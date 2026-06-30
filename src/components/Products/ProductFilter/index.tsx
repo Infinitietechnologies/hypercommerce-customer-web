@@ -36,8 +36,6 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 import { getSidebarFilters } from "@/routes/api";
 import { SidebarFilters } from "@/types/ApiResponse";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import AttributeSection from "./AttributeSection";
 
 export interface SelectedFilters {
@@ -117,11 +115,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
 
       setIsSidebarLoading(true);
       try {
-        const { lat = "", lng = "" } =
-          (getCookie("userLocation") as UserLocation) || {};
         const res = await getSidebarFilters({
-          latitude: lat,
-          longitude: lng,
           categories: filters.categories.join(","),
           brands: filters.brands.join(","),
           attribute_values: filters.attribute_values.join(","),

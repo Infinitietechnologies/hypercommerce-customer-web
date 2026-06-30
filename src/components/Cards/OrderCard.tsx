@@ -7,7 +7,6 @@ import {
   CreditCard,
   Eye,
   Truck,
-  Star,
   HandCoins,
   RotateCcw,
 } from "lucide-react";
@@ -36,7 +35,6 @@ import { formatString } from "@/helpers/validator";
 import { orderStatusColorMap } from "@/config/constants";
 import CancelOrderItemModal from "@/components/Modals/CancelOrderItemModal";
 import ReturnOrderItemModal from "@/components/Modals/ReturnOrderItemModal";
-import RatingModal from "../Modals/RatingModal";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import Lightbox from "yet-another-react-lightbox";
@@ -65,11 +63,6 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
     isOpen: isTrackOpen,
     onClose: onTrackClose,
     onOpen: onTrackOpen,
-  } = useDisclosure();
-  const {
-    isOpen: isReviewOpen,
-    onClose: onReviewClose,
-    onOpen: onReviewOpen,
   } = useDisclosure();
 
   const buttonConfig = getOrderStatusBtnConfig(order.status);
@@ -406,21 +399,6 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
               </Button>
             )}
 
-          {buttonConfig.review &&
-            order.delivery_boy_id &&
-            !order.is_delivery_feedback_given && (
-              <Button
-                size="sm"
-                variant="bordered"
-                startContent={<Star className="w-3 h-3" />}
-                className="text-xs font-medium w-full col-span-2"
-                onPress={onReviewOpen}
-                title={t("deliveryReview")}
-              >
-                {t("deliveryReview")}
-              </Button>
-            )}
-
         </CardFooter>
       </Card>
 
@@ -429,16 +407,6 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
           isOpen={isTrackOpen}
           onClose={onTrackClose}
           order={order}
-        />
-      )}
-
-      {buttonConfig.review && order.delivery_boy_id && (
-        <RatingModal
-          type="delivery"
-          isOpen={isReviewOpen}
-          onClose={onReviewClose}
-          deliveryBoyId={order.delivery_boy_id}
-          orderId={order.id}
         />
       )}
 

@@ -39,8 +39,15 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
 
   const [showClearCartModal, setShowClearCartModal] = useState(false);
   const router = useRouter();
-  const { currencySymbol, systemSettings, isSingleVendor } = useSettings();
+  const {
+    currencySymbol: settingsCurrencySymbol,
+    systemSettings,
+    isSingleVendor,
+  } = useSettings();
   const { payment_summary, items, total_quantity } = cart;
+  // Prefer the market-aware symbol the payment summary carries; fall back to settings.
+  const currencySymbol =
+    payment_summary.currency_symbol || settingsCurrencySymbol;
   const selectedAddress = useSelector(
     (state: RootState) => state.checkout.selectedAddress,
   );
@@ -226,20 +233,21 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
     );
   }
 
-  // Check minimum cart amount
-  if (
-    systemSettings?.minimumCartAmount &&
-    payment_summary.items_total < systemSettings.minimumCartAmount
-  ) {
-    const remainingAmount =
-      systemSettings.minimumCartAmount - payment_summary.items_total;
+  // Check minimum cart amount. The backend enforces this against
+  // payment_summary.minimum_cart_amount; mirror it here for the UI.
+  const minimumCartAmount =
+    payment_summary.minimum_cart_amount ||
+    systemSettings?.minimumCartAmount ||
+    0;
+  if (minimumCartAmount && payment_summary.items_total < minimumCartAmount) {
+    const remainingAmount = minimumCartAmount - payment_summary.items_total;
     validationErrors.push(
       t("checkout.validation.minCartAmount", {
-        minAmount: formatAmount(systemSettings.minimumCartAmount),
+        minAmount: formatAmount(minimumCartAmount),
         currentAmount: formatAmount(payment_summary.items_total),
         remainingAmount: formatAmount(remainingAmount),
         currencySymbol,
-        defaultValue: `Minimum cart amount is ${currencySymbol}${formatAmount(systemSettings.minimumCartAmount)}. Add ${currencySymbol}${formatAmount(remainingAmount)} more to proceed.`,
+        defaultValue: `Minimum cart amount is ${currencySymbol}${formatAmount(minimumCartAmount)}. Add ${currencySymbol}${formatAmount(remainingAmount)} more to proceed.`,
       }),
     );
   }
@@ -277,6 +285,18 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
               {`${t("checkout.allPricesIncludeTaxes")}`}
             </div>
 
+            {payment_summary.total_saving > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>
+                  {t("checkout.totalSaving", { defaultValue: "Total savings" })}
+                </span>
+                <span>
+                  -{currencySymbol}
+                  {formatAmount(payment_summary.total_saving)}
+                </span>
+              </div>
+            )}
+
             {selectedAddress?.id && (
               <div className="flex justify-between">
                 <span>{t("checkout.deliveryCharges")}</span>
@@ -286,7 +306,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                     {/* Strikethrough original amount */}
                     <span className="line-through text-gray-500">
                       {currencySymbol}
-                      {formatAmount(payment_summary.total_delivery_charges)}
+                      {formatAmount(payment_summary.delivery_charges)}
                     </span>
 
                     {/* Free Shipping text */}
@@ -297,71 +317,149 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 ) : (
                   <span>
                     {currencySymbol}
-                    {formatAmount(payment_summary.total_delivery_charges)}
+                    {formatAmount(payment_summary.delivery_charges)}
                   </span>
                 )}
               </div>
             )}
 
-            {payment_summary.handling_charges > 0 && (
-              <div className="flex justify-between">
-                <span>{t("checkout.handlingCharges")}</span>
-                <span>
-                  {currencySymbol}
-                  {formatAmount(payment_summary.handling_charges)}
-                </span>
-              </div>
-            )}
-
-            {payment_summary.per_store_drop_off_fee > 0 && (
-              <div className="flex justify-between">
-                <div>
-                  {t("checkout.dropOffFee")}{" "}
-                  {!isSingleVendor && (
-                    <>
-                      ({payment_summary.total_stores}
-                      <span className="ml-1">{t("checkout.stores")})</span>
-                    </>
-                  )}
+            {/* Per-store shipping breakdown (multi-store / fulfillability). */}
+            {selectedAddress?.id &&
+              payment_summary.seller_shipping_costs?.length > 0 && (
+                <div className="space-y-1 rounded-lg bg-default-50 dark:bg-default-100/40 p-2 text-xs">
+                  {payment_summary.seller_shipping_costs.map((store) => (
+                    <div key={store.store_id} className="space-y-0.5">
+                      <div className="flex justify-between">
+                        <span className="text-foreground/80">
+                          {store.store_name}
+                        </span>
+                        {store.is_fulfillable ? (
+                          <span>
+                            {currencySymbol}
+                            {formatAmount(store.shipping_cost ?? 0)}
+                          </span>
+                        ) : (
+                          <span className="text-danger">
+                            {t("checkout.notAvailable", {
+                              defaultValue: "Not available",
+                            })}
+                          </span>
+                        )}
+                      </div>
+                      {store.items
+                        ?.filter((it) => !it.is_fulfillable)
+                        .map((it) => (
+                          <div
+                            key={it.cart_item_id}
+                            className="flex justify-between pl-2 text-danger"
+                          >
+                            <span>{it.product_name}</span>
+                            <span className="text-right">
+                              {it.unfulfillable_reason ||
+                                t("checkout.notAvailable", {
+                                  defaultValue: "Not available",
+                                })}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  ))}
                 </div>
-                <span>
-                  {currencySymbol}
-                  {formatAmount(payment_summary.per_store_drop_off_fee)}
-                </span>
-              </div>
+              )}
+
+            {/* Taxes */}
+            {payment_summary.tax_total > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span>{t("checkout.tax", { defaultValue: "Tax" })}</span>
+                  <span>
+                    {currencySymbol}
+                    {formatAmount(payment_summary.tax_total)}
+                  </span>
+                </div>
+                {payment_summary.tax_breakdown?.map((tax) => (
+                  <div
+                    key={tax.tax_rate_id}
+                    className="flex justify-between pl-2 text-xs text-gray-500"
+                  >
+                    <span>
+                      {tax.title} ({tax.rate}%)
+                    </span>
+                    <span>
+                      {currencySymbol}
+                      {formatAmount(tax.amount)}
+                    </span>
+                  </div>
+                ))}
+              </>
             )}
 
-            {/* {payment_summary.delivery_distance_charges > 0 && (
+            {/* Platform fee */}
+            {payment_summary.platform_fee > 0 && (
               <div className="flex justify-between">
                 <span>
-                  {t("checkout.distanceCharges")} (
-                  {payment_summary.delivery_distance_km} km)
+                  {t("checkout.platformFee", { defaultValue: "Platform fee" })}
                 </span>
                 <span>
                   {currencySymbol}
-                  {formatAmount(payment_summary.delivery_distance_charges)}
-                </span>
-              </div>
-            )} */}
-
-            {payment_summary.is_rush_delivery && (
-              <div className="flex justify-between text-orange-600">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                  {t("checkout.rushDelivery")}
-                </span>
-                <span className="text-xs">
-                  {t("checkout.rushDeliveryDescription")}
+                  {formatAmount(payment_summary.platform_fee)}
                 </span>
               </div>
             )}
 
-            {payment_summary.estimated_delivery_time > 0 && (
-              <div className="flex justify-between text-gray-600">
-                <span>{t("checkout.estimatedDelivery")}</span>
-                <span className="text-xs">
-                  {payment_summary.estimated_delivery_time} {t("mins")}
+            {/* COD fee — only when COD is available */}
+            {payment_summary.cod_available && payment_summary.cod_fee > 0 && (
+              <div className="flex justify-between">
+                <span>{t("checkout.codFee", { defaultValue: "COD fee" })}</span>
+                <span>
+                  {currencySymbol}
+                  {formatAmount(payment_summary.cod_fee)}
                 </span>
+              </div>
+            )}
+
+            {/* Additional charges total */}
+            {payment_summary.additional_charges_total > 0 && (
+              <div className="flex justify-between">
+                <span>
+                  {t("checkout.additionalCharges", {
+                    defaultValue: "Additional charges",
+                  })}
+                </span>
+                <span>
+                  {currencySymbol}
+                  {formatAmount(payment_summary.additional_charges_total)}
+                </span>
+              </div>
+            )}
+
+            {/* Pending charges (e.g. prior unpaid seller-order charges) */}
+            {payment_summary.pending_charges?.length > 0 && (
+              <div className="space-y-1 rounded-lg bg-warning-50 dark:bg-warning-100/30 p-2 text-xs">
+                {payment_summary.pending_charges.map((charge) => (
+                  <div key={charge.id} className="flex justify-between">
+                    <span className="text-foreground/80">
+                      {charge.reason_note || charge.reason}
+                    </span>
+                    <span>
+                      {currencySymbol}
+                      {formatAmount(charge.amount)}
+                    </span>
+                  </div>
+                ))}
+                {payment_summary.pending_charges_total > 0 && (
+                  <div className="flex justify-between font-medium border-t border-warning-200 pt-1">
+                    <span>
+                      {t("checkout.pendingChargesTotal", {
+                        defaultValue: "Pending charges",
+                      })}
+                    </span>
+                    <span>
+                      {currencySymbol}
+                      {formatAmount(payment_summary.pending_charges_total)}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -434,6 +532,14 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                       </div>
                     </div>
                   )}
+
+                {/* Promo error */}
+                {payment_summary.promo_error && (
+                  <div className="flex items-center gap-2 text-danger text-xs">
+                    <Tag className="w-3.5 h-3.5" />
+                    <span>{payment_summary.promo_error}</span>
+                  </div>
+                )}
               </>
             ) : null}
 

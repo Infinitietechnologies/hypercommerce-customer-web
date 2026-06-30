@@ -11,8 +11,6 @@ import { getActiveCategory, isSSR } from "@/helpers/getters";
 import { Product } from "@/types/ApiResponse";
 import SectionHeading from "@/components/SectionHeading";
 import { Boxes } from "lucide-react";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { isRTL } from "@/helpers/functionalHelpers";
 import SwiperNavigation from "@/components/SwiperNavigation";
 
@@ -22,21 +20,11 @@ interface HomeProductProps {
 
 // SWR fetcher
 const fetcher = async () => {
-  // ✅ Get location from cookie
-  const location = getCookie("userLocation") as UserLocation | undefined;
-  const { lat = "", lng = "" } = location || {};
-
-  if (!lat || !lng) {
-    return [];
-  }
-
   // ✅ Get category with query > cookie > undefined
   const validSlug = getActiveCategory();
 
   // ✅ API call
   const response = await getProducts({
-    latitude: lat,
-    longitude: lng,
     categories: validSlug,
     include_child_categories: 0,
   });

@@ -10,7 +10,6 @@ import InfiniteScroll from "@/components/Functional/InfiniteScroll";
 import { useInfiniteData } from "@/hooks/useInfiniteData";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { NextPageWithLayout } from "@/types";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import { loadTranslations } from "../../../i18n";
 import { useTranslation } from "react-i18next";
@@ -53,7 +52,6 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
     perPage: PER_PAGE,
     initialData: initialStores?.data?.data || [],
     initialTotal: initialStores?.data?.total || 0,
-    passLocation: true,
     extraParams: { search: debouncedSearch },
   });
 
@@ -170,8 +168,6 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
         const searchQuery = (context.query?.search as string) || "";
         await loadTranslations(context);
 
@@ -189,8 +185,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const stores = await getStores({
           page: 1,
           per_page: PER_PAGE,
-          latitude: lat,
-          longitude: lng,
           search: searchQuery,
         });
 

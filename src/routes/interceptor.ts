@@ -34,6 +34,23 @@ export const setupInterceptors = (instance: AxiosInstance): void => {
         }
       }
 
+      // Market (hypercommerce): attach X-Market header so the backend's
+      // DetectMarket middleware resolves the right market. SSR passes it via
+      // params.market; client reads the `market` cookie set by /markets/switch.
+      const paramMarket = config?.params?.market || "";
+      if (paramMarket) {
+        const cleanedMarket = cleanToken(String(paramMarket));
+        if (cleanedMarket && config.headers) {
+          config.headers.set("X-Market", cleanedMarket);
+        }
+        delete config.params.market;
+      } else if (typeof window !== "undefined") {
+        const market = getCookie("market");
+        if (market && config.headers) {
+          config.headers.set("X-Market", cleanToken(String(market)));
+        }
+      }
+
       if (config?.params?.scope_category_slug === "all") {
         delete config.params.scope_category_slug;
       }

@@ -20,12 +20,12 @@ const StoreContent = ({
   openLightbox,
 }: any) => {
   const getStatusColor = () => {
-    if (!store.status.is_open) return "danger";
+    if (!store.status?.is_open) return "danger";
     return store.status.status === "online" ? "success" : "default";
   };
 
   const getStatusText = () => {
-    if (!store.status.is_open) return "Closed";
+    if (!store.status?.is_open) return "Closed";
     return store.status.status === "online" ? "Open Now" : "Offline";
   };
 
@@ -148,12 +148,12 @@ const StoreProfile: React.FC<StoreProfileProps> = ({ store }) => {
   };
 
   const getStatusColor = () => {
-    if (!store.status.is_open) return "danger";
+    if (!store.status?.is_open) return "danger";
     return store.status.status === "online" ? "success" : "default";
   };
 
   const getStatusText = () => {
-    if (!store.status.is_open) return t("closed") || "Closed";
+    if (!store.status?.is_open) return t("closed") || "Closed";
     return store.status.status === "online" ?  "Open Now" : "Offline";
   };
 

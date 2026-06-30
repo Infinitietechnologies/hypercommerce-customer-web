@@ -12,8 +12,6 @@ import { Store as StoreIcon } from "lucide-react";
 import { getStores } from "@/routes/api";
 import StoreCard from "@/components/Cards/StoreCard";
 import StoreCardSkeleton from "@/components/Skeletons/StoreCardSkeleton";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { isRTL } from "@/helpers/functionalHelpers";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -23,11 +21,7 @@ interface HomeStoreProps {
 
 // SWR fetcher
 const fetcher = async () => {
-  const { lat = "", lng = "" } = getCookie("userLocation") as UserLocation;
-  if (lat == "" && lng == "") {
-    return [];
-  }
-  const response = await getStores({ latitude: lat, longitude: lng });
+  const response = await getStores();
   if (!response.success || !response.data) {
     console.error(response.message || "Failed to fetch Stores");
     return [];

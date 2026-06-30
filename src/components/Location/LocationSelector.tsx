@@ -15,27 +15,18 @@ import LocationAutoComplete from "./LocationAutoComplete";
 import GoogleMap from "./GoogleMap";
 import { UserLocation } from "./types/LocationAutoComplete.types";
 import { getCookie, setCookie } from "@/lib/cookies";
-import { handleCheckZone } from "@/helpers/functionalHelpers";
 import { useSettings } from "@/contexts/SettingsContext";
 import { onLocationChange } from "@/helpers/events";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 import { staticLat, staticLng } from "@/config/constants";
-import { debounce } from "lodash";
-import { useMemo } from "react";
-import { getDeliveryZones, getStoresByMap } from "@/routes/api";
-import { Store } from "@/types/ApiResponse";
 
 // Define the ref interface (should match LocationAutoComplete)
 interface LocationAutoCompleteRef {
   setInputValue: (value: string) => void;
 }
 
-// Removed MapStoreCard since user requested not to show cards here
-
 const LocationSelector = () => {
-  const { defaultLocation, demoMode, systemSettings, isSingleVendor } =
-    useSettings();
+  const { defaultLocation, demoMode, systemSettings } = useSettings();
   const { t } = useTranslation();
   const [selectedLatLng, setSelectedLatLng] = useState<{
     lat: number;
@@ -61,65 +52,7 @@ const LocationSelector = () => {
   } | null>(null);
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [deliveryCheckLoading, setDeliveryCheckLoading] = useState(false);
-  const [stores, setStores] = useState<Store[]>([]);
-  const [mapLoaded, setMapLoaded] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [viewState, setViewState] = useState<
-    "location_selection" | "store_view"
-  >("location_selection");
-  const viewStateRef = useRef(viewState);
-  const lastBoundsRef = useRef<{
-    ne: { lat: number; lng: number };
-    sw: { lat: number; lng: number };
-  } | null>(null);
-
-  // Debounce API call to prevent laggy behavior during zoom/pan
-  const debouncedFetchStores = useMemo(
-    () =>
-      debounce(
-        async (bounds: {
-          ne: { lat: number; lng: number };
-          sw: { lat: number; lng: number };
-        }) => {
-          if (isSingleVendor) return;
-          try {
-            const res = await getStoresByMap({
-              ne_lat: bounds.ne.lat,
-              ne_lng: bounds.ne.lng,
-              sw_lat: bounds.sw.lat,
-              sw_lng: bounds.sw.lng,
-            });
-
-            if (res.success && res.data) {
-              setStores(res.data.stores);
-            }
-          } catch (error) {
-            console.error("Error fetching stores by map:", error);
-          }
-        },
-        500, // 500ms delay
-      ),
-    [isSingleVendor],
-  );
-
-  useEffect(() => {
-    viewStateRef.current = viewState;
-    if (
-      viewState === "store_view" &&
-      lastBoundsRef.current &&
-      !isSingleVendor
-    ) {
-      debouncedFetchStores(lastBoundsRef.current);
-    }
-  }, [viewState, isSingleVendor, debouncedFetchStores]);
-
-  // Fetch delivery zones only when modal is open AND map is loaded properly
-  const { data: zonesData } = useSWR(
-    isOpen && mapLoaded ? "delivery-zones" : null,
-    () => getDeliveryZones({ per_page: 100 }),
-  );
-  const zones = zonesData?.success ? zonesData.data.data : [];
 
   // Create a ref for LocationAutoComplete
   const autocompleteRef = useRef<LocationAutoCompleteRef>(null);
@@ -157,9 +90,6 @@ const LocationSelector = () => {
 
     setTempSelectedLatLng(selectedLatLng);
     setTempSelectedLocation(selectedLocation);
-    setMapLoaded(false); // Reset map loaded state when opening modal
-
-    setViewState("location_selection");
 
     // Update autocomplete input when modal opens
     if (selectedLocation && autocompleteRef.current) {
@@ -171,45 +101,14 @@ const LocationSelector = () => {
     }
   }, [isOpen, selectedLatLng, selectedLocation]);
 
-  const handleLocationSelect = async (location: {
+  const handleLocationSelect = (location: {
     placeName: string;
     latLng: { lat: number; lng: number };
     placeDescription: string;
   }) => {
-    // First update the modal location immediately for good UX
+    // Update the modal location immediately for good UX
     setTempSelectedLatLng(location.latLng);
     setTempSelectedLocation(location);
-
-    setDeliveryCheckLoading(true);
-
-    try {
-      const res = await handleCheckZone(
-        location.latLng.lat,
-        location.latLng.lng,
-      );
-
-      if (res) {
-        addToast({
-          title: t("locationSelector.deliveryAvailable"),
-          color: "success",
-        });
-      } else {
-        addToast({
-          title: t("locationSelector.deliveryNotAvailable"),
-          color: "danger",
-          description: t("locationSelector.deliveryNotAvailableDescription"),
-        });
-      }
-    } catch (error) {
-      console.error("Error checking delivery zone:", error);
-      addToast({
-        title: "Error checking delivery zone",
-        color: "danger",
-        description: "Please try again",
-      });
-    } finally {
-      setDeliveryCheckLoading(false);
-    }
   };
 
   // Helper function to wait for Google Maps API to load
@@ -232,21 +131,13 @@ const LocationSelector = () => {
   };
 
   const handleMapLocationUpdate = useCallback(
-    async (
-      latLng: {
-        lat: number;
-        lng: number;
-      },
-      renderToast: boolean = true,
-    ) => {
+    async (latLng: { lat: number; lng: number }) => {
       // Wait for Google Maps API to load
       const isLoaded = await waitForGoogleMaps();
       if (!isLoaded) {
         console.warn("Google Maps API failed to load");
         return;
       }
-
-      setDeliveryCheckLoading(true);
 
       try {
         const geocoder = new window.google.maps.Geocoder();
@@ -259,28 +150,12 @@ const LocationSelector = () => {
             placeDescription: "",
           };
 
-          // First update the modal location and autocomplete input
+          // Update the modal location and autocomplete input
           setTempSelectedLatLng(latLng);
           setTempSelectedLocation(newLocation);
 
           if (autocompleteRef.current) {
             autocompleteRef.current.setInputValue(newLocation.placeName);
-          }
-
-          // Then check delivery
-          const res = await handleCheckZone(latLng.lat, latLng.lng);
-
-          if (res) {
-            if (renderToast) {
-              addToast({ title: "Delivery Available", color: "success" });
-            }
-          } else {
-            addToast({
-              title: "Delivery Not Available",
-              color: "danger",
-              description:
-                "You can continue browsing or select a different location",
-            });
           }
         }
       } catch (error) {
@@ -290,108 +165,53 @@ const LocationSelector = () => {
           color: "danger",
           description: "Please try again",
         });
-      } finally {
-        setDeliveryCheckLoading(false);
       }
     },
     [],
   );
 
-  const handleConfirmLocation = async () => {
-    if (tempSelectedLocation && tempSelectedLatLng) {
-      // Check delivery one more time before confirming
-      setDeliveryCheckLoading(true);
+  const handleConfirmLocation = () => {
+    if (!tempSelectedLocation || !tempSelectedLatLng) return;
 
-      try {
-        const res = await handleCheckZone(
-          demoMode ? defaultLocation?.lat || staticLat : tempSelectedLatLng.lat,
-          demoMode ? defaultLocation?.lng || staticLng : tempSelectedLatLng.lng,
-        );
-
-        if (res) {
-          // Prepare the final location data based on demoMode
-          const finalLatLng = demoMode
-            ? {
-                lat: defaultLocation?.lat || staticLat,
-                lng: defaultLocation?.lng || staticLng,
-              }
-            : tempSelectedLatLng;
-
-          const finalLocation = demoMode
-            ? {
-                placeName: "Bhuj ,Gujrat ,India",
-                latLng: finalLatLng,
-                placeDescription: "",
-              }
-            : tempSelectedLocation;
-
-          // Update main state with the final values
-          setSelectedLatLng(finalLatLng);
-          setSelectedLocation(finalLocation);
-
-          // Save to cookie
-          const userLocation: UserLocation = {
-            lat: finalLatLng.lat,
-            lng: finalLatLng.lng,
-            placeName: finalLocation.placeName,
-            placeDescription: finalLocation.placeDescription,
-          };
-
-          setCookie<UserLocation>("userLocation", userLocation);
-
-          // Revalidate ALL SWR Cache
-          // await mutate((key) => key !== "/settings", undefined, {
-          //   revalidate: true,
-          // });
-
-          onLocationChange();
-
-          onClose();
-
-          addToast({
-            title: "Location confirmed successfully",
-            color: "success",
-          });
-        } else {
-          addToast({
-            title: "Cannot confirm location",
-            color: "danger",
-            description: "Delivery not available at this location",
-          });
+    // Prepare the final location data based on demoMode
+    const finalLatLng = demoMode
+      ? {
+          lat: defaultLocation?.lat || staticLat,
+          lng: defaultLocation?.lng || staticLng,
         }
-      } catch (error) {
-        console.error("Error confirming location:", error);
-        addToast({
-          title: "Error confirming location",
-          color: "danger",
-          description: "Please try again",
-        });
-      } finally {
-        setDeliveryCheckLoading(false);
-      }
-    }
+      : tempSelectedLatLng;
+
+    const finalLocation = demoMode
+      ? {
+          placeName: "Bhuj ,Gujrat ,India",
+          latLng: finalLatLng,
+          placeDescription: "",
+        }
+      : tempSelectedLocation;
+
+    // Update main state with the final values
+    setSelectedLatLng(finalLatLng);
+    setSelectedLocation(finalLocation);
+
+    // Save to cookie
+    const userLocation: UserLocation = {
+      lat: finalLatLng.lat,
+      lng: finalLatLng.lng,
+      placeName: finalLocation.placeName,
+      placeDescription: finalLocation.placeDescription,
+    };
+
+    setCookie<UserLocation>("userLocation", userLocation);
+
+    onLocationChange();
+
+    onClose();
+
+    addToast({
+      title: "Location confirmed successfully",
+      color: "success",
+    });
   };
-
-  const handleBoundsChange = useCallback(
-    (bounds: {
-      ne: { lat: number; lng: number };
-      sw: { lat: number; lng: number };
-    }) => {
-      lastBoundsRef.current = bounds;
-      if (isSingleVendor) return;
-      if (viewStateRef.current === "store_view") {
-        debouncedFetchStores(bounds);
-      }
-    },
-    [debouncedFetchStores, isSingleVendor],
-  );
-
-  const handleZoomChange = useCallback(() => {
-    // Smooth zoom handling logic
-    if (window.google?.maps) {
-      // const map = window.google.maps;
-    }
-  }, []);
 
   const handleCloseModal = () => {
     if (selectedLocation) {
@@ -429,7 +249,7 @@ const LocationSelector = () => {
           onOpen();
           if (defaultLocation) {
             // Call after modal opens and map loads
-            handleMapLocationUpdate(defaultLocation, false);
+            handleMapLocationUpdate(defaultLocation);
           }
         }}
       />
@@ -467,30 +287,18 @@ const LocationSelector = () => {
             <span>{t("locationSelector.modalTitle")}</span>
           </ModalHeader>
           <ModalBody className="pb-0 bg-default-50 dark:bg-content1 flex flex-col gap-0 px-2 md:px-4">
-            {viewState === "location_selection" && (
-              <div className="w-full mb-3 mt-1">
-                <LocationAutoComplete
-                  onLocationSelect={handleLocationSelect}
-                  ref={autocompleteRef}
-                  initialLocation={tempSelectedLocation}
-                />
-              </div>
-            )}
+            <div className="w-full mb-3 mt-1">
+              <LocationAutoComplete
+                onLocationSelect={handleLocationSelect}
+                ref={autocompleteRef}
+                initialLocation={tempSelectedLocation}
+              />
+            </div>
             <div className="relative w-full rounded-xl overflow-hidden min-h-[450px]">
               <GoogleMap
                 latLng={tempSelectedLatLng}
                 onLocationUpdate={handleMapLocationUpdate}
-                onBoundsChange={isSingleVendor ? undefined : handleBoundsChange}
-                onZoomChange={isSingleVendor ? undefined : handleZoomChange}
-                stores={
-                  isSingleVendor || viewState === "location_selection"
-                    ? []
-                    : stores
-                }
-                zones={viewState === "store_view" ? [] : zones}
-                onMapLoad={() => setMapLoaded(true)}
                 disableRedirect={!selectedLocation}
-                disableLocationChange={viewState === "store_view"}
                 height={450}
               />
             </div>
@@ -516,78 +324,29 @@ const LocationSelector = () => {
               </div>
             )}
 
-            {viewState === "location_selection" ? (
-              <>
-                <div className="flex items-center gap-3 w-full">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center shrink-0">
-                    <MapPin size={20} className="text-blue-500" />
-                  </div>
-                  <div className="flex flex-col flex-1 overflow-hidden">
-                    <span className="text-xs text-default-500">
-                      {t(
-                        "locationSelector.currentLocation",
-                        "Current Location",
-                      )}
-                    </span>
-                    <span className="text-sm font-semibold line-clamp-1 truncate text-left w-full">
-                      {tempSelectedLocation?.placeName || getButtonText()}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-3 w-full">
-                  <Button
-                    className="flex-1 font-medium bg-white dark:bg-default-100 border-1 border-gray-300 dark:border-default-200"
-                    variant="bordered"
-                    onPress={() => {
-                      if (selectedLocation) {
-                        setTempSelectedLatLng(selectedLatLng);
-                        setTempSelectedLocation(selectedLocation);
-                        setViewState("store_view");
-                      } else {
-                        handleCloseModal();
-                      }
-                    }}
-                  >
-                    {t("browseStores", "Browse Stores")}
-                  </Button>
-                  <Button
-                    color="primary"
-                    className="flex-1 font-medium"
-                    onPress={() => handleConfirmLocation()}
-                    isDisabled={!tempSelectedLocation || deliveryCheckLoading}
-                    isLoading={deliveryCheckLoading}
-                  >
-                    {deliveryCheckLoading
-                      ? t("locationSelector.checking", "Checking...")
-                      : t(
-                          "locationSelector.confirmLocation",
-                          "Confirm Location",
-                        )}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center gap-3 w-full">
-                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center shrink-0">
-                  <MapPin size={20} className="text-blue-500" />
-                </div>
-                <div className="flex flex-col flex-1 overflow-hidden">
-                  <span className="text-xs text-default-500">
-                    {t("locationSelector.currentLocation", "Current Location")}
-                  </span>
-                  <span className="text-sm font-semibold line-clamp-1 truncate text-left w-full">
-                    {tempSelectedLocation?.placeName || getButtonText()}
-                  </span>
-                </div>
-                <Button
-                  variant="bordered"
-                  className="font-medium bg-white dark:bg-default-100 border-1 border-gray-300 dark:border-default-200 px-6 shrink-0"
-                  onPress={() => setViewState("location_selection")}
-                >
-                  {t("change", "Change")}
-                </Button>
+            <div className="flex items-center gap-3 w-full">
+              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-500 flex items-center justify-center shrink-0">
+                <MapPin size={20} className="text-blue-500" />
               </div>
-            )}
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <span className="text-xs text-default-500">
+                  {t("locationSelector.currentLocation", "Current Location")}
+                </span>
+                <span className="text-sm font-semibold line-clamp-1 truncate text-left w-full">
+                  {tempSelectedLocation?.placeName || getButtonText()}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-3 w-full">
+              <Button
+                color="primary"
+                className="flex-1 font-medium"
+                onPress={() => handleConfirmLocation()}
+                isDisabled={!tempSelectedLocation}
+              >
+                {t("locationSelector.confirmLocation", "Confirm Location")}
+              </Button>
+            </div>
           </ModalFooter>
         </ModalContent>
       </Modal>

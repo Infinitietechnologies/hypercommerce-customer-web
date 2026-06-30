@@ -69,7 +69,6 @@
   "all_products": "सभी उत्पाद",
   "all_statuses": "सभी स्थिति",
   "all_types": "सभी प्रकार",
-  "already_in_list": "पहले से सूची में है",
   "amount": "राशि",
   "amount_max_limit": "राशि $1,000,000 से अधिक नहीं हो सकती",
   "amount_positive_number": "राशि एक धनात्मक संख्या होनी चाहिए",
@@ -1694,11 +1693,7 @@
       "create": "बनाएं",
       "creating": "बनाया जा रहा है..."
     },
-    "confirm_delete_wishlist": "क्या आप वाकई इस विशलिस्ट को हटाना चाहते हैं?",
-    "confirm_remove_item": "क्या आप वाकई इस आइटम को विशलिस्ट से हटाना चाहते हैं?",
     "createNew": "नई विशलिस्ट बनाएं",
-    "create_first_wishlist": "ऊपर अपनी पहली विशलिस्ट बनाएं",
-    "create_new_wishlist": "नई विशलिस्ट बनाएं",
     "delete_wishlist": "विशलिस्ट हटाएं",
     "edit_wishlist_error": "नाम आवश्यक है",
     "edit_wishlist_label": "विशलिस्ट नाम",
@@ -1708,27 +1703,17 @@
       "description": "उसके उत्पाद देखने के लिए साइडबार से एक विशलिस्ट चुनें",
       "title": "एक विशलिस्ट चुनें"
     },
-    "enter_wishlist_name": "विशलिस्ट नाम दर्ज करें...",
     "error": {
       "failed": "विशलिस्ट बनाने में विफल",
       "required": "कृपया एक विशलिस्ट नाम दर्ज करें"
     },
-    "failed_add_to_wishlist": "विशलिस्ट में जोड़ने में विफल",
-    "failed_create_wishlist": "विशलिस्ट बनाने में विफल",
-    "failed_delete_wishlist": "विशलिस्ट हटाने में विफल",
-    "failed_fetch_wishlists": "विशलिस्ट प्राप्त करने में विफल",
-    "failed_remove_item": "विशलिस्ट से आइटम हटाने में विफल",
     "inputPlaceholder": "विशलिस्ट नाम दर्ज करें...",
-    "loading_wishlists": "विशलिस्ट लोड हो रही हैं...",
     "modalTitle": "विशलिस्ट में सहेजें",
     "move_modal_title": "किसी अन्य विशलिस्ट में स्थानांतरित करें",
     "no_other_wishlists": "कोई अन्य विशलिस्ट उपलब्ध नहीं।",
-    "no_wishlists_found": "कोई विशलिस्ट नहीं मिली",
-    "save_to_wishlist": "विशलिस्ट में सहेजें",
     "select_wishlist": "विशलिस्ट चुनें",
     "select_wishlist_label": "विशलिस्ट चुनें",
     "select_wishlist_placeholder": "विशलिस्ट चुनें",
-    "selected_wishlist_not_found": "चयनित विशलिस्ट नहीं मिली",
     "wishlist_removeConfirmation": "क्या आप वाकई \"{{product}}\" को अपनी विशलिस्ट से हटाना चाहते हैं?"
   },
   "cookieConsent": {

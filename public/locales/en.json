@@ -70,7 +70,6 @@
   "all_products": "All Products",
   "all_statuses": "All Statuses",
   "all_types": "All Types",
-  "already_in_list": "Already in list",
   "amount": "Amount",
   "amount_max_limit": "Amount cannot exceed $1,000,000",
   "amount_positive_number": "Amount must be a positive number",
@@ -1695,11 +1694,7 @@
       "create": "Create",
       "creating": "Creating..."
     },
-    "confirm_delete_wishlist": "Are you sure you want to delete this wishlist?",
-    "confirm_remove_item": "Are you sure you want to remove this item from wishlist?",
     "createNew": "Create New Wishlist",
-    "create_first_wishlist": "Create your first wishlist above",
-    "create_new_wishlist": "Create New Wishlist",
     "delete_wishlist": "Delete Wishlist",
     "edit_wishlist_error": "Name is required",
     "edit_wishlist_label": "Wishlist Name",
@@ -1709,27 +1704,17 @@
       "description": "Choose a wishlist from the sidebar to view its products",
       "title": "Select a wishlist"
     },
-    "enter_wishlist_name": "Enter wishlist name...",
     "error": {
       "failed": "Failed to create wishlist",
       "required": "Please enter a wishlist name"
     },
-    "failed_add_to_wishlist": "Failed to add to wishlist",
-    "failed_create_wishlist": "Failed to create wishlist",
-    "failed_delete_wishlist": "Failed to delete wishlist",
-    "failed_fetch_wishlists": "Failed to fetch wishlists",
-    "failed_remove_item": "Failed to remove item from wishlist",
     "inputPlaceholder": "Enter wishlist name...",
-    "loading_wishlists": "Loading wishlists...",
     "modalTitle": "Save to Wishlist",
     "move_modal_title": "Move to another wishlist",
     "no_other_wishlists": "No other wishlists available.",
-    "no_wishlists_found": "No wishlists found",
-    "save_to_wishlist": "Save to Wishlist",
     "select_wishlist": "Select Wishlist",
     "select_wishlist_label": "Select Wishlist",
     "select_wishlist_placeholder": "Choose wishlist",
-    "selected_wishlist_not_found": "Selected wishlist not found",
     "wishlist_removeConfirmation": "Are you sure you want to remove \"{{product}}\" from your wishlist?"
   },
   "cookieConsent": {

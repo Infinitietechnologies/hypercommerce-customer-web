@@ -16,7 +16,7 @@ import { Bookmark, Plus, ShoppingBag } from "lucide-react";
 import WishlistCard from "@/components/Cards/WishlistCard";
 import WishListSkeleton from "@/components/Skeletons/WishListSkeleton";
 import WishListErrorAlert from "./WishListErrorAlert";
-import { Wishlist, WishTitle } from "@/types/ApiResponse";
+import { Wishlist, WishlistItem, WishTitle } from "@/types/ApiResponse";
 import CreateWishListModal from "@/components/Modals/CreateWishListModal";
 import { useTranslation } from "react-i18next";
 
@@ -44,7 +44,7 @@ interface WishListPageViewProps {
   >;
   onOpen: () => void;
   confirmDelete: (id: string, title: string) => void;
-  handleRemoveItem: (id: number, forceFetch: boolean) => void;
+  handleRemoveItem: (item: WishlistItem, forceFetch: boolean) => void;
 }
 
 const WishListPageView: React.FC<WishListPageViewProps> = ({
@@ -195,6 +195,10 @@ const WishListPageView: React.FC<WishListPageViewProps> = ({
                             item={item}
                             loading={loading}
                             handleRemoveItem={handleRemoveItem}
+                            isFavoriteList={
+                              selectedWishlist.slug?.toLowerCase() ===
+                              "favorite"
+                            }
                             wishlists={wishlists}
                             fetchWishlists={fetchWishlists}
                             fetchWishlistDetails={fetchWishlistDetails}

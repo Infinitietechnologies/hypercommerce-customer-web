@@ -7,8 +7,6 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { Product, PaginatedResponse } from "@/types/ApiResponse";
 import { getProducts } from "@/routes/api";
 import SearchModal from "../Modals/SearchModal";
-import { UserLocation } from "../Location/types/LocationAutoComplete.types";
-import { getCookie } from "@/lib/cookies";
 import { useRouter } from "next/router";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { useTranslation } from "react-i18next";
@@ -24,15 +22,10 @@ const searchFetcher = async (
   const [, query] = key.split(":");
   if (!query || query.trim().length < 2) return null;
 
-  const { lat = "", lng = "" } =
-    (getCookie("userLocation") as UserLocation) || {};
-
   const response = await getProducts({
     search: query,
     page: 1,
     per_page: 8,
-    latitude: lat,
-    longitude: lng,
     include_child_categories: 0,
   });
 

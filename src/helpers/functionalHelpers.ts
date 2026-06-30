@@ -2,7 +2,6 @@ import { setUserDataRedux } from "@/lib/redux/slices/authSlice";
 import { store } from "@/lib/redux/store";
 import {
   addToCart,
-  checkDeliveryZone,
   createOrder,
   getUserData,
   updateCartItem,
@@ -16,7 +15,6 @@ import {
 } from "@/types/ApiResponse";
 import { addToast } from "@heroui/react";
 import axios, { AxiosError } from "axios";
-import { GetServerSidePropsContext } from "next";
 // Import the new actions
 import {
   setCartData,
@@ -28,7 +26,6 @@ import i18n from "../../i18n";
 import { isValidUrl } from "./validator";
 import {
   setPromoCode,
-  setRusDelivery,
   setSelectedAddress,
   setUseWallet,
 } from "@/lib/redux/slices/checkoutSlice";
@@ -80,49 +77,10 @@ export const updateUserDataInRedux = async () => {
   }
 };
 
-export const handleCheckZone = async (
-  latitude: string | number,
-  longitude: string | number,
-): Promise<boolean> => {
-  try {
-    const res = await checkDeliveryZone({ latitude, longitude });
-
-    if (res.success && res.data?.is_deliverable) {
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("Error checking delivery zone:", error);
-    return false;
-  }
-};
-
 export const isAxiosError = (
   error: unknown,
 ): error is AxiosError<{ message?: string }> => {
   return axios.isAxiosError(error);
-};
-
-export const getUserLocationFromContext = async (
-  context: GetServerSidePropsContext,
-): Promise<{ lat: string; lng: string } | null> => {
-  try {
-    const raw = context.req.cookies.userLocation;
-    if (raw) {
-      let parsedLocation: { lat: string; lng: string } | null = null;
-      try {
-        parsedLocation = JSON.parse(decodeURIComponent(raw));
-      } catch {
-        parsedLocation = JSON.parse(raw);
-      }
-      return parsedLocation;
-    }
-    return null;
-  } catch (error) {
-    console.error("Error getting user Location from context:", error);
-    return null;
-  }
 };
 
 export const handleUpdateCartItem = async (params: {
@@ -292,26 +250,30 @@ export const handleAddToCart = async (params: {
         total_quantity: 0,
         items: [],
         payment_summary: {
-          items_total: null,
-          per_store_drop_off_fee: null,
-          is_rush_delivery: false,
-          is_rush_delivery_available: false,
+          items_total: 0,
+          total_saving: 0,
+          cod_available: false,
+          platform_fee: 0,
+          cod_fee: 0,
+          additional_charges_total: 0,
           delivery_charges: 0,
-          handling_charges: 0,
-          delivery_distance_charges: 0,
-          delivery_distance_km: 0,
-          total_stores: 0,
-          total_delivery_charges: 0,
-          estimated_delivery_time: 0,
           use_wallet: false,
-          wallet_balance: 0,
-          wallet_amount_used: 0,
-          payable_amount: 0,
-
           promo_code: "",
           promo_discount: 0,
           promo_applied: [],
           promo_error: null,
+          wallet_balance: 0,
+          wallet_amount_used: 0,
+          payable_amount: 0,
+          order_total: 0,
+          seller_shipping_costs: [],
+          pending_charges: [],
+          pending_charges_total: 0,
+          tax_breakdown: [],
+          tax_total: 0,
+          minimum_cart_amount: 0,
+          currency_code: "",
+          currency_symbol: "",
         },
         created_at: "",
         updated_at: "",
@@ -484,7 +446,6 @@ export const handleUpdateOfflineCartItem = (params: {
 
 export const resetCheckOutState = () => {
   store.dispatch(setPromoCode(""));
-  store.dispatch(setRusDelivery(false));
   store.dispatch(setUseWallet(false));
   store.dispatch(setSelectedAddress(null));
   // Clear attachments from window
@@ -502,7 +463,6 @@ export const handleCheckout = async (
     const address_id = state?.checkout?.selectedAddress?.id || "";
     const order_note = state?.checkout?.orderNote || "";
     const use_wallet = state?.checkout?.useWallet || false;
-    const rush_delivery = state?.checkout?.rushDelivery || false;
     const promo_code = state?.checkout?.promoCode || "";
 
     if (!address_id) {
@@ -519,7 +479,6 @@ export const handleCheckout = async (
     formData.append("promo_code", promo_code);
     formData.append("gift_card", "");
     formData.append("gift_card_discount", "");
-    formData.append("rush_delivery", rush_delivery ? "1" : "0");
     formData.append("use_wallet", use_wallet ? "1" : "0");
     formData.append("address_id", address_id.toString());
     formData.append("order_note", order_note);

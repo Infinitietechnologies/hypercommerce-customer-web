@@ -33,8 +33,6 @@ import { mutate } from "swr";
 import { useSettings } from "@/contexts/SettingsContext";
 import AttachmentUploader from "@/components/Cart/AttachmentUploader";
 import type { AttachmentFile } from "@/components/Cart/AttachmentUploader";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 
 interface CartItemsProps {
   items: CartItem[];
@@ -172,12 +170,9 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
 
   const handleCustomize = async (item: CartItem) => {
     setIsCustomizing(true);
-    const userLocation = getCookie("userLocation") as UserLocation;
     try {
       const res = await getProductBySlug({
         slug: item.product.slug,
-        latitude: userLocation?.lat,
-        longitude: userLocation?.lng,
       });
       if (res.success && res.data) {
         setCustomizingProduct(res.data);
@@ -240,11 +235,11 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
 
                 <Chip
                   variant="flat"
-                  color={group.store.status.is_open ? "success" : "danger"}
+                  color={group.store.status?.is_open ? "success" : "danger"}
                   radius="full"
                   size="sm"
                   startContent={
-                    group.store.status.is_open ? (
+                    group.store.status?.is_open ? (
                       <CheckCircle size={12} />
                     ) : (
                       <XCircle size={12} />
@@ -252,7 +247,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
                   }
                   className="font-medium text-xs px-2"
                 >
-                  {group.store.status.is_open
+                  {group.store.status?.is_open
                     ? t("soldBySection.open")
                     : t("soldBySection.closed")}
                 </Chip>

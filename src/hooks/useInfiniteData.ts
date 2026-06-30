@@ -1,6 +1,4 @@
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { isSSR } from "@/helpers/getters";
-import { getCookie } from "@/lib/cookies";
 import { useCallback, useEffect, useRef, useState , useMemo } from "react";
 import useSWR from "swr";
 
@@ -17,7 +15,6 @@ interface UseInfiniteDataProps<T> {
   extraParams?: {
     [key: string]: any;
   };
-  passLocation?: boolean;
   forceFetchOnMount?: boolean;
   dataKey?: string | null;
 }
@@ -28,7 +25,6 @@ export const useInfiniteData = <T>({
   initialData = [],
   initialTotal = 0,
   extraParams = {},
-  passLocation = false,
   forceFetchOnMount = false,
   dataKey = null,
 }: UseInfiniteDataProps<T>) => {
@@ -44,12 +40,10 @@ export const useInfiniteData = <T>({
   const isLoadingRef = useRef(false);
   const currentPageRef = useRef(1);
   const extraParamsRef = useRef(extraParams);
-  const passLocationRef = useRef(passLocation);
 
   useEffect(() => {
     extraParamsRef.current = extraParams;
-    passLocationRef.current = passLocation;
-  }, [extraParams, passLocation]);
+  }, [extraParams]);
 
   const serializedParams = useMemo(
     () => JSON.stringify(extraParams),
@@ -70,21 +64,12 @@ export const useInfiniteData = <T>({
     swrKey,
     async ([, params]: [string, string]) => {
       const currentParams = JSON.parse(params);
-      const { lat = "", lng = "" } =
-        (getCookie("userLocation") as UserLocation) || {};
-
-      if (passLocationRef.current && (!lat || !lng)) {
-        return { data: [], total: 0 };
-      }
-
-      const location = passLocationRef.current
-        ? { latitude: lat, longitude: lng }
-        : {};
+      // hypercommerce: no location gate. Market is auto-detected server-side
+      // (X-Market header / market cookie), so we never block on lat/lng.
       const res = await fetcher({
         page: 1,
         per_page: perPage,
         ...currentParams,
-        ...location,
       });
       if (res.success) {
         return res.data;
@@ -129,17 +114,11 @@ export const useInfiniteData = <T>({
     isLoadingRef.current = true;
     currentPageRef.current = nextPage;
 
-    const { lat = "", lng = "" } = getCookie("userLocation") as UserLocation;
-    const location = passLocationRef.current
-      ? { latitude: lat, longitude: lng }
-      : {};
-
     try {
       const res = await fetcher({
         page: nextPage,
         per_page: perPage,
         ...extraParamsRef.current,
-        ...location,
       });
 
       if (res.success) {

@@ -13,8 +13,6 @@ import CategoryCard from "@/components/Cards/CategoryCard";
 import CategoryCardSkeleton from "@/components/Skeletons/CategoryCardSkeleton";
 import SectionHeading from "@/components/SectionHeading";
 import Link from "next/link";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
-import { getCookie } from "@/lib/cookies";
 import { isRTL } from "@/helpers/functionalHelpers";
 
 interface HomeCategoriesProps {
@@ -25,23 +23,12 @@ interface HomeCategoriesProps {
 const fetcher = async () => {
   const validSlug = getActiveCategory();
 
-  const location = getCookie("userLocation") as UserLocation | undefined;
-  const { lat = "", lng = "" } = location || {};
-
-  if (!lat || !lng) {
-    return null;
-  }
-
   const response = validSlug
     ? await getCategories({
         slug: validSlug,
-        latitude: lat,
-        longitude: lng,
       })
     : await getSubCategories({
         slug: validSlug,
-        latitude: lat,
-        longitude: lng,
         filter: "top_category",
       });
 

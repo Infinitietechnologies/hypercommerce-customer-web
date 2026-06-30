@@ -33,7 +33,6 @@ import {
 } from "@/helpers/seo";
 import { useTranslation } from "react-i18next";
 import { Button } from "@heroui/react";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 import StoreProfile from "@/components/StoreProfile";
 import useSWR from "swr";
 import { trackStoreView } from "@/lib/analytics";
@@ -189,7 +188,6 @@ const StoreProductsPage: NextPageWithLayout<StoreProductsPageProps> = ({
     perPage: PER_PAGE,
     initialData: initialProducts?.data?.data || [],
     initialTotal: initialProducts?.data?.total || 0,
-    passLocation: true,
     dataKey: `/stores/${slug}`,
     extraParams: {
       categories:
@@ -465,8 +463,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
       try {
         const { slug } = context.params || {};
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
         await loadTranslations(context);
 
         if (!slug || Array.isArray(slug)) {
@@ -483,8 +479,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           page: 1,
           per_page: PER_PAGE,
           store: slug,
-          latitude: lat,
-          longitude: lng,
           access_token,
           include_child_categories: 0,
         };

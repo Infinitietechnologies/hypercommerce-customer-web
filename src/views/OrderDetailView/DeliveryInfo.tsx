@@ -1,18 +1,14 @@
-import { getOrderStatusBtnConfig } from "@/helpers/getters";
 import { Order } from "@/types/ApiResponse";
-import { Avatar, Button, Card, CardBody, CardHeader } from "@heroui/react";
-import { Edit, Phone, Star, Truck } from "lucide-react";
+import { Avatar, Card, CardBody, CardHeader } from "@heroui/react";
+import { Phone, Star, Truck } from "lucide-react";
+import { getOrderStatusBtnConfig } from "@/helpers/getters";
 import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
 interface DeliveryInfoProps {
   order: Order;
-  onDeliveryRatingOpen: () => void;
 }
 // DeliveryInfo component
-const DeliveryInfo: FC<DeliveryInfoProps> = ({
-  order,
-  onDeliveryRatingOpen,
-}) => {
+const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
   const buttonConfig = getOrderStatusBtnConfig(order.status);
   const { t } = useTranslation();
 
@@ -61,21 +57,6 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({
                 {t("deliveryPartner")}
               </h3>
             </div>
-            {buttonConfig.review &&
-              order.delivery_boy_id &&
-              !order.is_delivery_feedback_given && (
-                <Button
-                  size="sm"
-                  color="warning"
-                  variant="flat"
-                  className="text-xs"
-                  onPress={onDeliveryRatingOpen}
-                  startContent={<Truck className="w-4 h-4" />}
-                  title={t("deliveryReview")}
-                >
-                  {t("deliveryReview")}
-                </Button>
-              )}
           </CardHeader>
           <CardBody className="pt-0">
             <div className="flex items-start gap-3">
@@ -120,15 +101,6 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({
                         </div>
                       </div>
                     </div>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      color="primary"
-                      size="sm"
-                      className="p-0"
-                      onPress={onDeliveryRatingOpen}
-                      startContent={<Edit className="w-4 h-4" />}
-                    />
                   </div>
                 )}
               </div>

@@ -1,15 +1,12 @@
 import { getCookieFromContext, isSSR } from "@/helpers/getters";
 import HomeCategories from "@/views/homePage/HomeCategories";
-import HomeTopSlider from "@/views/homePage/HomeTopSlider";
 import { GetServerSideProps } from "next";
 import { getHomePageData } from "@/services/homePageService";
 
 import DeliveryBanner from "@/views/homePage/DeliveryBanner";
 import {
-  BannerData,
   Brand,
   Category,
-  FeaturedSection,
   Product,
   Settings,
   Store,
@@ -17,10 +14,7 @@ import {
 import HomeBrands from "@/views/homePage/HomeBrands";
 import HomeStores from "@/views/homePage/HomeStores";
 import { NextPageWithLayout } from "@/types";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
-import HomeFeaturedSections from "@/views/homePage/HomeFeaturedSections";
 import { getAccessTokenFromContext } from "@/helpers/auth";
-import HomeCarouselSlider from "@/views/homePage/HomeCarouselSlider";
 import { loadTranslations } from "../../i18n";
 import { useTranslation } from "react-i18next";
 import DynamicSEO from "@/SEO/DynamicSEO";
@@ -41,20 +35,16 @@ import HomeServiceHighlights from "@/views/homePage/HomeServiceHighlights";
 type HomePageProps = {
   initialSettings?: Settings | null;
   initialCategories?: Category[];
-  initialBanners?: BannerData;
   initialProducts?: Product[];
   initialBrands?: Brand[];
   initialStores?: Store[];
-  initialSections?: FeaturedSection[];
   error?: string;
 };
 
 const HomePage: NextPageWithLayout<HomePageProps> = ({
   initialCategories,
-  initialBanners,
   initialBrands,
   initialStores,
-  initialSections,
 }) => {
   const { t } = useTranslation();
   const { webSettings } = useSettings();
@@ -88,19 +78,11 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
       />
 
       <div className="flex flex-col gap-0">
-        <HomeTopSlider initialBanners={initialBanners} />
-
         <HomeBrands initialBrands={initialBrands} />
 
         <HomeCategories initialCategories={initialCategories} />
 
         <HomeStores initialStores={initialStores} />
-
-
-
-        <HomeCarouselSlider initialBanners={initialBanners} />
-
-        <HomeFeaturedSections initialSections={initialSections} />
 
         {/* <HomeRecentlyViewed /> */}
 
@@ -122,9 +104,6 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
 
           const access_token = (await getAccessTokenFromContext(context)) || "";
 
-          const { lat = "", lng = "" } =
-            (await getUserLocationFromContext(context)) || {};
-
           // 1️⃣ take category from query if available, else fallback to cookie
           const queryCategory = context.query.category as string | undefined;
           const cookieCategory =
@@ -132,25 +111,16 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
 
           const homeCategory = queryCategory || cookieCategory;
 
-          const {
-            settings,
-            categories,
-            banners,
-            products,
-            brands,
-            stores,
-            sections,
-          } = await getHomePageData({ lat, lng, access_token, homeCategory });
+          const { settings, categories, products, brands, stores } =
+            await getHomePageData({ access_token, homeCategory });
 
           return {
             props: {
               initialSettings: settings,
               initialCategories: categories,
-              initialBanners: banners,
               initialProducts: products,
               initialBrands: brands,
               initialStores: stores,
-              initialSections: sections,
             },
           };
         } catch (err) {
@@ -159,11 +129,9 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
             props: {
               initialSettings: null,
               initialCategories: [],
-              initialBanners: undefined,
               initialProducts: [],
               initialBrands: [],
               initialStores: [],
-              initialSections: [],
               error:
                 err instanceof Error
                   ? err.message

@@ -99,10 +99,6 @@ const Footer: FC = () => {
                     href: "/about-us",
                   },
                   { label: t("footer.quick_links.faqs"), href: "/faqs" },
-                   {
-                    label: t("footer.quick_links.delivery_zones"),
-                    href: "/delivery-zones",
-                  },
                   ...(!isSingleVendor
                     ? [
                         {
@@ -311,10 +307,6 @@ const Footer: FC = () => {
                     href: "/about-us",
                   },
                   { label: t("footer.quick_links.faqs"), href: "/faqs" },
-                   {
-                    label: t("footer.quick_links.delivery_zones"),
-                    href: "/delivery-zones",
-                  },
                   ...(!isSingleVendor
                     ? [
                         {

@@ -16,8 +16,6 @@ import AddressSelectionModal from "../Modals/AddressSelectionModal";
 import { getAddresses } from "@/routes/api";
 import { updateCartData } from "@/helpers/updators";
 import { useTranslation } from "react-i18next";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "../Location/types/LocationAutoComplete.types";
 import { Address } from "@/types/ApiResponse";
 
 type AddressSectionProps = {
@@ -52,14 +50,9 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
   const { data: initialData, isLoading: initialLoading } = useSWR(
     initialDataKey,
     async () => {
-      const location = getCookie("userLocation") as UserLocation | undefined;
-      const { lat = "", lng = "" } = location || {};
       const response = await getAddresses({
         page: 1,
         per_page: 1,
-        latitude: lat,
-        longitude: lng,
-        zone_id,
       });
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch addresses");
@@ -77,14 +70,9 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
 
   const fetchAddressesData = useCallback(
     async (page: number, perPage: number = 10) => {
-      const location = getCookie("userLocation") as UserLocation | undefined;
-      const { lat = "", lng = "" } = location || {};
       const response = await getAddresses({
         page,
         per_page: perPage,
-        latitude: lat,
-        longitude: lng,
-        zone_id,
       });
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch addresses");
@@ -106,7 +94,7 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
 
       return addressesArray;
     },
-    [zone_id]
+    []
   );
 
   // Clear redux selected address on initial mount

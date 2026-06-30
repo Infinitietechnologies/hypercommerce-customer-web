@@ -18,7 +18,6 @@ import InfiniteScroll from "@/components/Functional/InfiniteScroll";
 import { useInfiniteData } from "@/hooks/useInfiniteData";
 import { Product, PaginatedResponse } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import NoProductsFound from "@/components/NoProductsFound";
@@ -158,7 +157,6 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
     perPage: PER_PAGE,
     initialData: initialProducts?.data?.data || [],
     initialTotal: initialProducts?.data?.total || 0,
-    passLocation: true,
     extraParams: {
       categories:
         selectedFilters?.categories?.length > 0
@@ -387,8 +385,6 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
         const access_token = (await getAccessTokenFromContext(context)) || "";
         await loadTranslations(context);
 
@@ -401,8 +397,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const apiParams: Record<string, any> = {
           page: 1,
           per_page: PER_PAGE,
-          latitude: lat,
-          longitude: lng,
           access_token,
           search: q,
           include_child_categories: 0,

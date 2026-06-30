@@ -13,14 +13,11 @@ import AddressSection from "@/components/Cart/AddressSection";
 import { setOrderNote } from "@/lib/redux/slices/checkoutSlice";
 import { useDispatch } from "react-redux";
 import { debounce } from "lodash";
-import ExpressDelivery from "@/components/Cart/ExpressDelivery";
 import PromoCodeSection from "@/components/Cart/PromoCodeSection";
 import SimilarProductsSection from "@/components/Products/ProductDetailPage/SimilarProductsSection";
 import useSWR from "swr";
 import { getProducts } from "@/routes/api";
 import { useTranslation } from "react-i18next";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { CartResponse } from "@/types/ApiResponse";
 import SaveForLaterItems from "./SaveForLaterItems";
 
@@ -31,7 +28,6 @@ interface CartAdditionalInfoProps {
 const CartAdditionalInfo: FC<CartAdditionalInfoProps> = ({ cart }) => {
   const { t } = useTranslation();
   const [deliveryInstructions, setDeliveryInstructions] = useState<string>("");
-  const userLocation = getCookie("userLocation") as UserLocation;
   const items = cart?.items ?? [];
 
   const ProductSlugs =
@@ -49,8 +45,6 @@ const CartAdditionalInfo: FC<CartAdditionalInfoProps> = ({ cart }) => {
     getProducts({
       per_page: 10,
       page: 1,
-      latitude: userLocation.lat,
-      longitude: userLocation.lng,
       exclude_product: ProductSlugs || "",
       include_child_categories: 0,
     })
@@ -84,7 +78,6 @@ const CartAdditionalInfo: FC<CartAdditionalInfoProps> = ({ cart }) => {
         className="hidden"
       />
       <AddressSection onAddAddressModalOpen={onAddressModalOpen} />
-      <ExpressDelivery />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Delivery Instructions */}

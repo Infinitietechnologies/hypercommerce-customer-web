@@ -1008,36 +1008,21 @@ const SimpleProductModal: FC<ProductModalProps> = ({
             >
               {t("product_modal.cancel")}
             </Button>
-            {product.store_status.is_open ? (
-              <Button
-                color="primary"
-                onPress={AddToCart}
-                isDisabled={selectedVariant.stock === 0}
-                className="flex-1 text-sm"
-                size="sm"
-                startContent={<ShoppingCart size={16} />}
-                isLoading={loading}
-              >
-                {selectedVariant.stock === 0
-                  ? t("product_modal.out_of_stock")
-                  : editingCartItemId
-                    ? `${t("product_modal.update_cart_item")} • ${currencySymbol} ${totalPrice.toFixed(2)}`
-                    : `${t("product_modal.add_to_cart_title")} • ${currencySymbol} ${totalPrice.toFixed(2)}`}
-              </Button>
-            ) : (
-              <div className="flex flex-col items-end flex-1">
-                <span className="text-orange-500 font-medium text-sm sm:text-medium">
-                  {t("store_closed")}
-                </span>
-                {product.store_status?.next_opening_time && (
-                  <span className="text-xxs text-foreground/60">
-                    {t("opens_at", {
-                      time: product.store_status.next_opening_time,
-                    })}
-                  </span>
-                )}
-              </div>
-            )}
+            <Button
+              color="primary"
+              onPress={AddToCart}
+              isDisabled={selectedVariant.stock === 0}
+              className="flex-1 text-sm"
+              size="sm"
+              startContent={<ShoppingCart size={16} />}
+              isLoading={loading}
+            >
+              {selectedVariant.stock === 0
+                ? t("product_modal.out_of_stock")
+                : editingCartItemId
+                  ? `${t("product_modal.update_cart_item")} • ${currencySymbol} ${totalPrice.toFixed(2)}`
+                  : `${t("product_modal.add_to_cart_title")} • ${currencySymbol} ${totalPrice.toFixed(2)}`}
+            </Button>
           </div>
         </ModalFooter>
       </ModalContent>

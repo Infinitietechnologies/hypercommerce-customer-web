@@ -6,10 +6,10 @@ import {
   getWishlistById,
   UpdateWishlistById,
   deleteWishlistById,
-  deleteWishlistItemById,
+  toggleFavorite,
   getSettings,
 } from "@/routes/api";
-import { Wishlist, WishTitle } from "@/types/ApiResponse";
+import { Wishlist, WishlistItem, WishTitle } from "@/types/ApiResponse";
 import { GetServerSideProps } from "next";
 import { NextPageWithLayout } from "@/types";
 import { isSSR } from "@/helpers/getters";
@@ -229,10 +229,16 @@ const WishlistsPage: NextPageWithLayout<WishlistsPageProps> = ({
     }
   };
 
-  const handleRemoveItem = async (itemId: number, forceFetch: boolean) => {
-    updateLoading("removingItem", itemId);
+  // Per-item removal is only available on the system "Favorite" list, where
+  // it maps to toggling the favorite off (the backend has no per-item delete).
+  const handleRemoveItem = async (item: WishlistItem, forceFetch: boolean) => {
+    updateLoading("removingItem", item.id);
     try {
-      const response = await deleteWishlistItemById(itemId);
+      const response = await toggleFavorite({
+        product_id: item.product.id,
+        product_variant_id: item.variant?.id ?? null,
+        store_id: item.store.id,
+      });
       if (response.success) {
         if (selectedWishlist) {
           await fetchWishlistDetails(

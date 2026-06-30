@@ -12,7 +12,7 @@ pages/
 ├── brands/                   # listing + [slug] PLP
 ├── cart/                     # PROTECTED — cart, checkout
 ├── categories/               # category browsing
-├── delivery-zones/
+├── delivery-zones/           # DEPRECATED — redirect stubs only (hyperlocal removed)
 ├── faqs/
 ├── feature-sections/         # featured-section detail page
 ├── forgot-password/

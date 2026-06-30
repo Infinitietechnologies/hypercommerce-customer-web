@@ -7,8 +7,6 @@ import { Product, Settings } from "@/types/ApiResponse";
 export interface ProductDetailPageParams {
   slug: string;
   access_token: string;
-  lat?: string;
-  lng?: string;
   PER_PAGE?: number | string;
 }
 
@@ -34,13 +32,13 @@ export interface ProductDetailPageData {
  *
  * Uses Promise.allSettled to ensure failure of one API does not block others.
  *
- * @param {ProductDetailPageParams} params - Input parameters including slug, access_token, lat, lng
+ * @param {ProductDetailPageParams} params - Input parameters including slug, access_token
  * @returns {Promise<ProductDetailPageData>} - The fetched data and any errors
  */
 export async function fetchProductDetailPageData(
   params: ProductDetailPageParams
 ): Promise<ProductDetailPageData> {
-  const { slug, access_token, lat = "", lng = "", PER_PAGE = 20 } = params;
+  const { slug, access_token, PER_PAGE = 20 } = params;
 
   console.log("========== PRODUCT DETAIL FETCH ==========");
   console.log("Slug:", slug);
@@ -51,15 +49,11 @@ export async function fetchProductDetailPageData(
       getProductBySlug({
         slug,
         access_token,
-        latitude: lat,
-        longitude: lng,
       }),
       getProducts({
         exclude_product: slug,
         per_page: PER_PAGE,
         access_token,
-        latitude: lat,
-        longitude: lng,
         include_child_categories: 0,
       }),
       getSettings(),

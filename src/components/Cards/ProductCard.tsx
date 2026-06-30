@@ -1,4 +1,4 @@
-import { FC, memo } from "react";
+import { FC, memo, useState } from "react";
 import {
   Card,
   CardBody,
@@ -13,6 +13,7 @@ import {
 import { Clock, Bookmark, Star, Eye } from "lucide-react";
 import RatingStars from "../RatingStars";
 import { Product } from "@/types/ApiResponse";
+import { toggleFavorite } from "@/routes/api";
 import dynamic from "next/dynamic";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useSelector } from "react-redux";
@@ -23,11 +24,6 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { useScreenType } from "@/hooks/useScreenType";
 import { useAdTracking } from "@/hooks/useAdTracking";
-
-const WishlistModal = dynamic(
-  () => import("@/components/Modals/WishlistModal"),
-  { ssr: false },
-);
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
   ssr: false,
@@ -65,13 +61,13 @@ const ProductCard: FC<ProductCardProps> = ({
     onOpen: onCartOpen,
     onClose: onCartClose,
   } = useDisclosure();
-  const {
-    isOpen: isWishlistOpen,
-    onOpen: onWishlistOpen,
-    onClose: onWishlistClose,
-  } = useDisclosure();
 
   const defaultVariant = variants?.find((v) => v.is_default) || variants?.[0];
+
+  const [isFavorited, setIsFavorited] = useState(
+    Array.isArray(product.favorite) && product.favorite.length > 0,
+  );
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
   const variantCombinations = (() => {
     if (!variants || variants.length <= 1) return [];
@@ -123,16 +119,42 @@ const ProductCard: FC<ProductCardProps> = ({
 
   if (!defaultVariant) return null;
 
-  const handleWishlistOpen = () => {
-    if (isLoggedIn) {
-      onWishlistOpen();
-    } else {
+  const handleToggleFavorite = async () => {
+    if (!isLoggedIn) {
       const btn = document.getElementById("login-btn");
       btn?.click();
       addToast({
         title: t("please_login"),
         color: "warning",
       });
+      return;
+    }
+
+    if (!defaultVariant) return;
+
+    setIsTogglingFavorite(true);
+    try {
+      const response = await toggleFavorite({
+        product_id: product.id,
+        product_variant_id: defaultVariant.id ?? null,
+        store_id: defaultVariant.store_id,
+      });
+
+      if (response.success && response.data) {
+        setIsFavorited(response.data.is_favorited);
+      } else {
+        addToast({
+          title: response.message || t("something_went_wrong"),
+          color: "danger",
+        });
+      }
+    } catch {
+      addToast({
+        title: t("something_went_wrong"),
+        color: "danger",
+      });
+    } finally {
+      setIsTogglingFavorite(false);
     }
   };
 
@@ -165,13 +187,9 @@ const ProductCard: FC<ProductCardProps> = ({
         as={"div"}
         className="w-full h-full border-2 border-gray-100 dark:border-default-100 hover:shadow-md transition-shadow duration-200"
         disableRipple
-        isPressable={
-          screen !== "mobile"
-            ? !product.store_status.is_open || defaultVariant.stock !== 0
-            : false
-        }
+        isPressable={screen !== "mobile" ? defaultVariant.stock !== 0 : false}
         shadow="none"
-        isDisabled={defaultVariant.stock === 0 && product.store_status.is_open}
+        isDisabled={defaultVariant.stock === 0}
         onPress={() => {
           handleAdClick();
           router.push(`/products/${product.slug}`);
@@ -268,14 +286,14 @@ const ProductCard: FC<ProductCardProps> = ({
                   variant="light"
                   size="sm"
                   radius="full"
-                  onPress={handleWishlistOpen}
+                  isLoading={isTogglingFavorite}
+                  onPress={handleToggleFavorite}
                   className="bg-white dark:bg-content1 p-1.5 min-w-0 w-7 h-7"
                   title={t("pageTitle.wishlists")}
                 >
                   <Bookmark
                     className={
-                      Array.isArray(product.favorite) &&
-                      product.favorite.length > 0
+                      isFavorited
                         ? "fill-primary text-primary w-6 h-6"
                         : "text-foreground/60 w-6 h-6"
                     }
@@ -425,21 +443,8 @@ const ProductCard: FC<ProductCardProps> = ({
             )}
           </div>
 
-          {/* Store Closed + Out of Stock + Normal Add-to-Cart */}
-          {!product.store_status?.is_open ? (
-            <div className="flex flex-col items-end">
-              <span className="text-orange-500 font-medium text-xs sm:text-sm">
-                {t("store_closed")}
-              </span>
-              {product.store_status?.next_opening_time && (
-                <span className="text-xxs text-foreground/60">
-                  {t("opens_at", {
-                    time: product.store_status.next_opening_time,
-                  })}
-                </span>
-              )}
-            </div>
-          ) : !defaultVariant.availability || defaultVariant.stock === 0 ? (
+          {/* Out of Stock + Normal Add-to-Cart (store open/closed gate retired) */}
+          {!defaultVariant.availability || defaultVariant.stock === 0 ? (
             <span className="text-red-500 font-medium text-xxs sm:text-sm w-full text-end">
               {t("out_of_stock")}
             </span>
@@ -458,17 +463,6 @@ const ProductCard: FC<ProductCardProps> = ({
           isOpen={isCartOpen}
           onClose={onCartClose}
           product={product}
-        />
-      )}
-
-      {isWishlistOpen && (
-        <WishlistModal
-          isOpen={isWishlistOpen}
-          onClose={onWishlistClose}
-          productId={product.id}
-          productVariantId={defaultVariant.id}
-          storeId={defaultVariant.store_id}
-          favorite={product.favorite}
         />
       )}
     </>

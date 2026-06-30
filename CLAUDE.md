@@ -7,7 +7,7 @@
 ## 1. App overview
 
 **Name:** `hyper-local` (web storefront)
-**Type:** Customer storefront for the hyperlocal marketplace — browse, cart, checkout, orders, wallet, wishlist, account, referrals. SSR-first with `getServerSideProps`.
+**Type:** Customer storefront for the hypercommerce marketplace — browse, cart, checkout, orders, wallet, wishlist, account, referrals. SSR-first with `getServerSideProps`. (Migrated off the old hyperlocal delivery-zone model.)
 **Stack:**
 - **Framework:** Next.js 16 (**Pages Router** — NOT App Router), React 19, TypeScript.
 - **Styling:** Tailwind CSS v4 (`@tailwindcss/postcss`) + HeroUI (`@heroui/react`, `@heroui/system`, `@heroui/theme`).

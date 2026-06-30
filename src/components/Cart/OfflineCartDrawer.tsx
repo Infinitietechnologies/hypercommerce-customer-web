@@ -28,8 +28,6 @@ import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import dynamic from "next/dynamic";
 import { getProductBySlug } from "@/routes/api";
 import { Product, ProductVariant } from "@/types/ApiResponse";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "../Location/types/LocationAutoComplete.types";
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
   ssr: false,
@@ -180,12 +178,9 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
 
   const handleCustomize = async (item: any) => {
     setIsCustomizing(true);
-    const userLocation = getCookie("userLocation") as UserLocation;
     try {
       const res = await getProductBySlug({
         slug: item.slug,
-        latitude: userLocation?.lat,
-        longitude: userLocation?.lng,
       });
       if (res.success && res.data) {
         setCustomizingProduct(res.data);

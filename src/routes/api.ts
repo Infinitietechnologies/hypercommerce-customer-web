@@ -3,16 +3,13 @@ import { setupInterceptors } from "./interceptor";
 import {
   Address,
   ApiResponse,
-  BannerData,
   Brand,
   CartResponse,
   CartSyncData,
   Category,
-  CheckDeliveryZone,
-  DeliveryLocationResponse,
-  DeliveryZone,
   FAQ,
-  FeaturedSection,
+  HomeLayout,
+  HomeSection,
   KeywordSearch,
   Order,
   OrderCheckoutResponse,
@@ -28,6 +25,7 @@ import {
   Settings,
   SidebarFilters,
   Store,
+  ToggleFavoriteResponse,
   Transaction,
   userData,
   VerifyUserData,
@@ -49,7 +47,6 @@ import {
 } from "@/types/params";
 import {
   fallbackApiRes,
-  fallbackBannerRes,
   fallbackPaginateRes,
   fallbackPaginateResOfProductReviews,
 } from "@/config/constants";
@@ -150,26 +147,6 @@ export const getVersionCheck = async (
   } catch (error: any) {
     console.error("API error:", error);
     return { success: false, message: "An error occurred.", data: null };
-  }
-};
-
-// Banners
-export const getBannerImages = async (params: {
-  position?: "top" | "carousel" | "sidebar";
-  scope_category_slug?: string;
-  per_page?: string | number;
-  page?: string | number;
-  latitude?: string | number;
-  longitude?: string | number;
-}): Promise<PaginatedResponse<BannerData>> => {
-  try {
-    const response = await api.get("/banners", {
-      params: params,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackBannerRes;
   }
 };
 
@@ -421,8 +398,6 @@ export const getCategories = async (
     page?: string | number;
     per_page?: string | number;
     slug?: string;
-    latitude?: string | number;
-    longitude?: string | number;
   } = {},
 ): Promise<PaginatedResponse<Category[]>> => {
   try {
@@ -439,8 +414,6 @@ export const getSubCategories = async (
     page?: string | number;
     per_page?: string | number;
     slug?: string;
-    latitude?: string | number;
-    longitude?: string | number;
     filter?: "random" | "top_category";
   } = {},
 ): Promise<PaginatedResponse<Category[]>> => {
@@ -459,9 +432,6 @@ export const getAddresses = async (
     access_token?: string;
     page?: number;
     per_page?: number;
-    latitude?: string | number;
-    longitude?: string | number;
-    zone_id?: string | number;
   } = {},
 ): Promise<PaginatedResponse<Address[]>> => {
   try {
@@ -529,37 +499,6 @@ export const prepareWalletRecharge = async (params: AddBalanceParams) => {
     // Pass params to the request
     const response = await api.post<ApiResponse<PrepareWalletRechargeResponse>>(
       "/user/wallet/prepare-wallet-recharge",
-      params,
-    );
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
-};
-
-export const addBalance = async (params: AddBalanceParams) => {
-  try {
-    // Pass params to the request
-    const response = await api.post<ApiResponse<object>>(
-      "/user/wallet/add-balance",
-      params,
-    );
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
-};
-
-export const confirmWalletRecharge = async (params: {
-  razorpay_order_id: string;
-  razorpay_payment_id?: string;
-  razorpay_signature?: string;
-}) => {
-  try {
-    const response = await api.post<ApiResponse<object>>(
-      "/user/wallet/confirm-recharge",
       params,
     );
     return response.data;
@@ -672,8 +611,6 @@ export const getBrands = async (
     page?: string | number;
     per_page?: string | number;
     scope_category_slug?: string;
-    latitude?: string | number;
-    longitude?: string | number;
   } = {},
 ): Promise<PaginatedResponse<Brand[]>> => {
   try {
@@ -688,15 +625,13 @@ export const getBrands = async (
 // Stores
 export const getStores = async (
   params: {
-    latitude?: string | number;
-    longitude?: string | number;
     page?: string | number;
     per_page?: string | number;
     search?: string;
   } = {},
 ): Promise<PaginatedResponse<Store[]>> => {
   try {
-    const response = await api.get("/delivery-zone/stores", { params });
+    const response = await api.get("/stores", { params });
     return response.data;
   } catch (error) {
     console.error("API error:", error);
@@ -716,68 +651,6 @@ export const getSpecificStore = async (
   }
 };
 
-export const getStoresByMap = async (params: {
-  ne_lat: number;
-  ne_lng: number;
-  sw_lat: number;
-  sw_lng: number;
-}): Promise<ApiResponse<{ count: number; stores: Store[] }>> => {
-  try {
-    const response = await api.post("/stores/map", params);
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
-};
-
-// Delivery Zone
-export const checkDeliveryZone = async (params: {
-  latitude: string | number;
-  longitude: string | number;
-}): Promise<ApiResponse<CheckDeliveryZone>> => {
-  try {
-    const response = await api.get("/delivery-zone/check", { params });
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return { success: false, message: "An error occurred.", data: undefined };
-  }
-};
-
-export const getDeliveryZones = async (
-  params: {
-    page?: string | number;
-    per_page?: string | number;
-    search?: number | string;
-  } = {},
-): Promise<PaginatedResponse<DeliveryZone[]>> => {
-  try {
-    const response = await api.get("/delivery-zone", { params });
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackPaginateRes;
-  }
-};
-
-export const getDeliveryZoneBySlug = async (
-  params: {
-    slug?: string;
-  } = {},
-): Promise<ApiResponse<DeliveryZone>> => {
-  try {
-    const { slug = "" } = params;
-    const response = await api.get(`/delivery-zone/${slug}`, {
-      params,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
-};
-
 //Products
 export const getProducts = async (
   params: {
@@ -785,8 +658,6 @@ export const getProducts = async (
     slug?: string;
     per_page?: string | number;
     exclude_product?: string;
-    latitude?: number | string;
-    longitude?: number | string;
     access_token?: string | undefined;
     categories?: string;
     brands?: string;
@@ -797,7 +668,10 @@ export const getProducts = async (
   } = {},
 ): Promise<PaginatedResponse<Product[], { keywords: string[] }>> => {
   try {
-    const response = await api.get("/delivery-zone/products", {
+    // Market product listing (full products + variants + keywords).
+    // NOTE: /products/search is a legacy zone autocomplete (no variants) —
+    // the listing/grid must use /markets/products (ProductApiController@index).
+    const response = await api.get("/markets/products", {
       params,
     });
     return response.data;
@@ -814,8 +688,6 @@ export const getProducts = async (
 };
 
 export const getSidebarFilters = async (params: {
-  latitude: string | number;
-  longitude: string | number;
   attribute_values?: string;
   categories?: string;
   brands?: string;
@@ -844,8 +716,6 @@ export const getSidebarFilters = async (params: {
 export const getProductBySlug = async (
   params: {
     slug?: string;
-    latitude?: number | string;
-    longitude?: number | string;
     access_token?: string | undefined;
   } = {},
 ): Promise<ApiResponse<Product>> => {
@@ -864,8 +734,6 @@ export const getProductBySlug = async (
 export const getProductsByKeyword = async (
   params: {
     keywords?: string;
-    latitude?: number | string;
-    longitude?: number | string;
     per_page?: string | number;
   } = {},
 ): Promise<ApiResponse<KeywordSearch>> => {
@@ -1034,48 +902,36 @@ export const updateOrderItemSellerReview = async (
   }
 };
 
-//Sections
-export const getSections = async (
+// Home Layout (replaces featured-sections builder)
+export const getHomeLayout = async (
   params: {
-    latitude?: string | number;
-    longitude?: string | number;
+    category_slug?: string;
     page?: string | number;
     per_page?: string | number;
-    products_limit?: string | number;
-    section_type?: string;
-    access_token?: string | undefined;
-    scope_category_slug?: string;
   } = {},
-): Promise<PaginatedResponse<FeaturedSection[]>> => {
+): Promise<ApiResponse<HomeLayout>> => {
   try {
-    const response = await api.get("/featured-sections", { params });
+    const response = await api.get<ApiResponse<HomeLayout>>("/home-layout", {
+      params,
+    });
     return response.data;
   } catch (error) {
     console.error("API error:", error);
-    return fallbackPaginateRes;
+    return { success: false, message: "An error occurred.", data: null };
   }
 };
 
-export const getSectionBySlug = async (
+export const getHomeLayoutSection = async (
   params: {
+    sectionId: string | number;
     page?: string | number;
-    slug?: string;
     per_page?: string | number;
-    latitude?: number | string;
-    longitude?: number | string;
-    access_token?: string | undefined;
-    categories?: string;
-    brands?: string;
-    colors?: string;
-    sort?: string;
-    search?: string;
-    attribute_values?: string;
-  } = {},
-): Promise<PaginatedResponse<Product[]>> => {
+  },
+): Promise<PaginatedResponse<HomeSection[]>> => {
   try {
-    const { slug = "" } = params;
-    const response = await api.get(`/featured-sections/${slug}/products`, {
-      params,
+    const { sectionId, ...rest } = params;
+    const response = await api.get(`/home-layout/sections/${sectionId}`, {
+      params: rest,
     });
     return response.data;
   } catch (error) {
@@ -1105,10 +961,7 @@ export const getCart = async (
   params: {
     address_id?: string | number;
     promo_code?: string;
-    rush_delivery?: boolean;
     use_wallet?: boolean;
-    latitude?: number | string;
-    longitude?: number | string;
   } = {},
 ): Promise<ApiResponse<CartResponse>> => {
   try {
@@ -1365,7 +1218,6 @@ export const createOrder = async (
         promo_discount?: string;
         gift_card?: string;
         gift_card_discount?: string;
-        rush_delivery?: boolean | string | number;
         use_wallet?: boolean | string | number;
         address_id?: string | number;
         order_note?: string;
@@ -1385,20 +1237,6 @@ export const createOrder = async (
           }
         : undefined,
     });
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
-};
-
-export const getDeliveryBoyLocation = async (
-  orderSlug: string,
-): Promise<ApiResponse<DeliveryLocationResponse>> => {
-  try {
-    const response = await api.get(
-      `/user/orders/${orderSlug}/delivery-boy-location`,
-    );
     return response.data;
   } catch (error) {
     console.error("API error:", error);
@@ -1426,17 +1264,30 @@ export const getWishListWithItems = async (
   }
 };
 
-// Create a new wishlist or add item to the existing / new wishlist
-export const CreateWishListWithItems = async (
-  params: {
-    wishlist_title?: null | string;
-    product_id?: null | number;
-    product_variant_id?: null | number;
-    store_id?: null | number;
-  } = {},
-): Promise<ApiResponse<object>> => {
+// One-tap add/remove of a product in the default "Favorite" wishlist
+export const toggleFavorite = async (params: {
+  product_id: number;
+  product_variant_id?: number | null;
+  store_id: number;
+}): Promise<ApiResponse<ToggleFavoriteResponse>> => {
   try {
-    const response = await api.post("/user/wishlists", params);
+    const response = await api.post("/user/wishlists/toggle", params);
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
+// get the default "Favorite" wishlist with its items
+export const getFavoriteWishlist = async (
+  params: {
+    page?: string | number;
+    per_page?: string | number;
+  } = {},
+): Promise<ApiResponse<Wishlist>> => {
+  try {
+    const response = await api.get("/user/wishlists/favorite", { params });
     return response.data;
   } catch (error) {
     console.error("API error:", error);
@@ -1517,19 +1368,6 @@ export const deleteWishlistById = async (
   }
 };
 
-// Remove item from wishlist
-export const deleteWishlistItemById = async (
-  itemId: string | number,
-): Promise<ApiResponse<object>> => {
-  try {
-    const response = await api.delete(`/user/wishlists/items/${itemId}`);
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
-};
-
 // Move item to another wishlist
 export const moveItemFromAnotherWishList = async (
   params: {
@@ -1565,43 +1403,6 @@ export const getFaqs = async (
   } catch (error) {
     console.error("API error:", error);
     return fallbackPaginateRes;
-  }
-};
-
-//Delivery Boy Review
-export const giveDeliveryBoyReview = async (
-  params: {
-    delivery_boy_id?: string | number;
-    order_id?: string | number;
-    rating?: number;
-    title?: string | number;
-    description?: string;
-  } = {},
-): Promise<ApiResponse<object>> => {
-  try {
-    const response = await api.post("/delivery-boy/feedback", params);
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
-};
-
-export const updateDeliveryBoyReview = async (
-  params: {
-    id?: string | number;
-    rating?: number;
-    title?: string | number;
-    description?: string;
-  } = {},
-): Promise<ApiResponse<object>> => {
-  try {
-    const { id } = params;
-    const response = await api.post(`/delivery-boy/feedback/${id}`, params);
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
   }
 };
 

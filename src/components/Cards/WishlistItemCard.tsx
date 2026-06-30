@@ -9,7 +9,8 @@ interface WishlistItemCardProps {
   key?: string | number;
   item: WishlistItem;
   loading: { removingItem: number | null };
-  handleRemoveItem: (id: number, forceFetch: boolean) => void;
+  handleRemoveItem: (item: WishlistItem, forceFetch: boolean) => void;
+  isFavoriteList: boolean;
   wishlists: WishTitle[];
   fetchWishlistDetails: (id: string, forceFetch?: boolean) => void;
   fetchWishlists: () => void;
@@ -19,6 +20,7 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
   item,
   loading,
   handleRemoveItem,
+  isFavoriteList,
   wishlists,
   fetchWishlistDetails,
   fetchWishlists,
@@ -35,7 +37,7 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
 
     const confirmed = window.confirm(message);
     if (confirmed) {
-      handleRemoveItem(item.id, true);
+      handleRemoveItem(item, true);
     }
   };
 
@@ -79,17 +81,19 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
                 >
                   <ArrowRightLeft className="w-4 h-4" />
                 </Button>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  color="danger"
-                  isLoading={isRemoving}
-                  onPress={confirmRemoveItem}
-                  className="min-w-8 w-8 h-8"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                {isFavoriteList && (
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    color="danger"
+                    isLoading={isRemoving}
+                    onPress={confirmRemoveItem}
+                    className="min-w-8 w-8 h-8"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>

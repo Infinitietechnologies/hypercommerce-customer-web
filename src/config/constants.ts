@@ -38,17 +38,6 @@ export const fallbackApiRes = {
   data: undefined,
 };
 
-export const fallbackBannerRes = {
-  success: false,
-  message: "An error occurred.",
-  data: {
-    current_page: 0,
-    data: { top: [], carousel: [], sidebar: [] },
-    per_page: 0,
-    total: 0,
-  },
-};
-
 export const orderStatusColorMap = (
   status: OrderStatus | undefined
 ): "default" | "primary" | "secondary" | "success" | "warning" | "danger" => {

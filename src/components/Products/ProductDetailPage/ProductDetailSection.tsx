@@ -4,7 +4,6 @@ import {
   MoveRight,
   ShoppingBag,
   Star,
-  Store,
   Users,
   Share2,
 } from "lucide-react";
@@ -73,7 +72,6 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   } = initialProduct;
 
   const { currencySymbol } = useSettings();
-  const isStoreOpen = initialProduct?.store_status?.is_open;
   const isOutOfStock = selectedVariant
     ? !selectedVariant.availability || selectedVariant.stock <= 0
     : false;
@@ -210,27 +208,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
           radius="full"
           onPress={() => {
             const baseUrl = window.location.origin;
-            const cookieLoc = document.cookie
-              .split("; ")
-              .find((row) => row.startsWith("userLocation="));
-            const userLocStr = cookieLoc
-              ? decodeURIComponent(cookieLoc.split("=")[1])
-              : null;
-            let lat = "";
-            let lng = "";
-            if (userLocStr) {
-              try {
-                const parsed = JSON.parse(userLocStr);
-                lat = parsed.lat || "";
-                lng = parsed.lng || "";
-              } catch (e) {
-                console.error("Failed to parse user location from cookie:", e);
-              }
-            }
-            let shareUrl = `${baseUrl}/share/products/${initialProduct.slug}`;
-            if (lat && lng) {
-              shareUrl += `?lat=${lat}&lng=${lng}`;
-            }
+            const shareUrl = `${baseUrl}/share/products/${initialProduct.slug}`;
 
             if (navigator.share) {
               navigator
@@ -465,33 +443,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
           </div>
         </div>
 
-        {!isStoreOpen ? (
-          <div className="max-w-md shadow-sm rounded-lg p-4">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-full">
-                <Store className="w-6 h-6 text-orange-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold mb-1">
-                  {t("store_currently_closed")}
-                </h3>
-                <p className="text-foreground/50 text-xs mb-3">
-                  {t("store_closed_message")}
-                </p>
-                {initialProduct?.store_status?.next_opening_time && (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm max-w-fit text-foreground/80">
-                    <Clock className="w-4 h-4 text-orange-600" />
-                    <span className="text-xs font-medium ">
-                      {t("opens_at", {
-                        time: initialProduct.store_status.next_opening_time,
-                      })}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : isOutOfStock ? (
+        {isOutOfStock ? (
           <Card
             shadow="none"
             className="max-w-md border p-3 border-gray-100 dark:border-default-100"

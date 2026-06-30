@@ -38,7 +38,6 @@ const SubcategoryTabsMobile: React.FC<Props> = ({
     fetcher: getCategories,
     perPage: PER_PAGE,
     extraParams: { slug: parentSlug, scope_category_slug: parentSlug },
-    passLocation: true,
     dataKey: `subcategories-mobile-${parentSlug}`,
     forceFetchOnMount: true,
   });

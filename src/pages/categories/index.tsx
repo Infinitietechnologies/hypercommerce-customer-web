@@ -22,7 +22,6 @@ import {
 } from "@/helpers/seo";
 import { Button } from "@heroui/react";
 import { useRouter } from "next/router";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 
 interface CategoriesPageProps {
   initialCategories: PaginatedResponse<Category[]> | null;
@@ -50,7 +49,6 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
     perPage: PER_PAGE,
     initialData: initialCategories?.data?.data || [],
     initialTotal: initialCategories?.data?.total || 0,
-    passLocation: true,
     dataKey: "categories-page",
     extraParams: {
       slug: router.query.slug as string,
@@ -167,21 +165,13 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
-        let categories = null;
-
         const slug = context.query.slug as string | undefined;
 
-        if (lat && lng) {
-          categories = await getCategories({
-            page: 1,
-            per_page: PER_PAGE,
-            latitude: lat,
-            longitude: lng,
-            slug: slug,
-          });
-        }
+        const categories = await getCategories({
+          page: 1,
+          per_page: PER_PAGE,
+          slug: slug,
+        });
         const settings = await getSettings();
         await loadTranslations(context);
 

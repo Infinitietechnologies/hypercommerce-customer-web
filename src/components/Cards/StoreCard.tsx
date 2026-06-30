@@ -15,14 +15,16 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
   const rating = parseFloat(store.avg_store_rating).toFixed(1) || 0;
   const lat = store.latitude;
   const lng = store.longitude;
+  const isOpen = store.status?.is_open ?? true;
+  const statusValue = store.status?.status;
   const getStatusColor = () => {
-    if (!store.status.is_open) return "danger";
-    return store.status.status === "online" ? "success" : "default";
+    if (!isOpen) return "danger";
+    return statusValue === "online" ? "success" : "default";
   };
 
   const getStatusText = () => {
-    if (!store.status.is_open) return "Closed";
-    return store.status.status === "online" ? "Open Now" : "Offline";
+    if (!isOpen) return "Closed";
+    return statusValue === "online" ? "Open Now" : "Offline";
   };
 
   return (
@@ -33,7 +35,7 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
         isHoverable
         as={"div"}
         disableRipple
-        isDisabled={!store.status.is_open}
+        isDisabled={!isOpen}
         isPressable={false}
       >
         <CardBody className="p-0">
@@ -61,7 +63,7 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
               />
 
               <span
-                className={`absolute top-2 left-16 w-3.5 h-3.5 ${store.status.is_open ? "bg-green-400" : "bg-red-400"}  border-2 border-white rounded-full z-30`}
+                className={`absolute top-2 left-16 w-3.5 h-3.5 ${isOpen ? "bg-green-400" : "bg-red-400"}  border-2 border-white rounded-full z-30`}
               ></span>
 
               {store.is_recommended && (
@@ -80,7 +82,7 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
                 </div>
               )}
             </div>
-            {!store.status.is_open ? (
+            {!isOpen ? (
               <div className="w-full flex justify-end mt-1">
                 <Chip
                   size="sm"

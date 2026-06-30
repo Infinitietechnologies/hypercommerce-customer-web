@@ -547,6 +547,12 @@ export interface FavoriteItem {
   store_name: string;
 }
 
+export interface ToggleFavoriteResponse {
+  is_favorited: boolean;
+  item_id: number | null;
+  items_count: number;
+}
+
 export interface ProductReviews {
   total_reviews: number;
   average_rating: string;
@@ -667,9 +673,8 @@ export interface Order {
   gift_card: string | null;
   gift_card_discount: string;
   delivery_charge: string | number;
-  handling_charges: string | number;
-  per_store_drop_off_fee: string | number;
-  delivery_distance_charges: string | number;
+  platform_fee: string | number;
+  cod_fee: string | number;
 
   subtotal: string;
   total_payable: string;
@@ -994,6 +999,64 @@ export interface FeaturedSection {
   updated_at: string;
 }
 
+// Home Layout (replaces featured-sections builder)
+export type HomeSectionType =
+  | "hero"
+  | "banners"
+  | "products"
+  | "categories"
+  | "brands";
+
+export interface HomeSectionItem {
+  id: number;
+  title?: string;
+  image: string;
+  default_image?: string;
+  type?: string;
+  link_type?: string;
+  link_url?: string;
+  target_id: number | string | null;
+  slug: string;
+}
+
+// Hero items use `type`; banner items use `link_type` (+ optional link_url).
+// Both share the common image/slug fields of HomeSectionItem.
+export interface HomeHeroItem extends HomeSectionItem {
+  type?: string;
+}
+
+export interface HomeBannerItem extends HomeSectionItem {
+  link_type?: string;
+  link_url?: string;
+}
+
+export interface HomeSection {
+  id: number;
+  type: HomeSectionType;
+  title: string;
+  style: string | null;
+  config: Record<string, unknown> | null;
+  background_image: string | null;
+  hero_media: string | null;
+  card_background_image: string | null;
+  content: {
+    products?: Product[];
+    categories?: Category[];
+    brands?: Brand[];
+    items?: HomeSectionItem[];
+  };
+}
+
+export interface HomeLayout {
+  scope_type: string;
+  scope_id: number | null;
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  sections: HomeSection[];
+}
+
 // Cart API Type
 
 export interface CartApiResponse {
@@ -1116,26 +1179,66 @@ export interface CartItem {
   updated_at: string;
 }
 
+export interface SellerShippingItem {
+  cart_item_id: number;
+  product_name: string;
+  is_fulfillable: boolean;
+  unfulfillable_reason: string | null;
+  shipping_rate: number | null;
+  location_id: number | null;
+  location_name: string | null;
+  shipping_zone_id: number | null;
+}
+
+export interface SellerShippingCost {
+  store_id: number;
+  store_name: string;
+  shipping_cost: number | null;
+  is_fulfillable: boolean;
+  items: SellerShippingItem[];
+}
+
+export interface PendingCharge {
+  id: number;
+  amount: number;
+  reason: string;
+  reason_note: string | null;
+  seller_order_id: number | null;
+}
+
+export interface TaxBreakdownLine {
+  tax_rate_id: number;
+  title: string;
+  rate: number;
+  amount: number;
+}
+
 export interface PaymentSummary {
   items_total: number;
-  per_store_drop_off_fee: number;
-  is_rush_delivery: boolean;
-  is_rush_delivery_available: boolean;
+  total_saving: number;
+  cod_available: boolean;
+  platform_fee: number;
+  cod_fee: number;
+  additional_charges_total: number;
   delivery_charges: number;
-  handling_charges: number;
-  delivery_distance_charges: number;
-  delivery_distance_km: number;
-  total_stores: number;
-  total_delivery_charges: number;
-  estimated_delivery_time: number;
   use_wallet: boolean;
-  wallet_balance: number;
-  wallet_amount_used: number;
-  payable_amount: number;
   promo_code: string;
   promo_discount: number;
   promo_applied: PromoCode | [];
   promo_error: string | null;
+  wallet_balance: number;
+  wallet_amount_used: number;
+  payable_amount: number;
+  order_total: number;
+  seller_shipping_costs: SellerShippingCost[];
+  pending_charges: PendingCharge[];
+  pending_charges_total: number;
+  tax_breakdown: TaxBreakdownLine[];
+  tax_total: number;
+  minimum_cart_amount: number;
+  currency_code: string;
+  currency_symbol: string;
+  format?: Record<string, unknown>;
 }
 
 export interface Wishlist {
@@ -1180,74 +1283,6 @@ export interface WishTitle {
   items_count: number;
   created_at: string;
 }
-
-// sssssssssssssssss
-
-export interface DeliveryLocationResponse {
-  delivery_boy: DeliveryBoyLocation;
-  route: RouteDetails;
-  order: Order;
-}
-
-/* ---------- DELIVERY BOY SECTION ---------- */
-export interface DeliveryBoyLocation {
-  success: boolean;
-  message: string;
-  data: DeliveryLocationData;
-}
-
-export interface DeliveryLocationData {
-  id: number;
-  delivery_boy_id: number;
-  delivery_boy: DeliveryBoy;
-  latitude: string;
-  longitude: string;
-  recorded_at: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DeliveryBoy {
-  id: number;
-  user_id: number;
-  delivery_zone_id: number;
-  status: string;
-  full_name: string;
-  address: string;
-  driver_license: string[];
-  driver_license_number: string;
-  vehicle_type: string;
-  vehicle_registration: string[];
-  verification_status: string;
-  verification_remark: string | null;
-  created_at: string;
-}
-
-/* ---------- ROUTE SECTION ---------- */
-export interface RouteDetails {
-  total_distance: number;
-  route: number[];
-  route_details: RouteStoreDetails[];
-}
-
-export interface RouteStoreDetails {
-  store_id: number | null;
-  store_name: string;
-  distance_from_customer?: number;
-  distance_from_previous?: number;
-  address: string;
-  city: string;
-  landmark: string;
-  state: string;
-  zipcode: string | null;
-  country: string;
-  country_code: string;
-  latitude: number;
-  longitude: number;
-  is_collected: boolean;
-}
-
-// sssssssssssssssss
 
 // FAQs
 export interface FAQ {
@@ -1468,7 +1503,7 @@ export interface Store {
   lat?: string | number;
   lng?: string | number;
   enabled?: boolean;
-  status: {
+  status?: {
     is_open: boolean;
     status: string;
   };
@@ -1503,12 +1538,6 @@ export interface Banner {
   product_slug?: string;
   custom_url?: string;
   metadata?: SEOMetadata | string | null;
-}
-
-export interface CheckDeliveryZone {
-  is_available: boolean;
-  is_deliverable: boolean;
-  zone?: DeliveryZone;
 }
 
 export interface ReferralInfo {

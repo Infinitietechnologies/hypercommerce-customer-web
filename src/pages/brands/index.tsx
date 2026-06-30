@@ -18,7 +18,6 @@ import {
   generateCollectionSchema,
   generateBreadcrumbSchema,
 } from "@/helpers/seo";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 import { useRouter } from "next/router";
 
 interface BrandsPageProps {
@@ -43,7 +42,6 @@ const BrandsPage: NextPageWithLayout<BrandsPageProps> = ({ initialBrands }) => {
     perPage: PER_PAGE,
     initialData: initialBrands?.data?.data || [],
     initialTotal: initialBrands?.data?.total || 0,
-    passLocation: true,
     dataKey: "brands-page",
     extraParams: {
       scope_category_slug: router.query.slug as string,
@@ -136,21 +134,13 @@ const BrandsPage: NextPageWithLayout<BrandsPageProps> = ({ initialBrands }) => {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
-        let brands = null;
-
         const slug = context.query.slug as string | undefined;
 
-        if (lat && lng) {
-          brands = await getBrands({
-            page: 1,
-            per_page: PER_PAGE,
-            latitude: lat,
-            longitude: lng,
-            scope_category_slug: slug,
-          });
-        }
+        const brands = await getBrands({
+          page: 1,
+          per_page: PER_PAGE,
+          scope_category_slug: slug,
+        });
         const settings = await getSettings();
         await loadTranslations(context);
 

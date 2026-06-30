@@ -73,23 +73,27 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
             </span>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {t("handlingCharges")}
-            </span>
-            <span className="text-sm text-gray-900 dark:text-gray-100">
-              {formatCurrency(order.handling_charges.toString())}
-            </span>
-          </div>
+          {Number(order.platform_fee) > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {t("checkout.platformFee", { defaultValue: "Platform fee" })}
+              </span>
+              <span className="text-sm text-gray-900 dark:text-gray-100">
+                {formatCurrency(order.platform_fee.toString())}
+              </span>
+            </div>
+          )}
 
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {t("dropOffFee")}
-            </span>
-            <span className="text-sm text-gray-900 dark:text-gray-100">
-              {formatCurrency(order.per_store_drop_off_fee.toString())}
-            </span>
-          </div>
+          {Number(order.cod_fee) > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {t("checkout.codFee", { defaultValue: "COD fee" })}
+              </span>
+              <span className="text-sm text-gray-900 dark:text-gray-100">
+                {formatCurrency(order.cod_fee.toString())}
+              </span>
+            </div>
+          )}
         </div>
         {order.promo_line && <Divider className="my-3" />}
 

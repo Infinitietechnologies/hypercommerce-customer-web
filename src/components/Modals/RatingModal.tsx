@@ -15,8 +15,6 @@ import {
   Image,
 } from "@heroui/react";
 import {
-  giveDeliveryBoyReview,
-  updateDeliveryBoyReview,
   giveProductReview,
   updateProductReview,
   giveOrderItemSellerReview,
@@ -32,8 +30,7 @@ interface RatingModalProps {
   productId?: string | number;
   orderItemId?: string | number;
   onSuccess?: () => void;
-  type?: "delivery" | "product" | "seller";
-  deliveryBoyId?: string | number;
+  type?: "product" | "seller";
   orderId?: string | number;
   sellerId?: string | number;
   // optional seller name to show when rating a seller
@@ -68,7 +65,6 @@ const RatingModal: React.FC<RatingModalProps> = ({
   productId,
   onSuccess,
   type = "product",
-  deliveryBoyId,
   orderId,
   sellerId,
   sellerName,
@@ -270,25 +266,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
     setIsSubmitting(true);
     try {
       let response;
-      if (type === "delivery") {
-        // create vs update for delivery review
-        if (existingReview && existingReview.id) {
-          response = await updateDeliveryBoyReview({
-            id: existingReview.id,
-            rating,
-            title: title.trim(),
-            description: comment.trim(),
-          });
-        } else {
-          response = await giveDeliveryBoyReview({
-            order_id: orderId,
-            rating,
-            title: title.trim(),
-            description: comment.trim(),
-            delivery_boy_id: deliveryBoyId,
-          });
-        }
-      } else if (type === "seller") {
+      if (type === "seller") {
         // seller review
         if (existingReview && existingReview.id) {
           response = await updateOrderItemSellerReview({

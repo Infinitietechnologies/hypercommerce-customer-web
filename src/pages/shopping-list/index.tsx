@@ -53,13 +53,9 @@ const fetchProductsByKeywords = async (keywordString: string) => {
   if (!keywordString) {
     return [] as KeywordSearch[];
   }
-  const location = getCookie<UserLocation>("userLocation");
-  const { lat = "", lng = "" } = location || {};
 
   const response = await getProductsByKeyword({
     keywords: keywordString,
-    latitude: lat,
-    longitude: lng,
     per_page: PRODUCTS_PER_KEYWORD,
   });
 

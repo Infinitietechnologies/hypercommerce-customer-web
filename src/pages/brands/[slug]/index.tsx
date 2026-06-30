@@ -19,7 +19,6 @@ import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import { useRouter } from "next/router";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 import NoProductsFound from "@/components/NoProductsFound";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import { loadTranslations } from "../../../../i18n";
@@ -144,7 +143,6 @@ const BrandProductsPage: NextPageWithLayout<BrandProductsPageProps> = ({
     perPage: PER_PAGE,
     initialData: initialProducts?.data?.data || [],
     initialTotal: initialProducts?.data?.total || 0,
-    passLocation: true,
     dataKey: `/brands/${slug}`,
     extraParams: {
       categories:
@@ -392,8 +390,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
       try {
         const { slug } = context.params || {};
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
         await loadTranslations(context);
 
         if (!slug || Array.isArray(slug)) {
@@ -409,8 +405,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           per_page: PER_PAGE,
           brands: slug,
           access_token,
-          latitude: lat,
-          longitude: lng,
           include_child_categories: 0,
         };
 
@@ -435,7 +429,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const settings = await getSettings();
 
         // Fetch brand details for SEO
-        const brandsRes = await getBrands({ latitude: lat, longitude: lng });
+        const brandsRes = await getBrands();
         const initialBrand = brandsRes?.data?.data?.find(b => b.slug === slug) || null;
 
         return {

@@ -20,7 +20,6 @@ import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import { useRouter } from "next/router";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 import NoProductsFound from "@/components/NoProductsFound";
 import { ArrowRight, Package } from "lucide-react";
 import { loadTranslations } from "../../../../i18n";
@@ -155,7 +154,6 @@ const CategoryProductsPage: NextPageWithLayout<CategoryProductsPageProps> = ({
     perPage: PER_PAGE,
     initialData: initialProducts?.data?.data || [],
     initialTotal: initialProducts?.data?.total || 0,
-    passLocation: true,
     dataKey: `/categories/${slug}${selectedSubcategory ? `/${selectedSubcategory}` : ""}`,
     extraParams: {
       brands:
@@ -461,8 +459,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const { slug } = context.params || {};
         await loadTranslations(context);
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
 
         if (!slug || Array.isArray(slug)) {
           return {
@@ -479,8 +475,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           per_page: PER_PAGE,
           categories: subcategory || slug,
           access_token,
-          latitude: lat,
-          longitude: lng,
           include_child_categories: 1,
         };
 

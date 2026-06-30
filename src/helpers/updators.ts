@@ -9,8 +9,6 @@ import { getCart, syncOfflineCart } from "@/routes/api";
 import { ApiResponse, CartResponse, CartSyncData } from "@/types/ApiResponse";
 import { addToast } from "@heroui/react";
 import i18n from "../../i18n";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { resetCheckOutState } from "./functionalHelpers";
 import { clearOfflineCart } from "@/lib/redux/slices/offlineCartSlice";
 
@@ -18,7 +16,9 @@ export const updateCartData = async (
   passAddress: boolean = true,
   renderToast: boolean = true,
   customAddress: string | number = 0,
-  customRushMode: boolean = true,
+  // Retained for call-site compatibility; rush/express delivery is removed.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _customRushMode: boolean = true,
   emtyCartToast: boolean = true
 ): Promise<ApiResponse<CartResponse> | undefined> => {
   try {
@@ -31,50 +31,20 @@ export const updateCartData = async (
       return;
     }
 
-    const { lat = "", lng = "" } =
-      (getCookie("userLocation") as UserLocation) || {};
-
     store.dispatch(setCartLoading(true));
     const state = store.getState();
     const use_wallet = state?.checkout?.useWallet || false;
-    const rush_delivery = customRushMode
-      ? state?.checkout?.rushDelivery || false
-      : false;
     const promo_code = state?.checkout?.promoCode || "";
     const cartRes: ApiResponse<CartResponse> = await getCart({
       address_id: customAddress ? customAddress : passAddress ? address_id : "",
       use_wallet,
-      rush_delivery,
       promo_code,
-      latitude: lat,
-      longitude: lng,
     });
-
-    const rushCheck = customAddress || address_id;
 
     if (cartRes.success && cartRes.data) {
       store.dispatch(setCartData(cartRes.data));
       if (cartRes?.data?.removed_count && cartRes.data.removed_count > 0) {
         document.getElementById("removed-items-modal-open")?.click();
-      }
-      if (cartRes?.data?.payment_summary?.is_rush_delivery_available) {
-        document.getElementById("rush-delivery-available")?.click();
-      }
-      if (
-        !cartRes?.data?.payment_summary?.is_rush_delivery_available &&
-        rush_delivery &&
-        rushCheck
-      ) {
-        if (customAddress) {
-          document.getElementById("rush-delivery-off")?.click();
-        }
-
-        if (renderToast) {
-          addToast({
-            title: i18n.t("rushDeliveryUnavailable"),
-            color: "danger",
-          });
-        }
       }
     } else if (!cartRes.success && cartRes.message == "Your cart is empty") {
       store.dispatch(clearCart());

@@ -10,8 +10,6 @@ import { loadTranslations } from "../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { setRusDelivery } from "@/lib/redux/slices/checkoutSlice";
 
 const CartPageView = dynamic(() => import("@/views/CartPageView"), {
   ssr: false,
@@ -23,11 +21,9 @@ interface CartPageProps {
 
 const CartPage: NextPageWithLayout<CartPageProps> = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(setRusDelivery(false));
     updateCartData(false, false, 0, false);
-  }, [dispatch]);
+  }, []);
 
   return (
     <>

@@ -4,12 +4,9 @@ import { Swiper, SwiperSlide } from "swiper/react";
 
 import { Autoplay } from "swiper/modules";
 import { Card, Image, Skeleton } from "@heroui/react";
-import { getBannerImages } from "@/routes/api";
-import { getActiveCategory, isSSR } from "@/helpers/getters";
+import { isSSR } from "@/helpers/getters";
 import { BannerData } from "@/types/ApiResponse";
 import Link from "next/link";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { useScreenType } from "@/hooks/useScreenType";
 import { useTranslation } from "react-i18next";
 import { isRTL } from "@/helpers/functionalHelpers";
@@ -18,31 +15,9 @@ type HomeTopSliderProps = {
   initialBanners?: BannerData;
 };
 
-// Fetcher function for SWR
-const fetcher = async () => {
-  const scopeCategorySlug = getActiveCategory();
-
-  const location = getCookie("userLocation") as UserLocation | undefined;
-  const { lat = "", lng = "" } = location || {};
-
-  if (!lat || !lng) {
-    return { top: [], carousel: [] };
-  }
-
-  const response = await getBannerImages({
-    scope_category_slug: scopeCategorySlug,
-    per_page: 50,
-    latitude: lat,
-    longitude: lng,
-  });
-
-  if (!response.success || !response.data) {
-    console.error(response.message || "Failed to fetch banner images");
-  }
-
-  return response.data?.data ?? { top: [], carousel: [] };
-};
-
+// NOTE: The /banners endpoint was removed. Banners will be re-added via the
+// /home-layout builder in a later task. For now this component reads only its
+// initial props (empty by default) and performs no banner fetch.
 const HomeTopSlider: FC<HomeTopSliderProps> = ({
   initialBanners = { top: [], carousel: [] },
 }) => {
@@ -56,10 +31,10 @@ const HomeTopSlider: FC<HomeTopSliderProps> = ({
     isLoading,
     isValidating,
     mutate,
-  } = useSWR("/banners", fetcher, {
+  } = useSWR<BannerData>("/banners", null, {
     fallbackData: isSSR() ? initialBanners : undefined,
     revalidateOnFocus: false,
-    revalidateOnMount: !isSSR(),
+    revalidateOnMount: false,
   });
 
   if (isLoading || !bannerImages || isValidating) {

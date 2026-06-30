@@ -10,8 +10,6 @@ import { getProductBySlug, getProducts } from "@/routes/api";
 import useSWR from "swr";
 import { fetchProductDetailPageData } from "@/services/ProductDetailPageService";
 import { useRouter } from "next/router";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { useTranslation } from "react-i18next";
 import NoProductsFound from "@/components/NoProductsFound";
 import { Button } from "@heroui/react";
@@ -24,7 +22,6 @@ import {
 import { useEffect } from "react";
 import { addRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { useDispatch } from "react-redux";
-import { getUserLocationFromContext } from "@/helpers/functionalHelpers";
 import { loadTranslations } from "../../../../i18n";
 
 export interface ProductPageProps {
@@ -39,11 +36,8 @@ const PER_PAGE = 20;
 
 // SWR fetcher for client
 const fetcher = async (slug: string) => {
-  const { lat = "", lng = "" } = getCookie("userLocation") as UserLocation;
   const res = await getProductBySlug({
     slug,
-    latitude: lat,
-    longitude: lng,
   });
   if (!res.success || !res.data) {
     console.error(res.message || "Failed to fetch product");
@@ -53,13 +47,9 @@ const fetcher = async (slug: string) => {
 
 // SWR fetcher for similar products
 const similarProductsFetcher = async (slug: string) => {
-  const { lat = "", lng = "" } = getCookie("userLocation") as UserLocation;
-
   const res = await getProducts({
     exclude_product: slug,
     per_page: PER_PAGE,
-    latitude: lat,
-    longitude: lng,
     include_child_categories: 0,
   });
 
@@ -91,7 +81,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
     {
       fallbackData: isSSR() ? initialProduct : undefined,
       revalidateOnFocus: false,
-      revalidateOnMount: !isSSR() && (!!getCookie("userLocation") || !!initialProduct),
+      revalidateOnMount: !isSSR(),
     },
   );
 
@@ -105,7 +95,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
     {
       fallbackData: isSSR() ? initialSimilarProducts : undefined,
       revalidateOnFocus: false,
-      revalidateOnMount: !isSSR() && (!!getCookie("userLocation") || !!initialSimilarProducts),
+      revalidateOnMount: !isSSR(),
     },
   );
 
@@ -293,9 +283,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const access_token =
           (await getAccessTokenFromContext(context)) || "";
 
-        const { lat = "", lng = "" } =
-          (await getUserLocationFromContext(context)) || {};
-
         await loadTranslations(context);
 
         const slug = getSlugFromContext(context);
@@ -306,8 +293,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const data = await fetchProductDetailPageData({
           slug,
           access_token,
-          lat,
-          lng,
         });
 
         console.log(

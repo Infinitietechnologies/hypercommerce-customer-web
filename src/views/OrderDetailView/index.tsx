@@ -41,11 +41,6 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
   const { t } = useTranslation();
   const router = useRouter();
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const {
-    isOpen: isDeliveryRatingOpen,
-    onClose: onDeliveryRatingClose,
-    onOpen: onDeliveryRatingOpen,
-  } = useDisclosure();
 
   const {
     isOpen: isOpenProductReview,
@@ -265,31 +260,8 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               <PaymentInfo order={order} />
 
               {/* Delivery Information */}
-              <DeliveryInfo
-                order={order}
-                onDeliveryRatingOpen={onDeliveryRatingOpen}
-              />
+              <DeliveryInfo order={order} />
             </div>
-
-            {buttonConfig.review && order.delivery_boy_id && (
-              <RatingModal
-                isOpen={isDeliveryRatingOpen}
-                onClose={onDeliveryRatingClose}
-                deliveryBoyId={order.delivery_boy_id}
-                orderId={order.id}
-                type="delivery"
-                existingReview={
-                  order.is_delivery_feedback_given && order.delivery_feedback
-                    ? {
-                        id: (order as any)?.delivery_feedback?.id,
-                        rating: order.delivery_feedback.rating,
-                        title: order.delivery_feedback.title,
-                        comment: order.delivery_feedback.description,
-                      }
-                    : null
-                }
-              />
-            )}
           </div>
         </div>
         {buttonConfig.trackOrder && (

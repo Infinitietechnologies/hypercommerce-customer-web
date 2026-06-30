@@ -6,13 +6,10 @@ import { Navigation } from "swiper/modules";
 
 import ProductCard from "@/components/Cards/ProductCard";
 import ProductCardSkeleton from "@/components/Skeletons/ProductCardSkeleton";
-import { getActiveCategory, isSSR } from "@/helpers/getters";
+import { isSSR } from "@/helpers/getters";
 import SectionHeading from "@/components/SectionHeading";
 import { Boxes } from "lucide-react";
-import { getSections } from "@/routes/api";
 import { FeaturedSection } from "@/types/ApiResponse";
-import { getCookie } from "@/lib/cookies";
-import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import Link from "next/link";
 import { useScreenType } from "@/hooks/useScreenType";
 import { isRTL } from "@/helpers/functionalHelpers";
@@ -22,29 +19,9 @@ interface HomeFeaturedSectionsProps {
   initialSections?: FeaturedSection[];
 }
 
-const fetcher = async () => {
-  const location = getCookie("userLocation") as UserLocation | undefined;
-  const { lat = "", lng = "" } = location || {};
-
-  if (!lat || !lng) {
-    return [];
-  }
-
-  const validSlug = getActiveCategory();
-
-  const response = await getSections({
-    latitude: lat,
-    longitude: lng,
-    scope_category_slug: validSlug,
-  });
-
-  if (!response.success || !response.data) {
-    console.error(response.message || "Failed to fetch featured sections");
-  }
-
-  return response.data?.data ?? [];
-};
-
+// NOTE: The /featured-sections endpoint was removed (replaced by /home-layout).
+// This component no longer fetches; it renders only its initial props (empty by
+// default) until home-layout-driven sections are wired up in a later task.
 const HomeFeaturedSections: FC<HomeFeaturedSectionsProps> = ({
   initialSections = [],
 }) => {
@@ -55,10 +32,10 @@ const HomeFeaturedSections: FC<HomeFeaturedSectionsProps> = ({
     data: sections = [],
     isLoading,
     mutate,
-  } = useSWR("/featured-sections", fetcher, {
+  } = useSWR<FeaturedSection[]>("/featured-sections", null, {
     fallbackData: isSSR() ? initialSections : undefined,
     revalidateOnFocus: false,
-    revalidateOnMount: !isSSR(),
+    revalidateOnMount: false,
   });
   const shouldHide = sections?.length === 0;
 

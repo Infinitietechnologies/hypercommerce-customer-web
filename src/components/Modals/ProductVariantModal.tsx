@@ -982,27 +982,21 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                   </Button>
                                 </div>
                               </div>
-                              {product.store_status.is_open ? (
-                                <Button
-                                  color="primary"
-                                  size="sm"
-                                  onPress={() => handleAddToCartFn(v, qty)}
-                                  isDisabled={v.stock === 0}
-                                  isLoading={loadingVariantId === v.id}
-                                  className="text-xs px-2 sm:px-4"
-                                >
-                                  {v.stock === 0
-                                    ? t("product_modal.out_of_stock")
-                                    : `${t("product_modal.add_to_cart_title")} • ${
-                                        currencySymbol +
-                                        (price * qty).toFixed(2)
-                                      }`}
-                                </Button>
-                              ) : (
-                                <span className="text-orange-500 font-medium text-xs">
-                                  {t("store_closed")}
-                                </span>
-                              )}
+                              <Button
+                                color="primary"
+                                size="sm"
+                                onPress={() => handleAddToCartFn(v, qty)}
+                                isDisabled={v.stock === 0}
+                                isLoading={loadingVariantId === v.id}
+                                className="text-xs px-2 sm:px-4"
+                              >
+                                {v.stock === 0
+                                  ? t("product_modal.out_of_stock")
+                                  : `${t("product_modal.add_to_cart_title")} • ${
+                                      currencySymbol +
+                                      (price * qty).toFixed(2)
+                                    }`}
+                              </Button>
                             </div>
                           ) : null}
                         </div>

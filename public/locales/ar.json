@@ -69,7 +69,6 @@
   "all_products": "كل المنتجات",
   "all_statuses": "كل الحالات",
   "all_types": "كل الأنواع",
-  "already_in_list": "موجود بالفعل في القائمة",
   "amount": "المبلغ",
   "amount_max_limit": "لا يمكن أن يتجاوز المبلغ 1,000,000 دولار",
   "amount_positive_number": "يجب أن يكون المبلغ رقمًا موجبًا",
@@ -1694,11 +1693,7 @@
       "create": "إنشاء",
       "creating": "جارٍ الإنشاء..."
     },
-    "confirm_delete_wishlist": "هل أنت متأكد أنك تريد حذف قائمة الأمنيات هذه؟",
-    "confirm_remove_item": "هل أنت متأكد أنك تريد إزالة هذا العنصر من قائمة الأمنيات؟",
     "createNew": "إنشاء قائمة أمنيات جديدة",
-    "create_first_wishlist": "أنشئ قائمة الأمنيات الأولى أعلاه",
-    "create_new_wishlist": "إنشاء قائمة أمنيات جديدة",
     "delete_wishlist": "حذف قائمة الأمنيات",
     "edit_wishlist_error": "الاسم مطلوب",
     "edit_wishlist_label": "اسم قائمة الأمنيات",
@@ -1708,27 +1703,17 @@
       "description": "اختر قائمة أمنيات من الشريط الجانبي لعرض منتجاتها",
       "title": "اختر قائمة أمنيات"
     },
-    "enter_wishlist_name": "أدخل اسم قائمة الأمنيات...",
     "error": {
       "failed": "فشل إنشاء قائمة الأمنيات",
       "required": "يرجى إدخال اسم قائمة الأمنيات"
     },
-    "failed_add_to_wishlist": "فشل في الإضافة إلى قائمة الأمنيات",
-    "failed_create_wishlist": "فشل في إنشاء قائمة الأمنيات",
-    "failed_delete_wishlist": "فشل في حذف قائمة الأمنيات",
-    "failed_fetch_wishlists": "فشل في جلب قوائم الأمنيات",
-    "failed_remove_item": "فشل في إزالة العنصر من قائمة الأمنيات",
     "inputPlaceholder": "أدخل اسم قائمة الأمنيات...",
-    "loading_wishlists": "جارٍ تحميل قوائم الأمنيات...",
     "modalTitle": "حفظ في قائمة الأمنيات",
     "move_modal_title": "نقل إلى قائمة أمنيات أخرى",
     "no_other_wishlists": "لا توجد قوائم أمنيات أخرى متاحة.",
-    "no_wishlists_found": "لم يتم العثور على قوائم أمنيات",
-    "save_to_wishlist": "حفظ في قائمة الأمنيات",
     "select_wishlist": "اختر قائمة الأمنيات",
     "select_wishlist_label": "اختر قائمة الأمنيات",
     "select_wishlist_placeholder": "اختر القائمة",
-    "selected_wishlist_not_found": "قائمة الأمنيات المحددة غير موجودة",
     "wishlist_removeConfirmation": "هل أنت متأكد أنك تريد إزالة \"{{product}}\" من قائمة الأمنيات الخاصة بك؟"
   },
   "cookieConsent": {
