@@ -140,6 +140,20 @@ const ProductFilter: FC<ProductFilterProps> = ({
     fetchSidebarFilters(pendingFilters);
   }, [pendingFilters, fetchSidebarFilters]);
 
+  // Keep the latest pending filters reachable from the imperative refetch below.
+  const pendingFiltersRef = useRef(pendingFilters);
+  useEffect(() => {
+    pendingFiltersRef.current = pendingFilters;
+  }, [pendingFilters]);
+
+  // Sidebar filter counts / enabled flags are market-scoped, but the filter key
+  // doesn't change on a market switch — so bust the dedupe guard and refetch.
+  // Triggered by `onLocationChange` clicking the hidden button below.
+  const handleSidebarRefetch = useCallback(() => {
+    lastFetchedRef.current = "";
+    fetchSidebarFilters(pendingFiltersRef.current);
+  }, [fetchSidebarFilters]);
+
   // Prune pending filters if they become disabled in the new sidebar data
   useEffect(() => {
     if (!sidebarData) return;
@@ -295,6 +309,16 @@ const ProductFilter: FC<ProductFilterProps> = ({
 
   return (
     <>
+      {/* Hidden hook for market/location change — refetches market-scoped
+          sidebar filter counts. Clicked by `onLocationChange`. */}
+      <button
+        id="sidebar-filters-refetch"
+        type="button"
+        onClick={handleSidebarRefetch}
+        className="hidden"
+        aria-hidden
+      />
+
       {/* Mobile Filter Button */}
       <div className="md:hidden flex items-start w-full justify-between gap-2 mb-4">
         <Badge

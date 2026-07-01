@@ -3,14 +3,13 @@ import { CartItem, Product, ProductVariant } from "@/types/ApiResponse";
 import {
   addToast,
   Button,
-  Chip,
   Divider,
   Image,
   ScrollShadow,
   useDisclosure,
 } from "@heroui/react";
 import Link from "next/link";
-import { CheckCircle, Trash2, XCircle, Bookmark } from "lucide-react";
+import { Trash2, Bookmark } from "lucide-react";
 import CartQuantityControl from "@/components/CartQuantityControl";
 import {
   removeItemFromCart,
@@ -36,12 +35,11 @@ import type { AttachmentFile } from "@/components/Cart/AttachmentUploader";
 
 interface CartItemsProps {
   items: CartItem[];
-  currencySymbol: string;
 }
 
-const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
+const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
   const { t } = useTranslation();
-  const { systemSettings, isSingleVendor } = useSettings();
+  const { formatPrice, systemSettings, isSingleVendor } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const isLoading = useSelector((state: RootState) => state.cart.isLoading);
   // Local state for attachments: Record<productId, AttachmentFile[]>
@@ -232,25 +230,6 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
                     {group.store.name}
                   </Link>
                 </div>
-
-                <Chip
-                  variant="flat"
-                  color={group.store.status?.is_open ? "success" : "danger"}
-                  radius="full"
-                  size="sm"
-                  startContent={
-                    group.store.status?.is_open ? (
-                      <CheckCircle size={12} />
-                    ) : (
-                      <XCircle size={12} />
-                    )
-                  }
-                  className="font-medium text-xs px-2"
-                >
-                  {group.store.status?.is_open
-                    ? t("soldBySection.open")
-                    : t("soldBySection.closed")}
-                </Chip>
               </div>
             )}
 
@@ -321,8 +300,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
                                     {addon.title || addon.item?.title}
                                     {addonPrice > 0 && (
                                       <span className="ml-0.5 opacity-80 font-medium">
-                                        ({currencySymbol}
-                                        {addonPrice.toFixed(2)})
+                                        ({formatPrice(addonPrice)})
                                       </span>
                                     )}
                                     {i < item.addons!.length - 1 && ","}
@@ -356,18 +334,19 @@ const CartItems: FC<CartItemsProps> = ({ items = [], currencySymbol = "" }) => {
                         {/* Price and Quantity - Stack on mobile */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mt-1">
                           <span className="font-medium text-xs text-foreground/60 whitespace-nowrap">
-                            {currencySymbol}{" "}
                             {item.total_item_special_price &&
                             item.total_item_special_price !==
                               item.total_item_price ? (
                               <>
                                 <span className="line-through opacity-60">
-                                  {item.total_item_price}
+                                  {formatPrice(item.total_item_price)}
                                 </span>{" "}
-                                {item.total_item_special_price}
+                                {formatPrice(item.total_item_special_price)}
                               </>
                             ) : (
-                              item.total_item_price || item.variant.price
+                              formatPrice(
+                                item.total_item_price || item.variant.price,
+                              )
                             )}{" "}
                             × {item.quantity}
                           </span>

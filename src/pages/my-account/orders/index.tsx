@@ -3,8 +3,9 @@ import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import UserLayout from "@/layouts/UserLayout";
 import { GetServerSideProps } from "next";
-import { Order, PaginatedResponse } from "@/types/ApiResponse";
+import { OrderListItem, PaginatedResponse } from "@/types/ApiResponse";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { getOrders, getSettings } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
 import { Button, Pagination, Select, SelectItem } from "@heroui/react";
@@ -22,7 +23,7 @@ import { getCookie } from "@/lib/cookies";
 const PER_PAGE = 9;
 
 interface OrdersData {
-  data: Order[];
+  data: OrderListItem[];
   current_page: number;
   per_page: number;
   total: number;
@@ -45,7 +46,7 @@ const ordersFetcher = async (url: string) => {
   // Ensure client-side auth even when the interceptor isn't attaching headers for some reason
   const access_token = getCookie<string>("access_token") || "";
 
-  const response: PaginatedResponse<Order[]> = await getOrders({
+  const response: PaginatedResponse<OrderListItem[]> = await getOrders({
     per_page: PER_PAGE,
     page: page,
     date_range,
@@ -127,14 +128,20 @@ const OrdersError = ({ error }: { error: string }) => {
 };
 
 // Main orders content component
-const OrdersContent = ({ orders }: { orders: OrdersData }) => {
+const OrdersContent = ({
+  orders,
+  onChanged,
+}: {
+  orders: OrdersData;
+  onChanged?: () => void;
+}) => {
   const router = useRouter();
   return (
     <div className="w-full">
-      {/* Orders List */}
+      {/* Orders List — flat, one card per order ITEM */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
-        {orders.data.map((order: Order) => (
-          <OrderCard key={order.id} order={order} />
+        {orders.data.map((item: OrderListItem) => (
+          <OrderCard key={item.id} item={item} onChanged={onChanged} />
         ))}
       </div>
 
@@ -207,6 +214,7 @@ const OrdersPage: NextPageWithLayout<OrdersPageProps> = ({
     data: swrOrders,
     error: swrError,
     isLoading,
+    mutate,
   } = useSWR(
     shouldFetch
       ? `/api/orders?page=${currentPage}&date_range=${dateRange}&status=${status}`
@@ -336,7 +344,7 @@ const OrdersPage: NextPageWithLayout<OrdersPageProps> = ({
   return (
     <OrdersLayout rightContent={renderFilters()}>
       <PageHead pageTitle={t("pageTitle.orders")} />
-      <OrdersContent orders={orders} />
+      <OrdersContent orders={orders} onChanged={() => mutate()} />
     </OrdersLayout>
   );
 };
@@ -357,7 +365,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           };
         }
 
-        const response: PaginatedResponse<Order[]> = await getOrders({
+        const response: PaginatedResponse<OrderListItem[]> = await getOrders({
           access_token: access_token,
           per_page: PER_PAGE,
           page: String(page),
@@ -365,7 +373,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           status: status ? String(status) : undefined,
         });
 
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
 
         if (response.success && response.data) {
           return {

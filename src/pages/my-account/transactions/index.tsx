@@ -3,6 +3,7 @@ import PageHeader from "@/components/custom/PageHeader";
 import TransactionTable from "@/components/Tables/TransactionTable";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import UserLayout from "@/layouts/UserLayout";
 import { getSettings, getTransactions, getUserData } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
@@ -106,7 +107,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
             access_token,
           });
 
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
 
         if (response.success) {
           return {

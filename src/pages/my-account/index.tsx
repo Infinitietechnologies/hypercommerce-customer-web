@@ -43,6 +43,7 @@ import {
   verifyOtp,
 } from "@/routes/api";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import {
   getAccessTokenFromContext,
@@ -952,7 +953,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           };
         }
         const response = await getUserData({ access_token });
-        const res = await getSettings();
+        const market = getMarketFromContext(context);
+        const res = await getSettings({ market });
         await loadTranslations(context);
 
         return {

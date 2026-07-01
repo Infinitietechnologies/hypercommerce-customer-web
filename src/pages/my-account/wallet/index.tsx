@@ -3,6 +3,7 @@ import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import UserLayout from "@/layouts/UserLayout";
 import { setUserDataRedux } from "@/lib/redux/slices/authSlice";
 import { getSettings, getUserData, getWalletTransactions } from "@/routes/api";
@@ -143,7 +144,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
             query: typeof query === "string" ? query : "",
           });
 
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
 
         if (response.success) {
           return {

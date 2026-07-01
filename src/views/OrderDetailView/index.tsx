@@ -2,7 +2,6 @@ import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import RatingModal from "@/components/Modals/RatingModal";
 import ReturnOrderItemModal from "@/components/Modals/ReturnOrderItemModal";
 import { orderStatusColorMap } from "@/config/constants";
-import { useSettings } from "@/contexts/SettingsContext";
 import { formatString } from "@/helpers/validator";
 import { getFormattedDate, getOrderStatusBtnConfig } from "@/helpers/getters";
 import UserLayout from "@/layouts/UserLayout";
@@ -24,12 +23,6 @@ import CancelOrderItemModal from "@/components/Modals/CancelOrderItemModal";
 import { reorderOrder } from "@/routes/api";
 import { addToast } from "@heroui/react";
 import { updateCartData } from "@/helpers/updators";
-import dynamic from "next/dynamic";
-
-const TrackOrderModal = dynamic(
-  () => import("@/components/Modals/TrackOrderModal"),
-  { ssr: false },
-);
 
 interface OrderDetailPageViewProps {
   order: Order;
@@ -37,10 +30,8 @@ interface OrderDetailPageViewProps {
 
 // OrderDetailPageView component
 const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
-  const { currencySymbol } = useSettings();
   const { t } = useTranslation();
   const router = useRouter();
-  const { isOpen, onClose, onOpen } = useDisclosure();
 
   const {
     isOpen: isOpenProductReview,
@@ -55,6 +46,12 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
   } = useDisclosure();
 
   const buttonConfig = getOrderStatusBtnConfig(order.status);
+
+  // Prefer the customer-friendly headline; fall back to the raw status label.
+  const orderStatusHeadline =
+    order.customer_status?.label ||
+    order.status_label ||
+    formatString(order?.status);
 
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const [selectedSeller, setSelectedSeller] = useState<{
@@ -165,9 +162,9 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 size="sm"
                 radius="sm"
                 className="text-xs h-8 cursor-pointer"
-                title={formatString(order?.status)}
+                title={orderStatusHeadline}
               >
-                {formatString(order?.status)}
+                {orderStatusHeadline}
               </Chip>
 
               {order.status !== "cancelled" && (
@@ -210,9 +207,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             <div className="lg:col-span-2 space-y-4">
               {/* Order Items */}
               <OrderItems
-                onOpen={onOpen}
                 order={order}
-                currencySymbol={currencySymbol}
                 handleProductReview={handleProductReview}
                 onReturnOpen={
                   buttonConfig.returnOrder ? onReturnOpen : undefined
@@ -254,7 +249,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             {/* Right Column - Order Summary & Actions */}
             <div className="space-y-4">
               {/* Order Summary */}
-              <OrderSummary currencySymbol={currencySymbol} order={order} />
+              <OrderSummary order={order} />
 
               {/* Payment Information */}
               <PaymentInfo order={order} />
@@ -264,9 +259,6 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             </div>
           </div>
         </div>
-        {buttonConfig.trackOrder && (
-          <TrackOrderModal isOpen={isOpen} onClose={onClose} order={order} />
-        )}
         {/* Rating Modal */}
         {selectedItem && (
           <RatingModal

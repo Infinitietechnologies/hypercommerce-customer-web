@@ -8,6 +8,7 @@ export interface ProductDetailPageParams {
   slug: string;
   access_token: string;
   PER_PAGE?: number | string;
+  market?: string;
 }
 
 /**
@@ -38,7 +39,7 @@ export interface ProductDetailPageData {
 export async function fetchProductDetailPageData(
   params: ProductDetailPageParams
 ): Promise<ProductDetailPageData> {
-  const { slug, access_token, PER_PAGE = 20 } = params;
+  const { slug, access_token, PER_PAGE = 20, market } = params;
 
   console.log("========== PRODUCT DETAIL FETCH ==========");
   console.log("Slug:", slug);
@@ -49,14 +50,16 @@ export async function fetchProductDetailPageData(
       getProductBySlug({
         slug,
         access_token,
+        market,
       }),
       getProducts({
         exclude_product: slug,
         per_page: PER_PAGE,
         access_token,
+        market,
         include_child_categories: 0,
       }),
-      getSettings(),
+      getSettings({ market }),
     ]);
 
   console.log(

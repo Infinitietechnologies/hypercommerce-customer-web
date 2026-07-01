@@ -24,7 +24,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
   const { t, i18n } = useTranslation();
   const currentLang = i18n.resolvedLanguage || i18n.language;
   const rtl = isRTL(currentLang);
-  const { currencySymbol } = useSettings();
+  const { formatPrice } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const isLoading = useSelector((state: RootState) => state?.cart?.isLoading);
   const [moveLoading, setMoveLoading] = useState(false);
@@ -193,8 +193,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
                           {addon.title || addon.item?.title}
                           {addonPrice > 0 && (
                             <span className="ml-0.5 opacity-80 font-medium">
-                              ({currencySymbol}
-                              {addonPrice.toFixed(2)})
+                              ({formatPrice(addonPrice)})
                             </span>
                           )}
                           {i < item.addons!.length - 1 && ","}
@@ -210,15 +209,15 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
                   item.total_item_special_price !== item.total_item_price ? (
                     <>
                       <span className="text-foreground font-medium">
-                        {currencySymbol} {item.total_item_special_price}
+                        {formatPrice(item.total_item_special_price)}
                       </span>
                       <span className="text-foreground/40 line-through ml-2">
-                        {currencySymbol} {item.total_item_price}
+                        {formatPrice(item.total_item_price)}
                       </span>
                     </>
                   ) : (
                     <span className="text-foreground font-medium">
-                      {currencySymbol} {item.total_item_price || item.variant.price}
+                      {formatPrice(item.total_item_price || item.variant.price)}
                     </span>
                   )}
                 </p>

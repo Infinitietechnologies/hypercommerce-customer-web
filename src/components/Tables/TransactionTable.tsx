@@ -119,13 +119,12 @@ const TransactionTable: FC<TransactionTableProps> = ({
   const totalPages = Math.ceil(total / per_page);
 
   const columns = [
-    { key: "id", label: t("transaction_id") },
+    { key: "id", label: t("id") },
     { key: "transaction_id", label: t("payment_id") },
     { key: "order_id", label: t("order_id") },
     { key: "payment_method", label: t("payment_method") },
     { key: "payment_status", label: t("payment_status") },
     { key: "amount", label: t("amount") },
-    { key: "currency", label: t("currency") },
     { key: "created_at", label: t("date") },
   ];
 
@@ -225,8 +224,7 @@ const TransactionTable: FC<TransactionTableProps> = ({
       case "amount":
         return (
           <span className="text-xxs md:text-xs">
-            {transaction.currency || ""}{" "}
-            {parseFloat(transaction.amount).toFixed(2)}
+            {transaction.formatted_amount || ""}
           </span>
         );
       case "payment_method":

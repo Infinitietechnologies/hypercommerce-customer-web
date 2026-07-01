@@ -17,6 +17,7 @@ import { useInfiniteData } from "@/hooks/useInfiniteData";
 import { Product, PaginatedResponse, Brand } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import { useRouter } from "next/router";
 import NoProductsFound from "@/components/NoProductsFound";
@@ -390,6 +391,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
       try {
         const { slug } = context.params || {};
         const access_token = (await getAccessTokenFromContext(context)) || "";
+        const market = getMarketFromContext(context);
         await loadTranslations(context);
 
         if (!slug || Array.isArray(slug)) {
@@ -405,6 +407,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           per_page: PER_PAGE,
           brands: slug,
           access_token,
+          market,
           include_child_categories: 0,
         };
 
@@ -426,10 +429,10 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         }
 
         const products = await getProducts(apiParams);
-        const settings = await getSettings();
+        const settings = await getSettings({ market });
 
         // Fetch brand details for SEO
-        const brandsRes = await getBrands();
+        const brandsRes = await getBrands({ market });
         const initialBrand = brandsRes?.data?.data?.find(b => b.slug === slug) || null;
 
         return {

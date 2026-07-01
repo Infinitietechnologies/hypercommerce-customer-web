@@ -19,6 +19,7 @@ import ProductFilter from "@/components/Products/ProductFilter";
 import { Product, PaginatedResponse, Store } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import { useRouter } from "next/router";
 import { formatString } from "@/helpers/validator";
@@ -463,6 +464,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
       try {
         const { slug } = context.params || {};
         const access_token = (await getAccessTokenFromContext(context)) || "";
+        const market = getMarketFromContext(context);
         await loadTranslations(context);
 
         if (!slug || Array.isArray(slug)) {
@@ -480,6 +482,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           per_page: PER_PAGE,
           store: slug,
           access_token,
+          market,
           include_child_categories: 0,
         };
 
@@ -504,8 +507,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         }
 
         const products = await getProducts(apiParams);
-        const settings = await getSettings();
-        const store = await getSpecificStore(slug);
+        const settings = await getSettings({ market });
+        const store = await getSpecificStore(slug, market);
 
         // Server-side redirect for single vendor mode
         const systemSettings = settings?.data?.find(

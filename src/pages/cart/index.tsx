@@ -2,6 +2,7 @@ import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import { getSettings } from "@/routes/api";
 import { GetServerSideProps } from "next";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { NextPageWithLayout } from "@/types";
 import dynamic from "next/dynamic";
 import { updateCartData } from "@/helpers/updators";
@@ -48,7 +49,8 @@ const CartPage: NextPageWithLayout<CartPageProps> = () => {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const settingsRes = await getSettings();
+        const market = getMarketFromContext(context);
+        const settingsRes = await getSettings({ market });
         await loadTranslations(context);
 
         return {

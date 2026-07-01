@@ -2,6 +2,7 @@ import { Button, Input } from "@heroui/react";
 import { Heart } from "lucide-react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface TipSectionProps {
   selectedTip: number | null;
@@ -17,6 +18,7 @@ const TipSection: FC<TipSectionProps> = ({
   setCustomTip,
 }) => {
   const { t } = useTranslation();
+  const { formatPrice } = useSettings();
   const predefinedTips = [10, 15, 20, 25];
 
   const handleTipSelect = (tip: number) => {
@@ -93,7 +95,7 @@ const TipSection: FC<TipSectionProps> = ({
         <div className="mt-3 p-2 bg-secondary-50 dark:bg-transparent rounded-md">
           <p className="text-xs">
             {t("tip.currentAmount", {
-              amount: `$${getCurrentTipAmount().toFixed(2)}`,
+              amount: formatPrice(getCurrentTipAmount()),
             })}
           </p>
         </div>

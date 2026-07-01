@@ -43,7 +43,7 @@ import { GetServerSideProps } from "next";
 import { loadTranslations } from "../../../i18n";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { isRTL } from "@/helpers/functionalHelpers";
+import { isRTL, getMarketFromContext } from "@/helpers/functionalHelpers";
 
 const PRODUCTS_PER_KEYWORD = 20;
 const KEYWORDS_STORAGE_KEY = "shoppingListKeywords";
@@ -599,7 +599,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
       try {
         await loadTranslations(context);
 
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
 
         return {
           props: {

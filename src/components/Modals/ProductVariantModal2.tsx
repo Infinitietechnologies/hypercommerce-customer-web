@@ -29,7 +29,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
   onClose,
   product,
 }) => {
-  const { currencySymbol, systemSettings } = useSettings();
+  const { formatPrice, systemSettings } = useSettings();
   const { t } = useTranslation();
 
   const [quantity, setQuantity] = useState(
@@ -316,8 +316,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                         </p>
                         <div className="flex items-center gap-1">
                           <span className="text-xs font-bold">
-                            {currencySymbol}
-                            {variantPrice.toFixed(2)}
+                            {formatPrice(variantPrice)}
                           </span>
                           {discountPercentage > 0 && (
                             <Chip
@@ -363,14 +362,12 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold">
-                  {currencySymbol}
-                  {finalPrice.toFixed(2)}
+                  {formatPrice(finalPrice)}
                 </div>
                 {hasDiscount && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-foreground/50 line-through">
-                      {currencySymbol}
-                      {price.toFixed(2)}
+                      {formatPrice(price)}
                     </span>
                   </div>
                 )}
@@ -451,7 +448,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
             >
               {selectedVariant.stock === 0
                 ? t("product_modal.out_of_stock")
-                : `${currencySymbol} ${totalPrice.toFixed(2)}`}
+                : formatPrice(totalPrice)}
             </Button>
           </div>
         </ModalFooter>

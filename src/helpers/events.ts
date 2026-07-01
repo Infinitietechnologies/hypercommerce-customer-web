@@ -4,6 +4,7 @@ import { getCookie, setCookie } from "@/lib/cookies";
 import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 import { addToast } from "@heroui/react";
 import { clearRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
+import { mutate } from "swr";
 
 export const onLocationChange = () => {
   if (typeof window === "undefined") return;
@@ -36,7 +37,11 @@ export const onLocationChange = () => {
 
   let buttonIds: string[] = [];
 
-  if (currentPath.startsWith("/feature-sections/")) {
+  if (currentPath === "/products/search") {
+    // Search listing (must come before the /products/ PDP check below).
+    // sidebar-filters-refetch → market-scoped ProductFilter counts.
+    buttonIds = ["search-products-refetch", "sidebar-filters-refetch"];
+  } else if (currentPath.startsWith("/feature-sections/")) {
     // Handle dynamic slug
     buttonIds = ["refetch-section-products"];
   } else if (
@@ -45,17 +50,30 @@ export const onLocationChange = () => {
   ) {
     buttonIds = ["similar-products-refetch", "specific-product-refetch"];
   } else if (currentPath.startsWith("/brands/")) {
-    buttonIds = ["refetch-brand-products"];
+    buttonIds = ["refetch-brand-products", "sidebar-filters-refetch"];
   } else if (currentPath.startsWith("/categories/")) {
-    buttonIds = ["category-products-refetch"];
+    buttonIds = ["category-products-refetch", "sidebar-filters-refetch"];
   } else if (currentPath.startsWith("/stores/")) {
-    buttonIds = ["refetch-store-products"];
+    buttonIds = ["refetch-store-products", "sidebar-filters-refetch"];
   } else {
     // Handle exact matches
     buttonIds = pathButtonMap[currentPath] || [];
   }
 
   buttonIds.forEach((id) => document.getElementById(id)?.click?.());
+
+  // Self-fetching lists (subcategory sidebar/tabs, and any useInfiniteData list)
+  // aren't tied to a page refetch button. They carry market-scoped data
+  // (prices, product counts), so revalidate every `/infinite-data-*` SWR key
+  // on market change. SWR dedupes this against the button-driven refetches above.
+  mutate(
+    (key) =>
+      Array.isArray(key) &&
+      typeof key[0] === "string" &&
+      key[0].startsWith("/infinite-data"),
+    undefined,
+    { revalidate: true },
+  );
 
   updateCartData(false, false, 0, false);
 };

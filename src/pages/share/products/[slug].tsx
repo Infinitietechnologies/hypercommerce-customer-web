@@ -1,6 +1,7 @@
 import { GetServerSideProps } from "next";
 import { getSlugFromContext, isSSR } from "@/helpers/getters";
 import { getAccessTokenFromContext } from "@/helpers/auth";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { getSettings } from "@/routes/api";
 import { fetchProductDetailPageData } from "@/services/ProductDetailPageService";
 import ProductPage from "@/pages/products/[slug]/index";
@@ -9,15 +10,17 @@ export const getServerSideProps: GetServerSideProps = isSSR()
   ? async (context) => {
       try {
         const access_token = (await getAccessTokenFromContext(context)) || "";
+        const market = getMarketFromContext(context);
         const slug = getSlugFromContext(context);
 
-        const settingsRes = await getSettings();
+        const settingsRes = await getSettings({ market });
         const settings = settingsRes.data || null;
 
         // Fetch all product page data (market resolved server-side via header)
         const data = await fetchProductDetailPageData({
           slug,
           access_token,
+          market,
           PER_PAGE: 20,
         });
 

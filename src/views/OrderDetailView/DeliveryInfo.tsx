@@ -1,114 +1,137 @@
-import { Order } from "@/types/ApiResponse";
-import { Avatar, Card, CardBody, CardHeader } from "@heroui/react";
-import { Phone, Star, Truck } from "lucide-react";
-import { getOrderStatusBtnConfig } from "@/helpers/getters";
+import { Order, OrderShipment } from "@/types/ApiResponse";
+import { Card, CardBody, CardHeader, Chip, Divider } from "@heroui/react";
+import { ExternalLink, Package, Truck } from "lucide-react";
+import { getFormattedDate } from "@/helpers/getters";
 import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
+
 interface DeliveryInfoProps {
   order: Order;
 }
-// DeliveryInfo component
+
+// DeliveryInfo — per-shipment tracking view (replaces delivery-boy tracking).
 const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
-  const buttonConfig = getOrderStatusBtnConfig(order.status);
   const { t } = useTranslation();
+  const shipments: OrderShipment[] = order.shipments ?? [];
 
   return (
-    <>
-      <Card shadow="sm" radius="sm">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {t("delivery_info")}
-            </h3>
+    <Card shadow="sm" radius="sm">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <Truck className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            {t("shipments") || t("delivery_info")}
+          </h3>
+        </div>
+      </CardHeader>
+      <CardBody className="pt-0">
+        {shipments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
+            <Package className="w-6 h-6 text-foreground/30" />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t("notYetShipped") || "Not yet shipped"}
+            </p>
           </div>
-        </CardHeader>
-        <CardBody className="pt-0">
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-300">
-                {t("fulfillmentType")}
-              </span>
-              <span className="text-gray-900 dark:text-gray-100 capitalize">
-                {order.fulfillment_type}
-              </span>
-            </div>
-            {buttonConfig.deliveryTime ? (
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
-                  {t("estimatedDeliveryTime")}
-                </span>
-                <span className="text-gray-900 dark:text-gray-100">
-                  {order.estimated_delivery_time
-                    ? `${order.estimated_delivery_time} ${t("mins")}`
-                    : "TBD"}
-                </span>
-              </div>
-            ) : null}
-          </div>
-        </CardBody>
-      </Card>
-      {order.delivery_boy_id && (
-        <Card shadow="sm" radius="sm">
-          <CardHeader className="pb-2 flex justify-between w-full items-start">
-            <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {t("deliveryPartner")}
-              </h3>
-            </div>
-          </CardHeader>
-          <CardBody className="pt-0">
-            <div className="flex items-start gap-3">
-              <Avatar
-                showFallback
-                src={order.delivery_boy_profile}
-                name={order.delivery_boy_name}
-                size="sm"
-                className="shrink-0 w-10 h-10 text-xs cursor-pointer"
-                title={order.delivery_boy_name}
-                onClick={() => {
-                  if (order.delivery_boy_profile) {
-                    window.open(order.delivery_boy_profile, "_blank");
-                  }
-                }}
-              />
-              <div className="flex-1 space-y-2">
-                <div className="text-sm font-medium">
-                  {order.delivery_boy_name}
-                </div>
-                {order.delivery_boy_phone && (
-                  <div className="flex items-center gap-1 text-xs">
-                    <Phone className="w-3.5 h-3.5 text-gray-400" />
-                    <span>{order.delivery_boy_phone}</span>
-                  </div>
-                )}
-                {order.delivery_feedback && (
-                  <div className="flex items-start w-full justify-between gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
-                    <div className="flex items-start gap-2">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-medium">
-                          {order.delivery_feedback.rating}/5
+        ) : (
+          <div className="space-y-3">
+            {shipments.map((shipment) => {
+              const statusText =
+                shipment.customer_status_label || shipment.status_label;
+              return (
+                <div
+                  key={shipment.id}
+                  className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 p-3 space-y-2"
+                >
+                  {/* Carrier + status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Truck className="w-3.5 h-3.5 text-foreground/50 shrink-0" />
+                        <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {shipment.carrier_name || t("na")}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-0.5">
-                        <div className="text-xs">
-                          {order.delivery_feedback.title}
-                        </div>
-                        <div className="text-xxs text-foreground/50 block ml-1">
-                          {order.delivery_feedback.description}
-                        </div>
-                      </div>
+                      {shipment.tracking_number && (
+                        <p className="text-xxs text-foreground/50 mt-0.5">
+                          {t("trackingNumber") || "Tracking #"}:{" "}
+                          <span className="font-medium text-foreground/70">
+                            {shipment.tracking_number}
+                          </span>
+                        </p>
+                      )}
                     </div>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      radius="sm"
+                      color="primary"
+                      classNames={{ content: "text-xxs" }}
+                      title={statusText}
+                    >
+                      {statusText}
+                    </Chip>
                   </div>
-                )}
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-      )}
-    </>
+
+                  {/* Parcel products */}
+                  {shipment.products.length > 0 && (
+                    <div className="space-y-1">
+                      {shipment.products.map((product, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between text-xxs text-foreground/70"
+                        >
+                          <span className="truncate">
+                            {product.title || t("na")}
+                            {product.variant ? ` — ${product.variant}` : ""}
+                          </span>
+                          <span className="shrink-0 ml-2 text-foreground/50">
+                            × {product.quantity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Timestamps */}
+                  {(shipment.picked_up_at || shipment.delivered_at) && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xxs text-foreground/50">
+                      {shipment.picked_up_at && (
+                        <span>
+                          {t("pickedUp") || "Picked up"}:{" "}
+                          {getFormattedDate(shipment.picked_up_at)}
+                        </span>
+                      )}
+                      {shipment.delivered_at && (
+                        <span>
+                          {t("delivered") || "Delivered"}:{" "}
+                          {getFormattedDate(shipment.delivered_at)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Track link (external) */}
+                  {shipment.tracking_url && (
+                    <>
+                      <Divider className="opacity-50" />
+                      <a
+                        href={shipment.tracking_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      >
+                        {t("track") || "Track"}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardBody>
+    </Card>
   );
 };
 

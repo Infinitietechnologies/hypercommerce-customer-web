@@ -1,18 +1,13 @@
 import { FC, useState } from "react";
 import {
-  Download,
   Package,
   Calendar,
-  MapPin,
-  CreditCard,
+  Store as StoreIcon,
   Eye,
-  Truck,
-  HandCoins,
   RotateCcw,
+  Ban,
 } from "lucide-react";
 import {
-  Accordion,
-  AccordionItem,
   Button,
   Card,
   CardBody,
@@ -21,51 +16,43 @@ import {
   Chip,
   Divider,
   Image,
-  ScrollShadow,
   useDisclosure,
+  addToast,
 } from "@heroui/react";
-import { Order } from "@/types/ApiResponse";
-import {
-  getFormattedDate,
-  getOrderStatusBtnConfig,
-  isStatusBeforeOrAt,
-} from "@/helpers/getters";
-import { useSettings } from "@/contexts/SettingsContext";
-import { formatString } from "@/helpers/validator";
+import { OrderListItem } from "@/types/ApiResponse";
+import { getFormattedDate } from "@/helpers/getters";
 import { orderStatusColorMap } from "@/config/constants";
-import CancelOrderItemModal from "@/components/Modals/CancelOrderItemModal";
-import ReturnOrderItemModal from "@/components/Modals/ReturnOrderItemModal";
+import { useCurrency } from "@/components/Functional/Price";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import Lightbox from "yet-another-react-lightbox";
-import dynamic from "next/dynamic";
-import { reorderOrder } from "@/routes/api";
-import { addToast } from "@heroui/react";
+import { cancelOrderItem, reorderOrder } from "@/routes/api";
 import { updateCartData } from "@/helpers/updators";
-
-const TrackOrderModal = dynamic(
-  () => import("@/components/Modals/TrackOrderModal"),
-  { ssr: false },
-);
+import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 
 interface OrderCardProps {
-  order: Order;
+  /** One flat order ITEM (the list endpoint is now per-item). */
+  item: OrderListItem;
+  /** Called after a successful cancel so the parent can revalidate. */
+  onChanged?: () => void;
 }
 
-const OrderCard: FC<OrderCardProps> = ({ order }) => {
-  const { currencySymbol } = useSettings();
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<{ src: string }[]>([]);
-  const [isReordering, setIsReordering] = useState(false);
-
+const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
+  const { formatWith } = useCurrency();
   const { t } = useTranslation();
-  const {
-    isOpen: isTrackOpen,
-    onClose: onTrackClose,
-    onOpen: onTrackOpen,
-  } = useDisclosure();
 
-  const buttonConfig = getOrderStatusBtnConfig(order.status);
+  // Amounts are stored in the ORDER's own currency, so format with the order's
+  // symbol + format rules (not the shopper's currently-selected market).
+  const formatPrice = (amount: number | string | null | undefined) =>
+    formatWith(
+      amount,
+      item.order?.currency_symbol ?? undefined,
+      item.order?.format,
+    );
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const {
     isOpen: isCancelOpen,
@@ -73,16 +60,18 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
     onOpen: onCancelOpen,
   } = useDisclosure();
 
-  const {
-    isOpen: isReturnOpen,
-    onClose: onReturnClose,
-    onOpen: onReturnOpen,
-  } = useDisclosure();
+  // Prefer the customer-friendly headline; fall back to the raw status label.
+  const statusLabel = item.customer_status?.label || item.status_label;
+  const orderSlug = item.order?.slug || item.slug;
+  const productImage = item.product?.image || item.variant?.image || null;
+  const productName = item.product?.name || item.title;
+  const isDelivered = item.status === "delivered";
 
   const handleReorder = async () => {
+    if (!item.order_id) return;
     try {
       setIsReordering(true);
-      const response = await reorderOrder(order.id);
+      const response = await reorderOrder(item.order_id);
       if (response.success) {
         addToast({
           title:
@@ -112,6 +101,35 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
     }
   };
 
+  const handleCancelItem = async () => {
+    try {
+      setIsCancelling(true);
+      const res = await cancelOrderItem({ orderItemId: String(item.id) });
+      if (res.success) {
+        addToast({
+          title: t("cancel_item_success_title") || t("success"),
+          description: res.message || t("cancel_item_success_msg"),
+          color: "success",
+        });
+        onCancelClose();
+        onChanged?.();
+      } else {
+        addToast({
+          title: res.message || t("cancel_item_failed") || "Cancel failed",
+          color: "danger",
+        });
+      }
+    } catch (error) {
+      console.error("Cancel error:", error);
+      addToast({
+        title: t("cancel_item_failed") || "Cancel failed",
+        color: "danger",
+      });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   return (
     <>
       <Card shadow="sm" radius="sm">
@@ -124,40 +142,42 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
               <div className="flex flex-col min-w-0">
                 <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
                   <h3 className="font-semibold text-sm sm:text-medium text-foreground whitespace-nowrap">
-                    {t("orderId", { id: order.id })}
+                    {t("orderId", { id: item.order_id })}
                   </h3>
                   <Chip
                     size="sm"
                     radius="sm"
                     variant="flat"
-                    color={orderStatusColorMap(order?.status)}
+                    color={orderStatusColorMap(item.status)}
                     classNames={{
                       content: "text-xxs",
                       base: "p-0 hover:cursor-pointer shrink-0 max-w-full",
                     }}
-                    title={formatString(order?.status)}
+                    title={statusLabel}
                   >
-                    <span className="truncate">{formatString(order?.status)}</span>
+                    <span className="truncate">{statusLabel}</span>
                   </Chip>
                 </div>
 
-                <div className="flex gap-1 items-center min-w-0">
-                  <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-foreground/50 shrink-0" />
-                  <a
-                    href={`https://www.google.com/maps?q=${order.shipping_latitude},${order.shipping_longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={order.shipping_address_1}
-                    className="text-xxs text-foreground/50 truncate hover:cursor-pointer"
-                  >
-                    {order.shipping_address_1}
-                  </a>
-                </div>
+                {item.store?.name && (
+                  <div className="flex gap-1 items-center min-w-0">
+                    <StoreIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-foreground/50 shrink-0" />
+                    <Link
+                      href={
+                        item.store?.slug ? `/stores/${item.store.slug}` : "#"
+                      }
+                      title={item.store.name}
+                      className="text-xxs text-foreground/50 truncate hover:cursor-pointer hover:text-primary"
+                    >
+                      {item.store.name}
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-              {buttonConfig.reorder && order.status == "delivered" && (
+              {isDelivered && (
                 <Button
                   size="sm"
                   variant="flat"
@@ -170,20 +190,6 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
                 >
                   <RotateCcw className="w-4 h-4" />
                 </Button>
-              )}
-
-              {order.status !== "cancelled" && (
-                <Button
-                  size="sm"
-                  color="primary"
-                  startContent={<Download className="w-4 h-4" />}
-                  title={t("invoice")}
-                  className="text-xs font-medium min-w-8 h-8 w-8"
-                  isIconOnly
-                  onPress={() => {
-                    if (order.invoice) window.open(order.invoice, "_blank");
-                  }}
-                />
               )}
             </div>
           </div>
@@ -198,238 +204,141 @@ const OrderCard: FC<OrderCardProps> = ({ order }) => {
                   {t("date")}
                 </p>
                 <p className="text-xxs sm:text-xs font-medium text-foreground">
-                  {getFormattedDate(order.created_at)}
+                  {getFormattedDate(item.order?.order_date || item.created_at)}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <CreditCard className="w-4 h-4 text-foreground/50" />
-              <div>
+            {item.seller_name && (
+              <div className="min-w-0 text-right">
                 <p className="text-xxs sm:text-xs text-foreground/50">
-                  {t("finalTotal") || "Final Total"}
+                  {t("soldBySection.sellerLabel") || t("seller") || "Seller"}
                 </p>
-                <p className="text-xs sm:text-sm font-semibold text-foreground">
-                  {currencySymbol}
-                  {order.final_total}
+                <p
+                  className="text-xxs sm:text-xs font-medium text-foreground truncate max-w-[140px]"
+                  title={item.seller_name}
+                >
+                  {item.seller_name}
                 </p>
               </div>
-            </div>
+            )}
           </div>
         </CardHeader>
 
         <CardBody className="pb-1 overflow-hidden">
-          <div className="mb-4">
-            <Accordion
-              variant="light"
-              className="px-0"
-              itemClasses={{
-                base: "px-0",
-                title: "text-xs font-medium text-gray-900 dark:text-gray-100",
-                trigger: "px-0 py-0 h-5",
-                content: "px-0 pb-0",
-                indicator: "text-gray-400 dark:text-gray-500",
-              }}
-            >
-              <AccordionItem
-                key="order-items"
-                aria-label={t("itemsCount", {
-                  count: order.items.length,
-                })}
-                title={t("itemsCount", { count: order.items.length })}
-                startContent={
-                  <Package className="w-4 h-4 text-foreground/50" />
-                }
-              >
-                <ScrollShadow className="space-y-1.5 mt-2 w-full max-h-[200px]">
-                  {order.items.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center py-1.5 px-2.5 bg-gray-50 dark:bg-gray-700 rounded-md"
-                    >
-                      <div className="flex items-center flex-1 min-w-0 space-x-2">
-                        {item.product?.image ? (
-                          <Image
-                            loading="lazy"
-                            src={item.product.image}
-                            alt={item?.product?.name || "Not Available"}
-                            className="w-9 h-9 rounded-lg object-contain cursor-pointer"
-                            radius="none"
-                            onClick={() => {
-                              setLightboxImages([{ src: item.product.image }]);
-                              setLightboxOpen(true);
-                            }}
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">
-                            {t("na")}
-                          </div>
-                        )}
-
-                        <div className="max-w-[80%]">
-                          <h3 className="font-medium text-xs mb-1">
-                            <Link
-                              title={item?.product?.name || ""}
-                              href={`/products/${item?.product?.slug}`}
-                              className="block truncate overflow-hidden text-ellipsis max-w-full hover:text-primary"
-                            >
-                              {item?.product?.name || t("na")}
-                            </Link>
-
-                            {item?.variant?.title && (
-                              <div
-                                title={item.variant.title || ""}
-                                className="block truncate overflow-hidden text-ellipsis max-w-full text-xxs  text-foreground/50"
-                              >
-                                {item.variant.title}
-                              </div>
-                            )}
-                          </h3>
-                          <p className="text-xs text-foreground/50 -mt-1">
-                            {currencySymbol}
-                            {Number(item.price) +
-                              Number(item.tax_amount)} × {item.quantity}
-                          </p>
-                        </div>
-                      </div>
-
-                      <p className="text-xs font-semibold text-foreground/60 ml-2">
-                        {currencySymbol}
-                        {item.subtotal}
-                      </p>
-                    </div>
-                  ))}
-                </ScrollShadow>
-              </AccordionItem>
-            </Accordion>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2 mb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-1.5">
-                  <Truck className="w-4 h-4 text-foreground/50" />
-                  <div className="flex gap-1 items-center">
-                    <p className="text-xxs sm:text-xs text-foreground">
-                      {t("estimatedDelivery")}
-                    </p>
-                    <p className="text-xxs sm:text-xs font-medium text-foreground">
-                      {order.estimated_delivery_time &&
-                      buttonConfig.deliveryTime
-                        ? `${order.estimated_delivery_time} ${t("mins")}`
-                        : t("na")}
-                    </p>
-                  </div>
+          <div className="flex justify-between items-center py-1.5 px-2.5 bg-gray-50 dark:bg-gray-700 rounded-md">
+            <div className="flex items-center flex-1 min-w-0 space-x-2">
+              {productImage ? (
+                <Image
+                  loading="lazy"
+                  src={productImage}
+                  alt={productName || "Not Available"}
+                  className="w-11 h-11 rounded-lg object-contain cursor-pointer"
+                  radius="none"
+                  onClick={() => setLightboxOpen(true)}
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-md bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-[10px] text-gray-500">
+                  {t("na")}
                 </div>
-              </div>
+              )}
 
-              <div className="flex items-center gap-1.5">
-                {order.payment_method == "cod" ? (
-                  <HandCoins className="w-4 h-4 text-foreground/50" />
-                ) : (
-                  <CreditCard className="w-4 h-4 text-foreground/50" />
-                )}
-                <p className="text-xs text-foreground">
-                  {order.payment_method}
+              <div className="min-w-0 flex-1">
+                <h3 className="font-medium text-xs mb-0.5">
+                  <Link
+                    title={productName || ""}
+                    href={
+                      item.product?.slug
+                        ? `/products/${item.product.slug}`
+                        : "#"
+                    }
+                    className="block truncate overflow-hidden text-ellipsis max-w-full hover:text-primary"
+                  >
+                    {productName || t("na")}
+                  </Link>
+
+                  {item.variant_title && (
+                    <div
+                      title={item.variant_title}
+                      className="block truncate overflow-hidden text-ellipsis max-w-full text-xxs text-foreground/50"
+                    >
+                      {item.variant_title}
+                    </div>
+                  )}
+                </h3>
+                <p className="text-xs text-foreground/50">
+                  {formatPrice(item.price)} × {item.quantity}
                 </p>
               </div>
             </div>
+
+            <p className="text-xs font-semibold text-foreground/60 ml-2 shrink-0">
+              {formatPrice(item.subtotal)}
+            </p>
           </div>
         </CardBody>
 
-        <CardFooter className="grid grid-cols-6 gap-2 w-full pt-0">
+        <CardFooter className="grid grid-cols-6 gap-2 w-full pt-3">
           <Button
             size="sm"
             variant="bordered"
             as={Link}
-            href={`/my-account/orders/${order.slug}`}
+            href={`/my-account/orders/${orderSlug}`}
             startContent={<Eye className="w-3 h-3" />}
-            className="text-xs font-medium w-full col-span-2"
+            className="text-xs font-medium w-full col-span-3"
             title={t("details")}
           >
             {t("details")}
           </Button>
 
-          {buttonConfig.trackOrder && (
+          {item.can_cancel && (
             <Button
               size="sm"
               variant="bordered"
-              startContent={<Truck className="w-3 h-3" />}
-              className="text-xs font-medium w-full col-span-2"
-              onPress={onTrackOpen}
-              title={t("track")}
+              startContent={<Ban className="w-3 h-3" />}
+              className="text-xs font-medium w-full col-span-3"
+              onPress={onCancelOpen}
+              title={t("cancel")}
             >
-              {t("track")}
+              {t("cancel")}
             </Button>
           )}
 
-          {buttonConfig.cancelOrder &&
-            order.items.some(
-              (item) =>
-                item.product?.is_cancelable &&
-                (!item.product?.cancelable_till ||
-                  isStatusBeforeOrAt(
-                    order.status,
-                    item.product.cancelable_till,
-                  )),
-            ) && (
-              <Button
-                size="sm"
-                variant="bordered"
-                startContent={<Package className="w-3 h-3" />}
-                className="text-xs font-medium w-full col-span-2"
-                onPress={onCancelOpen}
-                title={t("cancel")}
-              >
-                {t("cancel")}
-              </Button>
-            )}
-
-          {buttonConfig.returnOrder &&
-            order.items.some((item) => item.return_eligible) && (
-              <Button
-                size="sm"
-                variant="bordered"
-                startContent={<Package className="w-3 h-3" />}
-                className="text-xs font-medium w-full col-span-2"
-                onPress={onReturnOpen}
-                title={t("return")}
-              >
-                {t("return")}
-              </Button>
-            )}
-
+          {item.return_eligible && (
+            <Button
+              size="sm"
+              variant="bordered"
+              as={Link}
+              href={`/my-account/orders/${orderSlug}`}
+              startContent={<RotateCcw className="w-3 h-3" />}
+              className="text-xs font-medium w-full col-span-3"
+              title={t("return")}
+            >
+              {t("return")}
+            </Button>
+          )}
         </CardFooter>
       </Card>
 
-      {buttonConfig.trackOrder && (
-        <TrackOrderModal
-          isOpen={isTrackOpen}
-          onClose={onTrackClose}
-          order={order}
-        />
-      )}
-
-      {/* Cancel Order Items Modal */}
-      <CancelOrderItemModal
+      <ConfirmationModal
         isOpen={isCancelOpen}
         onClose={onCancelClose}
-        order={order}
-        onItemCancelled={onCancelClose}
+        onConfirm={handleCancelItem}
+        title={t("cancel") || "Cancel item"}
+        description={productName || item.title}
+        confirmText={t("cancel") || "Cancel"}
+        cancelText={t("close") || "Close"}
+        variant="danger"
+        isDismissable={!isCancelling}
       />
 
-      {buttonConfig.returnOrder && (
-        <ReturnOrderItemModal
-          isOpen={isReturnOpen}
-          onClose={onReturnClose}
-          order={order}
+      {productImage && (
+        <Lightbox
+          open={lightboxOpen}
+          close={() => setLightboxOpen(false)}
+          slides={[{ src: productImage }]}
         />
       )}
-      <Lightbox
-        open={lightboxOpen}
-        close={() => setLightboxOpen(false)}
-        slides={lightboxImages}
-      />
     </>
   );
 };

@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import { getPageFromUrl, isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import UserLayout from "@/layouts/UserLayout";
 import { getAddresses, getSettings } from "@/routes/api";
 import { Address, PaginatedResponse } from "@/types/ApiResponse";
@@ -270,7 +271,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const page = parseInt(context.query.page as string) || 1;
 
         const response = await getAddresses({ access_token, page, per_page });
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
         await loadTranslations(context);
 
         return {

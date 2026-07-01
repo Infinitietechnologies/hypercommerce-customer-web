@@ -48,7 +48,7 @@ const ProductCard: FC<ProductCardProps> = ({
   product,
   hideStoreName = false,
 }) => {
-  const { currencySymbol, systemSettings, isSingleVendor } = useSettings();
+  const { formatPrice, systemSettings, isSingleVendor } = useSettings();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const { variants = [], indicator = null } = product;
   const router = useRouter();
@@ -425,19 +425,16 @@ const ProductCard: FC<ProductCardProps> = ({
             {hasDiscount ? (
               <div className="flex flex-col">
                 <span className="text-xs md:text-sm font-semibold">
-                  {currencySymbol}
-                  {specialPrice.toFixed(2)}
+                  {formatPrice(specialPrice)}
                 </span>
                 <span className="text-xxs md:text-xs opacity-50 line-through relative top-0.5">
-                  {currencySymbol}
-                  {price.toFixed(2)}
+                  {formatPrice(price)}
                 </span>
               </div>
             ) : (
               <div className="flex flex-col">
                 <span className="text-xs md:text-sm font-semibold">
-                  {currencySymbol}
-                  {price.toFixed(2)}
+                  {formatPrice(price)}
                 </span>
               </div>
             )}

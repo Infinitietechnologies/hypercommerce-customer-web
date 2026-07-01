@@ -15,17 +15,6 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
   const rating = parseFloat(store.avg_store_rating).toFixed(1) || 0;
   const lat = store.latitude;
   const lng = store.longitude;
-  const isOpen = store.status?.is_open ?? true;
-  const statusValue = store.status?.status;
-  const getStatusColor = () => {
-    if (!isOpen) return "danger";
-    return statusValue === "online" ? "success" : "default";
-  };
-
-  const getStatusText = () => {
-    if (!isOpen) return "Closed";
-    return statusValue === "online" ? "Open Now" : "Offline";
-  };
 
   return (
     <Link href={`/stores/${store.slug}`} title={store.name}>
@@ -35,7 +24,6 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
         isHoverable
         as={"div"}
         disableRipple
-        isDisabled={!isOpen}
         isPressable={false}
       >
         <CardBody className="p-0">
@@ -62,10 +50,6 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
                 className="absolute -bottom-6 left-4 w-14 h-14 sm:w-16 sm:h-16 z-20"
               />
 
-              <span
-                className={`absolute top-2 left-16 w-3.5 h-3.5 ${isOpen ? "bg-green-400" : "bg-red-400"}  border-2 border-white rounded-full z-30`}
-              ></span>
-
               {store.is_recommended && (
                 <div className="absolute -bottom-7 right-4 z-30">
                   <Chip
@@ -82,19 +66,6 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
                 </div>
               )}
             </div>
-            {!isOpen ? (
-              <div className="w-full flex justify-end mt-1">
-                <Chip
-                  size="sm"
-                  color={getStatusColor()}
-                  variant="dot"
-                  className="text-xxs mr-2"
-                >
-                  {getStatusText()}
-                </Chip>
-              </div>
-            ) : null}
-
             {/* Rating Badge */}
             <div className="absolute z-20 top-2 right-2 bg-white dark:bg-content1 rounded-md px-2 py-1 flex items-center gap-1 shadow-sm">
               <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />

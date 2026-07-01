@@ -19,16 +19,6 @@ const StoreContent = ({
   textColor = "text-gray-900",
   openLightbox,
 }: any) => {
-  const getStatusColor = () => {
-    if (!store.status?.is_open) return "danger";
-    return store.status.status === "online" ? "success" : "default";
-  };
-
-  const getStatusText = () => {
-    if (!store.status?.is_open) return "Closed";
-    return store.status.status === "online" ? "Open Now" : "Offline";
-  };
-
   return (
     <div className="relative flex md:items-end items-start gap-4 px-4 md:px-6 w-full">
       <div
@@ -75,15 +65,6 @@ const StoreContent = ({
               {t("recommended")}
             </Chip>
           )}
-          <Chip
-            size="sm"
-            color={getStatusColor()}
-            variant="dot"
-            className="text-xs md:text-white"
-          >
-            {getStatusText()}
-          </Chip>
-
           <Chip
             size="sm"
             variant="bordered"
@@ -145,16 +126,6 @@ const StoreProfile: React.FC<StoreProfileProps> = ({ store }) => {
         : [{ src: banner }, { src: avatar }]
     );
     setOpen(true);
-  };
-
-  const getStatusColor = () => {
-    if (!store.status?.is_open) return "danger";
-    return store.status.status === "online" ? "success" : "default";
-  };
-
-  const getStatusText = () => {
-    if (!store.status?.is_open) return t("closed") || "Closed";
-    return store.status.status === "online" ?  "Open Now" : "Offline";
   };
 
   return (
@@ -235,20 +206,14 @@ const StoreProfile: React.FC<StoreProfileProps> = ({ store }) => {
                 <span className="text-base font-medium leading-snug">{store.address}</span>
               </div>
             )}
-            <div className="flex items-center gap-3 text-default-500">
-              <Clock size={20} className="shrink-0 text-default-400" />
-              <div className="flex items-center gap-2 text-base">
-                <Chip
-                  size="sm"
-                  color={getStatusColor()}
-                  variant="dot"
-                  className="text-xs"
-                >
-                  {getStatusText()}
-                </Chip>
-                {store.timing && <span className="text-default-400 font-medium">• {store.timing}</span>}
+            {store.timing && (
+              <div className="flex items-center gap-3 text-default-500">
+                <Clock size={20} className="shrink-0 text-default-400" />
+                <span className="text-base text-default-400 font-medium">
+                  {store.timing}
+                </span>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

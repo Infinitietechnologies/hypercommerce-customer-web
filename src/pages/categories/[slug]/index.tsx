@@ -18,6 +18,7 @@ import { useInfiniteData } from "@/hooks/useInfiniteData";
 import { Product, PaginatedResponse } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import { useRouter } from "next/router";
 import NoProductsFound from "@/components/NoProductsFound";
@@ -459,6 +460,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const { slug } = context.params || {};
         await loadTranslations(context);
         const access_token = (await getAccessTokenFromContext(context)) || "";
+        const market = getMarketFromContext(context);
 
         if (!slug || Array.isArray(slug)) {
           return {
@@ -475,6 +477,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           per_page: PER_PAGE,
           categories: subcategory || slug,
           access_token,
+          market,
           include_child_categories: 1,
         };
 
@@ -496,10 +499,10 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         }
 
         const products = await getProducts(apiParams);
-        const settings = await getSettings();
+        const settings = await getSettings({ market });
 
         // Fetch category details for SEO
-        const categoryRes = await getCategories({ slug });
+        const categoryRes = await getCategories({ slug, market });
         const initialCategory = categoryRes?.data?.data?.find(c => c.slug === slug) || null;
 
         return {

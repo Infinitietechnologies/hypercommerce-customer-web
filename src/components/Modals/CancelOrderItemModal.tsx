@@ -22,7 +22,7 @@ import { useRouter } from "next/router";
 import { orderStatusColorMap } from "@/config/constants";
 import { formatString } from "@/helpers/validator";
 import Link from "next/link";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useCurrency } from "@/components/Functional/Price";
 
 interface CancelOrderItemModalProps {
   isOpen: boolean;
@@ -39,7 +39,11 @@ const CancelOrderItemModal: FC<CancelOrderItemModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { currencySymbol } = useSettings();
+  const { formatWith } = useCurrency();
+  // Amounts belong to THIS order's own currency (orders may mix currencies),
+  // so format with the order's symbol + format, not the active market's.
+  const formatPrice = (amount: number | string | null | undefined) =>
+    formatWith(amount, order.currency_symbol, order.format);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const [loadingItemId, setLoadingItemId] = useState<string | number | null>(
@@ -162,13 +166,11 @@ const CancelOrderItemModal: FC<CancelOrderItemModalProps> = ({
                                 {t("qty")}: {item.quantity}
                               </span>
                               <span>
-                                {t("unit_price")}: {currencySymbol}
-                                {item.price}
+                                {t("unit_price")}: {formatPrice(item.price)}
                               </span>
                             </div>
                             <div className="text-primary font-semibold">
-                              {t("subtotal")}: {currencySymbol}
-                              {item.subtotal}
+                              {t("subtotal")}: {formatPrice(item.subtotal)}
                             </div>
                           </div>
 
@@ -200,8 +202,8 @@ const CancelOrderItemModal: FC<CancelOrderItemModalProps> = ({
                                         {addonName}
                                       </span>
                                       <span className="text-[10px] text-primary font-medium ml-0.5">
-                                        ({item.quantity} × {currencySymbol}
-                                        {Number(addonPrice || 0).toFixed(2)})
+                                        ({item.quantity} ×{" "}
+                                        {formatPrice(Number(addonPrice || 0))})
                                       </span>
                                     </div>
                                   );

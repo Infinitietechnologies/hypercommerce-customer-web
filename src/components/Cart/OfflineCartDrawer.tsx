@@ -16,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { useSettings } from "@/contexts/SettingsContext";
-import { formatAmount } from "@/helpers/functionalHelpers";
 import {
   removeOfflineCartItem,
   updateOfflineCartItemQuantity,
@@ -40,7 +39,7 @@ type OfflineCartDrawerProps = {
 
 const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { currencySymbol } = useSettings();
+  const { formatPrice } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const dispatch = useDispatch();
@@ -289,7 +288,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                               </span>
                             </div>
                             <span>
-                              {currencySymbol} {formatAmount(item.price)} /{" "}
+                              {formatPrice(item.price)} /{" "}
                               {t("item") || "item"}
                             </span>
                           </div>
@@ -336,8 +335,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                               </Button>
                             </div>
                             <p className="text-sm font-semibold text-default-900 whitespace-nowrap">
-                              {currencySymbol}{" "}
-                              {formatAmount(
+                              {formatPrice(
                                 (item.price +
                                   (item.addons?.reduce(
                                     (sum, a) => sum + (a.price || 0),
@@ -393,7 +391,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                       {t("checkout.itemsTotal")}
                     </span>
                     <span className="font-semibold text-default-900">
-                      {currencySymbol} {formatAmount(offlineCart.subtotal)}
+                      {formatPrice(offlineCart.subtotal)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-default-500">

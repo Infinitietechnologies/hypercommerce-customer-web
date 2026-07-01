@@ -4,6 +4,7 @@ import UserLayout from "@/layouts/UserLayout";
 import { GetServerSideProps } from "next";
 import { Order } from "@/types/ApiResponse";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { getSpecificOrders, getSettings } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
@@ -174,7 +175,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           };
         }
         const response = await getSpecificOrders({ slug, access_token });
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
 
         if (response.success && response.data) {
           return {

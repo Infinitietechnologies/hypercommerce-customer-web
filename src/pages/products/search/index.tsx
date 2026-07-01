@@ -19,6 +19,7 @@ import { useInfiniteData } from "@/hooks/useInfiniteData";
 import { Product, PaginatedResponse } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import NoProductsFound from "@/components/NoProductsFound";
 import { ArrowRight, ShoppingCart, Search } from "lucide-react";
@@ -151,6 +152,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
     hasMore,
     total,
     loadMore,
+    refetch,
   } = useInfiniteData<Product>({
     fetcher: getProducts,
     dataKey: `/productsSearch:${safeQuery}`,
@@ -296,6 +298,13 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
           highlightText={total ? ` ${total} Products` : ""}
         />
 
+        {/* Re-fetch when the market/location changes (see onLocationChange) */}
+        <button
+          id="search-products-refetch"
+          onClick={() => refetch()}
+          className="hidden"
+        />
+
         <div className="flex w-full gap-2 flex-col md:flex-row">
           <div className="flex-none h-full">
             <ProductFilter
@@ -386,6 +395,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
         const access_token = (await getAccessTokenFromContext(context)) || "";
+        const market = getMarketFromContext(context);
         await loadTranslations(context);
 
         const q = Array.isArray(context.query.q)
@@ -398,6 +408,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           page: 1,
           per_page: PER_PAGE,
           access_token,
+          market,
           search: q,
           include_child_categories: 0,
         };
@@ -420,7 +431,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         }
 
         const products = await getProducts(apiParams);
-        const settings = await getSettings();
+        const settings = await getSettings({ market });
 
         return {
           props: {

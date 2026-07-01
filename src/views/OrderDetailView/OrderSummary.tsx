@@ -3,18 +3,18 @@ import { Card, CardBody, CardHeader, Divider, Chip } from "@heroui/react";
 import { ReceiptText, Gift, Zap } from "lucide-react";
 import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "@/components/Functional/Price";
 
 interface OrderSummaryProps {
   order: Order;
-  currencySymbol: string;
 }
 
-const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
+const OrderSummary: FC<OrderSummaryProps> = ({ order }) => {
   const { t } = useTranslation();
-
-  const formatCurrency = (amount: string) => {
-    return `${currencySymbol}${parseFloat(amount).toFixed(2)}`;
-  };
+  const { formatWith } = useCurrency();
+  // Show amounts in THIS order's own market currency.
+  const formatPrice = (amount: number | string | null | undefined) =>
+    formatWith(amount, order.currency_symbol, order.format);
 
   const getPromoStatus = () => {
     if (order.promo_line?.cashback_flag) {
@@ -58,7 +58,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
             {t("subtotal")}
           </span>
           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {formatCurrency(order.subtotal)}
+            {formatPrice(order.subtotal)}
           </span>
         </div>
 
@@ -69,7 +69,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
               {t("deliveryCharge")}
             </span>
             <span className="text-sm text-gray-900 dark:text-gray-100">
-              {formatCurrency(order.delivery_charge.toString())}
+              {formatPrice(order.delivery_charge.toString())}
             </span>
           </div>
 
@@ -79,7 +79,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
                 {t("checkout.platformFee", { defaultValue: "Platform fee" })}
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100">
-                {formatCurrency(order.platform_fee.toString())}
+                {formatPrice(order.platform_fee.toString())}
               </span>
             </div>
           )}
@@ -90,7 +90,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
                 {t("checkout.codFee", { defaultValue: "COD fee" })}
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100">
-                {formatCurrency(order.cod_fee.toString())}
+                {formatPrice(order.cod_fee.toString())}
               </span>
             </div>
           )}
@@ -158,7 +158,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
                   }`}
                 >
                   {order.promo_line.cashback_flag ? "" : "-"}
-                  {formatCurrency(order.promo_line.discount_amount)}
+                  {formatPrice(order.promo_line.discount_amount)}
                 </span>
               </div>
 
@@ -180,7 +180,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
                   {t("giftCardApplied")}
                 </span>
                 <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                  -{formatCurrency(order.gift_card_discount)}
+                  -{formatPrice(order.gift_card_discount)}
                 </span>
               </div>
             </div>
@@ -199,7 +199,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
             {t("finalTotal") || "Final Total"}
           </span>
           <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-            {formatCurrency(order.final_total)}
+            {formatPrice(order.final_total)}
           </span>
         </div>
 
@@ -210,7 +210,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
               {t("totalPayable") || "Total Payable"}
             </span>
             <span className="text-base font-bold text-green-600 dark:text-green-400">
-              {formatCurrency(order.total_payable)}
+              {formatPrice(order.total_payable)}
             </span>
           </div>
         )}
@@ -219,8 +219,8 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order, currencySymbol }) => {
         {hasWalletUsed && (
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 px-3 italic">
             {t("walletPaymentNote", {
-              walletAmount: formatCurrency(walletAmountUsed.toFixed(2)),
-              remainingAmount: formatCurrency(order.total_payable),
+              walletAmount: formatPrice(walletAmountUsed),
+              remainingAmount: formatPrice(order.total_payable),
               paymentMethod:
                 order.payment_method?.toUpperCase() || "PAYMENT GATEWAY",
             })}

@@ -1,6 +1,7 @@
 import { GetServerSideProps } from "next";
 import { getStores, getSettings } from "@/routes/api";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import { Store, PaginatedResponse } from "@/types/ApiResponse";
@@ -169,9 +170,10 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
         const searchQuery = (context.query?.search as string) || "";
+        const market = getMarketFromContext(context);
         await loadTranslations(context);
 
-        const settings = await getSettings();
+        const settings = await getSettings({ market });
 
         // Server-side redirect for single vendor mode
         const systemSettings = settings?.data?.find(
@@ -186,6 +188,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           page: 1,
           per_page: PER_PAGE,
           search: searchQuery,
+          market,
         });
 
         return {

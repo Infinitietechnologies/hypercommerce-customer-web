@@ -7,6 +7,45 @@ export type ApiResponse<T> = {
   total?: number;
 };
 
+// ---- Market currency / formatting (hypercommerce) ----
+export interface MarketFormat {
+  symbol_position?: "before" | "after" | string;
+  space_between_symbol?: boolean;
+  thousand_separator?: string;
+  decimal_separator?: string;
+  grouping_style?: string;
+  decimal_places?: number;
+  negative_format?: string;
+}
+
+export interface MarketCurrency {
+  code: string;
+  name: string;
+  symbol: string;
+  decimal_places: number;
+  is_base: boolean;
+}
+
+export interface MarketInfo {
+  id: number;
+  code: string;
+  name: string;
+  currency_code: string;
+  default_language?: string;
+  is_default: boolean;
+  priority?: number;
+  status?: string;
+  countries?: { id: number; iso2: string; name: string }[];
+  currency?: MarketCurrency;
+  format?: MarketFormat;
+}
+
+export interface MarketsSetting {
+  current: MarketInfo | null;
+  default: MarketInfo | null;
+  available: MarketInfo[];
+}
+
 export type VersionCheckData = {
   update_available: boolean;
   update_type: string;
@@ -626,6 +665,38 @@ export interface ProductFaq {
 
 // Orders Type
 
+/** Shopper-facing derived status (read-only tracker headline). */
+export interface CustomerStatus {
+  code: string;
+  label: string;
+  description: string;
+  stage: string;
+  is_exception: boolean;
+}
+
+/** A parcel/shipment on a seller-order (replaces delivery-boy live tracking). */
+export interface OrderShipment {
+  id: number;
+  seller_order_id: number;
+  status: string;
+  status_label: string;
+  customer_status: string;
+  customer_status_label: string;
+  customer_status_stage: string;
+  provider_code: string | null;
+  carrier_name: string | null;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  fulfillment_status: string;
+  picked_up_at: string | null;
+  delivered_at: string | null;
+  products: {
+    title: string | null;
+    variant: string | null;
+    quantity: number;
+  }[];
+}
+
 export interface Order {
   id: number;
   uuid: string;
@@ -634,20 +705,33 @@ export interface Order {
   email: string;
   currency_code: string;
   currency_rate: string;
+  /** Market currency symbol for THIS order (may differ from active market). */
+  currency_symbol: string;
+  /** Market number-format rules for THIS order. */
+  format?: MarketFormat;
   payment_method: string;
   payment_status: string;
   status: OrderStatus;
+  status_label: string;
+  /** Hypercommerce fulfillment rollup (separate from `status`). */
+  fulfillment_status: string;
+  fulfillment_status_label: string;
+  /** Customer-friendly headline + canonical tracker (derived). */
+  customer_status: CustomerStatus;
+  /** Per-shipment tracking, flattened across the order's seller orders. */
+  shipments?: OrderShipment[];
   invoice: string;
-  fulfillment_type: string;
-  estimated_delivery_time: number;
-  delivery_time_slot_id: number | null;
-  delivery_boy_id: number | null;
-  delivery_boy_name: string;
-  delivery_boy_phone: number | string;
-  delivery_boy_profile: string;
-  is_delivery_feedback_given: boolean;
+  /** @deprecated delivery-boy model removed — null stubs from the backend. */
+  fulfillment_type?: string;
+  estimated_delivery_time?: number | null;
+  delivery_time_slot_id?: number | null;
+  delivery_boy_id?: number | null;
+  delivery_boy_name?: string;
+  delivery_boy_phone?: number | string;
+  delivery_boy_profile?: string;
+  is_delivery_feedback_given?: boolean;
 
-  delivery_feedback: {
+  delivery_feedback?: {
     id: number;
     title: string;
     slug: string;
@@ -756,6 +840,22 @@ export interface OrderItem {
   subtotal: string;
 
   status: OrderStatus;
+  status_label: string;
+  /** Shopper-facing derived status for this item. */
+  customer_status: CustomerStatus;
+  /** Per-item tracker steps (scoped to this item's parcel + return/refund). */
+  timeline?: unknown;
+  can_cancel: boolean;
+  cancelable_quantity: number;
+  /** Snapshot ETA + upcoming delivery-date window. */
+  eta_min?: number | null;
+  eta_max?: number | null;
+  eta_unit?: string | null;
+  delivery_estimate?: {
+    from: string;
+    to: string;
+    unit: string;
+  } | null;
   otp: string | null;
   otp_verified: number;
 
@@ -812,6 +912,66 @@ export interface OrderVariant {
   image: string;
 }
 
+/**
+ * Flat "My Orders" list entry — ONE order item plus its order context.
+ * GET /user/orders now returns one of these per order ITEM (not per order).
+ */
+export interface OrderListItem {
+  id: number;
+  order_id: number;
+  title: string;
+  variant_title: string | null;
+  /** Order slug (link target for the detail page). */
+  slug: string;
+  sku: string | null;
+  quantity: number;
+  price: string;
+  subtotal: string;
+  status: OrderStatus;
+  status_label: string;
+  customer_status: CustomerStatus;
+  return_eligible: boolean;
+  return_deadline: string | null;
+  can_cancel: boolean;
+  cancelable_quantity: number;
+  seller_id: number | null;
+  seller_name: string | null;
+  is_user_review_given: boolean;
+  user_review: OrderItem["user_review"];
+  product?: {
+    id: number | null;
+    name: string | null;
+    slug: string | null;
+    image: string | null;
+  };
+  variant?: {
+    id: number | null;
+    title: string | null;
+    image: string | null;
+  };
+  store?: {
+    id: number | null;
+    name: string | null;
+    slug: string | null;
+  };
+  order: {
+    id: number;
+    uuid: string;
+    slug: string;
+    order_date: string | null;
+    status: OrderStatus;
+    status_label: string;
+    payment_method: string;
+    payment_status: string;
+    currency: string;
+    currency_symbol?: string | null;
+    format?: MarketFormat | null;
+    final_total: number;
+    total_payable: number;
+  } | null;
+  created_at: string | null;
+}
+
 export type SellerFeedbackItem = {
   seller_id: number;
   is_feedback_given: boolean;
@@ -850,6 +1010,7 @@ export type TransactionQueryArgs = {
 };
 
 export type WalletTransaction = {
+  formatted_amount: string;
   id: number;
   wallet_id: number;
   user_id: number;
@@ -867,6 +1028,7 @@ export type WalletTransaction = {
 };
 
 export interface Transaction {
+  formatted_amount: string;
   id: number;
   uuid: string;
   order_id: number | null;

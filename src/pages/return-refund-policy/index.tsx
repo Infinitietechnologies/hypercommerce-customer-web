@@ -4,6 +4,7 @@ import { Settings } from "@/types/ApiResponse";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import { useSettings } from "@/contexts/SettingsContext";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import HTMLRenderer from "@/components/Functional/HTMLRenderer";
 import { loadTranslations } from "../../../i18n";
 import PageHead from "@/SEO/PageHead";
@@ -56,7 +57,8 @@ const ReturnRefundPolicyPage: NextPage<ReturnRefundPolicyPageProps> = () => {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
         await loadTranslations(context);
 
         return {

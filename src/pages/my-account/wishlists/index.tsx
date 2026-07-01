@@ -13,6 +13,7 @@ import { Wishlist, WishlistItem, WishTitle } from "@/types/ApiResponse";
 import { GetServerSideProps } from "next";
 import { NextPageWithLayout } from "@/types";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import useSWR from "swr";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
@@ -317,7 +318,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         await loadTranslations(context);
 
         const wishlistsResponse = await getAllWishlistTitles({ access_token });
-        const settingsResponse = await getSettings();
+        const market = getMarketFromContext(context);
+        const settingsResponse = await getSettings({ market });
 
         if (wishlistsResponse.success && wishlistsResponse.data) {
           return {

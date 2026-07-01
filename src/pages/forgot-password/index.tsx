@@ -14,7 +14,7 @@ import {
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { isSSR } from "@/helpers/getters";
 import DefaultLayout from "@/layouts/default";
-import { isAxiosError } from "@/helpers/functionalHelpers";
+import { isAxiosError, getMarketFromContext } from "@/helpers/functionalHelpers";
 import { NextPageWithLayout } from "@/types";
 import { Settings } from "@/types/ApiResponse";
 import { loadTranslations } from "../../../i18n";
@@ -229,7 +229,8 @@ const ForgotPassword: NextPageWithLayout = (props: ForgotPasswordProps) => {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
         await loadTranslations(context);
         return {
           props: {

@@ -71,7 +71,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
     indicator,
   } = initialProduct;
 
-  const { currencySymbol } = useSettings();
+  const { formatPrice } = useSettings();
   const isOutOfStock = selectedVariant
     ? !selectedVariant.availability || selectedVariant.stock <= 0
     : false;
@@ -297,22 +297,19 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
                 // shadow-[4px_4px_0px_rgba(0,0,0,0.6)]"
                 className="text-xl md:text-3xl font-bold"
               >
-                <span className="text-2xl"> {currencySymbol}</span>
                 <span className=" ml-1">
-                  {selectedVariant?.special_price.toFixed(2)}
+                  {formatPrice(selectedVariant?.special_price)}
                 </span>
               </div>
 
               <span className="text-xs md:text-medium text-foreground/50 line-through mt-2">
-                {currencySymbol}
-                {selectedVariant?.price.toFixed(2)}
+                {formatPrice(selectedVariant?.price)}
               </span>
             </div>
           ) : (
             <div>
               <span className="text-lg font-semibold text-primary">
-                {currencySymbol}
-                {selectedVariant?.price.toFixed(2)}
+                {formatPrice(selectedVariant?.price)}
               </span>
             </div>
           )}

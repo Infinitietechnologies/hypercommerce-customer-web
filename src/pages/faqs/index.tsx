@@ -11,6 +11,7 @@ import {
 } from "@heroui/react";
 import { GetServerSideProps } from "next";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { ChevronRight, Search } from "lucide-react";
 import { NextPageWithLayout } from "@/types";
 import PageHeader from "@/components/custom/PageHeader";
@@ -205,6 +206,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
         const { page = "1", search = "" } = context.query;
+        const market = getMarketFromContext(context);
 
         const [faqsResult, settingsResult] = await Promise.allSettled([
           getFaqs({
@@ -212,7 +214,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
             page: Array.isArray(page) ? page[0] : page,
             per_page: PER_PAGE.toString(),
           }),
-          getSettings(),
+          getSettings({ market }),
         ]);
 
         await loadTranslations(context);

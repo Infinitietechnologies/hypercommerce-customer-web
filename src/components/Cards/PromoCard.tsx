@@ -15,14 +15,14 @@ const PromoCard: React.FC<PromoCardProps> = ({
   onApply,
   isDisabled,
 }) => {
-  const { currencySymbol } = useSettings();
+  const { formatPrice } = useSettings();
   const { t } = useTranslation();
 
   const getDiscountDisplay = () => {
     if (promo.discount_type === "percent") {
       return `${promo.discount_amount}%`;
     } else {
-      return `${currencySymbol}${promo.discount_amount}`;
+      return formatPrice(promo.discount_amount);
     }
   };
 
@@ -64,15 +64,13 @@ const PromoCard: React.FC<PromoCardProps> = ({
                 </span>
                 <Divider orientation="vertical" />
                 <span>
-                  {t("minOrder")}: {currencySymbol}
-                  {promo.min_order_total}
+                  {t("minOrder")}: {formatPrice(promo.min_order_total)}
                 </span>
                 {promo.max_discount_value && (
                   <>
                     <Divider orientation="vertical" />
                     <span>
-                      {t("maxSave")}: {currencySymbol}
-                      {promo.max_discount_value}
+                      {t("maxSave")}: {formatPrice(promo.max_discount_value)}
                     </span>
                   </>
                 )}

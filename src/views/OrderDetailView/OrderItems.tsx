@@ -1,14 +1,14 @@
 import OrderItemReviewCard from "@/components/Modals/OrderItemReviewCard";
 import FilePreview from "@/components/FilePreview";
 import { orderStatusColorMap } from "@/config/constants";
-import { getOrderStatusBtnConfig, isStatusBeforeOrAt } from "@/helpers/getters";
-import { formatString } from "@/helpers/validator";
+import { getOrderStatusBtnConfig } from "@/helpers/getters";
 import { Order, OrderItem } from "@/types/ApiResponse";
 import { Button, Card, CardBody, CardHeader, Chip, Image } from "@heroui/react";
-import { Package, ShoppingBag, Star, Truck } from "lucide-react";
+import { Package, ShoppingBag, Star } from "lucide-react";
 import Link from "next/link";
 import React, { FC, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "@/components/Functional/Price";
 import Lightbox from "yet-another-react-lightbox";
 
 interface GroupedStore {
@@ -18,8 +18,6 @@ interface GroupedStore {
 
 interface OrderItemsProps {
   order: Order;
-  currencySymbol: string;
-  onOpen: () => void;
   handleProductReview: (item: OrderItem) => void;
   onReturnOpen?: () => void;
   onCancelOpen?: () => void;
@@ -27,14 +25,17 @@ interface OrderItemsProps {
 
 const OrderItems: FC<OrderItemsProps> = ({
   order,
-  onOpen,
-  currencySymbol,
   handleProductReview,
   onReturnOpen,
   onCancelOpen,
 }) => {
   const buttonConfig = getOrderStatusBtnConfig(order.status);
   const { t } = useTranslation();
+  const { formatWith } = useCurrency();
+  // Detail amounts are shown in THIS order's own market currency (a past order
+  // may belong to a different market than the currently selected one).
+  const formatPrice = (amount: number | string | null | undefined) =>
+    formatWith(amount, order.currency_symbol, order.format);
 
   const groupedItems = useMemo(() => {
     const grouped = order.items.reduce(
@@ -105,15 +106,7 @@ const OrderItems: FC<OrderItemsProps> = ({
         <div className="flex items-center flex-wrap gap-2">
           {buttonConfig.cancelOrder &&
             onCancelOpen &&
-            order.items.some(
-              (item) =>
-                item.product?.is_cancelable &&
-                (!item.product?.cancelable_till ||
-                  isStatusBeforeOrAt(
-                    order.status,
-                    item.product.cancelable_till,
-                  )),
-            ) && (
+            order.items.some((item) => item.can_cancel) && (
               <Button
                 size="sm"
                 variant="light"
@@ -125,19 +118,6 @@ const OrderItems: FC<OrderItemsProps> = ({
                 {t("cancel")}
               </Button>
             )}
-          {buttonConfig.trackOrder && (
-            <Button
-              size="sm"
-              color="primary"
-              variant="light"
-              className="text-xs h-6 sm:h-5"
-              onPress={onOpen}
-              startContent={<Truck className="w-4 h-4" />}
-              title={t("trackOrder")}
-            >
-              {t("trackOrder")}
-            </Button>
-          )}
           {buttonConfig.returnOrder &&
             order.items.some((item) => item.return_eligible) &&
             onReturnOpen && (
@@ -240,8 +220,8 @@ const OrderItems: FC<OrderItemsProps> = ({
                                           {groupTitle ? `${groupTitle}: ` : ""}
                                           {itemTitle}
                                           <span className="ml-1 opacity-80 font-medium">
-                                            ({item.quantity} × {currencySymbol}
-                                            {addonPrice.toFixed(2)})
+                                            ({item.quantity} ×{" "}
+                                            {formatPrice(addonPrice)})
                                           </span>
                                         </span>
                                      );
@@ -271,17 +251,17 @@ const OrderItems: FC<OrderItemsProps> = ({
                           {/* Price Info */}
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
                             <span className="text-gray-600 dark:text-gray-300">
-                              {currencySymbol}
-                              {Number(item.price) +
-                                Number(item.tax_amount)} × {item.quantity}
+                              {formatPrice(
+                                Number(item.price) + Number(item.tax_amount),
+                              )}{" "}
+                              × {item.quantity}
                             </span>
                             <p className="font-semibold text-gray-900 dark:text-gray-100">
-                              {currencySymbol}
-                              {item.subtotal}
+                              {formatPrice(item.subtotal)}
                             </p>
                           </div>
 
-                          {/* Status Chip */}
+                          {/* Status Chip — customer-friendly headline */}
                           <Chip
                             size="sm"
                             color={orderStatusColorMap(item?.status)}
@@ -289,9 +269,11 @@ const OrderItems: FC<OrderItemsProps> = ({
                             radius="sm"
                             className="hover:cursor-pointer"
                             classNames={{ content: "text-xs" }}
-                            title={formatString(item?.status)}
+                            title={
+                              item.customer_status?.label || item.status_label
+                            }
                           >
-                            {formatString(item?.status)}
+                            {item.customer_status?.label || item.status_label}
                           </Chip>
                         </div>
 

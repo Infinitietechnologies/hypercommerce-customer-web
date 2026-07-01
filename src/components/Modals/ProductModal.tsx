@@ -60,7 +60,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
   editingQuantity,
   initialSelectedAddons,
 }) => {
-  const { currencySymbol, systemSettings } = useSettings();
+  const { formatPrice, systemSettings } = useSettings();
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
@@ -571,18 +571,16 @@ const SimpleProductModal: FC<ProductModalProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold">
-                  {currencySymbol}
-                  {finalPrice.toFixed(2)}
+                  {formatPrice(finalPrice)}
                 </div>
                 {hasDiscount && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-foreground/50 line-through">
-                      {currencySymbol}
-                      {price.toFixed(2)}
+                      {formatPrice(price)}
                     </span>
                     <span className="text-xs text-green-600 font-medium">
                       {t("product_modal.save", {
-                        amount: `${currencySymbol} ${(price - specialPrice).toFixed(2)}`,
+                        amount: formatPrice(price - specialPrice),
                       })}
                     </span>
                   </div>
@@ -623,8 +621,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                 {t("product_modal.subtotal", { count: quantity })}
               </span>
               <span className="text-sm font-medium text-foreground">
-                {currencySymbol}
-                {totalPrice.toFixed(2)}
+                {formatPrice(totalPrice)}
               </span>
             </div>
             {savings > 0 && (
@@ -648,8 +645,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                   )}
                 </div>
                 <span className="text-sm font-medium text-green-600">
-                  -{currencySymbol}
-                  {savings.toFixed(2)}
+                  {formatPrice(-savings)}
                 </span>
               </div>
             )}
@@ -793,8 +789,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                                     </span>
                                     {item.price > 0 && (
                                       <span className="text-xs font-semibold text-foreground whitespace-nowrap">
-                                        +{currencySymbol}
-                                        {item.price.toFixed(2)}
+                                        +{formatPrice(item.price)}
                                       </span>
                                     )}
                                   </div>
@@ -836,8 +831,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                                 </span>
                                 {item.price > 0 && (
                                   <span className="text-xs font-semibold text-foreground whitespace-nowrap">
-                                    +{currencySymbol}
-                                    {item.price.toFixed(2)}
+                                    +{formatPrice(item.price)}
                                   </span>
                                 )}
                               </div>
@@ -910,8 +904,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                                           </span>
                                           {item.price > 0 && (
                                             <span className="text-xs font-semibold text-foreground whitespace-nowrap">
-                                              +{currencySymbol}
-                                              {item.price.toFixed(2)}
+                                              +{formatPrice(item.price)}
                                             </span>
                                           )}
                                         </div>
@@ -961,8 +954,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                                         </span>
                                         {item.price > 0 && (
                                           <span className="text-xs font-semibold text-foreground whitespace-nowrap">
-                                            +{currencySymbol}
-                                            {item.price.toFixed(2)}
+                                            +{formatPrice(item.price)}
                                           </span>
                                         )}
                                       </div>
@@ -1020,8 +1012,8 @@ const SimpleProductModal: FC<ProductModalProps> = ({
               {selectedVariant.stock === 0
                 ? t("product_modal.out_of_stock")
                 : editingCartItemId
-                  ? `${t("product_modal.update_cart_item")} • ${currencySymbol} ${totalPrice.toFixed(2)}`
-                  : `${t("product_modal.add_to_cart_title")} • ${currencySymbol} ${totalPrice.toFixed(2)}`}
+                  ? `${t("product_modal.update_cart_item")} • ${formatPrice(totalPrice)}`
+                  : `${t("product_modal.add_to_cart_title")} • ${formatPrice(totalPrice)}`}
             </Button>
           </div>
         </ModalFooter>

@@ -21,7 +21,7 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { Order, OrderItem, OrderItemReturnRequest } from "@/types/ApiResponse";
 import { cancelReturnReq, returnOrderItem } from "@/routes/api";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useCurrency } from "@/components/Functional/Price";
 import { orderStatusColorMap } from "@/config/constants";
 import { formatString } from "@/helpers/validator";
 
@@ -49,7 +49,11 @@ const ReturnOrderItemModal: FC<ReturnOrderItemModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { currencySymbol } = useSettings();
+  const { formatWith } = useCurrency();
+  // Amounts belong to THIS order's own currency (orders may mix currencies),
+  // so format with the order's symbol + format, not the active market's.
+  const formatPrice = (amount: number | string | null | undefined) =>
+    formatWith(amount, order.currency_symbol, order.format);
 
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
@@ -490,13 +494,11 @@ const ReturnOrderItemModal: FC<ReturnOrderItemModalProps> = ({
                                 {t("qty")}: {item.quantity}
                               </span>
                               <span>
-                                {t("unit_price")}: {currencySymbol}
-                                {priceWithTax.toFixed(2)}
+                                {t("unit_price")}: {formatPrice(priceWithTax)}
                               </span>
                             </div>
                             <div className="text-primary font-semibold">
-                              {t("subtotal")}: {currencySymbol}
-                              {itemSubtotal}
+                              {t("subtotal")}: {formatPrice(itemSubtotal)}
                             </div>
                           </div>
                           {item.addons && item.addons.length > 0 && (
@@ -519,8 +521,8 @@ const ReturnOrderItemModal: FC<ReturnOrderItemModalProps> = ({
                                       {groupTitle ? `${groupTitle}: ` : ""}
                                       {itemTitle}
                                       <span className="ml-1 opacity-80 font-medium">
-                                        ({item.quantity} × {currencySymbol}
-                                        {addonPrice.toFixed(2)})
+                                        ({item.quantity} ×{" "}
+                                        {formatPrice(addonPrice)})
                                       </span>
                                     </div>
                                   );
@@ -676,8 +678,7 @@ const ReturnOrderItemModal: FC<ReturnOrderItemModalProps> = ({
                     </p>
                     <p className="text-xxs text-foreground/60">
                       {t("qty")}: {selectedItem.quantity} · {t("price")}:{" "}
-                      {currencySymbol}
-                      {selectedItem.price}
+                      {formatPrice(selectedItem.price)}
                     </p>
                   </div>
                   <Chip
@@ -861,8 +862,7 @@ const ReturnOrderItemModal: FC<ReturnOrderItemModalProps> = ({
                               {t("qty")}: {item.quantity}
                             </span>
                             <span>
-                              {t("price")}: {currencySymbol}
-                              {item.price}
+                              {t("price")}: {formatPrice(item.price)}
                             </span>
                             {timelineLabel && (
                               <span>

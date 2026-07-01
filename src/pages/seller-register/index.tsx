@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import PageHeader from "@/components/custom/PageHeader";
 import { getSettings } from "@/routes/api";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { GetServerSideProps } from "next";
 import { loadTranslations } from "../../../i18n";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -58,7 +59,8 @@ export default function SellerRegistration() {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const settings = await getSettings();
+        const market = getMarketFromContext(context);
+        const settings = await getSettings({ market });
 
         // Server-side redirect for single vendor mode
         const systemSettings = settings?.data?.find(

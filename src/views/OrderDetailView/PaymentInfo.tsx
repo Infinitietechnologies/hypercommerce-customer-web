@@ -3,7 +3,7 @@ import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import { CreditCard } from "lucide-react";
 import { Order } from "@/types/ApiResponse";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useCurrency } from "@/components/Functional/Price";
 
 interface PaymentInfoProps {
   order: Order;
@@ -11,7 +11,10 @@ interface PaymentInfoProps {
 
 const PaymentInfo: FC<PaymentInfoProps> = ({ order }) => {
   const { t } = useTranslation();
-  const { currencySymbol } = useSettings();
+  const { formatWith } = useCurrency();
+  // Show amounts in THIS order's own market currency.
+  const formatPrice = (amount: number | string | null | undefined) =>
+    formatWith(amount, order.currency_symbol, order.format);
 
   // Calculate wallet amount used
   const walletAmountUsed = Math.max(0, Number(order.wallet_balance || 0));
@@ -67,8 +70,7 @@ const PaymentInfo: FC<PaymentInfoProps> = ({ order }) => {
                 {t("walletAmountUsed")}
               </span>
               <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                {currencySymbol}
-                {walletAmountUsed.toFixed(2)}
+                {formatPrice(walletAmountUsed)}
               </span>
             </div>
           )}

@@ -40,7 +40,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
   }, []);
 
   const referralCode = referralInfo?.referral_code || "";
-  const { currencySymbol = "$" } = useSettings();
+  const { formatPrice } = useSettings();
   const program = referralInfo?.program;
   // const bonusValue = program?.referrer_bonus_value;
   // const bonusMethod = program?.referrer_bonus_method || "fixed";
@@ -53,7 +53,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
   //     : "";
   const rewardCapDisplay =
     bonusCap != null && bonusCap !== ""
-      ? `${currencySymbol}${bonusCap}`
+      ? formatPrice(bonusCap)
       : "";
 
   // const hasRewards = !!(rewardValueDisplay || rewardCapDisplay);

@@ -15,7 +15,7 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
   const userData = (useSelector((state: RootState) => state.auth.user) ||
     {}) as userData;
 
-  const { webSettings, currencySymbol } = useSettings();
+  const { webSettings, formatPrice } = useSettings();
   const { siteHeaderDarkLogo = "", siteName = "" } = webSettings || {};
 
   const { t } = useTranslation();
@@ -46,8 +46,7 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
           <div className="flex justify-between items-start">
             {!loading && (
               <div className="font-mono text-xl md:text-xl tracking-wider">
-                {currencySymbol}
-                <span className="ml-1">{userData?.wallet_balance}</span>
+                <span>{formatPrice(userData?.wallet_balance)}</span>
               </div>
             )}
           </div>

@@ -59,7 +59,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
   editingCartItemId = null,
   editingQuantity,
 }) => {
-  const { currencySymbol, systemSettings } = useSettings();
+  const { formatPrice, systemSettings } = useSettings();
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const [isLightboxOpen, setLightboxOpen] = useState(false);
@@ -557,8 +557,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                     </span>
                                     {item.price > 0 && (
                                       <span className="text-xs font-semibold text-foreground">
-                                        +{currencySymbol}
-                                        {item.price.toFixed(2)}
+                                        +{formatPrice(item.price)}
                                       </span>
                                     )}
                                   </div>
@@ -614,8 +613,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                   </span>
                                   {item.price > 0 && (
                                     <span className="text-xs font-semibold text-foreground">
-                                      +{currencySymbol}
-                                      {item.price.toFixed(2)}
+                                      +{formatPrice(item.price)}
                                     </span>
                                   )}
                                 </div>
@@ -701,8 +699,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                           </span>
                                           {item.price > 0 && (
                                             <span className="text-xs font-semibold text-foreground">
-                                              +{currencySymbol}
-                                              {item.price.toFixed(2)}
+                                              +{formatPrice(item.price)}
                                             </span>
                                           )}
                                         </div>
@@ -764,8 +761,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                         </span>
                                         {item.price > 0 && (
                                           <span className="text-xs font-semibold text-foreground">
-                                            +{currencySymbol}
-                                            {item.price.toFixed(2)}
+                                            +{formatPrice(item.price)}
                                           </span>
                                         )}
                                       </div>
@@ -872,13 +868,11 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                               </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-sm font-bold">
-                                  {currencySymbol}
-                                  {price.toFixed(2)}
+                                  {formatPrice(price)}
                                 </span>
                                 {hasDisc && (
                                   <span className="text-xxs text-foreground/50 line-through">
-                                    {currencySymbol}
-                                    {original.toFixed(2)}
+                                    {formatPrice(original)}
                                   </span>
                                 )}
                               </div>
@@ -992,10 +986,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                               >
                                 {v.stock === 0
                                   ? t("product_modal.out_of_stock")
-                                  : `${t("product_modal.add_to_cart_title")} • ${
-                                      currencySymbol +
-                                      (price * qty).toFixed(2)
-                                    }`}
+                                  : `${t("product_modal.add_to_cart_title")} • ${formatPrice(price * qty)}`}
                               </Button>
                             </div>
                           ) : null}
@@ -1030,8 +1021,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                   <div className="flex items-end justify-between">
                     <div className="flex flex-col">
                       <span className="text-lg font-bold">
-                        {currencySymbol}
-                        {totalPrice.toFixed(2)}
+                        {formatPrice(totalPrice)}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">

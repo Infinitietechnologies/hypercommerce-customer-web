@@ -15,6 +15,7 @@ import HomeBrands from "@/views/homePage/HomeBrands";
 import HomeStores from "@/views/homePage/HomeStores";
 import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { loadTranslations } from "../../i18n";
 import { useTranslation } from "react-i18next";
 import DynamicSEO from "@/SEO/DynamicSEO";
@@ -103,6 +104,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
           await loadTranslations(context);
 
           const access_token = (await getAccessTokenFromContext(context)) || "";
+          const market = getMarketFromContext(context);
 
           // 1️⃣ take category from query if available, else fallback to cookie
           const queryCategory = context.query.category as string | undefined;
@@ -112,7 +114,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
           const homeCategory = queryCategory || cookieCategory;
 
           const { settings, categories, products, brands, stores } =
-            await getHomePageData({ access_token, homeCategory });
+            await getHomePageData({ access_token, homeCategory, market });
 
           return {
             props: {

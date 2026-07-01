@@ -25,6 +25,7 @@ export type HomePageData = {
 type HomePageParams = {
   access_token?: string;
   homeCategory?: string;
+  market?: string;
 };
 
 /**
@@ -36,7 +37,7 @@ type HomePageParams = {
 export const getHomePageData = async (
   params: HomePageParams = {}
 ): Promise<HomePageData> => {
-  const { access_token = "", homeCategory = "" } = params;
+  const { access_token = "", homeCategory = "", market } = params;
 
   // Initialize with default values
   let settings: Settings = {} as Settings;
@@ -47,7 +48,7 @@ export const getHomePageData = async (
 
   // Fetch settings (still needed for site config)
   try {
-    const settingsResponse = await getSettings();
+    const settingsResponse = await getSettings({ market });
     if (settingsResponse.success && settingsResponse.data) {
       settings = settingsResponse.data;
     } else {
@@ -69,9 +70,11 @@ export const getHomePageData = async (
       ? getSubCategories({
           slug,
           filter: "top_category",
+          market,
         })
       : getCategories({
           slug,
+          market,
         }));
 
     if (categoriesResponse.success && categoriesResponse.data) {
@@ -89,6 +92,7 @@ export const getHomePageData = async (
   try {
     const brandsResponse = await getBrands({
       scope_category_slug: homeCategory ? homeCategory : undefined,
+      market,
     });
     if (brandsResponse.success && brandsResponse.data) {
       brands = brandsResponse.data.data || [];
@@ -103,6 +107,7 @@ export const getHomePageData = async (
   try {
     const productsResponse = await getProducts({
       access_token,
+      market,
       include_child_categories: 0,
       categories: homeCategory
         ? homeCategory == "all"
@@ -123,7 +128,7 @@ export const getHomePageData = async (
 
   // Fetch stores
   try {
-    const storesResponse = await getStores();
+    const storesResponse = await getStores({ market });
     if (storesResponse.success && storesResponse.data) {
       stores = storesResponse.data.data || [];
     } else {

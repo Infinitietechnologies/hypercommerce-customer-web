@@ -1,6 +1,7 @@
 import { GetServerSideProps } from "next";
 import { getSlugFromContext, isSSR } from "@/helpers/getters";
 import { getAccessTokenFromContext } from "@/helpers/auth";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import ProductDetailPageView from "@/views/Products/ProductDetailPageView";
 import { ArrowRight, Package, ShoppingCart } from "lucide-react";
@@ -282,6 +283,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
       try {
         const access_token =
           (await getAccessTokenFromContext(context)) || "";
+        const market = getMarketFromContext(context);
 
         await loadTranslations(context);
 
@@ -293,6 +295,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const data = await fetchProductDetailPageData({
           slug,
           access_token,
+          market,
         });
 
         console.log(

@@ -12,6 +12,7 @@ import {
   HomeSection,
   KeywordSearch,
   Order,
+  OrderListItem,
   OrderCheckoutResponse,
   PaginatedResponse,
   PaystackCreateOrderResponse,
@@ -93,13 +94,16 @@ setupInterceptors(api);
 
 // ALL Settings
 export const getSettings = async (
-  params: { access_token?: string | null } = {},
+  params: { access_token?: string | null; market?: string } = {},
 ): Promise<ApiResponse<Settings>> => {
   try {
     const response = await api.get<ApiResponse<Settings>>("/settings", {
-      headers: params.access_token
-        ? { Authorization: `Bearer ${params.access_token}` }
-        : undefined,
+      headers: {
+        ...(params.market ? { "X-Market": params.market } : {}),
+        ...(params.access_token
+          ? { Authorization: `Bearer ${params.access_token}` }
+          : {}),
+      },
     });
 
     return response.data;
@@ -398,6 +402,7 @@ export const getCategories = async (
     page?: string | number;
     per_page?: string | number;
     slug?: string;
+    market?: string;
   } = {},
 ): Promise<PaginatedResponse<Category[]>> => {
   try {
@@ -415,6 +420,7 @@ export const getSubCategories = async (
     per_page?: string | number;
     slug?: string;
     filter?: "random" | "top_category";
+    market?: string;
   } = {},
 ): Promise<PaginatedResponse<Category[]>> => {
   try {
@@ -611,6 +617,7 @@ export const getBrands = async (
     page?: string | number;
     per_page?: string | number;
     scope_category_slug?: string;
+    market?: string;
   } = {},
 ): Promise<PaginatedResponse<Brand[]>> => {
   try {
@@ -628,6 +635,7 @@ export const getStores = async (
     page?: string | number;
     per_page?: string | number;
     search?: string;
+    market?: string;
   } = {},
 ): Promise<PaginatedResponse<Store[]>> => {
   try {
@@ -641,9 +649,12 @@ export const getStores = async (
 
 export const getSpecificStore = async (
   slug: string,
+  market?: string,
 ): Promise<ApiResponse<Store>> => {
   try {
-    const response = await api.get(`/stores/${slug}`);
+    const response = await api.get(`/stores/${slug}`, {
+      params: market ? { market } : undefined,
+    });
     return response.data;
   } catch (error) {
     console.error("API error:", error);
@@ -665,6 +676,7 @@ export const getProducts = async (
     store?: string;
     include_child_categories?: number;
     attribute_values?: string;
+    market?: string;
   } = {},
 ): Promise<PaginatedResponse<Product[], { keywords: string[] }>> => {
   try {
@@ -687,6 +699,37 @@ export const getProducts = async (
   }
 };
 
+// Debug/testing helper: ask the backend which market a given country maps to.
+// The backend's geo-detect resolves a market from the country header
+// (X-Country-Code), so we can preview the market for a picked location.
+export const geoDetectForCountry = async (
+  countryCode?: string,
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await api.get("/geo-detect", {
+      headers: countryCode ? { "X-Country-Code": countryCode } : undefined,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
+// Switch the active market. Backend sets a `market` cookie (1yr) and, when
+// authenticated, updates the user_market pivot. Body: { code }.
+export const switchMarket = async (
+  code: string,
+): Promise<ApiResponse<any>> => {
+  try {
+    const response = await api.post("/markets/switch", { code });
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
 export const getSidebarFilters = async (params: {
   attribute_values?: string;
   categories?: string;
@@ -694,6 +737,7 @@ export const getSidebarFilters = async (params: {
   type?: string;
   value?: string;
   access_token?: string;
+  market?: string;
 }): Promise<ApiResponse<SidebarFilters>> => {
   try {
     const { access_token, ...rest } = params;
@@ -717,6 +761,7 @@ export const getProductBySlug = async (
   params: {
     slug?: string;
     access_token?: string | undefined;
+    market?: string;
   } = {},
 ): Promise<ApiResponse<Product>> => {
   try {
@@ -735,6 +780,7 @@ export const getProductsByKeyword = async (
   params: {
     keywords?: string;
     per_page?: string | number;
+    market?: string;
   } = {},
 ): Promise<ApiResponse<KeywordSearch>> => {
   try {
@@ -908,6 +954,7 @@ export const getHomeLayout = async (
     category_slug?: string;
     page?: string | number;
     per_page?: string | number;
+    market?: string;
   } = {},
 ): Promise<ApiResponse<HomeLayout>> => {
   try {
@@ -926,6 +973,7 @@ export const getHomeLayoutSection = async (
     sectionId: string | number;
     page?: string | number;
     per_page?: string | number;
+    market?: string;
   },
 ): Promise<PaginatedResponse<HomeSection[]>> => {
   try {
@@ -962,6 +1010,7 @@ export const getCart = async (
     address_id?: string | number;
     promo_code?: string;
     use_wallet?: boolean;
+    market?: string;
   } = {},
 ): Promise<ApiResponse<CartResponse>> => {
   try {
@@ -1092,7 +1141,7 @@ export const getOrders = async (
     date_range?: string;
     status?: string;
   } = {},
-): Promise<PaginatedResponse<Order[]>> => {
+): Promise<PaginatedResponse<OrderListItem[]>> => {
   try {
     const { access_token = "" } = params;
     const response = await api.get("/user/orders", {

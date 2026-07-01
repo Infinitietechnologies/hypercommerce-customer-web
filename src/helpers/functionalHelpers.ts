@@ -15,6 +15,8 @@ import {
 } from "@/types/ApiResponse";
 import { addToast } from "@heroui/react";
 import axios, { AxiosError } from "axios";
+import { GetServerSidePropsContext } from "next";
+import { parse } from "cookie";
 // Import the new actions
 import {
   setCartData,
@@ -586,4 +588,22 @@ export const urlToFile = async (
 
 export const isRTL = (currentLang: string = "") => {
   return ["ar", "fa", "ur"].includes(currentLang);
+};
+
+/**
+ * SSR helper: read the shopper's active `market` cookie from the request so it
+ * can be forwarded to market-scoped API calls (the axios interceptor turns a
+ * `params.market` value into the backend's `X-Market` header). Mirrors how
+ * `getAccessTokenFromContext` threads the access token on SSR.
+ */
+export const getMarketFromContext = (
+  context: GetServerSidePropsContext,
+): string | undefined => {
+  try {
+    const cookies = parse(context.req.headers.cookie || "");
+    const m = cookies.market;
+    return m ? String(m).replace(/^["']|["']$/g, "").trim() || undefined : undefined;
+  } catch {
+    return undefined;
+  }
 };

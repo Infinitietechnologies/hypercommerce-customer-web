@@ -110,7 +110,7 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
   const totalPages = Math.ceil(total / per_page);
 
   const columns = [
-    { key: "id", label: t("transaction_id") },
+    { key: "id", label: t("id") },
     { key: "transaction_reference", label: t("payment_id") },
     { key: "transaction_type", label: t("type") },
     { key: "status", label: t("status") },
@@ -207,8 +207,7 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
       case "amount":
         return (
           <span className="text-xxs md:text-xs">
-            {transaction.currency_code}{" "}
-            {parseFloat(transaction.amount).toFixed(2)}
+            {transaction.formatted_amount}{" "}
           </span>
         );
       case "payment_method":

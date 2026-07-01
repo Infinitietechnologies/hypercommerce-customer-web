@@ -8,8 +8,12 @@ import {
   Settings,
   SystemSettings,
   AdvertisementSettings,
+  MarketInfo,
+  MarketsSetting,
+  MarketFormat,
 } from "@/types/ApiResponse";
 import { getSpecificSettings, getWebSettings } from "@/helpers/getters";
+import { formatCurrency } from "@/helpers/currency";
 import { staticLat, staticLng } from "@/config/constants";
 
 type LatLng = {
@@ -31,6 +35,11 @@ type SettingsContextType = {
   isSingleVendor: boolean;
   currencySymbol: string;
   currency: string;
+  // Active market (from settings.markets.current) + its number-format rules.
+  market: MarketInfo | null;
+  currencyFormat: MarketFormat | null;
+  // Format any amount (already in market currency) for the active market.
+  formatPrice: (amount: number | string | null | undefined) => string;
   defaultLocation: LatLng | null;
   demoMode: boolean;
 };
@@ -48,6 +57,9 @@ const SettingsContext = createContext<SettingsContextType>({
   isSingleVendor: false,
   currencySymbol: "",
   currency: "",
+  market: null,
+  currencyFormat: null,
+  formatPrice: (amount) => String(amount ?? ""),
   defaultLocation: null,
   demoMode: false,
 });
@@ -94,9 +106,26 @@ export const SettingsProvider = ({
 
   const systemVendorType = systemSettings?.systemVendorType || "multiple";
   const isSingleVendor = systemVendorType === "single";
-  const currencySymbol = systemSettings?.currencySymbol || "";
-  const currency = systemSettings?.currency || "";
+
+  // Active market currency (from settings.markets.current). settings re-fetches
+  // per market (X-Market), so this reflects the selected market. Falls back to
+  // the static base-currency symbol when no market block is present.
+  const marketsSetting = Array.isArray(settings)
+    ? ((settings as { variable: string; value: unknown }[]).find(
+        (s) => s?.variable === "markets",
+      )?.value as MarketsSetting | undefined)
+    : undefined;
+  const market = marketsSetting?.current ?? null;
+  const currencyFormat = market?.format ?? null;
+
+  const currencySymbol =
+    market?.currency?.symbol || systemSettings?.currencySymbol || "";
+  const currency =
+    market?.currency_code || systemSettings?.currency || "";
   const demoMode = systemSettings?.demoMode || false;
+
+  const formatPrice = (amount: number | string | null | undefined) =>
+    formatCurrency(amount, currencySymbol, currencyFormat);
 
   const defaultLocation =
     webSettings?.defaultLatitude && webSettings?.defaultLongitude
@@ -117,6 +146,9 @@ export const SettingsProvider = ({
         defaultLocation,
         currencySymbol,
         currency,
+        market,
+        currencyFormat,
+        formatPrice,
         paymentSettings,
         authSettings,
         homeGeneralSettings,

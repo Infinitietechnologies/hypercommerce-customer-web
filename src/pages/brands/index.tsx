@@ -2,6 +2,7 @@ import { GetServerSideProps } from "next";
 import { getBrands, getSettings } from "@/routes/api";
 import React from "react";
 import { isSSR } from "@/helpers/getters";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import { Brand, PaginatedResponse } from "@/types/ApiResponse";
@@ -135,13 +136,15 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
         const slug = context.query.slug as string | undefined;
+        const market = getMarketFromContext(context);
 
         const brands = await getBrands({
           page: 1,
           per_page: PER_PAGE,
           scope_category_slug: slug,
+          market,
         });
-        const settings = await getSettings();
+        const settings = await getSettings({ market });
         await loadTranslations(context);
 
         return {

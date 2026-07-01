@@ -1,5 +1,5 @@
 import { Product } from "@/types/ApiResponse";
-import { Card, CardBody, CardHeader, Avatar, Chip } from "@heroui/react";
+import { Card, CardHeader, Avatar } from "@heroui/react";
 import Link from "next/link";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,16 +7,7 @@ import { Star } from "lucide-react"; // ⭐ Lucide icon
 
 const SoldBySection: FC<{ product: Product }> = ({ product }) => {
   const { t } = useTranslation();
-  const {
-    seller,
-    variants,
-    store_status = {
-      is_open: false,
-      current_slot: null,
-      next_opening_time: null,
-    },
-    seller_ratings,
-  } = product || {};
+  const { seller, variants, seller_ratings } = product || {};
   const defaultVariant = variants?.[0];
   const seller_rating = seller_ratings?.average_rating || 0;
 
@@ -63,33 +54,6 @@ const SoldBySection: FC<{ product: Product }> = ({ product }) => {
           )}
         </div>
       </CardHeader>
-
-      <CardBody className="pt-1">
-        {store_status?.is_open !== undefined && (
-          <Chip
-            color={store_status.is_open ? "success" : "danger"}
-            variant="flat"
-            className="mb-2"
-          >
-            {store_status.is_open
-              ? t("soldBySection.open")
-              : t("soldBySection.closed")}
-          </Chip>
-        )}
-
-        <p className="text-sm text-foreground/50 mb-1">
-          {store_status?.is_open
-            ? t("soldBySection.acceptingOrders")
-            : t("soldBySection.storeClosed")}
-        </p>
-
-        {/* Show next opening time only if closed */}
-        {!store_status?.is_open && store_status?.next_opening_time && (
-          <p className="text-sm text-primary font-medium">
-            {t("soldBySection.opensAt")} {store_status.next_opening_time}
-          </p>
-        )}
-      </CardBody>
     </Card>
   );
 };

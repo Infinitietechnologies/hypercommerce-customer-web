@@ -24,7 +24,7 @@ import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import { Trash2, Tag, Wallet } from "lucide-react";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
-import { formatAmount, handleCheckout } from "@/helpers/functionalHelpers";
+import { handleCheckout } from "@/helpers/functionalHelpers";
 
 interface CheckoutSectionProps {
   cart: CartResponse;
@@ -39,15 +39,8 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
 
   const [showClearCartModal, setShowClearCartModal] = useState(false);
   const router = useRouter();
-  const {
-    currencySymbol: settingsCurrencySymbol,
-    systemSettings,
-    isSingleVendor,
-  } = useSettings();
+  const { formatPrice, systemSettings, isSingleVendor } = useSettings();
   const { payment_summary, items, total_quantity } = cart;
-  // Prefer the market-aware symbol the payment summary carries; fall back to settings.
-  const currencySymbol =
-    payment_summary.currency_symbol || settingsCurrencySymbol;
   const selectedAddress = useSelector(
     (state: RootState) => state.checkout.selectedAddress,
   );
@@ -112,29 +105,6 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
           });
           return;
         }
-      }
-
-      // Check closed stores
-      const closedStores =
-        items?.length > 0
-          ? items.filter((item) => !item.store?.status?.is_open)
-          : [];
-
-      if (closedStores.length > 0) {
-        const closedStoreNames = closedStores
-          .map((s) => s.store?.name)
-          .filter(Boolean)
-          .join(", ");
-
-        addToast({
-          title: t("checkout.closedStores.title"),
-          description: t("checkout.closedStores.description", {
-            stores: closedStoreNames,
-          }),
-          color: "danger",
-        });
-
-        return;
       }
 
       // Wallet-only checkout
@@ -243,11 +213,14 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
     const remainingAmount = minimumCartAmount - payment_summary.items_total;
     validationErrors.push(
       t("checkout.validation.minCartAmount", {
-        minAmount: formatAmount(minimumCartAmount),
-        currentAmount: formatAmount(payment_summary.items_total),
-        remainingAmount: formatAmount(remainingAmount),
-        currencySymbol,
-        defaultValue: `Minimum cart amount is ${currencySymbol}${formatAmount(minimumCartAmount)}. Add ${currencySymbol}${formatAmount(remainingAmount)} more to proceed.`,
+        // Amounts are pre-formatted for the active market (symbol + number
+        // format included), so the translation's {{currencySymbol}} slot is
+        // emptied to avoid a duplicate/static symbol.
+        minAmount: formatPrice(minimumCartAmount),
+        currentAmount: formatPrice(payment_summary.items_total),
+        remainingAmount: formatPrice(remainingAmount),
+        currencySymbol: "",
+        defaultValue: `Minimum cart amount is ${formatPrice(minimumCartAmount)}. Add ${formatPrice(remainingAmount)} more to proceed.`,
       }),
     );
   }
@@ -270,15 +243,14 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
           </Button>
         </CardHeader>
         <CardBody>
-          <CartItems items={cart.items} currencySymbol={currencySymbol} />
+          <CartItems items={cart.items} />
         </CardBody>
         <CardFooter className="space-y-6 flex flex-col w-full border-t-1 border-gray-200 dark:border-default-100">
           <div className="space-y-3 pt-4 w-full text-sm">
             <div className="flex justify-between">
               <span>{t("checkout.itemsTotal")}</span>
               <span>
-                {currencySymbol}
-                {formatAmount(payment_summary.items_total)}
+                {formatPrice(payment_summary.items_total)}
               </span>
             </div>
             <div className="w-full -mt-2 text-start text-xs text-gray-500">
@@ -291,8 +263,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                   {t("checkout.totalSaving", { defaultValue: "Total savings" })}
                 </span>
                 <span>
-                  -{currencySymbol}
-                  {formatAmount(payment_summary.total_saving)}
+                  {formatPrice(-payment_summary.total_saving)}
                 </span>
               </div>
             )}
@@ -305,8 +276,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                   <span className="flex items-center gap-2">
                     {/* Strikethrough original amount */}
                     <span className="line-through text-gray-500">
-                      {currencySymbol}
-                      {formatAmount(payment_summary.delivery_charges)}
+                      {formatPrice(payment_summary.delivery_charges)}
                     </span>
 
                     {/* Free Shipping text */}
@@ -316,8 +286,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                   </span>
                 ) : (
                   <span>
-                    {currencySymbol}
-                    {formatAmount(payment_summary.delivery_charges)}
+                    {formatPrice(payment_summary.delivery_charges)}
                   </span>
                 )}
               </div>
@@ -335,8 +304,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                         </span>
                         {store.is_fulfillable ? (
                           <span>
-                            {currencySymbol}
-                            {formatAmount(store.shipping_cost ?? 0)}
+                            {formatPrice(store.shipping_cost ?? 0)}
                           </span>
                         ) : (
                           <span className="text-danger">
@@ -373,8 +341,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 <div className="flex justify-between">
                   <span>{t("checkout.tax", { defaultValue: "Tax" })}</span>
                   <span>
-                    {currencySymbol}
-                    {formatAmount(payment_summary.tax_total)}
+                    {formatPrice(payment_summary.tax_total)}
                   </span>
                 </div>
                 {payment_summary.tax_breakdown?.map((tax) => (
@@ -386,8 +353,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                       {tax.title} ({tax.rate}%)
                     </span>
                     <span>
-                      {currencySymbol}
-                      {formatAmount(tax.amount)}
+                      {formatPrice(tax.amount)}
                     </span>
                   </div>
                 ))}
@@ -401,8 +367,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                   {t("checkout.platformFee", { defaultValue: "Platform fee" })}
                 </span>
                 <span>
-                  {currencySymbol}
-                  {formatAmount(payment_summary.platform_fee)}
+                  {formatPrice(payment_summary.platform_fee)}
                 </span>
               </div>
             )}
@@ -412,8 +377,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
               <div className="flex justify-between">
                 <span>{t("checkout.codFee", { defaultValue: "COD fee" })}</span>
                 <span>
-                  {currencySymbol}
-                  {formatAmount(payment_summary.cod_fee)}
+                  {formatPrice(payment_summary.cod_fee)}
                 </span>
               </div>
             )}
@@ -427,8 +391,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                   })}
                 </span>
                 <span>
-                  {currencySymbol}
-                  {formatAmount(payment_summary.additional_charges_total)}
+                  {formatPrice(payment_summary.additional_charges_total)}
                 </span>
               </div>
             )}
@@ -442,8 +405,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                       {charge.reason_note || charge.reason}
                     </span>
                     <span>
-                      {currencySymbol}
-                      {formatAmount(charge.amount)}
+                      {formatPrice(charge.amount)}
                     </span>
                   </div>
                 ))}
@@ -455,8 +417,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                       })}
                     </span>
                     <span>
-                      {currencySymbol}
-                      {formatAmount(payment_summary.pending_charges_total)}
+                      {formatPrice(payment_summary.pending_charges_total)}
                     </span>
                   </div>
                 )}
@@ -488,7 +449,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                               {t("checkout.freeShipping")}
                             </span>
                           ) : (
-                            `- ${currencySymbol} ${formatAmount(payment_summary.promo_discount)}`
+                            `- ${formatPrice(payment_summary.promo_discount)}`
                           )}
                         </span>
                       </div>
@@ -525,8 +486,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                           )}
 
                           <span className="font-semibold whitespace-nowrap text-blue-600">
-                            + {currencySymbol}{" "}
-                            {formatAmount(payment_summary.promo_discount)}
+                            + {formatPrice(payment_summary.promo_discount)}
                           </span>
                         </div>
                       </div>
@@ -560,8 +520,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                     {t("checkout.useWalletBalance")}
                   </Switch>
                   <span className="text-xxs text-foreground/80">
-                    ({currencySymbol}
-                    {payment_summary.wallet_balance || 0})
+                    ({formatPrice(payment_summary.wallet_balance || 0)})
                   </span>
                 </div>
               </div>
@@ -572,8 +531,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 <div className="flex justify-between text-green-600">
                   <span>{t("checkout.walletAmountUsed")}</span>
                   <span>
-                    -{currencySymbol}
-                    {payment_summary.wallet_amount_used}
+                    {formatPrice(-payment_summary.wallet_amount_used)}
                   </span>
                 </div>
 
@@ -581,11 +539,10 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 <div className="flex justify-between text-blue-600">
                   <span>{t("checkout.remainingWalletBalance")}</span>
                   <span>
-                    {currencySymbol}
-                    {(
+                    {formatPrice(
                       Number(payment_summary?.wallet_balance ?? 0) -
-                      Number(payment_summary?.wallet_amount_used ?? 0)
-                    ).toFixed(2)}
+                        Number(payment_summary?.wallet_amount_used ?? 0),
+                    )}
                   </span>
                 </div>
               </>
@@ -597,8 +554,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
               <div className="flex justify-between text-lg font-semibold">
                 <span>{t("checkout.totalAmount")}</span>
                 <span>
-                  {currencySymbol}
-                  {formatAmount(payment_summary.payable_amount)}
+                  {formatPrice(payment_summary.payable_amount)}
                 </span>
               </div>
             </div>
