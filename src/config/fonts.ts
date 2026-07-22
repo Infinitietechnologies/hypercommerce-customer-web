@@ -1,21 +1,26 @@
-import { Lexend_Deca } from "next/font/google";
+import localFont from "next/font/local";
 
-export const fontSans = Lexend_Deca({
-  subsets: ["latin"],
-  weight: ["300", "400"], // 👈 lighter than default
+// Figtree matches the Flutter app (hypercommerce-customer-app/pubspec.yaml).
+// Variable font — one file covers every weight the app uses (300-800).
+// next/font requires plain object literals here: no spreads, no shared consts.
+export const fontSans = localFont({
+  src: "../assets/fonts/Figtree-VariableFont_wght.ttf",
+  weight: "300 900",
+  style: "normal",
   variable: "--font-sans",
   display: "swap",
   preload: true,
-  fallback: ["system-ui", "arial"],
-  adjustFontFallback: true,
+  adjustFontFallback: "Arial",
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "arial"],
 });
 
-export const fontMono = Lexend_Deca({
-  subsets: ["latin"],
-  weight: ["300", "400"],
+export const fontMono = localFont({
+  src: "../assets/fonts/Figtree-VariableFont_wght.ttf",
+  weight: "300 900",
+  style: "normal",
   variable: "--font-mono",
   display: "swap",
   preload: true,
-  fallback: ["Courier New", "monospace"],
-  adjustFontFallback: true,
+  adjustFontFallback: "Arial",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });

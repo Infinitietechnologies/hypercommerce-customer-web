@@ -44,10 +44,12 @@ button[aria-label="Toggle fullscreen view"] {
 /* Progress Bar CSS */
 #nprogress {
   pointer-events: none;
+  /* Brand amber, resolved from the HeroUI theme so it follows the tokens. */
+  --nprogress-color: hsl(var(--heroui-primary, 43 100% 54%));
 }
 
 #nprogress .bar {
-  background: #007bff !important; /* Blue progress bar */
+  background: var(--nprogress-color) !important;
   position: fixed;
   z-index: 1031;
   top: 0;
@@ -63,8 +65,8 @@ button[aria-label="Toggle fullscreen view"] {
   width: 100px;
   height: 100%;
   box-shadow:
-    0 0 10px #007bff,
-    0 0 5px #007bff !important;
+    0 0 10px var(--nprogress-color),
+    0 0 5px var(--nprogress-color) !important;
   opacity: 1;
   transform: rotate(3deg) translate(0px, -4px);
 }
@@ -88,8 +90,8 @@ button[aria-label="Toggle fullscreen view"] {
   width: 20px;
   height: 20px;
   border: 2px solid transparent;
-  border-top-color: #007bff;
-  border-left-color: #007bff;
+  border-top-color: var(--nprogress-color);
+  border-left-color: var(--nprogress-color);
   border-radius: 50%;
   animation: nprogress-spinner 400ms linear infinite;
 }
