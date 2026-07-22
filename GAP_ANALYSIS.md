@@ -146,8 +146,8 @@ Legend: ✅ present · 🟡 partial / diverging · ❌ missing · ⬜ N/A on web
 |---|---|---|
 | `splash_screen` | — | ⬜ |
 | `introduction_pages` (`/intro-slider`) | — | ❌ no onboarding/intro flow |
-| `login_page` | `LoginModal` | 🟡 modal-only, no `/login` route |
-| `register_page` | `RegisterModal` | 🟡 modal-only |
+| `login_page` | `/login` | ✅ |
+| `register_page` | `/register` | ✅ |
 | `mobile_otp_login`, `otp_verification`, `continue_with_otp`, `email_otp_verification` | inside modals | 🟡 no dedicated OTP screens |
 | `forgot_password` | `/forgot-password` | ✅ |
 | `referral_code_entry` | — | ❌ |
@@ -280,9 +280,11 @@ Web dark theme is `background #000000` / `foreground #FFFFFF` — pure black, no
 
 Flutter uses **full pages** for promo code, payment options, add money, add/edit address, product rating, and order tracking. Web uses **modals** for all six. On mobile widths this is a real behavioral divergence (no back-button history, no deep-linkability). Desktop modals are fine; mobile should route to a page or a full-screen sheet.
 
-### 6.7 🟠 Auth is modal-only on web
+### 6.7 🚧 Auth is modal-only on web — **partly resolved (Phase 3)**
 
-Flutter has 8 dedicated auth screens. Web funnels everything through `LoginModal` / `RegisterModal`. There is no `/login` or `/register` URL to link to, and `serverSideAuthGuard` redirects to `/?auth=required` rather than a real auth route.
+Flutter has 8 dedicated auth screens. Web funnelled everything through `LoginModal` / `RegisterModal`, with no `/login` or `/register` URL and a redirect to `/?auth=required` that lost the destination.
+
+`/login` and `/register` now exist and the redirect carries `?next=`. The OTP and verification screens are still modal-only — see Phase 3.
 
 ### 6.8 🟡 No `ui/` primitive layer
 
@@ -434,8 +436,27 @@ Both monoliths became **re-export barrels**, so none of the ~190 existing import
 
 **Deliberately not done:** endpoint callers are grouped by domain, but the older orchestrators (`homePageService.ts`, `ProductDetailPageService.ts`, `adTrackingService.ts`) keep their existing names and shape. Renaming them is churn with no benefit right now.
 
-### Phase 3 — Auth parity
-Real routes for `/login`, `/register`, `/otp`, `/email-otp`, `/referral-code`, `/verify-email`, `/verify-phone`. Keep modals for the desktop quick path; point `serverSideAuthGuard` at `/login?next=…`.
+### Phase 3 — Auth parity 🚧 **in progress**
+
+Real routes for the auth screens. Modals stay for the desktop quick path.
+
+| Route | Flutter source | Status |
+|---|---|---|
+| `/login` | `login_page.dart` | ✅ done |
+| `/register` | `register_page.dart` | ✅ done |
+| `/forgot-password` | `forgot_password.dart` | ✅ pre-existing |
+| `/otp` | `mobile_otp_login.dart`, `otp_verification_page.dart` | ⬜ todo |
+| `/verify-email` | `email_otp_verification_page.dart` | ⬜ todo |
+| `/verify-phone` | `mobile_verification_page.dart` | ⬜ todo |
+| `/referral-code` | `referral_code_entry_page.dart` | ⬜ todo |
+
+**Shared pieces built:** `features/auth/components/AuthShell.tsx` (gradient, Skip, heading — matches the Flutter auth chrome) and `features/auth/safeNext.ts`.
+
+**Redirect chain fixed.** Protected pages now send visitors to `/login?next=<destination>` and return them there after sign-in; `?next=` accepts same-origin paths only, so it can't be used as an open redirect.
+
+**Finding — `serverSideAuthGuard` was dead code.** `src/pages/CLAUDE.md` documented it as the protection mechanism, but **no page ever called it**. All seven account pages hand-rolled `if (!access_token) redirect to "/"`, which silently discarded the destination. They now share an exported `loginRedirect(context)`. The guard's own `PROTECTED_ROUTES` list is still unused — either wire it into a middleware or delete it; leaving it invites the same false assumption.
+
+**Still to reconcile:** `LoginModal` / `RegisterModal` now duplicate the page forms. Once the OTP routes land, the modals should delegate to the same form components rather than keeping a second copy of the logic.
 
 ### Phase 4 — Checkout & order lifecycle
 Pages for order confirmation, payment options, payment confirmation, order success. Convert promo code and add-money from modal-only to page-on-mobile / modal-on-desktop.
