@@ -90,8 +90,23 @@
     "hide_password": "إخفاء كلمة المرور",
     "errors": {
       "identifier_required": "أدخل بريدك الإلكتروني أو رقم هاتفك",
-      "password_required": "أدخل كلمة المرور"
-    }
+      "password_required": "أدخل كلمة المرور",
+      "name_too_short": "يجب ألا يقل الاسم عن 3 أحرف",
+      "phone_required": "يرجى إدخال رقم هاتفك",
+      "passwords_mismatch": "كلمتا المرور غير متطابقتين",
+      "register_failed": "فشل إنشاء الحساب. يرجى المحاولة مرة أخرى."
+    },
+    "create_account_subtitle": "يرجى تعبئة البيانات لإنشاء حسابك",
+    "have_account": "لديك حساب بالفعل؟",
+    "full_name": "الاسم الكامل",
+    "full_name_placeholder": "أدخل اسمك الكامل",
+    "phone_number": "رقم الهاتف",
+    "confirm_password": "تأكيد كلمة المرور",
+    "confirm_password_placeholder": "أعد إدخال كلمة المرور",
+    "referral_code": "رمز الإحالة",
+    "referral_code_placeholder": "أدخل رمز الإحالة",
+    "optional": "اختياري",
+    "register": "إنشاء حساب"
   },
   "available_options": "الخيارات المتاحة:",
   "available_promo_codes": "أكواد الخصم المتاحة",

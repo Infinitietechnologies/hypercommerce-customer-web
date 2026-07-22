@@ -90,8 +90,23 @@
     "hide_password": "Hide password",
     "errors": {
       "identifier_required": "Enter your email or mobile number",
-      "password_required": "Enter your password"
-    }
+      "password_required": "Enter your password",
+      "name_too_short": "Name must be at least 3 characters",
+      "phone_required": "Please enter your phone number",
+      "passwords_mismatch": "Passwords do not match",
+      "register_failed": "Registration failed. Please try again."
+    },
+    "create_account_subtitle": "Please fill the details to create your account",
+    "have_account": "Already have an account?",
+    "full_name": "Full Name",
+    "full_name_placeholder": "Enter your full name",
+    "phone_number": "Phone Number",
+    "confirm_password": "Confirm Password",
+    "confirm_password_placeholder": "Re-enter your password",
+    "referral_code": "Referral Code",
+    "referral_code_placeholder": "Enter referral code",
+    "optional": "optional",
+    "register": "Register"
   },
   "available_options": "Available Options:",
   "available_promo_codes": "Available Promo Codes",

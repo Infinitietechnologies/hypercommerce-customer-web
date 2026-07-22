@@ -18,18 +18,13 @@ import { handleLoginUser } from "@/helpers/auth";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { isSSR } from "@/helpers/getters";
 import { looksLikeEmail } from "@/helpers/validator";
+import { safeNext } from "@/features/auth/safeNext";
 import { getSettings } from "@/services/settings";
 import { loadTranslations } from "../../../i18n";
 
 interface LoginPageProps {
   initialSettings?: Settings | null;
 }
-
-/** Only allow same-origin paths so `?next=` can't be used as an open redirect. */
-const safeNext = (value: unknown): string =>
-  typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
-    ? value
-    : "/";
 
 const LoginPage: NextPageWithLayout<LoginPageProps> = () => {
   const router = useRouter();

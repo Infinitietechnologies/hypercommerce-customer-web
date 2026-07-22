@@ -90,8 +90,23 @@
     "hide_password": "पासवर्ड छिपाएं",
     "errors": {
       "identifier_required": "अपना ईमेल या मोबाइल नंबर दर्ज करें",
-      "password_required": "अपना पासवर्ड दर्ज करें"
-    }
+      "password_required": "अपना पासवर्ड दर्ज करें",
+      "name_too_short": "नाम कम से कम 3 अक्षरों का होना चाहिए",
+      "phone_required": "कृपया अपना फ़ोन नंबर दर्ज करें",
+      "passwords_mismatch": "पासवर्ड मेल नहीं खाते",
+      "register_failed": "रजिस्ट्रेशन विफल। कृपया पुनः प्रयास करें।"
+    },
+    "create_account_subtitle": "अपना खाता बनाने के लिए विवरण भरें",
+    "have_account": "पहले से खाता है?",
+    "full_name": "पूरा नाम",
+    "full_name_placeholder": "अपना पूरा नाम दर्ज करें",
+    "phone_number": "फ़ोन नंबर",
+    "confirm_password": "पासवर्ड की पुष्टि करें",
+    "confirm_password_placeholder": "पासवर्ड दोबारा दर्ज करें",
+    "referral_code": "रेफ़रल कोड",
+    "referral_code_placeholder": "रेफ़रल कोड दर्ज करें",
+    "optional": "वैकल्पिक",
+    "register": "रजिस्टर करें"
   },
   "available_options": "उपलब्ध विकल्प:",
   "available_promo_codes": "उपलब्ध प्रोमो कोड",
