@@ -36,7 +36,10 @@ const Badge = dynamic(() => import("@heroui/react").then((mod) => mod.Badge), {
 });
 
 const ProfileBtn = dynamic(() => import("./ProfileBtn"), { ssr: false });
-const LoginModal = dynamic(() => import("./Modals/LoginModal"), { ssr: false });
+const LoginTrigger = dynamic(
+  () => import("@/features/auth/components/LoginTrigger"),
+  { ssr: false },
+);
 const OfflineCartDrawer = dynamic(() => import("./Cart/OfflineCartDrawer"), {
   ssr: false,
 });
@@ -180,7 +183,7 @@ export const Navbar: FC = () => {
                   {isLoggedIn ? (
                     <ProfileBtn />
                   ) : (
-                    <LoginModal triggerView="icon" />
+                    <LoginTrigger view="icon" />
                   )}
                 </NavbarItem>
               </div>
@@ -238,7 +241,7 @@ export const Navbar: FC = () => {
               </div>
             </NavbarItem>
             <NavbarItem>
-              {isLoggedIn ? <ProfileBtn /> : <LoginModal />}
+              {isLoggedIn ? <ProfileBtn /> : <LoginTrigger />}
             </NavbarItem>
           </NavbarContent>
 
