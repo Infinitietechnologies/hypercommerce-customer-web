@@ -47,7 +47,7 @@ Everything below is what the project **actually uses today**. Do not add to this
 | HTTP | **axios** `^1.13.2` — one instance in `src/routes/api.ts`, interceptors in `src/routes/interceptor.ts` |
 | Forms / validation | **No form library.** Controlled React state + `src/helpers/validator.ts`; `libphonenumber-js` for phone |
 | i18n | `i18next` + `react-i18next`, bundles in `public/locales/{en,hi,ar}.json`, init in `i18n.ts`, scanner `npm run scan:i18n`. Arabic forces RTL |
-| Icons | `react-icons` `^5.5.0` (**use `react-icons/tb` — Tabler, matching Flutter**) and `lucide-react` (**legacy, being removed**) |
+| Icons | **`lucide-react` `^0.562.0` — the standard** (118 files). `react-icons` `^5.5.0` lingers in 4 files and is being retired. Do not add a third set |
 | Auth | Firebase Auth (phone OTP, Google, Apple) + Sanctum bearer token in cookies |
 | Payments | Stripe (`@stripe/react-stripe-js`), Razorpay (inline SDK), Paystack, Flutterwave (redirect) |
 | Maps | `leaflet` + `react-leaflet`, `@types/google.maps` |
@@ -57,13 +57,25 @@ Everything below is what the project **actually uses today**. Do not add to this
 | Utility | `lodash`, `clsx`, `cookie`, `nprogress`, `react-confetti` |
 | Lint / format | ESLint 9 flat config (`eslint.config.mjs`) + Prettier 3, `eslint-plugin-jsx-a11y`, `eslint-plugin-unused-imports` |
 
-### Component library policy — HeroUI, retheme required
+### Component library policy — HeroUI, themed with Flutter tokens
 
 HeroUI is **already the incumbent** and stays. There is no competing component library, so no migration is needed.
 
-**However — HeroUI is currently running its own blue theme, not ours.** `tailwind.config.ts` hard-codes `primary: #3b82f6` and `focus: #3b82f6` for light *and* dark. Flutter's brand is **amber `#FFB616`**. Retheming HeroUI with the Flutter tokens is Phase 0 in `../GAP_ANALYSIS.md` and blocks everything else.
+It is now themed with the Flutter tokens (Phase 0, done). The token pipeline is:
 
-**Never use HeroUI's default theme colors.**
+```
+src/theme/tokens.ts   ← the ONLY place raw hex values belong
+        ↓
+src/theme/heroui.ts   ← shapes them into a HeroUI ConfigThemes object
+        ↓
+tailwind.config.ts    ← heroui({ layout: heroLayout, themes: heroThemes })
+```
+
+To change a colour, edit `tokens.ts`. Never override a HeroUI colour at a call site, and **never use HeroUI's default theme colours** — the old blue `#3b82f6` appearing anywhere is a regression.
+
+Two constraints worth knowing before editing the theme:
+- **`next/font/local` needs a static object literal** — no spreads, no shared config const. `tsc` won't catch a violation; the build will.
+- **HeroUI drops alpha** — it stores colours as HSL channels, so `rgba(…, 0.06)` becomes fully opaque. Supply opaque equivalents (see `dividerSolid` / `outlineSolid` in `tokens.ts`).
 
 ### Flutter design tokens (source: `hypercommerce-customer-app/lib/config/theme.dart`)
 
@@ -100,7 +112,7 @@ shadow sm  0 2px 10px rgba(0,0,0,.10)
 
 Cards in Flutter are **flat**: `elevation 0` + a 0.5px hairline border. Shadows are for floating/overlay surfaces only.
 
-**Font weights — use Tailwind's standard scale.** Figtree ships real faces at all six weights and Flutter addresses them by their standard numeric values, so `font-light`→300, `font-normal`→400, `font-medium`→500, `font-semibold`→600, `font-bold`→700, `font-extrabold`→800. The downward `fontWeight` remap currently in `tailwind.config.ts:14-24` (`bold`→600 etc.) was a workaround for loading Lexend Deca at only 300/400 — **it gets deleted in Phase 0.** Do not reintroduce it and do not add a custom weight scale.
+**Font weights — Tailwind's standard scale, no remap.** Figtree is self-hosted as a variable font (`src/assets/fonts/Figtree-VariableFont_wght.ttf`, `weight: "300 900"`), so `font-light`→300, `font-normal`→400, `font-medium`→500, `font-semibold`→600, `font-bold`→700, `font-extrabold`→800 all resolve to real weights. The old downward remap (`bold`→600) has been deleted. **Do not reintroduce it** and do not add a custom weight scale.
 
 **Inputs use radius 12**, matching the app's themed `inputDecorationTheme`. The `borderRadius = 8.0` default inside `CustomTextFormField` is stale and overridden in practice — ignore it.
 
@@ -176,9 +188,10 @@ src/
 │       ├── components/         #   feature-only UI
 │       ├── hooks/              #   feature data hooks (SWR)
 │       └── types.ts
-├── theme/                      # NEW  single source for design tokens
+├── theme/                      # ✅ DONE (Phase 0)  single source for design tokens
 │   ├── tokens.ts               #   Flutter tokens as TS constants
 │   └── heroui.ts               #   HeroUI theme object consumed by tailwind.config.ts
+├── assets/fonts/               # ✅ DONE (Phase 0)  self-hosted Figtree variable font
 ├── services/                   # SPLIT  per-domain API modules (products.ts, cart.ts,
 │                               #   orders.ts, auth.ts, wallet.ts, …) on the shared instance
 ├── stores/                     # MIGRATE  redux slices consolidate here conceptually;
