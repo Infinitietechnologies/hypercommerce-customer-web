@@ -1,7 +1,9 @@
 # CLAUDE.md — HyperCommerce Customer Web
 
 > **Read this file at the start of every session, before touching anything under `hypercommerce-customer-web/`.**
-> Also read `/CLAUDE.md` at the repo root for system-wide context, and `../GAP_ANALYSIS.md` for the current modernization backlog.
+> Also read `GAP_ANALYSIS.md` in this folder for the current modernization backlog.
+>
+> The Flutter app and Laravel panel live in sibling repos (`hypercommerce-customer-app/`, `hypercommerce-panel/`) under a shared parent folder. They are **not** part of this repository — clone them alongside it to use them as reference.
 
 ---
 
@@ -19,7 +21,7 @@ The web storefront is **being modernized to match the Flutter app**. The Flutter
 
 **Before building or changing any screen, open the matching Flutter screen** under `hypercommerce-customer-app/lib/screens/<feature>/view/`. If you cannot find a counterpart, say so in your summary rather than inventing a design.
 
-The gap between the two is tracked in `../GAP_ANALYSIS.md` — read it before starting a phase, update it when a gap closes.
+The gap between the two is tracked in `GAP_ANALYSIS.md` — read it before starting a phase, update it when a gap closes.
 
 ### Backend
 
@@ -79,7 +81,7 @@ Two constraints worth knowing before editing the theme:
 
 ### Flutter design tokens (source: `hypercommerce-customer-app/lib/config/theme.dart`)
 
-These are the values HeroUI must be themed with. Full derivation in `../GAP_ANALYSIS.md` §1.
+These are the values HeroUI must be themed with. Full derivation in `GAP_ANALYSIS.md` §1.
 
 ```
 primary            #FFB616   (foreground on primary: #000000)
@@ -191,7 +193,7 @@ src/
 `config/`, `contexts/`, `SEO/` and `styles/` stay as they are — the Pages Router
 structure is not changing.
 
-Sequencing and exit criteria for each move are in `../GAP_ANALYSIS.md` §9.
+Sequencing and exit criteria for each move are in `GAP_ANALYSIS.md` §9.
 
 ---
 
@@ -415,8 +417,8 @@ Add the path to `PROTECTED_ROUTES` in `src/guards/authGuard.ts` **and** call `se
 
 ## 8. Git and workflow
 
-- **One branch per feature phase**, named after the phase in `../GAP_ANALYSIS.md` §9 (e.g. `feat/ui-primitives`, `feat/auth-screens`).
-- **Commit after each screen** is complete — building, themed, and with all four states (§6.3). Not at the end of the phase.
+- **Work on `dev`.** Do not create per-phase or per-feature branches; commit directly to `dev`.
+- **Commit after each screen** is complete — building, themed, and with all four states (§6.3). Not at the end of the phase. Small, self-contained commits are what makes a single shared branch workable.
 - **No unrelated changes in a commit.** Drive-by refactors, formatting sweeps, and dependency bumps get their own commits.
 - Conventional Commits: `feat:`, `fix:`, `refactor:`, `chore:`, `style:`.
 - Never mention Claude, AI, or prompts in commit messages.
@@ -432,12 +434,13 @@ Six exist. **This file wins on conflict**, then the nearest subfolder file:
 | `src/pages/CLAUDE.md` | Pages Router patterns | accurate |
 | `src/routes/CLAUDE.md` | api.ts / interceptor | accurate |
 | `src/lib/redux/CLAUDE.md` | slices, store, persist | accurate |
-| `src/components/CLAUDE.md` | component contract | ⚠️ **partly stale** |
+| `src/components/CLAUDE.md` | component contract + the `ui/` layer | accurate |
+| `src/features/CLAUDE.md` | feature module shape for new work | accurate |
 
-`src/components/CLAUDE.md` lists `components/Pages/` and `components/product/` (neither exists) and `Functional/ClientOnly.tsx` / `IfAuthenticated` (neither exists). It also says "HeroUI first — use it," which is superseded once the `ui/` layer lands: **import HeroUI only inside `src/components/ui/`, and consume `ui/` everywhere else.** Refresh that file during Phase 1.
+All six are current as of Phase 2.
 
 ### Before every task
-1. Read this file, `/CLAUDE.md`, `../GAP_ANALYSIS.md`, and the nearest subfolder `CLAUDE.md`.
+1. Read this file, `GAP_ANALYSIS.md`, and the nearest subfolder `CLAUDE.md`.
 2. Open the Flutter counterpart screen.
 3. Find the closest existing web page and mirror its SSR + view + component split. `src/pages/products/[slug]/` is the canonical pattern; `src/pages/my-account/orders/` is the protected paginated-list pattern.
 
