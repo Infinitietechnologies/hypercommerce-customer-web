@@ -213,7 +213,12 @@ Sequencing and exit criteria for each move are in `../GAP_ANALYSIS.md` §9.
 
 ### 4.1 Wrap everything in `src/components/ui/`
 
-- **No file outside `src/components/ui/` may `import … from "@heroui/react"`.** One wrapper per primitive means behavior, a11y defaults, and Flutter parity get fixed once.
+The layer exists (Phase 1). Import from `@/components/ui`.
+
+- **No *new or edited* file outside `src/components/ui/` may `import … from "@heroui/react"`.** One wrapper per primitive means behavior, a11y defaults, and Flutter parity get fixed once.
+- **Legacy files are migrated opportunistically**, not in a sweep — 162 still import HeroUI directly. Convert a file when you touch it for another reason; never open a standalone "migrate imports" commit across unrelated screens.
+- `ui/index.ts` exports two kinds of thing: **wrapped** primitives that carry Flutter parity (`Button`, `Input`, `Textarea`, `Card`, `Chip`, `Sheet`, `Skeleton`, `EmptyState`, `ErrorState`, `toast*`) and **pass-through** re-exports that need no behavior change. Both come from the same import.
+- When extending a HeroUI prop type, `Omit` any key you redeclare — `size` on Button, and `title` / `placement` / `scrollBehavior` on Modal — or `tsc` fails with TS2430.
 - Wrappers re-export HeroUI's prop types and add only what Flutter needs. Do not invent props with no Flutter counterpart.
 - Use `extendVariants` (as `components/custom/MyButton.tsx` already does) or `tailwind-variants` for variant maps — not conditional class soup at call sites.
 
@@ -231,7 +236,7 @@ Sequencing and exit criteria for each move are in `../GAP_ANALYSIS.md` §9.
 | **Input** | `theme.dart` `inputDecorationTheme` | radius **12**, **filled**, border `0.5px` outline → focused `1px` `#FFB616`, hint color `#6B6B6B` dark. Fill = L1 dark / `#F7FAFC` light |
 | **Card** | `theme.dart` `cardTheme` | radius **12**, `elevation 0` → `shadow-none`, hairline `0.5px` border, **zero margin** (parent owns spacing) |
 | **Chip** | Flutter chip usages | pill radius, L3 surface (`#2E2E2E` dark), no shadow |
-| **Modal / Sheet** | `lib/utils/widgets/*_bottom_sheet.dart` | **Desktop → centered HeroUI `Modal`. Mobile → bottom `Drawer`** with top radius **16**, drag handle, and backdrop dismiss. One `ui/Sheet` component picks the presentation off `useScreenType()` |
+| **Modal / Sheet** ✅ | `lib/utils/widgets/*_bottom_sheet.dart` | **Desktop → centered HeroUI `Modal`. Mobile → bottom `Drawer`** with top radius **16**, drag handle, and backdrop dismiss. `ui/Sheet` picks the presentation off `useScreenType()`. **Use it instead of `Modal`** for anything the app shows as a sheet |
 | **Divider** | `theme.dart` `dividerTheme` | `0.5px`, `rgba(255,255,255,.06)` dark / `#E0E0E0` light, zero space |
 | **Bottom nav** | `theme.dart` `bottomNavigationBarTheme` | bg `#111111`, active `#FFB616`, inactive `#6B6B6B`, no elevation |
 
