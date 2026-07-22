@@ -5,6 +5,12 @@ import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import ReduxProvider from "@/lib/redux/ReduxProvider";
+
+// The one auth sheet for the app — every trigger drives it through authSheetStore.
+const AuthSheetHost = dynamic(
+  () => import("@/features/auth/components/AuthSheetHost"),
+  { ssr: false },
+);
 import DefaultLayout from "@/layouts/default";
 import { NextPageWithLayout } from "@/types";
 import { fontSans, fontMono } from "@/config/fonts";
@@ -101,7 +107,10 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
             ),
           }}
         />
-        <ReduxProvider>{getLayout(<Component {...pageProps} />)}</ReduxProvider>
+        <ReduxProvider>
+          {getLayout(<Component {...pageProps} />)}
+          <AuthSheetHost />
+        </ReduxProvider>
       </NextThemesProvider>
     </HeroUIProvider>
   );

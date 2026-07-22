@@ -29,18 +29,16 @@ const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
 export interface LoginFormProps {
   /** Called once the session is established. */
   onSuccess: () => void;
-  /** Where the "create account" link should point. */
-  registerHref: string;
+  /** Switch the host sheet over to the register form. */
+  onSwitchToRegister: () => void;
   /** Rendered in a sheet rather than a page — used to tighten spacing. */
   compact?: boolean;
 }
 
 /**
- * The single login implementation. `/login` renders it inside AuthShell;
- * LoginSheet renders it inside a ui/Sheet for the desktop quick path. Both get
- * identical behaviour and styling because there is only one copy.
+ * The single login implementation, rendered inside LoginSheet.
  */
-const LoginForm = ({ onSuccess, registerHref, compact = false }: LoginFormProps) => {
+const LoginForm = ({ onSuccess, onSwitchToRegister, compact = false }: LoginFormProps) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
@@ -238,7 +236,10 @@ const LoginForm = ({ onSuccess, registerHref, compact = false }: LoginFormProps)
 
       <p className={`text-center text-small text-default-500 ${compact ? "mt-4" : "mt-6"}`}>
         {t("login_modal.no_account")}{" "}
-        <Link className="cursor-pointer text-small font-semibold" href={registerHref}>
+        <Link
+          className="cursor-pointer text-small font-semibold"
+          onPress={onSwitchToRegister}
+        >
           {t("login_modal.create_account")}
         </Link>
       </p>

@@ -23,15 +23,17 @@ export const isProtectedRoute = (path: string) => {
 };
 
 /**
- * Send the visitor to the real login route, remembering where they were headed
- * so it can return them there. Previously this dropped them on `/?auth=required`,
- * which lost the destination and relied on a modal opening itself.
+ * Bounce an unauthenticated visitor to the home page with `?auth=required`,
+ * which LoginTrigger reads to open the auth sheet. Auth is an overlay rather
+ * than a route, so there is nowhere else to send them.
+ *
+ * `?next=` carries the destination so they are returned there after signing in.
  */
 export const loginRedirect = (context: GetServerSidePropsContext) => {
   const next = context.resolvedUrl || "/";
   return next === "/"
-    ? "/login"
-    : `/login?next=${encodeURIComponent(next)}`;
+    ? "/?auth=required"
+    : `/?auth=required&next=${encodeURIComponent(next)}`;
 };
 
 export const serverSideAuthGuard = async (
