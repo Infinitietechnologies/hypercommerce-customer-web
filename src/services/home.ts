@@ -1,0 +1,54 @@
+import { api } from "./client";
+import {
+  ApiResponse,
+  HomeLayout,
+  HomeSection,
+  PaginatedResponse,
+} from "@/types/ApiResponse";
+
+
+import {
+  fallbackPaginateRes,
+} from "@/config/constants";
+
+// Home Layout (replaces featured-sections builder)
+export const getHomeLayout = async (
+  params: {
+    category_slug?: string;
+    page?: string | number;
+    per_page?: string | number;
+    market?: string;
+  } = {},
+): Promise<ApiResponse<HomeLayout>> => {
+  try {
+    const response = await api.get<ApiResponse<HomeLayout>>("/home-layout", {
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return { success: false, message: "An error occurred.", data: null };
+  }
+};
+
+export const getHomeLayoutSection = async (
+  params: {
+    sectionId: string | number;
+    page?: string | number;
+    per_page?: string | number;
+    market?: string;
+  },
+): Promise<PaginatedResponse<HomeSection[]>> => {
+  try {
+    const { sectionId, ...rest } = params;
+    const response = await api.get(`/home-layout/sections/${sectionId}`, {
+      params: rest,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackPaginateRes;
+  }
+};
+
+// Cart Management
