@@ -130,6 +130,37 @@ This was my harness being wrong, not the app. A 404 page returning HTTP 404 is c
 
 `/faqs/` and `/my-account/addresses/` ship `error: null` in `pageProps`. Harmless, but it means the pages have an error channel that is never surfaced to the user — worth checking those pages actually render an error state when the fetch fails.
 
+### 2.9 ✅ FIXED — Unknown slugs returned 200 instead of 404
+
+`/products/`, `/categories/`, `/brands/` and `/stores/` all answered **200** for
+slugs that do not exist. The category and brand cases were the damaging ones:
+
+```
+/categories/accessories-1/       total=36    ← correct
+/categories/this-does-not-exist/ total=325   ← the ENTIRE catalogue
+/brands/this-does-not-exist/     total=325   ← same
+```
+
+The products endpoint ignores an unrecognised filter rather than rejecting it,
+so a nonsense slug rendered every product as if it belonged to that category or
+brand. Search engines would index unlimited such URLs.
+
+**Shared root cause — worth remembering.** This API reports "not found" as
+`success: false` with **`data: []`**, and an empty array is **truthy** in JS. So
+`data ?? null` keeps the empty array and every `if (!product)` guard downstream
+reads it as a real record. That is why the product page's existing `notFound`
+branch never fired. It also broke the `main_category_data` fix in 2.3, which had
+the same flaw.
+
+All four now verify a real record before rendering. Verified: bad slugs 404,
+real slugs unchanged.
+
+### 2.10 ✅ NOT A DEFECT — order detail
+
+An earlier run reported `order: null` on `/my-account/orders/129/`. That was my
+error: the route keys off the order **slug** (`order-1784711027-3`), not the id.
+With the correct slug the page renders fine. The audit now uses real slugs.
+
 ---
 
 ## 3. Verified working
@@ -141,6 +172,9 @@ This was my harness being wrong, not the app. A 404 page returning HTTP 404 is c
 | Brand list / detail | 200, real brands |
 | Store list / detail | 200, real stores |
 | Search | 200, 89 links |
+| PDP | 200 — multi-variant 3 251 chars, single-variant 3 176 chars |
+| Order detail | 200 with real data (keyed by order slug) |
+| Unknown slugs | 404 across product, category, brand, store |
 | Cart (signed out) | 200 |
 | All policy/static pages | 200 with real content |
 | Seller register | 200 |
