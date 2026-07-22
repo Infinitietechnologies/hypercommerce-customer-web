@@ -1,35 +1,45 @@
-# `src/routes/` — Axios setup + every backend endpoint
+# `src/routes/` — Axios interceptors
 
 ```
 routes/
-├── api.ts          # ALL backend endpoint functions + axios instance
+├── api.ts          # re-export barrel (kept for backwards compatibility)
 └── interceptor.ts  # request/response interceptors (auth header, 401, 503/maintenance)
 ```
 
-This directory is the **only place** that imports `axios` from `'axios'`. Components, views, services, and helpers must import their callers from `@/routes/api.ts`.
+> **Moved.** The axios instance now lives in `src/services/client.ts`, and the
+> endpoint callers are grouped by domain in `src/services/<domain>.ts`.
+> `api.ts` is a barrel that re-exports them so existing imports keep working —
+> **do not add new callers to it.**
+>
+> New code: `import { getProducts } from "@/services/catalog"`.
 
-## `api.ts` — the contract
+`src/services/client.ts` is the **only place** that imports `axios` from
+`'axios'`. Components, views, and helpers import callers from a service module.
 
-- One axios instance, configured at module load.
+## The endpoint contract
+
+- One axios instance, configured at module load in `services/client.ts`.
 - Base URL via `constructApiBaseUrl(process.env.NEXT_PUBLIC_ADMIN_PANEL_URL)`. The function handles trailing slashes, validates the URL, and appends `/api`. It falls back to relative `/api` on misconfiguration so module load doesn't crash.
 - `setupInterceptors(instance)` is called once at module load.
-- Each endpoint is a **named export** that:
+- Each endpoint is a **named export** in its domain module that:
   - Builds the URL.
-  - Calls `axios.<verb>` with typed body/params.
+  - Calls `api.<verb>` with typed body/params.
   - Returns `response.data` typed to `ApiResponse<T>` or `PaginatedResponse<T>`.
   - Provides a sensible fallback on failure (`fallbackApiRes`, `fallbackPaginateRes`, etc. from `@/config/constants`).
-- Types live in `src/types/ApiResponse/` and `src/types/params.ts`.
+- Types live in `src/types/<domain>.ts`.
 
-**Convention for adding an endpoint:**
+**Convention for adding an endpoint** — in the matching `src/services/<domain>.ts`:
 ```ts
-import { ApiResponse, Foo } from '@/types/ApiResponse';
+import { api } from './client';
+import type { ApiResponse } from '@/types/common';
+import type { Foo } from '@/types/catalog';
 import { fallbackApiRes } from '@/config/constants';
 
 export const getFoo = async (
   params?: { lat?: string; lng?: string }
 ): Promise<ApiResponse<Foo>> => {
   try {
-    const { data } = await axios.get<ApiResponse<Foo>>(`${baseUrl}/foo`, { params });
+    const { data } = await api.get<ApiResponse<Foo>>('/foo', { params });
     return data;
   } catch (err) {
     return fallbackApiRes as ApiResponse<Foo>;

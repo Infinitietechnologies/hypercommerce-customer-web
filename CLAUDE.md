@@ -23,7 +23,7 @@ The gap between the two is tracked in `../GAP_ANALYSIS.md` — read it before st
 
 ### Backend
 
-Talks to the Laravel panel at `process.env.NEXT_PUBLIC_ADMIN_PANEL_URL + '/api/...'`. See `constructApiBaseUrl()` in `src/routes/api.ts`. Customer endpoints live in the panel's `routes/api.php` → `app/Http/Controllers/Api/User/*`. **API contract changes break the mobile app silently — always flag them.**
+Talks to the Laravel panel at `process.env.NEXT_PUBLIC_ADMIN_PANEL_URL + '/api/...'`. See `constructApiBaseUrl()` in `src/services/client.ts`. Customer endpoints live in the panel's `routes/api.php` → `app/Http/Controllers/Api/User/*`. **API contract changes break the mobile app silently — always flag them.**
 
 ---
 
@@ -44,7 +44,7 @@ Everything below is what the project **actually uses today**. Do not add to this
 | Global state | **Redux Toolkit** `^2.11.2` + `react-redux` + `redux-persist` |
 | Server-data cache | **SWR** `^2.3.8` |
 | SSR data | `getServerSideProps` (primary), `getStaticProps` where allowed |
-| HTTP | **axios** `^1.13.2` — one instance in `src/routes/api.ts`, interceptors in `src/routes/interceptor.ts` |
+| HTTP | **axios** `^1.13.2` — one instance in `src/services/client.ts`, endpoint callers in `src/services/<domain>.ts`, interceptors in `src/routes/interceptor.ts` |
 | Forms / validation | **No form library.** Controlled React state + `src/helpers/validator.ts`; `libphonenumber-js` for phone |
 | i18n | `i18next` + `react-i18next`, bundles in `public/locales/{en,hi,ar}.json`, init in `i18n.ts`, scanner `npm run scan:i18n`. Arabic forces RTL |
 | Icons | **`lucide-react` `^0.562.0` — the standard** (118 files). `react-icons` `^5.5.0` lingers in 4 files and is being retired. Do not add a third set |
@@ -127,7 +127,7 @@ hypercommerce-customer-web/
 ├── i18n.ts                     # i18next init + changeLanguage()
 ├── i18next-scanner.config.cjs
 ├── next.config.ts              # next + PWA
-├── tailwind.config.ts          # HeroUI plugin + theme  ← retheme target
+├── tailwind.config.ts          # HeroUI plugin, consuming src/theme/
 ├── eslint.config.mjs
 ├── tsconfig.json               # strict; alias "@/*" → "./src/*"
 ├── create-htaccess.js / ftp.js # deploy helpers
@@ -137,12 +137,16 @@ hypercommerce-customer-web/
 ├── scripts/                    # update-manifest, update-robots, generate-sitemap
 └── src/
     ├── SEO/                    # JSON-LD generators
+    ├── assets/fonts/           # ★ self-hosted Figtree variable font
     ├── components/             # ~137 components grouped by domain
+    │   ├── ui/                 # ★ HeroUI wrapper layer — the ONLY place
+    │   │                       #   @heroui/react may be imported
     │   ├── Cards/ Cart/ Empty/ Footer/ Functional/ Location/
     │   ├── Modals/ PaymentGateway/ Products/ Seller/ Skeletons/ Tables/
-    │   └── custom/             # MyButton, PageHeader, TabButton, banners
+    │   └── custom/             # PageHeader, TabButton, banners
     ├── config/                 # constants.ts, fonts.ts, seo.ts, site.ts
     ├── contexts/               # SettingsContext.tsx
+    ├── features/               # ★ feature modules for NEW work — see its CLAUDE.md
     ├── guards/                 # authGuard (SSR) + withAuth (HOC)
     ├── helpers/                # auth, events, getters, updaters, validator, seo, notificationUrl
     ├── hooks/                  # useAdTracking, useDebouncedValue, useInfiniteData,
@@ -153,57 +157,39 @@ hypercommerce-customer-web/
     │   └── redux/              # ReduxProvider, store, slices/
     ├── pages/                  # file-based routes (34 pages)
     ├── routes/
-    │   ├── api.ts              # 1591 lines — EVERY endpoint
+    │   ├── api.ts              # re-export barrel (29 lines) — do NOT add to it
     │   ├── interceptor.ts
     │   └── CLAUDE.md
-    ├── services/               # homePageService, ProductDetailPageService, adTrackingService
+    ├── services/               # ★ client.ts (the axios instance) + 16 domain modules:
+    │                           #   auth, catalog, cart, orders, wishlist, address, wallet,
+    │                           #   reviews, notifications, payments, market, home, settings,
+    │                           #   seller, content, ads — plus the older *Service.ts orchestrators
     ├── stores/                 # maintenanceStore.ts (in-memory singleton)
     ├── styles/                 # globals.css, index.css, custom/
-    ├── types/                  # ApiResponse/index.ts (1718 lines), params.ts, index.ts
+    ├── theme/                  # ★ tokens.ts + heroui.ts — the design tokens
+    ├── types/                  # ★ 15 domain modules; ApiResponse/index.ts is now a barrel
     └── views/                  # composed page bodies (CartPageView, OrderDetailView,
                                 #   homePage, Products, WishListPageView, empty)
 ```
 
-### 3.2 Target structure (modernization)
+★ = added or restructured during modernization (Phases 0–2).
 
-`NEW` = create · `KEEP` = unchanged · `SPLIT` = decompose in place · `MIGRATE` = move gradually, don't big-bang
+### 3.2 Still to come
 
 ```
 src/
-├── components/
-│   ├── ui/                     # NEW ★ HeroUI wrapper layer — the ONLY place
-│   │                           #   @heroui/react may be imported
-│   │   ├── Button.tsx Input.tsx Card.tsx Chip.tsx Modal.tsx Sheet.tsx
-│   │   ├── Skeleton.tsx EmptyState.tsx ErrorState.tsx Toast.tsx
-│   │   └── Select.tsx Checkbox.tsx Radio.tsx Switch.tsx Tabs.tsx
-│   │       Accordion.tsx Pagination.tsx Tooltip.tsx Badge.tsx
-│   │       Avatar.tsx Divider.tsx Spinner.tsx
-│   ├── shared/                 # NEW  cross-feature composites ported from Flutter
-│   │                           #   QuantityStepper, DeliveryTimeBadge, SponsoredBadge,
-│   │                           #   RecommendBadge, DottedDivider, PullToRefresh
-│   ├── Cards/ Cart/ Modals/ …  # KEEP (Skeletons/ and Empty/ rebuild on ui/)
-│   └── custom/                 # MIGRATE → MyButton folds into ui/Button
-├── features/                   # NEW  feature-first modules for all new work
-│   └── <feature>/              #   mirrors Flutter's screens/<feature>/
-│       ├── components/         #   feature-only UI
-│       ├── hooks/              #   feature data hooks (SWR)
-│       └── types.ts
-├── theme/                      # ✅ DONE (Phase 0)  single source for design tokens
-│   ├── tokens.ts               #   Flutter tokens as TS constants
-│   └── heroui.ts               #   HeroUI theme object consumed by tailwind.config.ts
-├── assets/fonts/               # ✅ DONE (Phase 0)  self-hosted Figtree variable font
-├── services/                   # SPLIT  per-domain API modules (products.ts, cart.ts,
-│                               #   orders.ts, auth.ts, wallet.ts, …) on the shared instance
-├── stores/                     # MIGRATE  redux slices consolidate here conceptually;
-│                               #   maintenanceStore stays in-memory
-├── types/                      # SPLIT  ApiResponse/index.ts → product.ts, cart.ts,
-│                               #   order.ts, user.ts, address.ts, store.ts, wallet.ts, …
-├── lib/redux/                  # KEEP  store + slices
-├── pages/ views/ layouts/      # KEEP  Pages Router structure is not changing
-├── guards/ helpers/ hooks/ config/ contexts/ SEO/ styles/   # KEEP
-└── routes/api.ts               # MIGRATE  shrinks to the axios instance + interceptor
-                                #   wiring as endpoints move into services/
+├── components/shared/          # NEW  cross-feature composites ported from Flutter:
+│                               #   QuantityStepper, DeliveryTimeBadge, SponsoredBadge,
+│                               #   RecommendBadge, DottedDivider, PullToRefresh,
+│                               #   MarketPickerSheet
+├── components/Skeletons/       # REBUILD on ui/Skeleton; add the missing screens
+├── components/Empty/           # FOLD into ui/EmptyState
+└── features/<feature>/         # POPULATE as Phases 3-9 build each screen
 ```
+
+`pages/`, `views/`, `layouts/`, `lib/redux/`, `guards/`, `helpers/`, `hooks/`,
+`config/`, `contexts/`, `SEO/` and `styles/` stay as they are — the Pages Router
+structure is not changing.
 
 Sequencing and exit criteria for each move are in `../GAP_ANALYSIS.md` §9.
 
@@ -300,7 +286,7 @@ Derived from the existing codebase; gaps filled with modern defaults.
 - `globals.css` is for resets and third-party overrides only — not component styling.
 
 ### Do not
-- `import axios from "axios"` in a component — go through `src/services/` (or `src/routes/api.ts` until it's split).
+- `import axios from "axios"` anywhere but `src/services/client.ts` — components call a hook, hooks call `src/services/<domain>.ts`.
 - Add an `app/` directory or App Router files.
 - Write to `localStorage` directly — redux-persist owns it.
 - Hard-code the API base URL, currency symbols, or status strings.
@@ -383,8 +369,9 @@ Every user-facing string is `t('namespace.key')`. Never inline English. New keys
 
 ### 7.2 Fetching rules
 
-- **No direct fetches inside components.** Components receive props or call a hook. Hooks call `src/services/*`. Services use the shared axios instance.
-- One axios instance, created in `src/routes/api.ts`, interceptors from `src/routes/interceptor.ts` (auth header injection, 401 → logout, 503 → maintenance).
+- **No direct fetches inside components.** Components receive props or call a hook. Hooks call `src/services/<domain>.ts`. Services use the shared axios instance from `src/services/client.ts`.
+- **Add new endpoints to the matching domain module**, never to the `src/routes/api.ts` barrel.
+- One axios instance, created in `src/services/client.ts`, interceptors from `src/routes/interceptor.ts` (auth header injection, 401 → logout, 503 → maintenance). `src/routes/api.ts` is a re-export barrel only — do not add callers to it.
 - Every endpoint is a named export returning a typed `ApiResponse<T>` / `PaginatedResponse<T>`.
 - SSR-critical calls use the fallback constants in `src/config/constants.ts` (`fallbackApiRes`, `fallbackPaginateRes`) so a failed fetch never crashes a page.
 
@@ -411,7 +398,7 @@ X-Market header → ?market= query → user_market pivot → market cookie
 → country header → Setting('default_market_id')
 ```
 
-Web already sends the header — `src/routes/interceptor.ts:37-50` and `src/routes/api.ts:102`. `src/contexts/SettingsContext.tsx` exposes market-scoped settings and currency; `src/hooks/useInfiniteData.ts` is market-aware.
+Web already sends the header — `src/routes/interceptor.ts:37-50` and `src/services/catalog.ts`. `src/contexts/SettingsContext.tsx` exposes market-scoped settings and currency; `src/hooks/useInfiniteData.ts` is market-aware.
 
 Rules:
 - Never fetch catalog data outside the shared axios instance — you would lose the `X-Market` header and silently get default-market data.
