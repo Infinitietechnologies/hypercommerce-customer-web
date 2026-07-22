@@ -148,7 +148,9 @@ Legend: ✅ present · 🟡 partial / diverging · ❌ missing · ⬜ N/A on web
 | `introduction_pages` (`/intro-slider`) | — | ❌ no onboarding/intro flow |
 | `login_page` | `/login` | ✅ |
 | `register_page` | `/register` | ✅ |
-| `mobile_otp_login`, `otp_verification`, `continue_with_otp`, `email_otp_verification` | inside modals | 🟡 no dedicated OTP screens |
+| `mobile_otp_login`, `otp_verification` | `/otp` | ✅ |
+| `email_verification` | `/verify-email` | ✅ |
+| `continue_with_otp`, `email_otp_verification` | inside modals | 🟡 |
 | `forgot_password` | `/forgot-password` | ✅ |
 | `referral_code_entry` | — | ❌ |
 | `email_verification` (`/email-verification`) | — | ❌ |
@@ -444,19 +446,28 @@ Real routes for the auth screens. Modals stay for the desktop quick path.
 |---|---|---|
 | `/login` | `login_page.dart` | ✅ done |
 | `/register` | `register_page.dart` | ✅ done |
+| `/otp` | `mobile_otp_login.dart`, `otp_verification_page.dart` | ✅ done |
+| `/verify-email` | `email_verification_page.dart` | ✅ done |
 | `/forgot-password` | `forgot_password.dart` | ✅ pre-existing |
-| `/otp` | `mobile_otp_login.dart`, `otp_verification_page.dart` | ⬜ todo |
-| `/verify-email` | `email_otp_verification_page.dart` | ⬜ todo |
 | `/verify-phone` | `mobile_verification_page.dart` | ⬜ todo |
 | `/referral-code` | `referral_code_entry_page.dart` | ⬜ todo |
 
-**Shared pieces built:** `features/auth/components/AuthShell.tsx` (gradient, Skip, heading — matches the Flutter auth chrome) and `features/auth/safeNext.ts`.
+**Shared pieces built:**
+- `features/auth/components/AuthShell.tsx` — gradient, Skip, heading; matches the Flutter auth chrome.
+- `features/auth/safeNext.ts` — same-origin-only `?next=` resolution.
+- `features/auth/useOtpLogin.ts` — phone OTP for **both** gateways the panel supports (Firebase `ConfirmationResult`, and the panel's own SMS endpoints). Lifted out of `LoginModal` rather than copied, so there is one implementation to keep correct.
+
+`/verify-email` is auth-gated and returns `307 → /login?next=%2Fverify-email%2F` when signed out.
+
+**Note on `/verify-phone`:** the Flutter screen has only a `view/` — no repo or bloc of its own — because it reuses the OTP flow. On web it should therefore build on `useOtpLogin` rather than introducing a parallel path.
 
 **Redirect chain fixed.** Protected pages now send visitors to `/login?next=<destination>` and return them there after sign-in; `?next=` accepts same-origin paths only, so it can't be used as an open redirect.
 
 **Finding — `serverSideAuthGuard` was dead code.** `src/pages/CLAUDE.md` documented it as the protection mechanism, but **no page ever called it**. All seven account pages hand-rolled `if (!access_token) redirect to "/"`, which silently discarded the destination. They now share an exported `loginRedirect(context)`. The guard's own `PROTECTED_ROUTES` list is still unused — either wire it into a middleware or delete it; leaving it invites the same false assumption.
 
-**Still to reconcile:** `LoginModal` / `RegisterModal` now duplicate the page forms. Once the OTP routes land, the modals should delegate to the same form components rather than keeping a second copy of the logic.
+**Still to reconcile:** `LoginModal` / `RegisterModal` duplicate the page forms. The OTP half of that duplication is already addressed — `useOtpLogin` is the shared implementation, and `LoginModal` should be switched over to it. The email/password and registration forms still exist twice and should follow the same treatment.
+
+**Verification gotcha:** `PhoneInput` is a `dynamic(..., { ssr: false })` import, so a screenshot taken immediately after navigation shows the field missing. It isn't — query the DOM to confirm before debugging a phantom layout bug. This produced a false alarm twice.
 
 ### Phase 4 — Checkout & order lifecycle
 Pages for order confirmation, payment options, payment confirmation, order success. Convert promo code and add-money from modal-only to page-on-mobile / modal-on-desktop.
