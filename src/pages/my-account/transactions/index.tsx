@@ -17,6 +17,7 @@ import { GetServerSideProps } from "next";
 import { loadTranslations } from "../../../../i18n";
 import { useTranslation } from "react-i18next";
 import PageHead from "@/SEO/PageHead";
+import { loginRedirect } from "@/guards/authGuard";
 
 type TransactionsPageProps = {
   initialUserData: userData;
@@ -82,7 +83,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         if (!access_token) {
           return {
             redirect: {
-              destination: "/",
+              destination: loginRedirect(context),
               permanent: false,
             },
           };

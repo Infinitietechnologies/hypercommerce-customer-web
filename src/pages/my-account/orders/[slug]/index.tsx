@@ -17,6 +17,7 @@ import { loadTranslations } from "../../../../../i18n";
 import { useTranslation } from "react-i18next";
 import PageHead from "@/SEO/PageHead";
 import { getCookie } from "@/lib/cookies";
+import { loginRedirect } from "@/guards/authGuard";
 
 interface OrderDetailsPageProps {
   order?: Order;
@@ -158,7 +159,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         if (!access_token) {
           return {
             redirect: {
-              destination: "/",
+              destination: loginRedirect(context),
               permanent: false,
             },
           };

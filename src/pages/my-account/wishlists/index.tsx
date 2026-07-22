@@ -21,6 +21,7 @@ import dynamic from "next/dynamic";
 import { loadTranslations } from "../../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
+import { loginRedirect } from "@/guards/authGuard";
 
 const EditWishlistModal = dynamic(
   () => import("@/components/Modals/EditWishlistModal"),
@@ -310,7 +311,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         if (!access_token) {
           return {
             redirect: {
-              destination: "/",
+              destination: loginRedirect(context),
               permanent: false,
             },
           };

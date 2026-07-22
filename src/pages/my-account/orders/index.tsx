@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import PageHead from "@/SEO/PageHead";
 import OrderCardSkeleton from "@/components/Skeletons/OrderCardSkeleton";
 import { getCookie } from "@/lib/cookies";
+import { loginRedirect } from "@/guards/authGuard";
 
 const PER_PAGE = 9;
 
@@ -359,7 +360,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         if (!access_token) {
           return {
             redirect: {
-              destination: "/",
+              destination: loginRedirect(context),
               permanent: false,
             },
           };

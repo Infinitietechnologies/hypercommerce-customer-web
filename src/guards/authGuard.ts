@@ -22,6 +22,18 @@ export const isProtectedRoute = (path: string) => {
   });
 };
 
+/**
+ * Send the visitor to the real login route, remembering where they were headed
+ * so it can return them there. Previously this dropped them on `/?auth=required`,
+ * which lost the destination and relied on a modal opening itself.
+ */
+export const loginRedirect = (context: GetServerSidePropsContext) => {
+  const next = context.resolvedUrl || "/";
+  return next === "/"
+    ? "/login"
+    : `/login?next=${encodeURIComponent(next)}`;
+};
+
 export const serverSideAuthGuard = async (
   context: GetServerSidePropsContext
 ) => {
@@ -31,7 +43,7 @@ export const serverSideAuthGuard = async (
     if (!access_token) {
       return {
         redirect: {
-          destination: "/?auth=required",
+          destination: loginRedirect(context),
           permanent: false,
         },
       };
@@ -42,7 +54,7 @@ export const serverSideAuthGuard = async (
     console.error("Auth guard error:", error);
     return {
       redirect: {
-        destination: "/?auth=error",
+        destination: loginRedirect(context),
         permanent: false,
       },
     };

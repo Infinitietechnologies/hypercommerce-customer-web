@@ -23,6 +23,7 @@ import { loadTranslations } from "../../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
 import WalletTransactionTable from "@/components/Tables/WalletTransactionTable";
+import { loginRedirect } from "@/guards/authGuard";
 
 type WalletPageProps = {
   initialUserData: userData;
@@ -118,7 +119,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         if (!access_token) {
           return {
             redirect: {
-              destination: "/",
+              destination: loginRedirect(context),
               permanent: false,
             },
           };

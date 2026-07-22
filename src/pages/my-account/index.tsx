@@ -65,6 +65,7 @@ import { useTranslation } from "react-i18next";
 import { getFirebaseErrorMessage } from "@/lib/firebase";
 import Lightbox from "yet-another-react-lightbox";
 import { useSettings } from "@/contexts/SettingsContext";
+import { loginRedirect } from "@/guards/authGuard";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -947,7 +948,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         if (!access_token) {
           return {
             redirect: {
-              destination: "/",
+              destination: loginRedirect(context),
               permanent: false,
             },
           };

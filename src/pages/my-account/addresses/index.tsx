@@ -19,6 +19,7 @@ import { NextPageWithLayout } from "@/types";
 import { loadTranslations } from "../../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
+import { loginRedirect } from "@/guards/authGuard";
 
 const per_page = 6;
 
@@ -263,7 +264,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         if (!access_token) {
           return {
             redirect: {
-              destination: "/",
+              destination: loginRedirect(context),
               permanent: false,
             },
           };
