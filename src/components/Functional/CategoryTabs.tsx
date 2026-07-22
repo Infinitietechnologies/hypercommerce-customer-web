@@ -207,6 +207,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
       />
       <div className="flex gap-0.5">
         <TabButton
+                      variant="text"
           slug="all"
           title={homeGeneralSettings?.title || "All"}
           isSelected={selectedCategory === "all"}
@@ -281,6 +282,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
               : categories.map((category) => (
                   <SwiperSlide key={category.slug} style={{ width: "auto" }}>
                     <TabButton
+                      variant="text"
                       slug={category.slug}
                       title={category.title}
                       category={category}
@@ -296,6 +298,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
             {hasMore && (
               <SwiperSlide style={{ width: "auto" }}>
                 <TabButton
+                      variant="text"
                   slug="see-more"
                   title={isLoadingMore ? "Loading..." : "See More"}
                   isSelected={false}

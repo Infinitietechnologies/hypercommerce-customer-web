@@ -22,6 +22,11 @@ interface TabButtonProps {
   onClick?: () => void;
   staticIcon?: React.ReactNode;
   size?: "sm" | "lg";
+  /**
+   * "icon" stacks an icon above the label (subcategory rails).
+   * "text" is the label-only row used by the primary category bar.
+   */
+  variant?: "icon" | "text";
 }
 
 const TabButton: React.FC<TabButtonProps> = ({
@@ -33,6 +38,7 @@ const TabButton: React.FC<TabButtonProps> = ({
   onClick,
   staticIcon,
   size = "sm",
+  variant = "icon",
 }) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -59,6 +65,28 @@ const TabButton: React.FC<TabButtonProps> = ({
       : category?.icon || category?.image;
 
   const isLarge = size === "lg";
+
+  if (variant === "text") {
+    return (
+      <button
+        ref={buttonRef}
+        aria-current={isSelected ? "true" : undefined}
+        className={`
+          whitespace-nowrap border-b-2 px-2.5 py-2.5 text-xs transition-colors
+          ${
+            isSelected
+              ? "border-primary font-semibold text-foreground"
+              : "border-transparent font-medium text-default-600 hover:text-foreground"
+          }
+          ${isLoading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+        `}
+        disabled={isLoading}
+        onClick={onClick}
+      >
+        {title}
+      </button>
+    );
+  }
 
   return (
     <button

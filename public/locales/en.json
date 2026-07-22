@@ -698,7 +698,8 @@
     "contact_us": "Contact Us",
     "faqs": "FAQs",
     "home": "Home",
-    "products": "Products"
+    "products": "Products",
+    "favourites": "Favourites"
   },
   "network_error": "Network Error",
   "network_error_description": "Something went wrong while submitting your review. Please try again later.",
