@@ -323,12 +323,20 @@ export const getCartDataFromRedux = () => {
 
 export const getUserCountryCode = async (): Promise<string> => {
   const DEFAULT_COUNTRY = "US";
-  const res = await fetch("https://api.country.is/");
-  if (res.ok) {
-    const data: { country?: string } = await res.json();
-    if (data?.country) {
-      return data.country.toUpperCase();
+
+  // Step 1: geo-IP lookup. It is a third-party request, so it fails routinely —
+  // offline, blocked by a content blocker, or rate limited. Swallow it and fall
+  // through to the local fallbacks rather than rejecting.
+  try {
+    const res = await fetch("https://api.country.is/");
+    if (res.ok) {
+      const data: { country?: string } = await res.json();
+      if (data?.country) {
+        return data.country.toUpperCase();
+      }
     }
+  } catch {
+    // Ignored — Step 2 and Step 3 below cover it.
   }
 
   // Step 2: Try navigator.language
@@ -337,6 +345,8 @@ export const getUserCountryCode = async (): Promise<string> => {
   interface NavigatorWithUserLanguage extends Navigator {
     userLanguage?: string;
   }
+
+  if (typeof navigator === "undefined") return DEFAULT_COUNTRY;
 
   const lang =
     navigator.language || (navigator as NavigatorWithUserLanguage).userLanguage;
