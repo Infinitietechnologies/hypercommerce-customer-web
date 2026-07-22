@@ -26,7 +26,7 @@ import {
   Smartphone,
   Phone,
 } from "lucide-react";
-import { MyButton } from "../custom/MyButton";
+import { Button as UIButton } from "../ui";
 import RegisterModal from "./RegisterModal";
 import GoogleLoginBtn from "../Functional/GoogleLoginBtn";
 import {
@@ -664,7 +664,7 @@ export const LoginModal: FC<LoginModalProps> = ({ triggerView = "btn" }) => {
     <>
       {/* Trigger Button */}
       {triggerView === "btn" ? (
-        <MyButton
+        <UIButton
           id="login-btn"
           color="primary"
           onPress={onOpen}
@@ -674,7 +674,7 @@ export const LoginModal: FC<LoginModalProps> = ({ triggerView = "btn" }) => {
           className="p-0 text-xs"
         >
           {t("login_modal.button")}
-        </MyButton>
+        </UIButton>
       ) : triggerView === "icon" ? (
         <Button
           id="login-btn"
