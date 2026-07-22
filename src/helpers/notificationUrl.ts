@@ -89,10 +89,10 @@ export const getNotificationRedirectUrl = (
       const storeSlug = firstStringValue(data, ["store_slug", "slug", "storeId", "store_id"]);
       return storeSlug ? `/stores/${storeSlug}` : "/stores";
     }
-    case "featured_section": {
-      const sectionSlug = firstStringValue(data, ["section_slug", "feature_section_slug", "slug"]);
-      return sectionSlug ? `/feature-sections/${sectionSlug}` : "/feature-sections";
-    }
+    // Featured sections were replaced by the home-layout builder and no longer
+    // have their own route, so these pushes land on the home page.
+    case "featured_section":
+      return "/";
     default: {
       const entityType = firstStringValue(data, ["entity_type", "target_type", "object_type"]);
       const entitySlug = firstStringValue(data, ["entity_slug", "target_slug", "object_slug"]);

@@ -23,7 +23,6 @@ export const onLocationChange = () => {
       "home-category-tabs",
     ],
     "/stores": ["refetch-store-page"],
-    "/feature-sections": ["refetch-sections-page"],
     "/cart": ["refetch-cart-page", "refetch-similar-products"],
     "/categories": ["refetch-categories-page"],
     "/shopping-list": ["shopping-list-refetch"],
@@ -41,9 +40,6 @@ export const onLocationChange = () => {
     // Search listing (must come before the /products/ PDP check below).
     // sidebar-filters-refetch → market-scoped ProductFilter counts.
     buttonIds = ["search-products-refetch", "sidebar-filters-refetch"];
-  } else if (currentPath.startsWith("/feature-sections/")) {
-    // Handle dynamic slug
-    buttonIds = ["refetch-section-products"];
   } else if (
     currentPath.startsWith("/products/") ||
     currentPath.startsWith("/share/products/")

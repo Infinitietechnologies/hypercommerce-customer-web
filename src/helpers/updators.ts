@@ -175,10 +175,7 @@ export const updateDataOnAuth = async () => {
 
   let buttonIds: string[] = [];
 
-  if (currentPath.startsWith("/feature-sections/")) {
-    // Handle dynamic slug
-    buttonIds = ["refetch-section-products"];
-  } else if (currentPath.startsWith("/products/")) {
+  if (currentPath.startsWith("/products/")) {
     buttonIds = ["similar-products-refetch", "specific-product-refetch"];
   } else if (currentPath.startsWith("/brands/")) {
     buttonIds = ["refetch-brand-products"];

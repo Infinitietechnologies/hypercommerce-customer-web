@@ -171,12 +171,12 @@ function getNotificationUrl(data) {
     case "feature_section":
     case "feature-section":
     case "featuresection":
+    // Featured sections were replaced by the home-layout builder and no longer
+    // have their own route, so these pushes land on the home page.
     case "featured_section":
     case "featured-section":
-    case "featuredsection": {
-      const sectionSlug = firstStringValue(parsed, ["section_slug", "feature_section_slug", "slug"]);
-      return sectionSlug ? `/feature-sections/${sectionSlug}` : "/feature-sections";
-    }
+    case "featuredsection":
+      return "/";
     default: {
       const entityType = firstStringValue(parsed, ["entity_type", "target_type", "object_type"]);
       const entitySlug = firstStringValue(parsed, ["entity_slug", "target_slug", "object_slug", "slug"]);

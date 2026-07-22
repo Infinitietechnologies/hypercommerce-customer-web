@@ -11,6 +11,11 @@ import { ReferralInfo } from "@/types/ApiResponse";
 import { useSettings } from "@/contexts/SettingsContext";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
+import type { GetServerSideProps } from "next";
+import { loginRedirect } from "@/guards/authGuard";
+import { getAccessTokenFromContext } from "@/helpers/auth";
+import { isSSR } from "@/helpers/getters";
+import { loadTranslations } from "../../../../i18n";
 
 const ReferAndEarnPage: NextPageWithLayout = () => {
   const [copied, setCopied] = useState(false);
@@ -258,5 +263,17 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
     </>
   );
 };
+
+export const getServerSideProps: GetServerSideProps | undefined = isSSR()
+  ? async (context) => {
+      const access_token = (await getAccessTokenFromContext(context)) || "";
+      if (!access_token) {
+        return { redirect: { destination: loginRedirect(context), permanent: false } };
+      }
+
+      await loadTranslations(context);
+      return { props: {} };
+    }
+  : undefined;
 
 export default ReferAndEarnPage;

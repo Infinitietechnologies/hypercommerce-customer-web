@@ -30,6 +30,11 @@ import {
   markAllNotificationsRead,
 } from "@/routes/api";
 import { getNotificationRedirectUrl } from "@/helpers/notificationUrl";
+import type { GetServerSideProps } from "next";
+import { loginRedirect } from "@/guards/authGuard";
+import { getAccessTokenFromContext } from "@/helpers/auth";
+import { isSSR } from "@/helpers/getters";
+import { loadTranslations } from "../../../../i18n";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type NotificationMetadata = {
@@ -475,5 +480,17 @@ const NotificationsPage: NextPageWithLayout = () => {
     </>
   );
 };
+
+export const getServerSideProps: GetServerSideProps | undefined = isSSR()
+  ? async (context) => {
+      const access_token = (await getAccessTokenFromContext(context)) || "";
+      if (!access_token) {
+        return { redirect: { destination: loginRedirect(context), permanent: false } };
+      }
+
+      await loadTranslations(context);
+      return { props: {} };
+    }
+  : undefined;
 
 export default NotificationsPage;

@@ -501,9 +501,15 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const products = await getProducts(apiParams);
         const settings = await getSettings({ market });
 
-        // Fetch category details for SEO
+        // Fetch category details for SEO.
+        // Passing `slug` makes the endpoint return that category's CHILDREN,
+        // with the category itself in `main_category_data` — so searching the
+        // rows for a matching slug never hits.
         const categoryRes = await getCategories({ slug, market });
-        const initialCategory = categoryRes?.data?.data?.find(c => c.slug === slug) || null;
+        const mainCategory = categoryRes?.data?.main_category_data ?? null;
+        const initialCategory = mainCategory
+          ? ({ ...mainCategory, slug } as unknown as Category)
+          : null;
 
         return {
           props: {

@@ -17,7 +17,6 @@ const staticRoutes = [
     { path: '/categories/', priority: '0.9' },
     { path: '/delivery-zones/', priority: '0.6' },
     { path: '/faqs/', priority: '0.6' },
-    { path: '/feature-sections/', priority: '0.5' },
     { path: '/privacy-policy/', priority: '0.4' },
     { path: '/products/', priority: '0.9' },
     { path: '/return-refund-policy/', priority: '0.4' },
