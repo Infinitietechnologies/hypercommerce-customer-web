@@ -103,7 +103,7 @@ const LocationSelector = () => {
     return new Promise((resolve) => {
       const startTime = Date.now();
       const checkGoogleMaps = () => {
-        if (window.google?.maps?.importLibrary) {
+        if (typeof window.google?.maps?.importLibrary === "function") {
           resolve(true);
         } else if (Date.now() - startTime > timeout) {
           resolve(false);
