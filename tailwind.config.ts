@@ -1,7 +1,7 @@
 import { heroui } from "@heroui/theme";
 
 import { heroLayout, heroThemes } from "./src/theme/heroui";
-import { accent, chrome, dark, light, radius, shadow, spacing } from "./src/theme/tokens";
+import { accent, dark, light, radius, shadow, spacing } from "./src/theme/tokens";
 
 /** @type {import('tailwindcss').Config} */
 const config: import("tailwindcss").Config = {
@@ -39,9 +39,6 @@ const config: import("tailwindcss").Config = {
         overlay: shadow.overlay,
       },
       colors: {
-        header: chrome.header,
-        "header-foreground": chrome.headerForeground,
-        "header-muted": chrome.headerMuted,
         "rating-star": accent.ratingStar,
         "delivery-time": accent.deliveryTime,
         "discount-card": accent.discountCard,

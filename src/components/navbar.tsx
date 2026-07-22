@@ -15,7 +15,7 @@ import {
 import LocationSelector from "./Location/LocationSelector";
 import { ThemeSwitch } from "./theme-switch";
 import GlobalSearchbar from "./Functional/GlobalSearchbar";
-import { ShoppingCart, Heart, Home, Tags, HelpCircle, Info, X } from "lucide-react";
+import { ShoppingCart, Home, Tags, HelpCircle, Info, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
@@ -130,12 +130,7 @@ export const Navbar: FC = () => {
           maxWidth="2xl"
           position="sticky"
           className="p-0"
-          classNames={{
-            wrapper: "p-0 px-2 md:px-4",
-            // The bar is dark in both themes, so it uses the chrome token
-            // rather than the themed background.
-            base: "shadow-none bg-header text-header-foreground",
-          }}
+          classNames={{ wrapper: "p-0 px-2 md:px-4", base: "shadow-none" }}
           isMenuOpen={isMenuOpen}
           onMenuOpenChange={setIsMenuOpen}
         >
@@ -216,22 +211,10 @@ export const Navbar: FC = () => {
             <NavbarItem className="flex items-end gap-2">
               <ThemeSwitch />
             </NavbarItem>
-            {isLoggedIn ? (
-              <NavbarItem>
-                <Link
-                  className="text-header-foreground"
-                  href="/my-account/wishlists"
-                  title={t("nav.favourites")}
-                >
-                  <Heart aria-hidden="true" className="cursor-pointer" />
-                  <span className="sr-only">{t("nav.favourites")}</span>
-                </Link>
-              </NavbarItem>
-            ) : null}
             <NavbarItem>
               <div className="flex items-center">
                 <Badge
-                  color="danger"
+                  color="primary"
                   content={
                     isLoggedIn
                       ? cartCount || undefined
@@ -252,7 +235,7 @@ export const Navbar: FC = () => {
                       }
                     }}
                   >
-                    <ShoppingCart className="text-header-foreground cursor-pointer" />
+                    <ShoppingCart className="text-default-500 cursor-pointer" />
                   </Link>
                 </Badge>
               </div>

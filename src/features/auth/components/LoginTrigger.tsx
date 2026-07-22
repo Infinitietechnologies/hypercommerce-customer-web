@@ -24,7 +24,6 @@ const LoginTrigger = ({ view = "btn" }: LoginTriggerProps) => {
         aria-label={t("login_modal.sign_in")}
         id="login-btn"
         size="sm"
-        className="text-header-foreground"
         variant="light"
         onPress={onPress}
       >
@@ -33,14 +32,14 @@ const LoginTrigger = ({ view = "btn" }: LoginTriggerProps) => {
     );
   }
 
-  // Reads as a text action in the dark header bar, not a filled button.
   return (
     <Button
-      className="px-2 text-small font-normal text-header-foreground"
+      className="p-0 text-xs"
+      color="primary"
       id="login-btn"
-      size="sm"
+      size="responsive"
       startContent={<LogIn aria-hidden="true" size={16} />}
-      variant="light"
+      variant="flat"
       onPress={onPress}
     >
       {t("login_modal.button")}

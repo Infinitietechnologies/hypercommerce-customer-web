@@ -90,16 +90,6 @@ export const status = {
   warning: "#FFAB40",
 } as const;
 
-/**
- * The header bar is dark in both themes, so it cannot reuse `background`.
- * Matches the dark L0 surface so the two agree in dark mode.
- */
-export const chrome = {
-  header: "#0D0D0D",
-  headerForeground: "#FFFFFF",
-  headerMuted: "#9E9E9E",
-} as const;
-
 /** Commerce accents with no HeroUI slot — exposed as Tailwind utilities. */
 export const accent = {
   ratingStar: "#EEAB18",
