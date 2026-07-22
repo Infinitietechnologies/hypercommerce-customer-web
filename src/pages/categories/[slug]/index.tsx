@@ -506,10 +506,17 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         // with the category itself in `main_category_data` — so searching the
         // rows for a matching slug never hits.
         const categoryRes = await getCategories({ slug, market });
-        const mainCategory = categoryRes?.data?.main_category_data ?? null;
-        const initialCategory = mainCategory
-          ? ({ ...mainCategory, slug } as unknown as Category)
-          : null;
+        // An unknown slug still returns 200, with main_category_data as an empty
+        // array — which is truthy — so check for a real record before trusting it.
+        const mainCategory = categoryRes?.data?.main_category_data;
+        const found =
+          mainCategory && !Array.isArray(mainCategory) && Boolean(mainCategory.id);
+
+        if (!found) {
+          return { notFound: true };
+        }
+
+        const initialCategory = { ...mainCategory, slug } as unknown as Category;
 
         return {
           props: {

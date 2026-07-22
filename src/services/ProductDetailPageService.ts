@@ -14,6 +14,12 @@ export interface ProductDetailPageParams {
 /**
  * Output of fetchProductDetailPageData function
  */
+/** Narrow an API payload to a real product, rejecting the `[]` not-found shape. */
+const asProduct = (data: unknown): Product | null =>
+  data && !Array.isArray(data) && typeof data === "object" && "id" in data
+    ? (data as Product)
+    : null;
+
 export interface ProductDetailPageData {
   initialProduct: Product | null; // replace `any` with your Product type
   initialSimilarProducts: Product[]; // replace `any` with your Product type
@@ -90,9 +96,12 @@ export async function fetchProductDetailPageData(
   }
 
   return {
+    // A missing product comes back as success:false with `data: []`, and an
+    // empty array is truthy — so `?? null` alone would hand the page an "empty
+    // product" and the 404 branch would never fire.
     initialProduct:
       productDetailResult.status === "fulfilled"
-        ? (productDetailResult.value.data ?? null)
+        ? (asProduct(productDetailResult.value.data) ?? null)
         : null,
 
     initialSimilarProducts:

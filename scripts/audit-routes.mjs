@@ -73,6 +73,12 @@ const ROUTES = [
   ["/stores/", "store list"],
   ["/stores/cena-enterprise/", "store detail"],
   ["/products/search/", "search"],
+  // Detail pages — the highest-risk data surfaces.
+  ["/products/extendable-dining-table/", "PDP (multi-variant)"],
+  ["/products/armchair-ottoman-set/", "PDP (single variant)"],
+  ["/products/this-slug-does-not-exist/", "PDP (bad slug)", { expect: 404 }],
+  ["/categories/this-does-not-exist/", "category (bad slug)", { expect: 404 }],
+  ["/stores/this-does-not-exist/", "store (bad slug)", { expect: 404 }],
   ["/shopping-list/", "shopping list"],
   ["/cart/", "cart"],
   ["/login/", "login"],
@@ -96,6 +102,9 @@ const ROUTES = [
   ["/my-account/notifications/", "notifications", { protected: true }],
   ["/my-account/refer-and-earn/", "refer & earn", { protected: true }],
   ["/verify-email/", "verify email", { protected: true }],
+  // Order detail keys off the order SLUG, not the id.
+  ["/my-account/orders/order-1784711027-3/", "order detail (active)", { protected: true }],
+  ["/my-account/orders/order-1784611972-3/", "order detail (cancelled)", { protected: true }],
 ];
 
 const ENDPOINTS = [

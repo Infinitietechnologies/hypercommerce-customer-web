@@ -510,6 +510,14 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const settings = await getSettings({ market });
         const store = await getSpecificStore(slug, market);
 
+        // The store endpoint reports an unknown slug as success:false, but the
+        // products call above happily returns the unfiltered catalogue, so
+        // without this the page renders every product under a store that does
+        // not exist.
+        if (!store?.success || !store?.data) {
+          return { notFound: true };
+        }
+
         // Server-side redirect for single vendor mode
         const systemSettings = settings?.data?.find(
           (s: { variable: string }) => s.variable === "system",

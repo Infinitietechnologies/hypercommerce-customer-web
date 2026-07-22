@@ -435,6 +435,13 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const brandsRes = await getBrands({ market });
         const initialBrand = brandsRes?.data?.data?.find(b => b.slug === slug) || null;
 
+        // An unknown brand slug is not rejected by the products endpoint — it
+        // simply returns the unfiltered catalogue — so the page would otherwise
+        // render every product as if it belonged to that brand.
+        if (!initialBrand) {
+          return { notFound: true };
+        }
+
         return {
           props: {
             initialProducts: products,
