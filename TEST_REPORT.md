@@ -112,15 +112,11 @@ Flag to the API owner: **the mobile app has the same problem**, so changing it i
 
 Not a code defect — the web layout simply has not been composed in the admin builder. But it means **the web home page is nearly empty right now**, and any visual comparison against the app will mislead until someone builds the web layout in the back office.
 
-### 2.6 🟡 Auth pages render almost nothing server-side
+### 2.6 ✅ NO LONGER APPLIES — auth pages rendered almost nothing server-side
 
-```
-/login/         167 chars of text
-/register/      260 chars
-/verify-email/  117 chars
-```
+`/login`, `/register` and `/verify-email` each rendered barely any HTML server-side. Auth has since moved back into an overlay and those routes are removed, so the concern is moot.
 
-These render client-side, so the SSR HTML is effectively blank. Consequences: no content without JS, a visible flash before hydration, and nothing for crawlers. Acceptable for `/verify-email` (private), weak for `/login` and `/register`.
+⚠️ **Consequence worth knowing:** there is now no crawlable sign-in or registration URL at all, and nothing to deep-link to. That is deliberate. Note also that **email verification has no web UI** — `/verify-email` is gone and there is no modal equivalent.
 
 ### 2.7 ✅ NOT A DEFECT — `/404/` returns 404
 
@@ -178,7 +174,7 @@ With the correct slug the page renders fine. The audit now uses real slugs.
 | Cart (signed out) | 200 |
 | All policy/static pages | 200 with real content |
 | Seller register | 200 |
-| Auth redirect chain | `/my-account/*` → `/login?next=<destination>`, destination preserved |
+| Auth redirect chain | `/my-account/*` → `/?auth=required&next=<destination>`, destination preserved |
 | Account area (signed in) | all 9 pages 200 with real data — orders 3 553 chars, wallet, transactions, addresses, wishlists |
 | Theme tokens | `--heroui-primary` = `#ffb616`, dark elevation correct |
 | Production build | compiles, 33 routes |

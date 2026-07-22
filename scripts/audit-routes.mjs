@@ -81,8 +81,6 @@ const ROUTES = [
   ["/stores/this-does-not-exist/", "store (bad slug)", { expect: 404 }],
   ["/shopping-list/", "shopping list"],
   ["/cart/", "cart"],
-  ["/login/", "login"],
-  ["/register/", "register"],
   ["/forgot-password/", "forgot password"],
   ["/about-us/", "about"],
   ["/faqs/", "faqs"],
@@ -101,7 +99,6 @@ const ROUTES = [
   ["/my-account/wishlists/", "wishlists", { protected: true }],
   ["/my-account/notifications/", "notifications", { protected: true }],
   ["/my-account/refer-and-earn/", "refer & earn", { protected: true }],
-  ["/verify-email/", "verify email", { protected: true }],
   // Order detail keys off the order SLUG, not the id.
   ["/my-account/orders/order-1784711027-3/", "order detail (active)", { protected: true }],
   ["/my-account/orders/order-1784611972-3/", "order detail (cancelled)", { protected: true }],
@@ -181,9 +178,9 @@ const run = async () => {
 
     if (opts.protected && !authed) {
       const ok = r.status === 307 || r.status === 302;
-      const toLogin = (r.location || "").includes("/login");
+      const toLogin = (r.location || "").includes("auth=required");
       const flag = ok && toLogin ? "ok  " : "WARN";
-      if (!(ok && toLogin)) problems.push(`${path} — protected route did not redirect to /login (got ${r.status} ${r.location || ""})`);
+      if (!(ok && toLogin)) problems.push(`${path} — protected route did not redirect to the auth sheet (got ${r.status} ${r.location || ""})`);
       console.log(`${flag} ${pad(r.status, 4)} ${pad(path, 34)} ${label} → ${r.location || "no redirect"}`);
       continue;
     }
