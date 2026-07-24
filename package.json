@@ -17,6 +17,7 @@
     "@heroui/react": "^2.8.7",
     "@heroui/system": "2.4.25",
     "@heroui/theme": "2.4.25",
+    "@iconify/react": "^6.0.2",
     "@react-aria/visually-hidden": "3.8.29",
     "@reduxjs/toolkit": "^2.11.2",
     "@stripe/react-stripe-js": "^5.4.1",

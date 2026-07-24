@@ -7,11 +7,11 @@ import {
   Button,
   Image,
   useDisclosure,
-  addToast,
+  toast,
   Tooltip,
-} from "@heroui/react";
-import { Clock, Bookmark, Star, Eye } from "lucide-react";
-import RatingStars from "../RatingStars";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 import { Product } from "@/types/ApiResponse";
 import { toggleFavorite } from "@/routes/api";
 import dynamic from "next/dynamic";
@@ -44,6 +44,16 @@ interface ProductCardProps {
   hideStoreName?: boolean;
 }
 
+/**
+ * Listing card — amber redesign (Claude Design handoff
+ * `src/components/ProductCard.jsx`): hover lift + image zoom, square media,
+ * hairline border that turns amber on hover, brand/rating row above a
+ * two-line title, then the price row.
+ *
+ * Divergence from the handoff, kept deliberately: the handoff card has no
+ * inline add-to-bag, but the live storefront needs one (plus quick-view,
+ * badges, low-stock and ad tracking), so those features stay.
+ */
 const ProductCard: FC<ProductCardProps> = ({
   product,
   hideStoreName = false,
@@ -123,7 +133,7 @@ const ProductCard: FC<ProductCardProps> = ({
     if (!isLoggedIn) {
       const btn = document.getElementById("login-btn");
       btn?.click();
-      addToast({
+      toast({
         title: t("please_login"),
         color: "warning",
       });
@@ -143,13 +153,13 @@ const ProductCard: FC<ProductCardProps> = ({
       if (response.success && response.data) {
         setIsFavorited(response.data.is_favorited);
       } else {
-        addToast({
+        toast({
           title: response.message || t("something_went_wrong"),
           color: "danger",
         });
       }
     } catch {
-      addToast({
+      toast({
         title: t("something_went_wrong"),
         color: "danger",
       });
@@ -179,108 +189,85 @@ const ProductCard: FC<ProductCardProps> = ({
   // Check if product is featured
   const isFeatured = product.featured === "1";
   const productBadge = product.badge;
+  const isOutOfStock = !defaultVariant.availability || defaultVariant.stock === 0;
+
   return (
     <>
-      <Card
-        key={product.id}
-        ref={elementRef}
-        as={"div"}
-        className="w-full h-full border-2 border-gray-100 dark:border-default-100 hover:shadow-md transition-shadow duration-200"
-        disableRipple
-        isPressable={screen !== "mobile" ? defaultVariant.stock !== 0 : false}
-        shadow="none"
-        isDisabled={defaultVariant.stock === 0}
-        onPress={() => {
-          handleAdClick();
-          router.push(`/products/${product.slug}`);
-        }}
+      <motion.div
+        whileHover={{ y: -4 }}
+        transition={{ type: "spring", stiffness: 400, damping: 26 }}
+        className="h-full"
       >
-        <CardBody className="p-0 px-0">
-          <div className="relative mb-2 flex justify-center cursor-pointer overflow-hidden">
-            {product.main_image ? (
-              <Link
-                href={`/products/${product.slug}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAdClick();
-                }}
-                title={product.title}
-                className="block w-full"
-              >
-                <Image
-                  alt={product.title ?? t("product_image_alt")}
-                  className={`w-full h-28 md:h-32 lg:h-36 hover:scale-105 transition-transform ${
-                    product.image_fit === "cover"
-                      ? "object-cover object-top"
-                      : "object-contain"
-                  }`}
-                  src={product.main_image}
-                  loading="eager"
-                  removeWrapper
-                  radius="none"
-                />
-              </Link>
-            ) : (
-              <div className="w-full h-28 md:h-32 lg:h-36 bg-gray-200 rounded-lg" />
-            )}
-
-            {/* Simple Ad Badge - Bottom Left */}
-            {product.is_sponsored && (
-              <div className="absolute bottom-2 left-2 z-30">
-                <div className="bg-black/40 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm flex items-center justify-center">
-                  <span className="text-[9px] font-bold text-white tracking-wider leading-none">
-                    Ad
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Featured Badge - Bottom Right */}
-            {isFeatured && (
-              <div className="absolute bottom-1 right-1 z-30">
-                <Chip
-                  className="text-xxs bg-linear-to-r from-secondary-300 to-secondary-400 capitalize text-white font-semibold shadow-sm tracking-wide"
-                  classNames={{ base: "p-0.5 h-4", content: "p-1 text-xxs" }}
-                  radius="sm"
-                  startContent={<Star size={10} className="fill-current" />}
-                  title={t("featured")}
-                >
-                  {t("featured")}
-                </Chip>
-              </div>
-            )}
-
-
-
-            {/* Discount + Dynamic Badge - stacked on the left */}
-            <div className="absolute -top-1 -left-1 z-20 flex flex-col items-start">
-              {discountPercentage > 0 && (
-                <div className="inline-flex items-center bg-green-500 text-white text-xs font-medium rounded-br-lg px-3.5 py-1 mt-0.5">
-                  {t("discount", { percent: discountPercentage })}
-                </div>
-              )}
-              {productBadge && (
-                <div
-                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold tracking-wide shadow-sm mt-1"
-                  style={{
-                    backgroundColor: productBadge.bg_color,
-                    color: productBadge.text_color,
-                    borderColor: productBadge.border_color,
-                    borderWidth: productBadge.border_color ? 1 : 0,
-                    borderStyle: "solid",
-                    borderRadius: "0 6px 6px 0",
+        <Card
+          key={product.id}
+          ref={elementRef}
+          as={"div"}
+          className="w-full h-full border border-divider hover:border-primary transition-colors group overflow-hidden text-left"
+          disableRipple
+          isPressable={screen !== "mobile" ? defaultVariant.stock !== 0 : false}
+          shadow="none"
+          isDisabled={defaultVariant.stock === 0}
+          onPress={() => {
+            handleAdClick();
+            router.push(`/products/${product.slug}`);
+          }}
+        >
+          <CardBody className="p-0 overflow-hidden">
+            <div className="relative aspect-square bg-gradient-to-br from-content2 to-background overflow-hidden">
+              {product.main_image ? (
+                <Link
+                  href={`/products/${product.slug}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAdClick();
                   }}
-                  title={productBadge.label}
+                  title={product.title}
+                  className="block w-full h-full"
                 >
-                  <Star size={9} className="fill-current flex-shrink-0" />
-                  {productBadge.label}
-                </div>
+                  <Image
+                    alt={product.title ?? t("product_image_alt")}
+                    className={`w-full h-full transition-transform duration-500 group-hover:scale-110 ${
+                      product.image_fit === "cover"
+                        ? "object-cover object-top"
+                        : "object-contain"
+                    }`}
+                    src={product.main_image}
+                    loading="eager"
+                    removeWrapper
+                    radius="none"
+                  />
+                </Link>
+              ) : (
+                <div className="w-full h-full bg-content2" />
               )}
-            </div>
 
-            {/*Buttons - Top Right */}
-            <div className="absolute top-1 right-1 z-20">
-              <div className="flex flex-col gap-1 rounded-bl-2xl">
+              {/* Discount + dynamic badge — stacked top-left */}
+              <div className="absolute top-3 left-3 z-20 flex flex-col items-start gap-1">
+                {discountPercentage > 0 && (
+                  <span className="text-[11px] font-extrabold text-white bg-danger rounded-md px-2 py-0.5">
+                    {t("discount", { percent: discountPercentage })}
+                  </span>
+                )}
+                {productBadge && (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-extrabold tracking-wide rounded-md"
+                    style={{
+                      backgroundColor: productBadge.bg_color,
+                      color: productBadge.text_color,
+                      borderColor: productBadge.border_color,
+                      borderWidth: productBadge.border_color ? 1 : 0,
+                      borderStyle: "solid",
+                    }}
+                    title={productBadge.label}
+                  >
+                    <Icon icon="solar:star-bold" className="text-[10px]" />
+                    {productBadge.label}
+                  </span>
+                )}
+              </div>
+
+              {/* Wishlist + quick view — top-right */}
+              <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-1.5">
                 <Button
                   isIconOnly
                   variant="light"
@@ -288,14 +275,15 @@ const ProductCard: FC<ProductCardProps> = ({
                   radius="full"
                   isLoading={isTogglingFavorite}
                   onPress={handleToggleFavorite}
-                  className="bg-white dark:bg-content1 p-1.5 min-w-0 w-7 h-7"
+                  className="bg-content1 shadow-sm min-w-0 w-8 h-8 hover:text-danger transition-colors"
                   title={t("pageTitle.wishlists")}
                 >
-                  <Bookmark
+                  <Icon
+                    icon={isFavorited ? "solar:heart-bold" : "solar:heart-linear"}
                     className={
                       isFavorited
-                        ? "fill-primary text-primary w-6 h-6"
-                        : "text-foreground/60 w-6 h-6"
+                        ? "text-lg text-danger"
+                        : "text-lg text-default-500"
                     }
                   />
                 </Button>
@@ -305,32 +293,111 @@ const ProductCard: FC<ProductCardProps> = ({
                   size="sm"
                   radius="full"
                   onPress={onCartOpen}
-                  className="bg-white dark:bg-content1 hover:bg-white dark:hover:bg-content1 p-1.5 min-w-0 w-7 h-7"
+                  className="bg-content1 shadow-sm min-w-0 w-8 h-8 hover:text-primary transition-colors"
                   title={t("quickView")}
                 >
-                  <Eye className="text-foreground/60 hover:text-primary w-6 h-6" />
+                  <Icon
+                    icon="solar:eye-linear"
+                    className="text-lg text-default-500"
+                  />
                 </Button>
               </div>
+
+              {/* Ad badge — bottom left */}
+              {product.is_sponsored && (
+                <div className="absolute bottom-2 left-2 z-20">
+                  <div className="bg-black/40 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-white tracking-wider leading-none">
+                      Ad
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Featured badge — bottom right */}
+              {isFeatured && (
+                <div className="absolute bottom-2 right-2 z-20">
+                  <Chip
+                    className="bg-secondary text-white font-extrabold shadow-sm tracking-wide"
+                    classNames={{ base: "h-5", content: "px-1.5 text-[10px]" }}
+                    radius="sm"
+                    startContent={
+                      <Icon icon="solar:star-bold" className="text-[10px] ml-1" />
+                    }
+                    title={t("featured")}
+                  >
+                    {t("featured")}
+                  </Chip>
+                </div>
+              )}
+            </div>
+          </CardBody>
+
+          <CardFooter className="flex-col items-stretch gap-1 px-4 py-3.5">
+            {/* Store / rating row */}
+            <div className="flex items-center justify-between gap-2 min-h-4">
+              {product.variants?.[0]?.store_name &&
+              !hideStoreName &&
+              !isSingleVendor ? (
+                <Link
+                  href={`/stores/${product.variants?.[0]?.store_slug}`}
+                  className="text-xs font-extrabold text-default-500 truncate"
+                  onClick={(e) => e.stopPropagation()}
+                  title={product.variants[0].store_name}
+                >
+                  {product.variants[0].store_name}
+                </Link>
+              ) : (
+                <span />
+              )}
+
+              {product.ratings !== undefined && (
+                <span className="flex items-center gap-1 text-xs font-extrabold shrink-0">
+                  <Icon icon="solar:star-bold" className="text-sm text-primary" />
+                  {Number(product.ratings).toFixed(1)}
+                  <span className="text-default-400 font-medium">
+                    ({product.rating_count ?? 0})
+                  </span>
+                </span>
+              )}
             </div>
 
+            {/* Title */}
+            <div className="flex flex-col">
+              <div className="flex items-start gap-0">
+                <ProductIndicator indicator={indicator} size={12} />
+                <Link
+                  href={`/products/${product.slug}`}
+                  className={`text-sm font-medium leading-snug ${isLowStock ? "line-clamp-1 min-h-5" : "line-clamp-2 min-h-[2.5rem]"}`}
+                  title={product.title}
+                  onClick={handleAdClick}
+                >
+                  {product.title ?? t("untitled_product")}
+                </Link>
+              </div>
+              {isLowStock && (
+                <span className="text-xxs text-warning font-semibold whitespace-nowrap max-h-4">
+                  {t("product_modal.low_stock_alert", {
+                    stock: defaultVariant.stock,
+                  })}
+                </span>
+              )}
+            </div>
 
-          </div>
+            <HTMLRenderer
+              html={product.description ?? ""}
+              className="text-xxs text-foreground/50 line-clamp-2 min-h-6 hidden"
+            />
 
-          <div className="w-full px-2">
-            <div className="flex w-full justify-between mb-1">
-              <Button
+            {/* Delivery estimate + variant choices */}
+            <div className="flex w-full items-center justify-between gap-2">
+              <span
                 title={`${product.estimated_delivery_time} ${t("mins")}`}
-                as={"div"}
-                color="primary"
-                variant="flat"
-                radius="sm"
-                className="min-w-0 w-14 text-start  text-[9px] text-primary-500 h-4 px-1 py-0.5 gap-1"
-                startContent={
-                  <Clock className="text-primary-500 w-2.5 h-2.5 p-0" />
-                }
+                className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-600 bg-primary-100/60 rounded-md px-1.5 py-0.5"
               >
+                <Icon icon="solar:clock-circle-linear" className="text-[11px]" />
                 {`${product.estimated_delivery_time} ${t("mins")}`}
-              </Button>
+              </span>
               {product.variants.length > 1 && (
                 <Tooltip
                   content={tooltipContent}
@@ -339,121 +406,44 @@ const ProductCard: FC<ProductCardProps> = ({
                   closeDelay={0}
                   classNames={{
                     content:
-                      "bg-content1 border border-default-200 shadow-lg py-2 px-3",
+                      "bg-content1 border border-divider shadow-lg py-2 px-3",
                   }}
                 >
-                  <div className="bg-warning-100 text-warning-600 py-0.5 px-1 rounded-md text-[9px] flex items-center gap-1">
-                    <span>
-                      {t("choices", { count: product.variants.length })}
-                    </span>
-                  </div>
+                  <span className="text-[10px] font-bold text-default-500 bg-content2 py-0.5 px-1.5 rounded-md">
+                    {t("choices", { count: product.variants.length })}
+                  </span>
                 </Tooltip>
               )}
             </div>
 
-            <div className="space-y-1">
-              <div className="flex flex-col">
-                <div className="flex items-start gap-0">
-                  <ProductIndicator indicator={indicator} size={12} />
-                  <Link
-                    href={`/products/${product.slug}`}
-                    className={`text-xs font-semibold ${isLowStock ? "line-clamp-1 min-h-4" : "line-clamp-2 min-h-8"} `}
-                    title={product.title}
-                    onClick={handleAdClick}
-                  >
-                    {product.title ?? t("untitled_product")}
-                  </Link>
-                </div>
-                {isLowStock && (
-                  <span className="text-xxs text-orange-500 font-semibold whitespace-nowrap max-h-4">
-                    {t("product_modal.low_stock_alert", {
-                      stock: defaultVariant.stock,
-                    })}
+            {/* Price + add to bag */}
+            <div className="flex items-end justify-between gap-2 mt-0.5">
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-extrabold leading-none">
+                  {formatPrice(hasDiscount ? specialPrice : price)}
+                </span>
+                {hasDiscount && (
+                  <span className="text-[13px] text-default-400 line-through">
+                    {formatPrice(price)}
                   </span>
                 )}
               </div>
 
-              <HTMLRenderer
-                html={product.description ?? ""}
-                className="text-xxs text-foreground/50 line-clamp-2 min-h-6 hidden"
-              />
+              {isOutOfStock ? (
+                <span className="text-danger font-bold text-xs whitespace-nowrap">
+                  {t("out_of_stock")}
+                </span>
+              ) : (
+                <ProductCardAddButton
+                  product={product}
+                  defaultVariant={defaultVariant}
+                  onOpenModal={onCartOpen}
+                />
+              )}
             </div>
-
-            {(product.ratings !== undefined ||
-              product.variants?.[0]?.store_name) && (
-              <div className="flex items-center justify-between gap-2">
-                {product.ratings !== undefined && (
-                  <div className="flex items-center gap-1">
-                    {/* Desktop / Tablet – Full stars */}
-                    <div className="hidden sm:flex gap-0.5">
-                      <RatingStars rating={Number(product.ratings)} size={12} />
-                    </div>
-
-                    {/* Mobile – Single star + rating */}
-                    <div className="flex sm:hidden items-center gap-1">
-                      <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
-                      <span className="text-xxs font-medium">
-                        {Number(product.ratings).toFixed(1)}
-                      </span>
-                    </div>
-
-                    {/* Rating count – keep for all */}
-                    <span className="text-xxs text-gray-500">
-                      ({product.rating_count ?? 0})
-                    </span>
-                  </div>
-                )}
-
-                {product.variants?.[0]?.store_name &&
-                  !hideStoreName &&
-                  !isSingleVendor && (
-                    <Link
-                      href={`/stores/${product.variants?.[0]?.store_slug}`}
-                      className="text-xxs text-foreground/60 font-medium truncate "
-                      onClick={(e) => e.stopPropagation()}
-                      title={product.variants[0].store_name}
-                    >
-                      {product.variants[0].store_name}
-                    </Link>
-                  )}
-              </div>
-            )}
-          </div>
-        </CardBody>
-        <CardFooter className="flex items-center justify-between w-full pt-2">
-          <div className="flex items-center gap-2">
-            {hasDiscount ? (
-              <div className="flex flex-col">
-                <span className="text-xs md:text-sm font-semibold">
-                  {formatPrice(specialPrice)}
-                </span>
-                <span className="text-xxs md:text-xs opacity-50 line-through relative top-0.5">
-                  {formatPrice(price)}
-                </span>
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                <span className="text-xs md:text-sm font-semibold">
-                  {formatPrice(price)}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Out of Stock + Normal Add-to-Cart (store open/closed gate retired) */}
-          {!defaultVariant.availability || defaultVariant.stock === 0 ? (
-            <span className="text-red-500 font-medium text-xxs sm:text-sm w-full text-end">
-              {t("out_of_stock")}
-            </span>
-          ) : (
-            <ProductCardAddButton
-              product={product}
-              defaultVariant={defaultVariant}
-              onOpenModal={onCartOpen}
-            />
-          )}
-        </CardFooter>
-      </Card>
+          </CardFooter>
+        </Card>
+      </motion.div>
 
       {isCartOpen && (
         <ProductModal

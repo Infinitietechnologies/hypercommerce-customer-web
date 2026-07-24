@@ -1,4 +1,4 @@
-import { Skeleton } from "@heroui/react";
+import { Skeleton } from "@/components/ui";
 import React from "react";
 
 interface SkeletonTabButtonProps {
@@ -24,7 +24,7 @@ const SkeletonTabButton: React.FC<SkeletonTabButtonProps> = ({
       {/* Icon Skeleton */}
       <div
         className={`
-          flex items-center justify-center rounded-lg bg-default-100 dark:bg-transparent
+          flex items-center justify-center rounded-lg bg-content2
           ${
             isLarge
               ? "w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16"

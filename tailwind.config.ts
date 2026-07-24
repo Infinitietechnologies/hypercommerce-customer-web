@@ -29,6 +29,10 @@ const config: import("tailwindcss").Config = {
         large: "1.125rem", // 18px
       },
       spacing,
+      maxWidth: {
+        // Shared storefront page width (redesign) — header + content align on it.
+        site: "1360px",
+      },
       borderRadius: {
         xlarge: radius.xlarge,
       },

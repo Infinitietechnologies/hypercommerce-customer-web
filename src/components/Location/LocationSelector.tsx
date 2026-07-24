@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Button,
+  Divider,
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   useDisclosure,
-  addToast,
+  toast as addToast,
   Alert,
   Spinner,
-} from "@heroui/react";
-import { ChevronDown, MapPin, LocateFixed, Home, Building } from "lucide-react";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { UserLocation } from "./types/LocationAutoComplete.types";
 import { getCookie, setCookie } from "@/lib/cookies";
 import { geoDetectForCountry, switchMarket, getAddresses } from "@/routes/api";
@@ -292,11 +293,23 @@ const LocationSelector = () => {
   const getAddressTypeIcon = (type: string) => {
     switch (type?.toLowerCase()) {
       case "home":
-        return <Home className="w-4 h-4 text-primary" />;
+        return (
+          <Icon icon="solar:home-2-linear" className="text-lg text-primary" />
+        );
       case "work":
-        return <Building className="w-4 h-4 text-primary" />;
+        return (
+          <Icon
+            icon="solar:buildings-2-linear"
+            className="text-lg text-primary"
+          />
+        );
       default:
-        return <MapPin className="w-4 h-4 text-default-500" />;
+        return (
+          <Icon
+            icon="solar:map-point-linear"
+            className="text-lg text-default-500"
+          />
+        );
     }
   };
 
@@ -319,21 +332,32 @@ const LocationSelector = () => {
   return (
     <div>
       <button id="location-modal-btn" onClick={() => onOpen()} />
-      <Button
-        disableRipple
-        color={
-          !isInitialized ? "warning" : selectedLocation ? undefined : "primary"
-        }
-        variant="flat"
-        onPress={onOpen}
-        className="p-0 py-0 bg-transparent max-w-full"
-        startContent={<MapPin width={16} />}
-        endContent={<ChevronDown width={16} />}
-        isDisabled={!isInitialized}
-        fullWidth
+      {/* Trigger — amber redesign header selector: a bordered pill on desktop,
+          a plain app-style row below `lg`. */}
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={!isInitialized}
+        className="flex items-center gap-2 w-full lg:w-auto shrink-0 text-left transition-colors disabled:opacity-60
+          rounded-xl lg:border lg:border-divider lg:bg-content2 lg:px-3 lg:h-11 lg:hover:border-primary"
       >
-        <span className="truncate text-left flex-1">{getButtonText()}</span>
-      </Button>
+        <Icon
+          icon="solar:map-point-bold"
+          className="text-2xl lg:text-xl text-primary lg:text-primary-600 shrink-0"
+        />
+        <span className="leading-tight min-w-0 flex-1 lg:flex-none">
+          <span className="block text-[11px] font-semibold text-default-500">
+            {t("locationSelector.deliverTo")}
+          </span>
+          <span className="block text-sm font-bold truncate lg:max-w-[150px]">
+            {getButtonText()}
+          </span>
+        </span>
+        <Icon
+          icon="solar:alt-arrow-down-linear"
+          className="text-base text-default-400 shrink-0"
+        />
+      </button>
 
       <Modal
         isOpen={isOpen}
@@ -349,9 +373,12 @@ const LocationSelector = () => {
         backdrop="blur"
       >
         <ModalContent>
-          <ModalHeader className="flex justify-between items-center">
-            <span>
+          <ModalHeader className="flex flex-col gap-1 items-start">
+            <span className="text-lg font-extrabold">
               {t("locationSelector.modalTitle", "Select delivery address")}
+            </span>
+            <span className="text-sm font-normal text-default-500">
+              {t("locationSelector.modalSubtitle")}
             </span>
           </ModalHeader>
           <ModalBody className="pb-6 flex flex-col gap-4">
@@ -374,37 +401,56 @@ const LocationSelector = () => {
             )}
 
             {/* Use my current location */}
-            <button
-              type="button"
-              onClick={handleUseCurrentLocation}
-              disabled={isBusy}
-              className="flex items-center gap-3 w-full text-left disabled:opacity-60"
+            <Button
+              onPress={handleUseCurrentLocation}
+              isDisabled={isBusy}
+              isLoading={locatingId === "current"}
+              variant="flat"
+              color="primary"
+              startContent={
+                locatingId !== "current" && (
+                  <Icon icon="solar:gps-linear" className="text-xl" />
+                )
+              }
+              className="justify-start font-bold h-12"
             >
-              <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                {locatingId === "current" ? (
-                  <Spinner size="sm" color="primary" />
-                ) : (
-                  <LocateFixed size={18} />
-                )}
-              </div>
-              <span className="text-sm font-semibold text-primary">
-                {t("locationSelector.useCurrentLocation", "Use my current location")}
-              </span>
-            </button>
-
-            <div className="border-t border-dashed border-default-200" />
+              {locatingId === "current"
+                ? t("locationSelector.detecting")
+                : t(
+                    "locationSelector.useCurrentLocation",
+                    "Use my current location",
+                  )}
+            </Button>
 
             {/* Saved addresses */}
+            <div className="flex items-center gap-3">
+              <Divider className="flex-1" />
+              <span className="text-xs font-bold uppercase tracking-wider text-default-400">
+                {t("locationSelector.savedAddresses", "Saved addresses")}
+              </span>
+              <Divider className="flex-1" />
+            </div>
+
             {!isLoggedIn ? (
               <div className="text-center py-6">
-                <MapPin className="w-10 h-10 text-default-300 mx-auto mb-3" />
+                <div className="w-16 h-16 rounded-large bg-primary-100/60 grid place-items-center mx-auto mb-3">
+                  <Icon
+                    icon="solar:map-point-linear"
+                    className="text-3xl text-primary-600"
+                  />
+                </div>
                 <p className="text-sm text-default-500 mb-4">
                   {t(
                     "locationSelector.loginPrompt",
                     "Log in to see your saved addresses",
                   )}
                 </p>
-                <Button color="primary" variant="flat" onPress={openLogin}>
+                <Button
+                  color="primary"
+                  variant="flat"
+                  className="font-extrabold"
+                  onPress={openLogin}
+                >
                   {t("login_modal.button", "Login")}
                 </Button>
               </div>
@@ -414,7 +460,12 @@ const LocationSelector = () => {
               </div>
             ) : addresses.length === 0 ? (
               <div className="text-center py-6">
-                <MapPin className="w-10 h-10 text-default-300 mx-auto mb-2" />
+                <div className="w-16 h-16 rounded-large bg-primary-100/60 grid place-items-center mx-auto mb-3">
+                  <Icon
+                    icon="solar:map-point-linear"
+                    className="text-3xl text-primary-600"
+                  />
+                </div>
                 <p className="text-sm text-default-500">
                   {t(
                     "locationSelector.noSavedAddresses",
@@ -424,9 +475,6 @@ const LocationSelector = () => {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold text-default-500 uppercase">
-                  {t("locationSelector.savedAddresses", "Saved addresses")}
-                </p>
                 {addresses.map((address) => {
                   const isSelected =
                     selectedLatLng?.lat === address.latitude &&
@@ -437,10 +485,10 @@ const LocationSelector = () => {
                       type="button"
                       onClick={() => handleSelectAddress(address)}
                       disabled={isBusy}
-                      className={`flex items-start gap-3 w-full text-left rounded-xl p-3 border transition-colors disabled:opacity-60 ${
+                      className={`flex items-start gap-3 w-full text-left rounded-xl px-3 py-3 border bg-content2 transition-colors disabled:opacity-60 ${
                         isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-default-200 hover:bg-default-100"
+                          ? "border-primary"
+                          : "border-divider hover:border-primary/60"
                       }`}
                     >
                       <div className="mt-0.5 shrink-0">
@@ -451,10 +499,10 @@ const LocationSelector = () => {
                         )}
                       </div>
                       <div className="flex flex-col flex-1 min-w-0">
-                        <span className="text-sm font-medium capitalize">
+                        <span className="text-sm font-bold capitalize">
                           {address.address_type}
                         </span>
-                        <span className="text-xs text-default-500 line-clamp-2">
+                        <span className="text-xs text-default-500 mt-0.5 line-clamp-2">
                           {address.address_line1}
                           {address.address_line2 &&
                             `, ${address.address_line2}`}

@@ -230,8 +230,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
           <div
             className={`absolute left-0 top-0 bottom-0 w-6
             bg-linear-to-r
-            from-gray-400/20 via-gray-400/10 to-transparent
-            dark:from-gray-500/30 dark:via-gray-400/20
+            from-background via-background/60 to-transparent
             z-10 pointer-events-none
             transition-opacity duration-300 ease-in-out
             ${showLeftShadow ? "opacity-100" : "opacity-0"}`}
@@ -241,8 +240,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
           <div
             className={`absolute right-0 top-0 bottom-0 w-6
               bg-linear-to-l
-            from-gray-400/20 via-gray-400/10 to-transparent
-            dark:from-gray-500/30 dark:via-gray-400/20
+            from-background via-background/60 to-transparent
               z-10 pointer-events-none
               transition-opacity duration-300 ease-in-out
               ${showRightShadow ? "opacity-100" : "opacity-0"}`}

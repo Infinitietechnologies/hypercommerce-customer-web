@@ -1,17 +1,43 @@
 import type { ConfigThemes } from "@heroui/theme";
 
-import {
-  brand,
-  dark,
-  light,
-  neutralDark,
-  neutralLight,
-  onBrand,
-  radius,
-  status,
-} from "./tokens";
+import { brand, dark, light, onBrand, radius, secondaryAccent, status } from "./tokens";
 
 const primary = { ...brand, DEFAULT: brand[500], foreground: onBrand };
+
+/**
+ * Warm neutral "default" scales for the amber redesign. HeroUI uses `default`
+ * for muted fills/borders/disabled text, so these follow the cream (light) and
+ * warm-black (dark) surface ramps rather than Material greys.
+ */
+const defaultLight = {
+  50: "#f7f5f0",
+  100: light.surface2, // #f0ede5
+  200: light.surface3, // #ece8df
+  300: light.surface4, // #d8d2c4
+  400: "#b5ad9c",
+  500: light.muted, // #6d6656
+  600: "#544e40",
+  700: "#3d382d",
+  800: "#2a2620",
+  900: "#181510",
+  foreground: light.foreground,
+  DEFAULT: light.surface3,
+} as const;
+
+const defaultDark = {
+  50: "#1a1712",
+  100: dark.surface2, // #231f18
+  200: dark.surface3, // #2b2620
+  300: dark.surface4, // #3a342b
+  400: "#5c5647",
+  500: dark.muted, // #a89f8c
+  600: "#c4bba6",
+  700: "#d8d0bd",
+  800: "#e8e2d3",
+  900: dark.foreground,
+  foreground: dark.foreground,
+  DEFAULT: dark.surface3,
+} as const;
 
 /** Layout values shared by both themes. Border widths match the app's hairlines. */
 export const heroLayout = {
@@ -41,12 +67,12 @@ export const heroThemes: ConfigThemes = {
       content2: light.surface2,
       content3: light.surface3,
       content4: light.surface4,
-      default: { ...neutralLight, DEFAULT: neutralLight[300], foreground: light.foreground },
+      default: defaultLight,
       primary,
-      secondary: { ...neutralLight, DEFAULT: light.foreground, foreground: "#FFFFFF" },
-      success: { DEFAULT: status.success, foreground: "#FFFFFF" },
+      secondary: { DEFAULT: secondaryAccent.light, foreground: "#ffffff" },
+      success: { DEFAULT: status.success, foreground: "#ffffff" },
       warning: { DEFAULT: status.warning, foreground: onBrand },
-      danger: { DEFAULT: status.error, foreground: "#FFFFFF" },
+      danger: { DEFAULT: status.error, foreground: "#ffffff" },
     },
   },
   dark: {
@@ -60,12 +86,12 @@ export const heroThemes: ConfigThemes = {
       content2: dark.surface2,
       content3: dark.surface3,
       content4: dark.surface4,
-      default: { ...neutralDark, DEFAULT: neutralDark[200], foreground: dark.foreground },
+      default: defaultDark,
       primary,
-      secondary: { ...neutralDark, DEFAULT: dark.foreground, foreground: onBrand },
-      success: { DEFAULT: status.success, foreground: "#FFFFFF" },
+      secondary: { DEFAULT: secondaryAccent.dark, foreground: "#0d0820" },
+      success: { DEFAULT: status.successDark, foreground: "#08110b" },
       warning: { DEFAULT: status.warning, foreground: onBrand },
-      danger: { DEFAULT: status.error, foreground: "#FFFFFF" },
+      danger: { DEFAULT: status.errorDark, foreground: "#1a0605" },
     },
   },
 };

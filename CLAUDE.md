@@ -23,6 +23,18 @@ The web storefront is **being modernized to match the Flutter app**. The Flutter
 
 The gap between the two is tracked in `GAP_ANALYSIS.md` — read it before starting a phase, update it when a gap closes.
 
+> **Redesign in progress (2026-07 →).** The customer-web is being reskinned to the
+> **"Ecommerce redesign with amber theme"** Hero UI handoff (Claude Design project
+> `6302fd32-b7e1-4090-a063-18109d839a17`). **A fresh redesign is being authored
+> separately — treat the tokens below as the current state, not a final target.**
+> For **visual design** (colour, type, spacing, component look), this handoff is now
+> the source of truth for web and supersedes the Flutter app; Flutter still governs
+> **screen inventory, features, and the API contract**. Landed so far: amber `#eba513`
+> palette + warm neutrals + violet secondary (`src/theme/{tokens,heroui}.ts`), Plus
+> Jakarta Sans (`src/config/fonts.ts`), `@iconify/react` (solar icon set), `max-w-site`
+> (1360px), and the atoms/components gallery at **`/design-system`**. Screens port one
+> at a time; static demo data in the handoff must be rewired to the real API shape.
+
 ### Backend
 
 Talks to the Laravel panel at `process.env.NEXT_PUBLIC_ADMIN_PANEL_URL + '/api/...'`. See `constructApiBaseUrl()` in `src/services/client.ts`. Customer endpoints live in the panel's `routes/api.php` → `app/Http/Controllers/Api/User/*`. **API contract changes break the mobile app silently — always flag them.**
@@ -49,7 +61,7 @@ Everything below is what the project **actually uses today**. Do not add to this
 | HTTP | **axios** `^1.13.2` — one instance in `src/services/client.ts`, endpoint callers in `src/services/<domain>.ts`, interceptors in `src/routes/interceptor.ts` |
 | Forms / validation | **No form library.** Controlled React state + `src/helpers/validator.ts`; `libphonenumber-js` for phone |
 | i18n | `i18next` + `react-i18next`, bundles in `public/locales/{en,hi,ar}.json`, init in `i18n.ts`, scanner `npm run scan:i18n`. Arabic forces RTL |
-| Icons | **`lucide-react` `^0.562.0` — the standard** (118 files). `react-icons` `^5.5.0` lingers in 4 files and is being retired. Do not add a third set |
+| Icons | **`@iconify/react` (solar set) — the redesign standard**, matches the Hero UI handoff 1:1; use `<Icon icon="solar:…" />` for new redesign screens. `lucide-react` `^0.562.0` remains for pre-redesign screens (118 files); `react-icons` `^5.5.0` lingers in 4 files and is being retired. Do not add a fourth set |
 | Auth | Firebase Auth (phone OTP, Google, Apple) + Sanctum bearer token in cookies |
 | Payments | Stripe (`@stripe/react-stripe-js`), Razorpay (inline SDK), Paystack, Flutterwave (redirect) |
 | Maps | `leaflet` + `react-leaflet`, `@types/google.maps` |
@@ -465,7 +477,7 @@ npm run scan:i18n
 ## 9. Do NOT
 
 1. **No second component library.** HeroUI is it. No MUI, no shadcn, no Chakra, no Radix-direct, no Ant.
-2. **No HeroUI default theme colors.** Amber `#FFB616` is the brand. Blue `#3b82f6` anywhere in the codebase is a bug.
+2. **No HeroUI default theme colors.** Amber `#eba513` is the brand (redesign — supersedes the old `#FFB616`; see Redesign note in §1). Blue `#3b82f6` anywhere in the codebase is a bug.
 3. **No new dependency without recording it in §2 of this file** — in the same commit that adds it. Justify it; prefer what's already installed.
 4. **No scope creep.** Do exactly the screen or fix that was asked. Note anything else you spot and move on.
 5. **No skipping the Flutter reference.** If you did not open the Flutter screen, you are guessing.
@@ -476,7 +488,7 @@ npm run scan:i18n
 10. **No structural change** (folder moves, state-management swaps, router changes, major version bumps) without explicit approval.
 11. **No delivery zones.** The feature is being removed from the Flutter app too. Do not port `/delivery-zones` or `/delivery-zone-detail`, and do not flag their absence as a gap.
 12. **No store picker.** The app has a *market* picker, not a store picker. Do not conflate the two (§7.4).
-13. **No custom font-weight scale.** Tailwind defaults map 1:1 to Figtree's six faces.
+13. **No custom font-weight scale.** Tailwind defaults map 1:1 to the font's faces. Storefront `sans` is **Plus Jakarta Sans** (redesign, weights 400–800, via `next/font/google` in `src/config/fonts.ts`) — it superseded Figtree.
 
 ---
 

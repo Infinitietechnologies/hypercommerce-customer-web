@@ -1,16 +1,17 @@
+import { Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 
-// Figtree matches the Flutter app (hypercommerce-customer-app/pubspec.yaml).
-// Variable font — one file covers every weight the app uses (300-800).
+// Plus Jakarta Sans — the typeface of the HyperCommerce amber redesign
+// (Claude Design 6302fd32…). Supersedes Figtree as the storefront's `sans`.
 // next/font requires plain object literals here: no spreads, no shared consts.
-export const fontSans = localFont({
-  src: "../assets/fonts/Figtree-VariableFont_wght.ttf",
-  weight: "300 900",
+export const fontSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   style: "normal",
   variable: "--font-sans",
   display: "swap",
   preload: true,
-  adjustFontFallback: "Arial",
+  adjustFontFallback: true,
   fallback: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "arial"],
 });
 

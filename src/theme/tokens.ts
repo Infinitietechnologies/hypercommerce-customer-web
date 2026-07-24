@@ -6,22 +6,27 @@
  * these through the Tailwind/HeroUI theme.
  */
 
-/** Brand amber. 500 is AppTheme.primaryColor, 300 is AppTheme.lightPrimaryColor. */
+/**
+ * Brand amber. 500 is the brand primary.
+ * Source: HyperCommerce "Ecommerce redesign with amber theme" Hero UI handoff
+ * (Claude Design 6302fd32…), tailwind.config.js `primary` scale. This supersedes
+ * the old Flutter amber (#FFB616) — the redesign is now the source of truth.
+ */
 export const brand = {
-  50: "#FFF9E9",
-  100: "#FFF0C7",
-  200: "#FDE49B",
-  300: "#FACC66",
-  400: "#FFC23C",
-  500: "#FFB616",
-  600: "#DB9A0C",
-  700: "#A87507",
-  800: "#7A5405",
-  900: "#533903",
+  50: "#fdf7e8",
+  100: "#fdf2d5",
+  200: "#f9e3a5",
+  300: "#f4cf6a",
+  400: "#efba3f",
+  500: "#eba513",
+  600: "#c2870a",
+  700: "#946608",
+  800: "#6b4a06",
+  900: "#443003",
 } as const;
 
-/** AppTheme.secondaryColor — sits on top of brand fills. */
-export const onBrand = "#000000";
+/** Label colour on brand fills. Redesign primary-foreground (#1c1608, near-black). */
+export const onBrand = "#1c1608";
 
 /** Material greys, matching the grey.shadeN values used throughout the app. */
 export const neutralLight = {
@@ -51,43 +56,54 @@ export const neutralDark = {
   900: "#F0F0F0",
 } as const;
 
+// Surfaces below come from the amber redesign (warm cream in light, warm
+// near-black in dark). content1 = card, content2 = subtle fill, content3/4 =
+// deeper wells. Source: handoff tailwind.config.js.
 export const light = {
-  background: "#FFFFFF",
-  foreground: "#0D1117",
-  surface1: "#FFFFFF",
-  surface2: "#F7FAFC",
-  surface3: "#F5F5F5",
-  surface4: "#E0E0E0",
-  divider: "#E0E0E0",
-  outline: "#EEEEEE",
-  muted: "#616161",
+  background: "#f4f2ec",
+  foreground: "#181510",
+  surface1: "#ffffff",
+  surface2: "#f0ede5",
+  surface3: "#ece8df",
+  surface4: "#d8d2c4",
+  divider: "#ece8df",
+  outline: "#ece8df",
+  muted: "#6d6656",
   subCategoryCard: "#E5FBFF",
-  collapsedAppBar: "#F5F3ED",
+  collapsedAppBar: "#f0ede5",
 } as const;
 
-/** L0 page → L1 card → L2 elevated → L3 chip/input. */
+/** L0 page → L1 card → L2 elevated → L3 chip/input — warm dark. */
 export const dark = {
-  background: "#0D0D0D",
-  foreground: "#F0F0F0",
-  surface1: "#1A1A1A",
-  surface2: "#242424",
-  surface3: "#2E2E2E",
-  surface4: "#3A3A3A",
-  divider: "rgba(255,255,255,0.06)",
-  outline: "rgba(255,255,255,0.12)",
-  // HeroUI stores colors as HSL channels and drops alpha, so it needs opaque
-  // equivalents. These are the rgba values above flattened over the L0/L1 surfaces.
-  dividerSolid: "#262626",
-  outlineSolid: "#2E2E2E",
-  muted: "#9E9E9E",
-  bottomNav: "#111111",
-  bottomNavInactive: "#6B6B6B",
+  background: "#100e0b",
+  foreground: "#f5f0e5",
+  surface1: "#1a1712",
+  surface2: "#231f18",
+  surface3: "#2b2620",
+  surface4: "#3a342b",
+  divider: "#2b2620",
+  outline: "#3a342b",
+  // Kept for API compatibility with prior callers; now opaque warm tones.
+  dividerSolid: "#2b2620",
+  outlineSolid: "#3a342b",
+  muted: "#a89f8c",
+  bottomNav: "#100e0b",
+  bottomNavInactive: "#a89f8c",
 } as const;
 
+// success/danger are mode-specific in the redesign; heroui.ts picks per theme.
 export const status = {
-  error: "#F44336",
-  success: "#4CAF50",
+  error: "#d6453f",
+  errorDark: "#f06a63",
+  success: "#178a4e",
+  successDark: "#4ec982",
   warning: "#FFAB40",
+} as const;
+
+/** Redesign secondary = violet accent (chips, "arriving" alerts). */
+export const secondaryAccent = {
+  light: "#6d5ae0",
+  dark: "#a794ff",
 } as const;
 
 /** Commerce accents with no HeroUI slot — exposed as Tailwind utilities. */

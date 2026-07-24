@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Image } from "@heroui/react";
-import { LayoutGrid } from "lucide-react";
+import { Image } from "@/components/ui";
+import { Icon } from "@iconify/react";
 
 interface Category {
   id: number;
@@ -72,16 +72,16 @@ const TabButton: React.FC<TabButtonProps> = ({
             ? "px-1 py-2 sm:min-w-[80px] lg:min-w-[110px] lg:px-4 lg:py-3"
             : "px-1 py-2 sm:min-w-[72px] min-w-[50px]"
         }
-        border-b-2 transition-all duration-200  hover:border-primary hover:bg-transparent
+        border-b-2 transition-all duration-200 hover:border-primary
         ${
           isSelected
-            ? "border-primary text-primary"
-            : "border-transparent text-default-600 hover:text-default-900"
+            ? "border-primary text-primary-600"
+            : "border-transparent text-default-500 hover:text-foreground"
         }
         ${
           isLoading
             ? "opacity-50 cursor-not-allowed"
-            : "cursor-pointer hover:bg-default-100/50"
+            : "cursor-pointer hover:bg-content2/60"
         }
       `}
     >
@@ -94,11 +94,7 @@ const TabButton: React.FC<TabButtonProps> = ({
                 ? "w-10 h-10 md:w-14 md:h-14 lg:w-16 lg:h-16"
                 : "w-10 h-10 md:w-12 md:h-12"
             }
-            ${
-              isSelected
-                ? "bg-primary/10 dark:bg-transparent"
-                : "bg-default-100 dark:bg-default-100"
-            }
+            ${isSelected ? "bg-primary-100" : "bg-content2"}
           `}
       >
         {iconUrl ? (
@@ -119,14 +115,11 @@ const TabButton: React.FC<TabButtonProps> = ({
           />
         ) : (
           staticIcon || (
-            <LayoutGrid
+            <Icon
+              icon="solar:widget-2-linear"
               className={`
-                ${
-                  isLarge
-                    ? "w-6 h-6 md:w-9 md:h-9 lg:w-11 lg:h-11"
-                    : "w-6 h-6 md:w-8 md:h-8"
-                }
-                ${isSelected ? "text-primary" : "text-default-400"}
+                ${isLarge ? "text-2xl md:text-4xl lg:text-5xl" : "text-2xl md:text-3xl"}
+                ${isSelected ? "text-primary-600" : "text-default-400"}
               `}
             />
           )
@@ -142,7 +135,7 @@ const TabButton: React.FC<TabButtonProps> = ({
               ? "lg:text-sm max-w-[80px] sm:max-w-[100px] lg:max-w-[120px]"
               : "max-w-[60px] sm:max-w-[80px]"
           }
-          ${isSelected ? "font-semibold text-primary" : "font-medium"}
+          ${isSelected ? "font-extrabold text-primary-600" : "font-semibold"}
         `}
       >
         {title}
