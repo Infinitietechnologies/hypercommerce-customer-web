@@ -331,25 +331,22 @@ const LocationSelector = () => {
 
   return (
     <div>
-      <button id="location-modal-btn" onClick={() => onOpen()} />
-      {/* Trigger — amber redesign header selector: a bordered pill on desktop,
-          a plain app-style row below `lg`. */}
       <button
         type="button"
         onClick={onOpen}
         disabled={!isInitialized}
-        className="flex items-center gap-2 w-full lg:w-auto shrink-0 text-left transition-colors disabled:opacity-60
-          rounded-xl lg:border lg:border-divider lg:bg-content2 lg:px-3 lg:h-11 lg:hover:border-primary"
+        className="flex items-center gap-2 w-full min-[1024px]:w-auto shrink-0 text-left transition-colors disabled:opacity-60
+          rounded-medium min-[1024px]:border min-[1024px]:border-divider min-[1024px]:bg-content1 min-[1024px]:px-3.5 min-[1024px]:h-11 min-[1024px]:shadow-sm min-[1024px]:hover:border-primary"
       >
         <Icon
           icon="solar:map-point-bold"
-          className="text-2xl lg:text-xl text-primary lg:text-primary-600 shrink-0"
+          className="text-2xl min-[1024px]:text-lg text-primary min-[1024px]:text-primary-600 shrink-0"
         />
-        <span className="leading-tight min-w-0 flex-1 lg:flex-none">
-          <span className="block text-[11px] font-semibold text-default-500">
+        <span className="leading-tight min-w-0 flex-1 min-[1024px]:flex-none">
+          <span className="block text-[10px] font-semibold text-default-500">
             {t("locationSelector.deliverTo")}
           </span>
-          <span className="block text-sm font-bold truncate lg:max-w-[150px]">
+          <span className="block text-[13px] font-semibold truncate min-[1024px]:max-w-[150px]">
             {getButtonText()}
           </span>
         </span>
@@ -445,14 +442,6 @@ const LocationSelector = () => {
                     "Log in to see your saved addresses",
                   )}
                 </p>
-                <Button
-                  color="primary"
-                  variant="flat"
-                  className="font-extrabold"
-                  onPress={openLogin}
-                >
-                  {t("login_modal.button", "Login")}
-                </Button>
               </div>
             ) : isAddressesLoading ? (
               <div className="flex flex-col items-center justify-center py-8">

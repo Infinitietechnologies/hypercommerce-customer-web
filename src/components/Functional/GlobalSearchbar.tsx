@@ -249,13 +249,14 @@ const GlobalSearchBar: React.FC = () => {
 
   return (
     <>
-      {/* Bar styling mirrors the amber redesign handoff `src/components/SearchBar.jsx`:
-          h-12 filled field on content2, hairline border that turns amber on
-          hover/focus, solar magnifier, amber Search action. */}
+      {/* New redesign search: a clean rounded field on the page surface with a
+          solar magnifier and grey placeholder — no button. Radius 14 (`md`),
+          hairline border that turns amber on hover/focus. The shopping-list
+          shortcut stays as a subtle trailing icon. */}
       <div className="relative w-full overflow-hidden">
         <Input
           as={"div"}
-          radius="lg"
+          radius="md"
           variant="flat"
           startContent={
             <Icon
@@ -264,51 +265,49 @@ const GlobalSearchBar: React.FC = () => {
             />
           }
           endContent={
-            <div className="flex items-center gap-1 shrink-0">
-              <Button
-                title={t("userLayout.shoppingList")}
-                onPress={() => {
-                  router.push("/shopping-list");
-                }}
-                isIconOnly
-                radius="full"
-                className="p-0 min-w-8 w-8 h-8 bg-transparent"
-              >
-                <Icon
-                  icon="solar:clipboard-text-linear"
-                  className="text-xl text-default-500"
-                />
-              </Button>
-              <span className="hidden sm:inline-flex bg-primary text-primary-foreground font-extrabold text-sm rounded-lg px-5 py-2 -mr-1 transition-transform active:scale-95">
-                {t("search")}
-              </span>
-            </div>
+            <Button
+              title={t("userLayout.shoppingList")}
+              onPress={() => router.push("/shopping-list")}
+              isIconOnly
+              radius="full"
+              className="p-0 min-w-8 w-8 h-8 bg-transparent shrink-0"
+            >
+              <Icon
+                icon="solar:clipboard-text-linear"
+                className="text-xl text-default-500"
+              />
+            </Button>
           }
           onClick={onOpen}
           readOnly
           className="cursor-pointer"
           classNames={{
             inputWrapper:
-              "bg-content2 border border-divider h-12 pr-1 data-[focus=true]:border-primary data-[hover=true]:border-primary/60",
+              "bg-background border border-divider h-12 pr-1 data-[focus=true]:border-primary data-[hover=true]:border-primary shadow-none",
             input: "text-sm font-medium",
           }}
         />
 
-        {/* Animated placeholder text */}
+        {/* Animated placeholder text — vertically centred on the field via a
+            full-height flex wrapper (stays centred regardless of the input's
+            label slot); the inner span carries the enter/exit motion. */}
         <span
           aria-hidden
-          key={placeholderIndex}
-          className="absolute left-12 top-1/2 -translate-y-1/2
-            text-default-500 truncate w-[45%] text-sm font-medium pointer-events-none
-            transition-all duration-600 ease-in-out"
-          style={{
-            transform: `translateY(calc(-50% + ${animationState === "enter" ? "20px" : animationState === "exit" ? "-20px" : "0px"}))`,
-            opacity: getOpacity(),
-          }}
+          className="absolute inset-y-0 left-12 right-12 flex items-center overflow-hidden pointer-events-none"
         >
-          {String(placeholders?.[placeholderIndex] ?? "")
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase()) || "Search"}
+          <span
+            key={placeholderIndex}
+            className="truncate text-default-500 text-sm font-medium leading-none
+              transition-all duration-600 ease-in-out"
+            style={{
+              transform: `translateY(${animationState === "enter" ? "20px" : animationState === "exit" ? "-20px" : "0px"})`,
+              opacity: getOpacity(),
+            }}
+          >
+            {String(placeholders?.[placeholderIndex] ?? "")
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase()) || "Search"}
+          </span>
         </span>
       </div>
 

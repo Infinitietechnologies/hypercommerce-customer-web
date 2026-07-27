@@ -170,6 +170,29 @@
   font-family: inherit;
 }
 
+/* ---- Header responsiveness ----------------------------------------------- */
+
+/*
+ * The design ships one desktop header row. Below 1024px it can't fit, so a
+ * mobile bar (logo + cart + hamburger, search on its own row) takes over. The
+ * media-query swap can't live in inline styles, so it lives here.
+ */
+:is(.rd, .rd-vars) .rd-hdr-desktop {
+  display: none;
+}
+:is(.rd, .rd-vars) .rd-hdr-mobile {
+  display: flex;
+}
+
+@media (min-width: 1024px) {
+  :is(.rd, .rd-vars) .rd-hdr-desktop {
+    display: flex;
+  }
+  :is(.rd, .rd-vars) .rd-hdr-mobile {
+    display: none;
+  }
+}
+
 /* ---- Listing layout ------------------------------------------------------ */
 
 /*

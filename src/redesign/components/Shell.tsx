@@ -74,6 +74,42 @@ export function FullHeader({
   const router = useRouter();
   const go = (path: string) => router.push(path);
 
+  const locationPill = (
+    <button
+      aria-label="Change delivery location"
+      className="rd-field"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "9px 14px",
+        border: `1px solid ${v.line}`,
+        borderRadius: radius.input,
+        background: v.surface,
+        flexShrink: 0,
+        cursor: "pointer",
+        boxShadow: shadow.hairline,
+        fontFamily: "inherit",
+        color: "inherit",
+      }}
+      type="button"
+    >
+      <RdIcon color={v.amberDark} icon="solar:map-point-bold" size={18} />
+      <span
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          lineHeight: 1.2,
+        }}
+      >
+        <span style={{ fontSize: 10, color: v.inkSoft }}>Deliver to</span>
+        <span style={{ fontSize: 13, fontWeight: 600 }}>Bengaluru 560001</span>
+      </span>
+      <RdIcon color={v.inkSoft} icon="solar:alt-arrow-down-linear" size={14} />
+    </button>
+  );
+
   return (
     <header
       style={{
@@ -85,64 +121,24 @@ export function FullHeader({
         boxShadow: shadow.header,
       }}
     >
+      {/* Desktop bar (≥1024px) — the design's original single-row layout. */}
       <div
+        className="rd-hdr-desktop"
         style={{
           maxWidth: layout.maxWidth,
           margin: "0 auto",
           padding: "14px 24px",
-          display: "flex",
           alignItems: "center",
           gap: 20,
-          flexWrap: "wrap",
         }}
       >
         <Logo onClick={() => go("/redesign/home")} />
-
-        <button
-          className="rd-field"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "9px 14px",
-            border: `1px solid ${v.line}`,
-            borderRadius: radius.input,
-            background: v.surface,
-            flexShrink: 0,
-            cursor: "pointer",
-            boxShadow: shadow.hairline,
-            fontFamily: "inherit",
-            color: "inherit",
-          }}
-          type="button"
-        >
-          <RdIcon color={v.amberDark} icon="solar:map-point-bold" size={18} />
-          <span
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              lineHeight: 1.2,
-            }}
-          >
-            <span style={{ fontSize: 10, color: v.inkSoft }}>Deliver to</span>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>
-              Bengaluru 560001
-            </span>
-          </span>
-          <RdIcon
-            color={v.inkSoft}
-            icon="solar:alt-arrow-down-linear"
-            size={14}
-          />
-        </button>
-
+        {locationPill}
         <SearchField
           placeholder="Search for products, brands and more"
           style={{ flex: "1 1 260px", minWidth: 220 }}
           onClick={() => go("/redesign/search")}
         />
-
         <div
           style={{
             display: "flex",
@@ -172,6 +168,57 @@ export function FullHeader({
             icon="solar:cart-large-2-linear"
             label="Cart"
             onClick={() => go("/redesign/cart")}
+          />
+        </div>
+      </div>
+
+      {/* Mobile bar (<1024px) — location replaces the logo, account + cart on the
+          right; search and wishlist take the full-width second row. */}
+      <div
+        className="rd-hdr-mobile"
+        style={{
+          maxWidth: layout.maxWidth,
+          margin: "0 auto",
+          padding: "12px 16px",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {locationPill}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginLeft: "auto",
+              flexShrink: 0,
+            }}
+          >
+            <HeaderIconButton
+              icon="solar:user-circle-linear"
+              label="Account"
+              onClick={() => go("/redesign/account")}
+            />
+            <HeaderIconButton
+              badge={cartCount}
+              icon="solar:cart-large-2-linear"
+              label="Cart"
+              onClick={() => go("/redesign/cart")}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <SearchField
+            placeholder="Search products, brands…"
+            style={{ flex: 1, minWidth: 0 }}
+            onClick={() => go("/redesign/search")}
+          />
+          <HeaderIconButton
+            icon="solar:heart-linear"
+            label="Wishlist"
+            onClick={() => go("/redesign/account?tab=wishlists")}
           />
         </div>
       </div>

@@ -83,7 +83,8 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <HeroUIProvider navigate={router.push}>
       <NextThemesProvider
-        defaultTheme="system"
+        forcedTheme="light"
+        defaultTheme="light"
         attribute="class"
         disableTransitionOnChange
       >

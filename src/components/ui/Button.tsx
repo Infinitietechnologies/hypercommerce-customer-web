@@ -4,10 +4,10 @@ import { Button as HeroButton, Spinner, extendVariants } from "@heroui/react";
 import { forwardRef } from "react";
 
 /**
- * Matches CustomButton in the Flutter app
- * (hypercommerce-customer-app/lib/utils/widgets/custom_button.dart):
- * radius 8, no elevation, amber fill with black label, 48px tall on mobile
- * and 40px from tablet up.
+ * The storefront button (redesign): radius 12 (`rounded-small`), amber fill
+ * with near-black label, 48px tall on mobile and 40px from tablet up. The
+ * primary CTA carries a soft amber glow (`shadow-primary`); other colours stay
+ * flat — see the `Button` component below.
  */
 const StyledButton = extendVariants(HeroButton, {
   variants: {
@@ -16,10 +16,10 @@ const StyledButton = extendVariants(HeroButton, {
       xs: "p-2 min-w-12 h-7 text-tiny gap-1 rounded-small",
       responsive: `
       px-3 py-2 min-w-16 h-8 text-tiny gap-2 rounded-small
-      sm:px-4 sm:py-2.5 sm:min-w-16 sm:h-10 sm:text-base sm:gap-3 sm:rounded-medium
-      md:px-4 md:py-2.5 md:min-w-18 md:h-10 md:text-small md:gap-2 md:rounded-medium
+      sm:px-4 sm:py-2.5 sm:min-w-16 sm:h-10 sm:text-base sm:gap-3 sm:rounded-small
+      md:px-4 md:py-2.5 md:min-w-18 md:h-10 md:text-small md:gap-2 md:rounded-small
     `,
-      app: "px-4 h-12 md:h-10 text-small gap-2 rounded-medium",
+      app: "px-4 h-12 md:h-10 text-small gap-2 rounded-small",
     },
   },
   defaultVariants: {
@@ -36,18 +36,27 @@ export interface ButtonProps extends Omit<HeroButtonProps, "size"> {
  * so `isLoading` hides children here.
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ isLoading, children, disableAnimation, ...props }, ref) => (
-    <StyledButton
-      ref={ref}
-      disableAnimation={disableAnimation}
-      isLoading={false}
-      isDisabled={props.isDisabled || isLoading}
-      {...props}
-      className={`shadow-none ${props.className ?? ""}`}
-    >
-      {isLoading ? <Spinner size="sm" color="current" /> : children}
-    </StyledButton>
-  ),
+  ({ isLoading, children, disableAnimation, ...props }, ref) => {
+    // Solid primary is the only elevated button; everything else stays flat.
+    const isSolidPrimary =
+      (props.color ?? "primary") === "primary" &&
+      (props.variant ?? "solid") === "solid" &&
+      !props.isDisabled &&
+      !isLoading;
+
+    return (
+      <StyledButton
+        ref={ref}
+        disableAnimation={disableAnimation}
+        isLoading={false}
+        isDisabled={props.isDisabled || isLoading}
+        {...props}
+        className={`${isSolidPrimary ? "shadow-primary" : "shadow-none"} ${props.className ?? ""}`}
+      >
+        {isLoading ? <Spinner size="sm" color="current" /> : children}
+      </StyledButton>
+    );
+  },
 );
 
 Button.displayName = "Button";

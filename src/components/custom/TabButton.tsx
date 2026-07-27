@@ -22,6 +22,12 @@ interface TabButtonProps {
   onClick?: () => void;
   staticIcon?: React.ReactNode;
   size?: "sm" | "lg";
+  /**
+   * `card` (default) — stacked icon-tile + label; used where category tiles are
+   * shown as a grid. `strip` — flat inline icon + label with an underline on
+   * the active tab, matching the /redesign sandbox home category strip.
+   */
+  variant?: "card" | "strip";
 }
 
 const TabButton: React.FC<TabButtonProps> = ({
@@ -33,6 +39,7 @@ const TabButton: React.FC<TabButtonProps> = ({
   onClick,
   staticIcon,
   size = "sm",
+  variant = "card",
 }) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -58,6 +65,57 @@ const TabButton: React.FC<TabButtonProps> = ({
       ? category.active_icon
       : category?.icon || category?.image;
 
+  // ---- Flat inline strip (sandbox home category nav) --------------------------
+  if (variant === "strip") {
+    return (
+      <button
+        ref={buttonRef}
+        onClick={onClick}
+        disabled={isLoading}
+        className={`
+          flex items-center gap-1.5 whitespace-nowrap px-3.5 py-[11px]
+          border-b-2 transition-colors duration-200
+          ${
+            isSelected
+              ? "border-primary text-primary-600"
+              : "border-transparent text-default-500 hover:text-foreground hover:border-primary/40"
+          }
+          ${isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+        `}
+      >
+        <span className="flex items-center justify-center shrink-0">
+          {iconUrl ? (
+            <Image
+              src={iconUrl}
+              alt={title}
+              loading="eager"
+              radius="none"
+              className={`object-contain w-[25px] h-[25px] ${isSelected ? "" : "opacity-80"}`}
+            />
+          ) : (
+            staticIcon || (
+              <Icon
+                icon="solar:widget-2-linear"
+                className={`text-[17px] ${isSelected ? "text-primary-600" : "text-default-400"}`}
+              />
+            )
+          )}
+        </span>
+        <span
+          className={`text-[13px] leading-none ${
+            isSelected ? "font-bold text-primary-600" : "font-semibold"
+          }`}
+        >
+          {title}
+        </span>
+        {isLoading && (
+          <span className="ml-1 animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
+        )}
+      </button>
+    );
+  }
+
+  // ---- Card (default) ---------------------------------------------------------
   const isLarge = size === "lg";
 
   return (
@@ -110,7 +168,6 @@ const TabButton: React.FC<TabButtonProps> = ({
                     ? "w-6 h-6 md:w-9 md:h-9 lg:w-11 lg:h-11"
                     : "w-6 h-6 md:w-8 md:h-8"
                 }
-                ${!isSelected ? "" : ""}
               `}
           />
         ) : (

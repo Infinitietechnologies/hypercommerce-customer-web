@@ -7,6 +7,11 @@ interface SectionHeadingProps {
   color?: string;
 }
 
+/**
+ * Home/section heading — new amber redesign. Warm amber-tint icon chip, ink
+ * title at the sandbox section-title scale (19/600), muted description.
+ * (Source: /redesign primitives `SectionHeader`.)
+ */
 const SectionHeading: FC<SectionHeadingProps> = ({
   title,
   description,
@@ -14,29 +19,27 @@ const SectionHeading: FC<SectionHeadingProps> = ({
   color,
 }) => {
   return (
-    <div>
-      <div className="flex justify-between w-full items-center">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-linear-to-r from-primary-500 to-primary-400 rounded-full">
-            {icon}
-          </div>
+    <div className="flex items-center gap-3">
+      <div className="grid place-items-center p-2.5 rounded-large bg-primary-100 text-primary-600 shrink-0">
+        {icon}
+      </div>
 
-          <div>
-            <h1
-              className="text-sm sm:text-lg font-bold tracking-wide sm:tracking-wider"
-              style={{ color: color || undefined }}
-            >
-              {title}
-            </h1>
+      <div className="min-w-0">
+        <h2
+          className="text-[17px] sm:text-[19px] font-semibold tracking-tight text-foreground leading-tight"
+          style={{ color: color || undefined }}
+        >
+          {title}
+        </h2>
 
-            <p
-              className="text-xxs sm:text-xs text-foreground/50"
-              style={{ color: color || undefined }}
-            >
-              {description}
-            </p>
-          </div>
-        </div>
+        {description ? (
+          <p
+            className="text-xs text-default-500"
+            style={{ color: color || undefined }}
+          >
+            {description}
+          </p>
+        ) : null}
       </div>
     </div>
   );

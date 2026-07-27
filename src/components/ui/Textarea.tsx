@@ -8,7 +8,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   (props, ref) => (
     <HeroTextarea
       ref={ref}
-      radius="lg"
+      radius="md"
       variant="faded"
       labelPlacement="outside"
       {...props}

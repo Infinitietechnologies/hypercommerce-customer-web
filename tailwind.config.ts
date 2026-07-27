@@ -30,8 +30,9 @@ const config: import("tailwindcss").Config = {
       },
       spacing,
       maxWidth: {
-        // Shared storefront page width (redesign) — header + content align on it.
-        site: "1360px",
+        // Shared storefront page width — header, content and footer align on it.
+        // Matches the redesign sandbox's `layout.maxWidth` (1280px) exactly.
+        site: "1280px",
       },
       borderRadius: {
         xlarge: radius.xlarge,
@@ -41,6 +42,7 @@ const config: import("tailwindcss").Config = {
         md: shadow.md,
         lg: shadow.lg,
         overlay: shadow.overlay,
+        primary: shadow.primary,
       },
       colors: {
         "rating-star": accent.ratingStar,
@@ -59,6 +61,8 @@ const config: import("tailwindcss").Config = {
         xs: "375px",
         sm: "431px",
         md: "769px",
+        // Shell desktop/mobile cutover matches the sandbox (1024px). The header
+        // uses arbitrary `min-[1024px]:` variants keyed to this same value.
         lg: "1440px",
         xl: "1800px",
         xxl: "2550px",

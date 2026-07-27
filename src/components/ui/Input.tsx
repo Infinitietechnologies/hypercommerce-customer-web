@@ -4,14 +4,13 @@ import { Input as HeroInput } from "@heroui/react";
 import { forwardRef } from "react";
 
 /**
- * Matches inputDecorationTheme in the Flutter app
- * (hypercommerce-customer-app/lib/config/theme.dart): filled surface,
- * radius 12, hairline border that thickens to amber on focus.
+ * Redesign input: filled surface, radius 14 (`md`), hairline border that
+ * thickens to amber on focus.
  */
 const Input = forwardRef<HTMLInputElement, HeroInputProps>((props, ref) => (
   <HeroInput
     ref={ref}
-    radius="lg"
+    radius="md"
     variant="faded"
     labelPlacement="outside"
     {...props}

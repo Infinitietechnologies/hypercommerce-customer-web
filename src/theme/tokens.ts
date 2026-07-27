@@ -8,25 +8,27 @@
 
 /**
  * Brand amber. 500 is the brand primary.
- * Source: HyperCommerce "Ecommerce redesign with amber theme" Hero UI handoff
- * (Claude Design 6302fd32…), tailwind.config.js `primary` scale. This supersedes
- * the old Flutter amber (#FFB616) — the redesign is now the source of truth.
+ * Source: the new HyperCommerce redesign (`ecommerce-website-design/` +
+ * `src/redesign/`). Anchored on the three stops the design fixes —
+ * tint `#fdf1dc` (100), primary `#f5a623` (500), amber-dark `#c9790a` (600) —
+ * with the rest of the ramp filled to stay monotonic. Supersedes the old
+ * `#eba513` handoff.
  */
 export const brand = {
-  50: "#fdf7e8",
-  100: "#fdf2d5",
-  200: "#f9e3a5",
-  300: "#f4cf6a",
-  400: "#efba3f",
-  500: "#eba513",
-  600: "#c2870a",
-  700: "#946608",
-  800: "#6b4a06",
-  900: "#443003",
+  50: "#fef8ee",
+  100: "#fdf1dc",
+  200: "#fadfab",
+  300: "#f8c976",
+  400: "#f6b649",
+  500: "#f5a623",
+  600: "#c9790a",
+  700: "#9d5f0b",
+  800: "#7e4d11",
+  900: "#6a4111",
 } as const;
 
-/** Label colour on brand fills. Redesign primary-foreground (#1c1608, near-black). */
-export const onBrand = "#1c1608";
+/** Label colour on brand fills. Redesign uses near-black `#1a1200`. */
+export const onBrand = "#1a1200";
 
 /** Material greys, matching the grey.shadeN values used throughout the app. */
 export const neutralLight = {
@@ -56,48 +58,55 @@ export const neutralDark = {
   900: "#F0F0F0",
 } as const;
 
-// Surfaces below come from the amber redesign (warm cream in light, warm
-// near-black in dark). content1 = card, content2 = subtle fill, content3/4 =
-// deeper wells. Source: handoff tailwind.config.js.
+// Surfaces from the new redesign. Warm cream page, white cards, warm hairlines.
+// content1 = card, content2 = subtle fill, content3/4 = deeper wells.
+// Source: `src/redesign/tokens.ts` (bg #faf8f5, surface #fff, line #ece8e2,
+// ink #1c1a17, ink-soft #7a7570).
 export const light = {
-  background: "#f4f2ec",
-  foreground: "#181510",
+  background: "#faf8f5",
+  foreground: "#1c1a17",
   surface1: "#ffffff",
-  surface2: "#f0ede5",
-  surface3: "#ece8df",
-  surface4: "#d8d2c4",
-  divider: "#ece8df",
-  outline: "#ece8df",
-  muted: "#6d6656",
+  surface2: "#f4f1ec",
+  surface3: "#efeae2",
+  surface4: "#e6e0d5",
+  divider: "#ece8e2",
+  outline: "#ece8e2",
+  muted: "#7a7570",
   subCategoryCard: "#E5FBFF",
-  collapsedAppBar: "#f0ede5",
+  collapsedAppBar: "#f4f1ec",
 } as const;
 
-/** L0 page → L1 card → L2 elevated → L3 chip/input — warm dark. */
+/**
+ * Dark theme — DELIBERATELY ALIASED TO LIGHT for the redesign's light-only ship
+ * (decision 2026-07-27, see THEME_REDESIGN.md). Keys kept so `heroui.ts` and
+ * `tailwind.config.ts` keep compiling; values mirror `light` so nothing renders
+ * a stale dark surface if a `dark` class slips through. `_app.tsx` also forces
+ * the light theme. Restore a real dark ramp here when dark mode is revived.
+ */
 export const dark = {
-  background: "#100e0b",
-  foreground: "#f5f0e5",
-  surface1: "#1a1712",
-  surface2: "#231f18",
-  surface3: "#2b2620",
-  surface4: "#3a342b",
-  divider: "#2b2620",
-  outline: "#3a342b",
-  // Kept for API compatibility with prior callers; now opaque warm tones.
-  dividerSolid: "#2b2620",
-  outlineSolid: "#3a342b",
-  muted: "#a89f8c",
-  bottomNav: "#100e0b",
-  bottomNavInactive: "#a89f8c",
+  background: light.background,
+  foreground: light.foreground,
+  surface1: light.surface1,
+  surface2: light.surface2,
+  surface3: light.surface3,
+  surface4: light.surface4,
+  divider: light.divider,
+  outline: light.outline,
+  dividerSolid: light.divider,
+  outlineSolid: light.outline,
+  muted: light.muted,
+  bottomNav: light.surface1,
+  bottomNavInactive: light.muted,
 } as const;
 
 // success/danger are mode-specific in the redesign; heroui.ts picks per theme.
 export const status = {
-  error: "#d6453f",
-  errorDark: "#f06a63",
+  // Redesign danger is #d1453b. *Dark variants mirror light (light-only ship).
+  error: "#d1453b",
+  errorDark: "#d1453b",
   success: "#178a4e",
-  successDark: "#4ec982",
-  warning: "#FFAB40",
+  successDark: "#178a4e",
+  warning: "#f5a623",
 } as const;
 
 /** Redesign secondary = violet accent (chips, "arriving" alerts). */
@@ -116,12 +125,16 @@ export const accent = {
   authBg: "rgba(0,0,0,0.87)",
 } as const;
 
-/** Buttons 8, cards/inputs/sheets 12, large surfaces 16. */
+/**
+ * Redesign radii: buttons 12 (small), cards/inputs 14 (medium), sheets 18
+ * (large), large surfaces 20 (xlarge). HeroUI's `sm/md/lg` map to
+ * small/medium/large; xlarge is a Tailwind utility.
+ */
 export const radius = {
-  small: "6px",
-  medium: "8px",
-  large: "12px",
-  xlarge: "16px",
+  small: "12px",
+  medium: "14px",
+  large: "18px",
+  xlarge: "20px",
 } as const;
 
 /** Fills the 6/10/14 gaps in Tailwind's 4px scale. */
@@ -131,10 +144,15 @@ export const spacing = {
   3.5: "14px",
 } as const;
 
-/** Cards are flat in the app — shadows are for floating/overlay surfaces only. */
+/**
+ * Redesign elevation ramp — soft, tinted with the warm ink. Cards carry `sm`;
+ * hover lifts to `md`; banners/overlays use `lg`/`overlay`.
+ */
 export const shadow = {
-  sm: "0 2px 10px rgba(0,0,0,0.10)",
-  md: "0 3px 10px rgba(0,0,0,0.12)",
-  lg: "0 6px 12px rgba(0,0,0,0.15)",
-  overlay: "0 2px 10px rgba(0,0,0,0.20)",
+  sm: "0 2px 10px -6px rgba(28,26,23,0.08)",
+  md: "0 12px 26px -14px rgba(28,26,23,0.18)",
+  lg: "0 14px 30px -18px rgba(28,26,23,0.28)",
+  overlay: "0 8px 24px -12px rgba(28,26,23,0.30)",
+  // Amber glow under the primary CTA — the redesign's signature button lift.
+  primary: "0 8px 20px -10px rgba(245,166,35,0.5)",
 } as const;
