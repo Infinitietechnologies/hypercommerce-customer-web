@@ -404,11 +404,7 @@ const StoreProductsPage: NextPageWithLayout<StoreProductsPageProps> = ({
                         <ProductCardSkeleton key={i} />
                       ))
                     : products.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          hideStoreName={true}
-                        />
+                        <ProductCard key={product.id} product={product} />
                       ))}
                 </div>
 

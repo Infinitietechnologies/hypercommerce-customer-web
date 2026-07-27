@@ -206,6 +206,56 @@ export const forgotPassword = async (params: {
   }
 };
 
+// --- Forgot-password OTP flow (identifier -> OTP -> reset token -> new password)
+// Backend: App\Http\Controllers\Api\User\PasswordResetApiController.
+
+/** Step 1 — send a reset OTP to the account matching `identifier` (email or
+ *  mobile). `channel` tells which was used; for a Firebase mobile gateway the
+ *  server only validates the account and the client sends the SMS itself. */
+export const sendForgotOtp = async (params: {
+  identifier: string;
+}): Promise<ApiResponse<{ channel: "email" | "mobile"; gateway?: "firebase" | "custom" }>> => {
+  try {
+    const response = await api.post("/forget-password/send-otp", params);
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
+/** Step 2 — verify the code (email/custom SMS via `otp`, Firebase via `idToken`)
+ *  and receive the short-lived reset token. */
+export const verifyForgotOtp = async (params: {
+  identifier: string;
+  otp?: string;
+  idToken?: string;
+}): Promise<ApiResponse<{ token: string; identifier: string }>> => {
+  try {
+    const response = await api.post("/forget-password/verify-otp", params);
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
+/** Step 3 — set the new password using the reset token from step 2. */
+export const resetPassword = async (params: {
+  identifier: string;
+  token: string;
+  password: string;
+  password_confirmation: string;
+}): Promise<ApiResponse<null>> => {
+  try {
+    const response = await api.post("/reset-password", params);
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
 export const getUserData = async (
   params: { access_token?: string } = {},
 ): Promise<ApiResponse<userData>> => {

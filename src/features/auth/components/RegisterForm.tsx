@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 
-import { Eye, EyeOff, Mail, User } from "lucide-react";
+import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -111,7 +111,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, compact = false }: RegisterF
           isInvalid={Boolean(errors.name)}
           label={t("auth.full_name")}
           placeholder={t("auth.full_name_placeholder")}
-          startContent={<User aria-hidden="true" size={18} />}
+          startContent={<Icon aria-hidden="true" className="text-lg" icon="solar:user-linear" />}
           value={name}
           onValueChange={(v) => {
             setName(v);
@@ -125,7 +125,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, compact = false }: RegisterF
           isInvalid={Boolean(errors.email)}
           label={t("login_modal.email_label")}
           placeholder={t("login_modal.email_placeholder")}
-          startContent={<Mail aria-hidden="true" size={18} />}
+          startContent={<Icon aria-hidden="true" className="text-lg" icon="solar:letter-linear" />}
           type="email"
           value={email}
           onValueChange={(v) => {
@@ -164,7 +164,10 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, compact = false }: RegisterF
               type="button"
               onClick={() => setShowPassword((s) => !s)}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              <Icon
+                className="text-lg"
+                icon={showPassword ? "solar:eye-closed-linear" : "solar:eye-linear"}
+              />
             </button>
           }
           onValueChange={(v) => {

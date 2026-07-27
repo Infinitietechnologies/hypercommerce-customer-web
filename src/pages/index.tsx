@@ -1,20 +1,10 @@
 import { getCookieFromContext, isSSR } from "@/helpers/getters";
-import HomeCategories from "@/views/homePage/HomeCategories";
 import { GetServerSideProps } from "next";
-import { getHomePageData } from "@/services/homePageService";
+import { getHomeLayout } from "@/routes/api";
 
-import DeliveryBanner from "@/views/homePage/DeliveryBanner";
-import {
-  Brand,
-  Category,
-  Product,
-  Settings,
-  Store,
-} from "@/types/ApiResponse";
-import HomeBrands from "@/views/homePage/HomeBrands";
-import HomeStores from "@/views/homePage/HomeStores";
+import { HomeLayout, Settings } from "@/types/ApiResponse";
+import HomeBuilder from "@/views/homePage/HomeBuilder";
 import { NextPageWithLayout } from "@/types";
-import { getAccessTokenFromContext } from "@/helpers/auth";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { loadTranslations } from "../../i18n";
 import { useTranslation } from "react-i18next";
@@ -25,8 +15,6 @@ import {
 } from "@/helpers/seo";
 import { useSettings } from "@/contexts/SettingsContext";
 import { siteConfig } from "@/config/site";
-import AppDownloadSection from "@/views/homePage/AppDownloadSection";
-import HomeServiceHighlights from "@/views/homePage/HomeServiceHighlights";
 
 // const HomeRecentlyViewed = dynamic(
 //   () => import("@/views/homePage/HomeRecentlyViewed"),
@@ -35,17 +23,12 @@ import HomeServiceHighlights from "@/views/homePage/HomeServiceHighlights";
 
 type HomePageProps = {
   initialSettings?: Settings | null;
-  initialCategories?: Category[];
-  initialProducts?: Product[];
-  initialBrands?: Brand[];
-  initialStores?: Store[];
+  initialLayout?: HomeLayout | null;
   error?: string;
 };
 
 const HomePage: NextPageWithLayout<HomePageProps> = ({
-  initialCategories,
-  initialBrands,
-  initialStores,
+  initialLayout = null,
 }) => {
   const { t } = useTranslation();
   const { webSettings } = useSettings();
@@ -78,21 +61,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
         jsonLd={[organizationSchema, websiteSchema]}
       />
 
-      <div className="flex flex-col gap-0">
-        <HomeBrands initialBrands={initialBrands} />
-
-        <HomeCategories initialCategories={initialCategories} />
-
-        <HomeStores initialStores={initialStores} />
-
-        {/* <HomeRecentlyViewed /> */}
-
-        <HomeServiceHighlights />
-
-        <DeliveryBanner />
-
-        <AppDownloadSection />
-      </div>
+      <HomeBuilder initialLayout={initialLayout} />
     </>
   );
 };
@@ -103,37 +72,33 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
         try {
           await loadTranslations(context);
 
-          const access_token = (await getAccessTokenFromContext(context)) || "";
           const market = getMarketFromContext(context);
 
-          // 1️⃣ take category from query if available, else fallback to cookie
+          // Category from query if present, else the saved home-category cookie.
           const queryCategory = context.query.category as string | undefined;
           const cookieCategory =
             (getCookieFromContext(context, "homeCategory") as string) || "";
-
           const homeCategory = queryCategory || cookieCategory;
+          const category_slug =
+            homeCategory && homeCategory !== "all" ? homeCategory : undefined;
 
-          const { settings, categories, products, brands, stores } =
-            await getHomePageData({ access_token, homeCategory, market });
+          const layoutRes = await getHomeLayout({
+            category_slug,
+            page: 1,
+            per_page: 6,
+            market,
+          });
 
           return {
             props: {
-              initialSettings: settings,
-              initialCategories: categories,
-              initialProducts: products,
-              initialBrands: brands,
-              initialStores: stores,
+              initialLayout: layoutRes.success ? layoutRes.data : null,
             },
           };
         } catch (err) {
           console.error("Error in getServerSideProps:", err);
           return {
             props: {
-              initialSettings: null,
-              initialCategories: [],
-              initialProducts: [],
-              initialBrands: [],
-              initialStores: [],
+              initialLayout: null,
               error:
                 err instanceof Error
                   ? err.message

@@ -2,10 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Button,
   Divider,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
+  Sheet,
   useDisclosure,
   toast as addToast,
   Alert,
@@ -335,18 +332,18 @@ const LocationSelector = () => {
         type="button"
         onClick={onOpen}
         disabled={!isInitialized}
-        className="flex items-center gap-2 w-full min-[1024px]:w-auto shrink-0 text-left transition-colors disabled:opacity-60
-          rounded-medium min-[1024px]:border min-[1024px]:border-divider min-[1024px]:bg-content1 min-[1024px]:px-3.5 min-[1024px]:h-11 min-[1024px]:shadow-sm min-[1024px]:hover:border-primary"
+        className="flex max-w-full items-center gap-2 min-[1024px]:w-auto shrink-0 text-left transition-colors disabled:opacity-60
+          rounded-medium border border-divider bg-content1 px-3.5 h-11 shadow-sm hover:border-primary"
       >
         <Icon
           icon="solar:map-point-bold"
-          className="text-2xl min-[1024px]:text-lg text-primary min-[1024px]:text-primary-600 shrink-0"
+          className="text-lg text-primary-600 shrink-0"
         />
         <span className="leading-tight min-w-0 flex-1 min-[1024px]:flex-none">
-          <span className="block text-[10px] font-semibold text-default-500">
+          <span className="block text-xxs font-semibold text-default-500">
             {t("locationSelector.deliverTo")}
           </span>
-          <span className="block text-[13px] font-semibold truncate min-[1024px]:max-w-[150px]">
+          <span className="block text-compact font-semibold truncate min-[1024px]:max-w-[150px]">
             {getButtonText()}
           </span>
         </span>
@@ -356,29 +353,29 @@ const LocationSelector = () => {
         />
       </button>
 
-      <Modal
+      <Sheet
         isOpen={isOpen}
         onClose={handleCloseModal}
-        scrollBehavior="inside"
         isDismissable={selectedLocation ? true : false}
         classNames={{
           base: "w-full overflow-hidden",
-          body: "px-2 md:px-4",
-          header: "p-3 sm:p-4",
+          body: "px-2 md:px-4 pb-6 flex flex-col gap-4",
+          header: "flex flex-col gap-1 items-start p-3 sm:p-4",
         }}
         size="lg"
         backdrop="blur"
-      >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1 items-start">
+        title={
+          <>
             <span className="text-lg font-extrabold">
               {t("locationSelector.modalTitle", "Select delivery address")}
             </span>
             <span className="text-sm font-normal text-default-500">
               {t("locationSelector.modalSubtitle")}
             </span>
-          </ModalHeader>
-          <ModalBody className="pb-6 flex flex-col gap-4">
+          </>
+        }
+      >
+        <>
             {demoMode && (
               <Alert
                 color="warning"
@@ -442,6 +439,14 @@ const LocationSelector = () => {
                     "Log in to see your saved addresses",
                   )}
                 </p>
+                <Button
+                  className="font-bold"
+                  color="primary"
+                  variant="flat"
+                  onPress={openLogin}
+                >
+                  {t("login_modal.sign_in")}
+                </Button>
               </div>
             ) : isAddressesLoading ? (
               <div className="flex flex-col items-center justify-center py-8">
@@ -503,9 +508,8 @@ const LocationSelector = () => {
                 })}
               </div>
             )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+        </>
+      </Sheet>
     </div>
   );
 };

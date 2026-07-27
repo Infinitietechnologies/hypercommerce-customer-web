@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import LoginForm from "@/features/auth/components/LoginForm";
 import RegisterForm from "@/features/auth/components/RegisterForm";
+import ForgotPasswordForm from "@/features/auth/components/ForgotPasswordForm";
 import { Sheet } from "@/components/ui";
 import { authSheetStore } from "@/stores/authSheetStore";
 import { safeNext } from "@/features/auth/safeNext";
@@ -30,11 +31,18 @@ const AuthSheetHost = () => {
     serverSnapshot,
   );
 
-  // A protected page redirects here when the visitor is signed out.
+  // Opened via query: a protected page bounces signed-out visitors here with
+  // `?auth=required`, and the retired /forgot-password route redirects to
+  // `?auth=forgot` so old links land on the in-sheet reset flow.
   useEffect(() => {
-    if (!router.isReady || router.query.auth !== "required") return;
+    if (!router.isReady) return;
+    const auth = router.query.auth;
+    if (auth !== "required" && auth !== "forgot") return;
 
-    authSheetStore.open({ next: safeNext(router.query.next) });
+    authSheetStore.open({
+      mode: auth === "forgot" ? "forgot" : "login",
+      next: safeNext(router.query.next),
+    });
 
     // Drop the params so a refresh or back-navigation does not reopen the sheet.
     const rest = { ...router.query };
@@ -51,19 +59,20 @@ const AuthSheetHost = () => {
     if (next && next !== "/") router.push(next);
   }, [next, router]);
 
-  const isLogin = mode === "login";
+  const heading =
+    mode === "login"
+      ? { title: t("auth.welcome_back"), subtitle: t("auth.sign_in_subtitle") }
+      : mode === "register"
+        ? { title: t("login_modal.create_account"), subtitle: t("auth.create_account_subtitle") }
+        : { title: t("auth.forgot.title"), subtitle: t("auth.forgot.subtitle") };
 
   return (
     <Sheet
       isOpen={isOpen}
       title={
         <div className="flex flex-col gap-0.5">
-          <span className="text-large font-bold">
-            {isLogin ? t("auth.welcome_back") : t("login_modal.create_account")}
-          </span>
-          <span className="text-small font-normal text-default-500">
-            {isLogin ? t("auth.sign_in_subtitle") : t("auth.create_account_subtitle")}
-          </span>
+          <span className="text-large font-bold">{heading.title}</span>
+          <span className="text-small font-normal text-default-500">{heading.subtitle}</span>
         </div>
       }
       onOpenChange={(open) => {
@@ -71,16 +80,22 @@ const AuthSheetHost = () => {
       }}
     >
       <div className="pb-2">
-        {isLogin ? (
+        {mode === "login" ? (
           <LoginForm
             compact
             onSuccess={onSuccess}
+            onForgotPassword={() => authSheetStore.setMode("forgot")}
             onSwitchToRegister={() => authSheetStore.setMode("register")}
           />
-        ) : (
+        ) : mode === "register" ? (
           <RegisterForm
             compact
             onSuccess={onSuccess}
+            onSwitchToLogin={() => authSheetStore.setMode("login")}
+          />
+        ) : (
+          <ForgotPasswordForm
+            compact
             onSwitchToLogin={() => authSheetStore.setMode("login")}
           />
         )}

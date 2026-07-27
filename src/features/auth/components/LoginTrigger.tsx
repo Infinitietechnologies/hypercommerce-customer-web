@@ -1,4 +1,4 @@
-import { LogIn } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui";
@@ -27,7 +27,7 @@ const LoginTrigger = ({ view = "btn" }: LoginTriggerProps) => {
         variant="light"
         onPress={onPress}
       >
-        <LogIn aria-hidden="true" size={18} />
+        <Icon aria-hidden="true" className="text-lg" icon="solar:login-2-linear" />
       </Button>
     );
   }
@@ -38,7 +38,7 @@ const LoginTrigger = ({ view = "btn" }: LoginTriggerProps) => {
       color="primary"
       id="login-btn"
       size="responsive"
-      startContent={<LogIn aria-hidden="true" size={16} />}
+      startContent={<Icon aria-hidden="true" className="text-base" icon="solar:login-2-linear" />}
       variant="flat"
       onPress={onPress}
     >

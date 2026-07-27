@@ -6,6 +6,8 @@ import { FC, memo } from "react";
 
 interface BrandCardProps {
   brand: Brand;
+  /** `full` style shows the name under the logo; `image_title` shows logo only. */
+  showName?: boolean;
 }
 
 /**
@@ -13,14 +15,14 @@ interface BrandCardProps {
  * soft shadow that lifts and turns amber on hover. Name sits under the logo.
  * (Source: /redesign cards `BrandCard`.)
  */
-const BrandCard: FC<BrandCardProps> = ({ brand }) => {
+const BrandCard: FC<BrandCardProps> = ({ brand, showName = true }) => {
   const screen = useScreenType();
 
   return (
     <div className="flex flex-col items-center w-full min-w-0">
       <Card
         className="w-full border border-divider bg-content1 rounded-large shadow-sm
-          transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-md
+          transition-all duration-200 hover:border-primary hover:shadow-md
           overflow-hidden flex items-center justify-center"
         shadow="none"
         isPressable={screen !== "mobile"}
@@ -42,14 +44,16 @@ const BrandCard: FC<BrandCardProps> = ({ brand }) => {
         </CardBody>
       </Card>
 
-      <div className="h-8 flex items-center w-full min-w-0">
-        <h2
-          title={brand.title}
-          className="text-center truncate w-full text-xs font-semibold px-1"
-        >
-          {brand.title}
-        </h2>
-      </div>
+      {showName && (
+        <div className="h-8 flex items-center w-full min-w-0">
+          <h2
+            title={brand.title}
+            className="text-center truncate w-full text-xs font-semibold px-1"
+          >
+            {brand.title}
+          </h2>
+        </div>
+      )}
     </div>
   );
 };

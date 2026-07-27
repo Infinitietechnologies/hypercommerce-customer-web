@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 
-import { Eye, EyeOff, Mail } from "lucide-react";
+import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -31,6 +31,8 @@ export interface LoginFormProps {
   onSuccess: () => void;
   /** Switch the host sheet over to the register form. */
   onSwitchToRegister: () => void;
+  /** Switch the host sheet over to the password-reset form. */
+  onForgotPassword: () => void;
   /** Rendered in a sheet rather than a page — used to tighten spacing. */
   compact?: boolean;
 }
@@ -38,7 +40,12 @@ export interface LoginFormProps {
 /**
  * The single login implementation, rendered inside LoginSheet.
  */
-const LoginForm = ({ onSuccess, onSwitchToRegister, compact = false }: LoginFormProps) => {
+const LoginForm = ({
+  onSuccess,
+  onSwitchToRegister,
+  onForgotPassword,
+  compact = false,
+}: LoginFormProps) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
@@ -104,7 +111,7 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, compact = false }: LoginForm
               isInvalid={Boolean(errors.identifier)}
               label={t("login_modal.email_label")}
               placeholder={t("login_modal.email_placeholder")}
-              startContent={<Mail aria-hidden="true" size={18} />}
+              startContent={<Icon aria-hidden="true" className="text-lg" icon="solar:letter-linear" />}
               value={identifier}
               onValueChange={(v) => {
                 setIdentifier(v);
@@ -127,7 +134,10 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, compact = false }: LoginForm
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  <Icon
+                    className="text-lg"
+                    icon={showPassword ? "solar:eye-closed-linear" : "solar:eye-linear"}
+                  />
                 </button>
               }
               onValueChange={(v) => {
@@ -137,7 +147,10 @@ const LoginForm = ({ onSuccess, onSwitchToRegister, compact = false }: LoginForm
             />
 
             <div className="flex justify-end">
-              <Link className="text-small" href="/forgot-password">
+              <Link
+                className="cursor-pointer text-small"
+                onPress={onForgotPassword}
+              >
                 {t("login_modal.forgot_password")}
               </Link>
             </div>

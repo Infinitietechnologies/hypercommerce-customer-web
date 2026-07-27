@@ -2,7 +2,7 @@
 // — the header renders one per breakpoint, the location gate has its own, and a
 // protected page can request it via ?auth=required — and they must all drive a
 // single sheet rather than each opening their own.
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot";
 
 type AuthSheetState = {
   isOpen: boolean;

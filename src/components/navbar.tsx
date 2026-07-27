@@ -18,6 +18,34 @@ const OfflineCartDrawer = dynamic(() => import("./Cart/OfflineCartDrawer"), {
   ssr: false,
 });
 
+/** Stacked glyph + label header action (sandbox `HeaderIconButton`). */
+const HeaderAction = ({
+  icon,
+  label,
+  href,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  href?: string;
+  onClick?: (e: React.MouseEvent) => void;
+}) => (
+  <Link
+    href={href ?? "#"}
+    title={label}
+    onClick={onClick}
+    className="group flex flex-col items-center gap-0.5 text-foreground text-2xl"
+  >
+    <AnimatedIcon
+      icon={icon}
+      className="text-[23px] transition-colors group-hover:text-primary-600"
+    />
+    <span className="text-label font-medium group-hover:text-primary-600 transition-colors">
+      {label}
+    </span>
+  </Link>
+);
+
 /**
  * Storefront header — new amber redesign, ported 1:1 from the `/redesign`
  * sandbox `FullHeader` (`src/redesign/components/Shell.tsx`).
@@ -120,34 +148,6 @@ export const Navbar: FC = () => {
     </Link>
   );
 
-  /** Stacked glyph + label header action (sandbox `HeaderIconButton`). */
-  const HeaderAction = ({
-    icon,
-    label,
-    href,
-    onClick,
-  }: {
-    icon: string;
-    label: string;
-    href?: string;
-    onClick?: (e: React.MouseEvent) => void;
-  }) => (
-    <Link
-      href={href ?? "#"}
-      title={label}
-      onClick={onClick}
-      className="group flex flex-col items-center gap-0.5 text-foreground text-2xl"
-    >
-      <AnimatedIcon
-        icon={icon}
-        className="text-[23px] transition-colors group-hover:text-primary-600"
-      />
-      <span className="text-[11px] font-medium group-hover:text-primary-600 transition-colors">
-        {label}
-      </span>
-    </Link>
-  );
-
   /** Auth-aware account: profile dropdown when logged-in, login trigger else.
    *  Gated behind `mounted` so SSR and the first client render always show the
    *  same (logged-out) markup — ProfileBtn is client-only (ssr:false) and
@@ -168,19 +168,32 @@ export const Navbar: FC = () => {
         anim="float"
         className="text-[23px] transition-colors group-hover:text-primary-600"
       />
-      <span className="text-[11px] font-medium group-hover:text-primary-600 transition-colors">
+      <span className="text-label font-medium group-hover:text-primary-600 transition-colors">
         {t("nav.account", "Account")}
       </span>
     </button>
   );
 
-  const WishlistAction = (
+  // Wishlist and Orders point at protected `/my-account/*` routes, so they only
+  // make sense once signed in. Gated behind `mounted` for the same SSR-parity
+  // reason as AccountAction.
+  const showAccountLinks = mounted && isLoggedIn;
+
+  const WishlistAction = showAccountLinks ? (
     <HeaderAction
       icon="solar:heart-linear"
       label={t("nav.wishlist", "Wishlist")}
       href="/my-account/wishlists"
     />
-  );
+  ) : null;
+
+  const OrdersAction = showAccountLinks ? (
+    <HeaderAction
+      icon="solar:box-linear"
+      label={t("nav.orders", "Orders")}
+      href="/my-account/orders"
+    />
+  ) : null;
 
   const CartAction = (
     <Badge
@@ -239,6 +252,7 @@ export const Navbar: FC = () => {
 
             <div className="flex items-center gap-6 shrink-0 ml-auto">
               {WishlistAction}
+              {OrdersAction}
               {AccountAction}
               {CartAction}
             </div>
@@ -247,13 +261,13 @@ export const Navbar: FC = () => {
 
         {/* ---------- mobile / tablet header (< 1024px) ---------- */}
         <header className="min-[1024px]:hidden w-full sticky top-0 z-40 bg-content1 border-b border-divider">
-          <div className="w-full max-w-site mx-auto px-4 pt-3 pb-2.5 flex flex-col gap-3">
+          <div className="w-full max-w-site mx-auto px-4 py-3 flex flex-col gap-3">
             <div className="flex items-center gap-2.5">
               <div className="flex-1 min-w-0">
                 <LocationSelector />
               </div>
 
-              <div className="flex items-center gap-4 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {AccountAction}
                 {CartAction}
               </div>

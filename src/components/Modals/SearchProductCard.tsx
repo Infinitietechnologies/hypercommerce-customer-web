@@ -1,6 +1,6 @@
 import React, { memo, useCallback } from "react";
-import { Avatar, Chip } from "@heroui/react";
-import { Star, Clock } from "lucide-react";
+import { Avatar, Chip } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { Product } from "@/types/ApiResponse";
 import { useRouter } from "next/router";
 import { useAdTracking } from "@/hooks/useAdTracking";
@@ -109,17 +109,23 @@ const SearchProductCard: React.FC<Props> = ({
           )}
         </div>
       </div>
-      <div className="flex flex-col items-end gap-1 text-xs text-foreground/60">
-        <div className="flex items-center gap-1">
-          <Star className="w-3 h-3 text-yellow-500 fill-current" />
-          <span>{product.ratings}</span>
-          <span>({product.rating_count})</span>
+      {(product.rating_count > 0 || Boolean(product.estimated_delivery_time)) && (
+        <div className="flex flex-col items-end gap-1 text-xs text-default-500">
+          {product.rating_count > 0 && (
+            <div className="flex items-center gap-1">
+              <Icon icon="solar:star-bold" className="text-rating-star text-sm" />
+              <span>{product.ratings}</span>
+              <span>({product.rating_count})</span>
+            </div>
+          )}
+          {Boolean(product.estimated_delivery_time) && (
+            <div className="flex items-center gap-1">
+              <Icon icon="solar:clock-circle-linear" className="text-sm" />
+              <span>{formatDeliveryTime(product.estimated_delivery_time)}</span>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          <span>{formatDeliveryTime(product.estimated_delivery_time)}</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

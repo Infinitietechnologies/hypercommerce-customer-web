@@ -18,11 +18,13 @@ export const getHomeLayout = async (
     page?: string | number;
     per_page?: string | number;
     market?: string;
+    /** Storefront platform layout; the web storefront uses "web". */
+    platform?: "app" | "web";
   } = {},
 ): Promise<ApiResponse<HomeLayout>> => {
   try {
     const response = await api.get<ApiResponse<HomeLayout>>("/home-layout", {
-      params,
+      params: { platform: "web", ...params },
     });
     return response.data;
   } catch (error) {

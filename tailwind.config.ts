@@ -23,7 +23,9 @@ const config: import("tailwindcss").Config = {
       fontSize: {
         tiny: "0.4375rem", // 7px
         xxs: "0.625rem", // 10px
+        label: "0.6875rem", // 11px — stacked header-action labels (sandbox HeaderIconButton)
         xs: "0.75rem", // 12px
+        compact: "0.8125rem", // 13px — dense labels/body (sandbox pill, tabs, footer links)
         small: "0.875rem", // 14px
         medium: "0.9375rem", // 15px
         large: "1.125rem", // 18px

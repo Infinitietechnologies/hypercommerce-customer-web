@@ -4,8 +4,8 @@ import { Input as HeroInput } from "@heroui/react";
 import { forwardRef } from "react";
 
 /**
- * Redesign input: filled surface, radius 14 (`md`), hairline border that
- * thickens to amber on focus.
+ * Redesign input: white fill, radius 14 (`md`), 1px hairline border that turns
+ * amber with a soft tint ring on focus (sandbox `TextField`).
  */
 const Input = forwardRef<HTMLInputElement, HeroInputProps>((props, ref) => (
   <HeroInput
@@ -16,9 +16,10 @@ const Input = forwardRef<HTMLInputElement, HeroInputProps>((props, ref) => (
     {...props}
     classNames={{
       ...props.classNames,
-      inputWrapper: `bg-content2 dark:bg-content1 border-1 border-divider
+      inputWrapper: `bg-content1 border-1 border-divider
         data-[hover=true]:border-default-300
-        group-data-[focus=true]:border-2 group-data-[focus=true]:border-primary
+        focus-within:border-primary
+        focus-within:ring-3 focus-within:ring-primary-100
         shadow-none ${props.classNames?.inputWrapper ?? ""}`,
     }}
   />

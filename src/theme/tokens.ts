@@ -63,7 +63,7 @@ export const neutralDark = {
 // Source: `src/redesign/tokens.ts` (bg #faf8f5, surface #fff, line #ece8e2,
 // ink #1c1a17, ink-soft #7a7570).
 export const light = {
-  background: "#faf8f5",
+  background: "#ffffff",
   foreground: "#1c1a17",
   surface1: "#ffffff",
   surface2: "#f4f1ec",

@@ -15,12 +15,12 @@ const LinkColumn = ({
   links: { label: string; href: string }[];
 }) => (
   <div>
-    <h2 className="text-sm font-bold text-foreground mb-3.5">{header}</h2>
+    <h2 className="text-compact font-bold text-foreground mb-3.5">{header}</h2>
     <div className="flex flex-col gap-2.5">
       {links.map(({ label, href }) => (
         <Link
           key={label}
-          className="text-sm text-default-500 hover:text-primary-600 transition-colors"
+          className="text-compact text-default-500 hover:text-primary-600 transition-colors"
           href={href}
           title={label}
         >
@@ -94,9 +94,9 @@ const Footer: FC = () => {
   ].filter((s) => s.href);
 
   return (
-    <footer className="w-full border-t border-divider bg-gradient-to-b from-primary-100 to-content1">
+    <footer className="w-full border-t border-divider bg-gradient-to-b from-primary-100 to-content1 to-55%">
       <div className="w-full max-w-site mx-auto px-4 sm:px-6 pt-10 pb-7">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-7">
           {/* Company */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" title={t("nav.home")}>
@@ -133,7 +133,7 @@ const Footer: FC = () => {
 
           {/* Social + trust */}
           <div>
-            <h2 className="text-sm font-bold text-foreground mb-3.5">
+            <h2 className="text-compact font-bold text-foreground mb-3.5">
               {t("footer.social.follow_us")}
             </h2>
             {socials.length > 0 && (
@@ -170,7 +170,7 @@ const Footer: FC = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 pt-5 border-t border-divider flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mt-8 pt-5.5 border-t border-divider flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs text-default-500">
             <span>
               &copy; {new Date().getFullYear()} {siteCopyright}

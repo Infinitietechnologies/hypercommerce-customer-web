@@ -1,6 +1,15 @@
-import { HomeBannerItem, HomeHeroItem } from "@/types/ApiResponse";
+import { Category, HomeBannerItem, HomeHeroItem } from "@/types/ApiResponse";
 
 type HomeItem = HomeHeroItem | HomeBannerItem;
+
+/**
+ * Category link target — a subcategory deep-links through its parent so the
+ * parent listing opens with it preselected. Mirrors CategoryCard.
+ */
+export const categoryHref = (category: Pick<Category, "slug" | "parent_slug">): string =>
+  category?.parent_slug
+    ? `/categories/${category.parent_slug}?subcategory=${category.slug}`
+    : `/categories/${category?.slug ?? ""}`;
 
 /**
  * Build the link target for a hero/banner item coming from /home-layout.

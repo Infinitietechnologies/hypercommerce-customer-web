@@ -3,41 +3,49 @@
 > **Read this file at the start of every session, before touching anything under `hypercommerce-customer-web/`.**
 > Also read `GAP_ANALYSIS.md` in this folder for the current modernization backlog.
 >
-> The Flutter app and Laravel panel live in sibling repos (`hypercommerce-customer-app/`, `hypercommerce-panel/`) under a shared parent folder. They are **not** part of this repository — clone them alongside it to use them as reference.
+> The Laravel panel — the backend API this storefront and other production clients consume — lives in a sibling repo (`hypercommerce-panel/`). Reference it for the API contract when wiring data. It is **not** part of this repository.
 
 ---
 
 ## 1. Project context
 
-**HyperCommerce** is a multi-seller marketplace. Three codebases live in this repo:
+**HyperCommerce** is a multi-seller marketplace. The two codebases you work with:
 
 | Folder | What it is |
 |---|---|
-| `hypercommerce-customer-app/` | Flutter customer app — **design and feature source of truth** |
 | `hypercommerce-customer-web/` | This project — Next.js customer storefront |
-| `hypercommerce-panel/` | Laravel admin panel + the API both clients consume |
+| `hypercommerce-panel/` | Laravel admin panel + the backend API this storefront consumes |
 
-The web storefront is **being modernized to match the Flutter app**. The Flutter app defines the visual language, the screen inventory, and the interaction patterns. When the two disagree, **Flutter wins** unless the divergence is a documented web-only concern (SEO, desktop layout, keyboard input).
+The web storefront is **being reskinned to the new amber redesign** (see the redesign note below). Two sources of truth, kept strictly separate:
 
-**Before building or changing any screen, open the matching Flutter screen** under `hypercommerce-customer-app/lib/screens/<feature>/view/`. If you cannot find a counterpart, say so in your summary rather than inventing a design.
+- **Everything about how a screen looks and what it contains** — layout, colour, type, spacing, radii, shadows, component shapes, which fields/sections appear: the **`src/redesign/` sandbox is the single source of truth**, backed by its `ecommerce-website-design/*.dc.html` exports. The static redesign components are complete — build to them, do not re-derive a design from anywhere else.
+- **The real data behind those screens** — endpoints, request/response shapes, field names: the **live backend API** (the Laravel panel + the existing `src/services/` layer). The sandbox ships mock data (`src/redesign/data/mock.ts`); porting a screen means keeping its real API wiring and applying the redesign look.
 
-The gap between the two is tracked in `GAP_ANALYSIS.md` — read it before starting a phase, update it when a gap closes.
+**Before building or changing any screen:** open its `/redesign` counterpart (the pixel target — screen map is in `THEME_REDESIGN.md`) and match it. Wire data from the live API, not the sandbox mock. If a screen has no `/redesign` counterpart (e.g. auth, seller-register), design it to the redesign foundations (`src/redesign/tokens.ts` + primitives) and log the rationale in `REDESIGN_QUESTIONS.md`.
 
-> **Redesign in progress (2026-07 →).** The customer-web is being reskinned to the
-> **"Ecommerce redesign with amber theme"** Hero UI handoff (Claude Design project
-> `6302fd32-b7e1-4090-a063-18109d839a17`). **A fresh redesign is being authored
-> separately — treat the tokens below as the current state, not a final target.**
-> For **visual design** (colour, type, spacing, component look), this handoff is now
-> the source of truth for web and supersedes the Flutter app; Flutter still governs
-> **screen inventory, features, and the API contract**. Landed so far: amber `#eba513`
-> palette + warm neutrals + violet secondary (`src/theme/{tokens,heroui}.ts`), Plus
-> Jakarta Sans (`src/config/fonts.ts`), `@iconify/react` (solar icon set), `max-w-site`
-> (1360px), and the atoms/components gallery at **`/design-system`**. Screens port one
-> at a time; static demo data in the handoff must be rewired to the real API shape.
+Open redesign items and data gaps are tracked in `THEME_REDESIGN.md` and `REDESIGN_QUESTIONS.md` — read them before starting a phase, update them as items close. (`GAP_ANALYSIS.md` holds the older modernization backlog.)
+
+> **Redesign (2026-07 →) — the amber reskin.** The pixel target is the
+> **`src/redesign/` sandbox** (rendered at the `/redesign/*` routes), built from the
+> `ecommerce-website-design/*.dc.html` exports. It is the single visual source of
+> truth — match it, do not re-derive the look from memory or anywhere else.
+>
+> **The foundations have already LANDED in the live theme** — the token pipeline is
+> done and correct, so build on it, don't reinvent it:
+> - Amber `#f5a623` (brand 500), dark `#c9790a` (600), tint `#fdf1dc` (100), label-on-amber `#1a1200`.
+> - Warm neutrals: page `#faf8f5`, card `#ffffff`, ink `#1c1a17`, ink-soft `#7a7570`, line `#ece8e2`. Violet secondary `#6d5ae0`. Danger `#d1453b`.
+> - Radii 12 (small/buttons) · 14 (medium/inputs) · 18 (large/cards) · 20 (xlarge). Soft warm shadow ramp (`shadow-sm/md/lg`) + amber CTA glow (`shadow-primary`).
+> - **Plus Jakarta Sans** (weights 400–800), `@iconify/react` solar set, `max-w-site` **1280px**, header cutover **1024px**, **light-only** (dark aliased to light, theme switch hidden).
+> - All of the above live in `src/theme/{tokens,heroui}.ts` + `tailwind.config.ts`, mirroring `src/redesign/tokens.ts`. Gallery at **`/design-system`** (the regression target).
+>
+> What remains is **porting each live screen** to this design one at a time
+> (`THEME_REDESIGN.md` Phase D + screen map), rewiring the sandbox's mock data to
+> the real API shape. Any old value — amber `#eba513`/`#FFB616`, Figtree, radius-8
+> buttons, flat cards, `1360px` — is **stale; do not reintroduce it.**
 
 ### Backend
 
-Talks to the Laravel panel at `process.env.NEXT_PUBLIC_ADMIN_PANEL_URL + '/api/...'`. See `constructApiBaseUrl()` in `src/services/client.ts`. Customer endpoints live in the panel's `routes/api.php` → `app/Http/Controllers/Api/User/*`. **API contract changes break the mobile app silently — always flag them.**
+Talks to the Laravel panel at `process.env.NEXT_PUBLIC_ADMIN_PANEL_URL + '/api/...'`. See `constructApiBaseUrl()` in `src/services/client.ts`. Customer endpoints live in the panel's `routes/api.php` → `app/Http/Controllers/Api/User/*`. **The API is shared with other production clients — never change a response shape to suit the web; if a screen needs a contract change, flag it, don't just make it.**
 
 ---
 
@@ -71,11 +79,11 @@ Everything below is what the project **actually uses today**. Do not add to this
 | Utility | `lodash`, `clsx`, `cookie`, `nprogress`, `react-confetti` |
 | Lint / format | ESLint 9 flat config (`eslint.config.mjs`) + Prettier 3, `eslint-plugin-jsx-a11y`, `eslint-plugin-unused-imports` |
 
-### Component library policy — HeroUI, themed with Flutter tokens
+### Component library policy — HeroUI, themed with the redesign tokens
 
 HeroUI is **already the incumbent** and stays. There is no competing component library, so no migration is needed.
 
-It is now themed with the Flutter tokens (Phase 0, done). The token pipeline is:
+It is themed with the **redesign tokens** (done — the values below already ship). The token pipeline is:
 
 ```
 src/theme/tokens.ts   ← the ONLY place raw hex values belong
@@ -91,44 +99,51 @@ Two constraints worth knowing before editing the theme:
 - **`next/font/local` needs a static object literal** — no spreads, no shared config const. `tsc` won't catch a violation; the build will.
 - **HeroUI drops alpha** — it stores colours as HSL channels, so `rgba(…, 0.06)` becomes fully opaque. Supply opaque equivalents (see `dividerSolid` / `outlineSolid` in `tokens.ts`).
 
-### Flutter design tokens (source: `hypercommerce-customer-app/lib/config/theme.dart`)
+### Redesign design tokens (source: `src/redesign/tokens.ts` ↔ `ecommerce-website-design/`)
 
-These are the values HeroUI must be themed with. Full derivation in `GAP_ANALYSIS.md` §1.
+These are the values HeroUI **is** themed with — they already ship in
+`src/theme/tokens.ts`. Match the `src/redesign/` sandbox; this table is the
+quick reference. **The old Material/handoff palette is retired —
+do not reintroduce `#FFB616`, `#eba513`, `#F5F5F5` greys, or Figtree.**
 
 ```
-primary            #FFB616   (foreground on primary: #000000)
-primary-light      #FACC66
-rating-star        #EEAB18
-error / success / warning   #F44336 / #4CAF50 / #FFAB40
-discount-card      #256533     order-track        #338518
-delivery-badge     #C2FBFF
+brand      #f5a623 (500, primary) · #c9790a (600, dark) · #fdf1dc (100, tint)
+           foreground-on-amber #1a1200
+rating-star #EEAB18   secondary/violet #6d5ae0
+error / success / warning   #d1453b / #178a4e / #f5a623
+discount-card #256533   order-track #338518   delivery-time #C2FBFF
 
-light  bg #FFFFFF · bg2 #F5F5F5 · container #F7FAFC · card #F5F5F5
-       text #0D1117 · muted #616161 · outline #EEEEEE · divider #E0E0E0
+surfaces   page #faf8f5 · card/surface #ffffff · subtle fill #f4f1ec
+           deeper wells #efeae2 / #e6e0d5
+text       ink #1c1a17 · ink-soft/muted #7a7570
+line/outline/divider  #ece8e2 (warm hairline)
 
-dark   L0 page  #0D0D0D
-       L1 card  #1A1A1A
-       L2 elev  #242424
-       L3 chip/input #2E2E2E
-       text #F0F0F0 · muted #9E9E9E
-       outline rgba(255,255,255,.12) · divider rgba(255,255,255,.06)
-       bottom-nav #111111 · nav-inactive #6B6B6B
+dark       ALIASED TO LIGHT — light-only ship (theme switch hidden in _app.tsx).
+           Restore a real dark ramp only when dark mode is revived.
 
-font   Figtree 300/400/500/600/700/800 — standard weight semantics, no remap
-       (sizes used: 10 11 12 13 14 15 16 18)
-radius 4 · 6 · 8 (buttons) · 10 · 12 (cards + inputs + sheets — dominant) · 16 (large)
-space  6 · 8 · 10 · 12 · 14 · 16 (dominant) · 20
-shadow sm  0 2px 10px rgba(0,0,0,.10)
-       md  0 3px 10px rgba(0,0,0,.12)
-       lg  0 6px 12px rgba(0,0,0,.15)
-       overlay 0 2px 10px rgba(0,0,0,.20)
+font   Plus Jakarta Sans 400/500/600/700/800 — Tailwind standard weights, no remap
+       (Figtree remains only as the `--font-mono` fallback face)
+radius 12 (buttons/small) · 14 (inputs/medium) · 18 (cards/large) · 20 (xlarge)
+       chips are pill (999). badges 8.
+space  6 · 8 · 10 · 12 · 14 · 16 · 20 · 24 (page gutter)
+shadow sm  0 2px 10px -6px rgba(28,26,23,.08)      (cards rest here)
+       md  0 12px 26px -14px rgba(28,26,23,.18)    (card hover lift)
+       lg  0 14px 30px -18px rgba(28,26,23,.28)    (banners)
+       overlay 0 8px 24px -12px rgba(28,26,23,.30)
+       primary 0 8px 20px -10px rgba(245,166,35,.5) (amber CTA glow)
 ```
 
-Cards in Flutter are **flat**: `elevation 0` + a 0.5px hairline border. Shadows are for floating/overlay surfaces only.
+Redesign cards **rest on a soft `shadow-sm`** with an `#ece8e2` hairline and
+lift to `shadow-md` + amber border on hover (see `redesign.css`). This is the
+warm-elevated look of the sandbox — **not** a flat card. The signature
+primary button carries the amber glow (`shadow-primary`), radius 12.
 
-**Font weights — Tailwind's standard scale, no remap.** Figtree is self-hosted as a variable font (`src/assets/fonts/Figtree-VariableFont_wght.ttf`, `weight: "300 900"`), so `font-light`→300, `font-normal`→400, `font-medium`→500, `font-semibold`→600, `font-bold`→700, `font-extrabold`→800 all resolve to real weights. The old downward remap (`bold`→600) has been deleted. **Do not reintroduce it** and do not add a custom weight scale.
+**Font weights — Tailwind's standard scale, no remap.** Plus Jakarta Sans is
+loaded via `next/font/google` (`src/config/fonts.ts`, weights 400–800), so
+`font-normal`→400 … `font-extrabold`→800 all resolve to real faces. Do not add a
+custom weight scale or a downward remap.
 
-**Inputs use radius 12**, matching the app's themed `inputDecorationTheme`. The `borderRadius = 8.0` default inside `CustomTextFormField` is stale and overridden in practice — ignore it.
+**Inputs use radius 14** (`radius.medium`), matching the sandbox `radius.input`.
 
 ---
 
@@ -192,7 +207,7 @@ hypercommerce-customer-web/
 
 ```
 src/
-├── components/shared/          # NEW  cross-feature composites ported from Flutter:
+├── components/shared/          # NEW  cross-feature composites from the redesign:
 │                               #   QuantityStepper, DeliveryTimeBadge, SponsoredBadge,
 │                               #   RecommendBadge, DottedDivider, PullToRefresh,
 │                               #   MarketPickerSheet
@@ -215,11 +230,11 @@ Sequencing and exit criteria for each move are in `GAP_ANALYSIS.md` §9.
 
 The layer exists (Phase 1). Import from `@/components/ui`.
 
-- **No *new or edited* file outside `src/components/ui/` may `import … from "@heroui/react"`.** One wrapper per primitive means behavior, a11y defaults, and Flutter parity get fixed once.
+- **No *new or edited* file outside `src/components/ui/` may `import … from "@heroui/react"`.** One wrapper per primitive means behavior, a11y defaults, and redesign parity get fixed once.
 - **Legacy files are migrated opportunistically**, not in a sweep — 162 still import HeroUI directly. Convert a file when you touch it for another reason; never open a standalone "migrate imports" commit across unrelated screens.
-- `ui/index.ts` exports two kinds of thing: **wrapped** primitives that carry Flutter parity (`Button`, `Input`, `Textarea`, `Card`, `Chip`, `Sheet`, `Skeleton`, `EmptyState`, `ErrorState`, `toast*`) and **pass-through** re-exports that need no behavior change. Both come from the same import.
+- `ui/index.ts` exports two kinds of thing: **wrapped** primitives that carry redesign parity (`Button`, `Input`, `Textarea`, `Card`, `Chip`, `Sheet`, `Skeleton`, `EmptyState`, `ErrorState`, `toast*`) and **pass-through** re-exports that need no behavior change. Both come from the same import.
 - When extending a HeroUI prop type, `Omit` any key you redeclare — `size` on Button, and `title` / `placement` / `scrollBehavior` on Modal — or `tsc` fails with TS2430.
-- Wrappers re-export HeroUI's prop types and add only what Flutter needs. Do not invent props with no Flutter counterpart.
+- Wrappers re-export HeroUI's prop types and add only what the redesign needs. Do not invent props the redesign has no use for.
 - Use `extendVariants` (as `components/custom/MyButton.tsx` already does) or `tailwind-variants` for variant maps — not conditional class soup at call sites.
 
 ### 4.2 Theme through Tailwind config only
@@ -228,17 +243,20 @@ The layer exists (Phase 1). Import from `@/components/ui`.
 - Never restyle a HeroUI component by overriding its colors at the call site. If a color is wrong, the theme is wrong.
 - Both `light` and `dark` themes must be defined. Dark mode uses the **4-level elevation system** — never flat `#000000`.
 
-### 4.3 Match Flutter exactly
+### 4.3 Match the redesign exactly
 
-| Element | Flutter reference | Required behavior |
-|---|---|---|
-| **Button** | `lib/utils/widgets/custom_button.dart` | radius **8**, `shadow-none`, height **48** mobile / **40** tablet+, bg `#FFB616`, fg `#000000`, disabled = primary @ 50%, loading = inline 20px spinner replacing the label (never a separate overlay) |
-| **Input** | `theme.dart` `inputDecorationTheme` | radius **12**, **filled**, border `0.5px` outline → focused `1px` `#FFB616`, hint color `#6B6B6B` dark. Fill = L1 dark / `#F7FAFC` light |
-| **Card** | `theme.dart` `cardTheme` | radius **12**, `elevation 0` → `shadow-none`, hairline `0.5px` border, **zero margin** (parent owns spacing) |
-| **Chip** | Flutter chip usages | pill radius, L3 surface (`#2E2E2E` dark), no shadow |
-| **Modal / Sheet** ✅ | `lib/utils/widgets/*_bottom_sheet.dart` | **Desktop → centered HeroUI `Modal`. Mobile → bottom `Drawer`** with top radius **16**, drag handle, and backdrop dismiss. `ui/Sheet` picks the presentation off `useScreenType()`. **Use it instead of `Modal`** for anything the app shows as a sheet |
-| **Divider** | `theme.dart` `dividerTheme` | `0.5px`, `rgba(255,255,255,.06)` dark / `#E0E0E0` light, zero space |
-| **Bottom nav** | `theme.dart` `bottomNavigationBarTheme` | bg `#111111`, active `#FFB616`, inactive `#6B6B6B`, no elevation |
+Full spec — look **and** behaviour — is the `src/redesign/` sandbox
+(`primitives/index.tsx` + `redesign.css`). This table is the quick reference.
+
+| Element | Spec (look + behaviour) |
+|---|---|
+| **Button** | radius **12**, primary = amber `#f5a623` fill, fg `#1a1200`, `shadow-primary` glow; secondary = white + `#ece8e2` border; tinted = `#fdf1dc` fill + `#c9790a` text; ghost = amber text. Height **48** mobile / **40** tablet+. Disabled = primary @ 50%. Loading = inline 20px spinner replacing the label (never a separate overlay) |
+| **Input** | radius **14**, filled white, `1px` `#ece8e2` border → focused `1px` amber `#f5a623`, hint `#7a7570` |
+| **Card** | radius **18**, white surface, `shadow-sm` at rest + `#ece8e2` hairline, hover → `shadow-md` + amber border, **zero margin** (parent owns spacing) |
+| **Chip** | pill radius (999), `#fdf1dc` tint or white surface, amber text where selected, no shadow |
+| **Modal / Sheet** ✅ | **Desktop → centered HeroUI `Modal`. Mobile → bottom `Drawer`** with top radius **18**, drag handle, backdrop dismiss. `ui/Sheet` picks presentation off `useScreenType()`. **Use it instead of `Modal`** for anything shown as a sheet |
+| **Divider** | `1px`, `#ece8e2`, zero space |
+| **Bottom nav** | reskinned to redesign tokens: white surface, active amber `#f5a623`, inactive `#7a7570` |
 
 ### 4.4 Which HeroUI component for what
 
@@ -294,7 +312,7 @@ Derived from the existing codebase; gaps filled with modern defaults.
 
 ### Styling
 - **Tailwind only.** No inline `style={{ }}` — the 14 existing occurrences are legacy and should be removed when touched. The sole exception is a genuinely dynamic value (map pixel offsets, carousel transforms) that cannot be a class.
-- **No arbitrary values** (`[14px]`, `[#FFB616]`) unless the token genuinely doesn't exist — in which case **add the token** to `tailwind.config.ts` and use it. ~100 arbitrary values exist today; treat them as debt.
+- **No arbitrary values** (`[15px]`, `[#f5a623]`) unless the token genuinely doesn't exist — in which case **add the token** to `tailwind.config.ts` and use it. ~100 arbitrary values exist today; treat them as debt.
 - No hard-coded hex anywhere in `src/` outside `src/theme/`. This includes `globals.css`.
 - Use `clsx` for conditional classes.
 - `globals.css` is for resets and third-party overrides only — not component styling.
@@ -315,8 +333,17 @@ Minimal. Add one only when intent isn't readable from the code. Hard cap: **one 
 
 ## 6. Design and UX rules
 
-### 6.1 Always reference Flutter
-Before building or updating any screen, open `hypercommerce-customer-app/lib/screens/<feature>/view/` and the widgets it uses in `lib/utils/widgets/`. Match layout order, spacing rhythm, copy, and interaction. Note any deliberate deviation in your summary.
+### 6.1 Reference the redesign — it is the whole spec
+Before building or updating any screen, open its **`/redesign` counterpart**
+(`src/pages/redesign/*` + `src/redesign/`) and match it: layout, spacing rhythm,
+component shapes, colour, radius, shadow, and the field/section list it shows.
+The static redesign components are complete — the design questions are already
+answered there, so read them off the sandbox rather than inventing or guessing.
+
+Then wire the **real data** from the live API (`src/services/` + the panel
+contract), replacing the sandbox's mock data. Log any data delta — a field the
+redesign shows that the API doesn't return, or vice versa — in
+`REDESIGN_QUESTIONS.md`, and ship a sensible default meanwhile.
 
 ### 6.2 Responsive behavior
 
@@ -324,7 +351,7 @@ Breakpoints (already in `tailwind.config.ts`): `xxs 320 · xs 375 · sm 431 · m
 
 | Range | Requirement |
 |---|---|
-| Mobile (`< md`) | **1:1 with Flutter** — same layout, same order, same component shapes. Sheets not modals. Bottom nav visible |
+| Mobile (`< md`) | **1:1 with the `/redesign` mobile layout** — same layout, same order, same component shapes. Sheets not modals. Bottom nav visible |
 | Tablet (`md`–`lg`) | 2-column: content + secondary panel (filters, summary, related) |
 | Desktop (`≥ lg`) | Multi-column with persistent sidebars — category/filter sidebar left, cart/summary right where relevant. Header nav replaces bottom nav |
 
@@ -334,8 +361,8 @@ Never let desktop layout logic degrade the mobile experience. Mobile-first class
 
 No screen is complete without all four:
 
-1. **Loading** — a `ui/Skeleton` composition that mirrors the final layout (matching Flutter's `custom_shimmer.dart`). Never a bare spinner for full-page loads.
-2. **Empty** — `ui/EmptyState` with illustration, headline, body, and a primary action. Mirrors `lib/utils/widgets/empty_states_page.dart`.
+1. **Loading** — a `ui/Skeleton` composition that mirrors the final layout. Never a bare spinner for full-page loads.
+2. **Empty** — `ui/EmptyState` with illustration, headline, body, and a primary action, styled to the redesign foundations.
 3. **Error** — `ui/ErrorState` with a human message and a retry action. Never a raw error string or a blank page.
 4. **Loaded** — the real thing.
 
@@ -357,6 +384,19 @@ No screen is complete without all four:
 
 ### 6.6 i18n
 Every user-facing string is `t('namespace.key')`. Never inline English. New keys go into **all three** locale files (`en`, `hi`, `ar`) even as placeholders. Run `npm run scan:i18n` after adding keys.
+
+### 6.7 Verify the reskin visually — never from code alone
+A reskin is only "done" when it *looks* like its `/redesign` twin. Code review
+cannot catch spacing, colour, or radius drift — you must see it rendered.
+
+1. Run `npm run dev`. Open the ported route **and** its `/redesign` counterpart side by side.
+2. Compare at the real breakpoints — **mobile (375px), tablet (769px), desktop (1280px)** — the redesign header/layout changes at the 1024px cutover, so check both sides of it.
+3. Check all four states (loading / empty / error / loaded), not just the happy path.
+4. Diff specifically: page background (`#faf8f5`, not white), card radius (18) + soft shadow + hairline, button radius (12) + amber glow, amber is `#f5a623` (not `#eba513`/`#FFB616`), font is Plus Jakarta Sans, gutter/`max-w-site` 1280.
+5. Only after it matches: `npm run lint`, then commit. If a mismatch traces to a missing token, add the token first (§4.2) — never patch it with an arbitrary value at the call site.
+
+`/design-system` is the atoms/components regression target — if a primitive looks
+wrong there, fix the theme, not the screen.
 
 ---
 
@@ -417,10 +457,10 @@ Web already sends the header — `src/routes/interceptor.ts:37-50` and `src/serv
 Rules:
 - Never fetch catalog data outside the shared axios instance — you would lose the `X-Market` header and silently get default-market data.
 - Never hard-code a currency symbol or format; read it from `SettingsContext`.
-- **Switching market invalidates all catalog caches** — products, categories, brands, stores, home layout, search. Flutter does this via a broadcast stream in `market_service.dart`; web must mirror it by clearing the corresponding SWR keys.
-- **Market ≠ store.** A market is a country/region storefront scope. A store is a seller location. There is no store picker in the app; do not build one.
+- **Switching market invalidates all catalog caches** — products, categories, brands, stores, home layout, search. On market change, clear the corresponding SWR keys so none of them serve the previous market's data.
+- **Market ≠ store.** A market is a country/region storefront scope. A store is a seller location. There is no store picker; do not build one.
 
-The picker UI (`MarketPickerSheet`) does not exist yet — Phase 8. Reference: `hypercommerce-customer-app/lib/screens/market_picker/market_picker_bottom_sheet.dart`.
+The picker UI (`MarketPickerSheet`) does not exist yet — Phase 8. Design it to the redesign foundations (`ui/Sheet` on mobile) and log the layout in `REDESIGN_QUESTIONS.md` before building.
 
 ### 7.5 Protected routes
 Add the path to `PROTECTED_ROUTES` in `src/guards/authGuard.ts` **and** call `serverSideAuthGuard(context)` in that page's `getServerSideProps`. The SSR guard is primary; the `withAuth` HOC is a client-side fallback.
@@ -452,16 +492,17 @@ Six exist. **This file wins on conflict**, then the nearest subfolder file:
 All six are current as of Phase 2.
 
 ### Before every task
-1. Read this file, `GAP_ANALYSIS.md`, and the nearest subfolder `CLAUDE.md`.
-2. Open the Flutter counterpart screen.
+1. Read this file, `GAP_ANALYSIS.md`, `THEME_REDESIGN.md`, `REDESIGN_QUESTIONS.md`, and the nearest subfolder `CLAUDE.md`.
+2. Open the **`/redesign` counterpart** (the pixel target + field list) and match it. Get the data shape from the existing `src/services/` + the panel API contract.
 3. Find the closest existing web page and mirror its SSR + view + component split. `src/pages/products/[slug]/` is the canonical pattern; `src/pages/my-account/orders/` is the protected paginated-list pattern.
+4. **After building, render it and compare against the `/redesign` twin** (see §6.7) before calling it done — do not verify a reskin from code alone.
 
 ### After every task
 1. `npm run lint`
 2. `npm run scan:i18n` if translation keys changed
 3. Confirm `store.ts` + persist allowlist if a slice changed
 4. Add any new env var to `.env.example`
-5. Flag any API contract change — **the Flutter app breaks silently**
+5. Flag any API contract change — **other production clients break silently**
 
 ### Commands
 ```bash
@@ -477,19 +518,19 @@ npm run scan:i18n
 ## 9. Do NOT
 
 1. **No second component library.** HeroUI is it. No MUI, no shadcn, no Chakra, no Radix-direct, no Ant.
-2. **No HeroUI default theme colors.** Amber `#eba513` is the brand (redesign — supersedes the old `#FFB616`; see Redesign note in §1). Blue `#3b82f6` anywhere in the codebase is a bug.
+2. **No HeroUI default theme colors.** Amber `#f5a623` is the brand (redesign — supersedes the retired `#eba513` and `#FFB616`; see Redesign note in §1). Blue `#3b82f6` anywhere in the codebase is a bug, and so is any lingering `#eba513`/`#FFB616`.
 3. **No new dependency without recording it in §2 of this file** — in the same commit that adds it. Justify it; prefer what's already installed.
 4. **No scope creep.** Do exactly the screen or fix that was asked. Note anything else you spot and move on.
-5. **No skipping the Flutter reference.** If you did not open the Flutter screen, you are guessing.
+5. **No skipping the redesign reference.** If you did not open the `/redesign` counterpart, you are guessing at the design. Match it, don't invent.
 6. **No App Router.** Pages Router only.
 7. **No direct `@heroui/react` imports outside `src/components/ui/`** (once that layer exists).
 8. **No bypassing the data layer** — no axios in components, no `localStorage` outside redux-persist, no hard-coded API URLs.
 9. **No screen without loading, empty, and error states.**
 10. **No structural change** (folder moves, state-management swaps, router changes, major version bumps) without explicit approval.
-11. **No delivery zones.** The feature is being removed from the Flutter app too. Do not port `/delivery-zones` or `/delivery-zone-detail`, and do not flag their absence as a gap.
-12. **No store picker.** The app has a *market* picker, not a store picker. Do not conflate the two (§7.4).
-13. **No custom font-weight scale.** Tailwind defaults map 1:1 to the font's faces. Storefront `sans` is **Plus Jakarta Sans** (redesign, weights 400–800, via `next/font/google` in `src/config/fonts.ts`) — it superseded Figtree.
+11. **No delivery zones.** The feature is deprecated product-wide. Do not port `/delivery-zones` or `/delivery-zone-detail`, and do not flag their absence as a gap.
+12. **No store picker.** There is a *market* picker, not a store picker. Do not conflate the two (§7.4).
+13. **No custom font-weight scale.** Tailwind defaults map 1:1 to the font's faces. Storefront `sans` is **Plus Jakarta Sans** (redesign, weights 400–800, via `next/font/google` in `src/config/fonts.ts`); Figtree remains only as the `--font-mono` fallback.
 
 ---
 
-_Rewritten 2026-07-21 from a full audit of this codebase and `hypercommerce-customer-app/`. Update when the router model, HeroUI theme, state layout, folder structure, or i18n approach changes._
+_Rewritten 2026-07-21 from a full audit of this codebase. Realigned to the shipped amber redesign 2026-07-27: **`src/redesign/` is the single source of truth for design (look + layout + field list); real data comes from the live backend API. The Flutter app is no longer a reference** — it was dropped from the design/feature workflow entirely. Update when the router model, HeroUI theme, state layout, folder structure, or i18n approach changes._

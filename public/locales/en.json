@@ -130,7 +130,31 @@
     "email_updated": "Email updated",
     "verification_email_sent": "Verification email sent",
     "sign_in_method": "Sign-in method",
-    "otp_tab": "OTP"
+    "otp_tab": "OTP",
+    "forgot": {
+      "title": "Reset password",
+      "subtitle": "Verify your identity to set a new password",
+      "method_label": "Reset method",
+      "email_tab": "Email",
+      "phone_tab": "Phone",
+      "email_hint": "Enter your account email and we’ll send a verification code.",
+      "phone_hint": "Enter your account phone number and we’ll send a verification code.",
+      "send_code": "Send code",
+      "otp_hint": "Enter the 6-digit code sent to {{target}}.",
+      "new_password_hint": "Choose a new password for your account.",
+      "new_password": "New password",
+      "reset_password": "Reset password",
+      "remember": "Remembered your password?",
+      "code_sent_title": "Code sent",
+      "code_sent_desc": "Check your inbox or messages for the verification code.",
+      "reset_success_title": "Password updated",
+      "reset_success_desc": "Sign in with your new password.",
+      "errors": {
+        "send_failed": "Could not send the code",
+        "otp_invalid": "Invalid or expired code",
+        "reset_failed": "Could not reset the password"
+      }
+    }
   },
   "available_options": "Available Options:",
   "available_promo_codes": "Available Promo Codes",
@@ -479,7 +503,17 @@
     "last_1_day": "Last 1 Day",
     "last_7_days": "Last 7 Days",
     "last_30_days": "Last 30 Days",
-    "last_365_days": "Last 365 Days"
+    "last_365_days": "Last 365 Days",
+    "title": "Filters",
+    "brand": "Brand",
+    "price": "Price",
+    "rating": "Rating",
+    "min": "Min",
+    "max": "Max",
+    "any": "Any",
+    "clear": "Clear all",
+    "none": "No options yet",
+    "sort": "Sort"
   },
   "finalTotal": "Final Total",
   "footer": {
@@ -565,6 +599,13 @@
     "stores": {
       "description": "Explore trusted local vendors near you",
       "title": "Browse Stores"
+    },
+    "shop_now": "Shop now",
+    "load_more": "Load more",
+    "empty": {
+      "title": "Nothing here yet",
+      "description": "New products and offers are on the way.",
+      "action": "Continue shopping"
     }
   },
   "home_title": "Home",
@@ -699,12 +740,16 @@
   "na": "U/A",
   "nav": {
     "about_us": "About Us",
+    "account": "Account",
     "brands": "Brands",
+    "cart": "Cart",
     "contact_us": "Contact Us",
     "faqs": "FAQs",
     "home": "Home",
     "menu": "Menu",
-    "products": "Products"
+    "orders": "Orders",
+    "products": "Products",
+    "wishlist": "Wishlist"
   },
   "network_error": "Network Error",
   "network_error_description": "Something went wrong while submitting your review. Please try again later.",
@@ -1952,5 +1997,12 @@
   "yes_cancel": "Yes, Cancel",
   "youMightAlsoLike": "You Might Also Like",
   "your_review": "Your Review",
-  "your_review_placeholder": "Share detailed feedback about your experience with this {{type}}..."
+  "your_review_placeholder": "Share detailed feedback about your experience with this {{type}}...",
+  "sort": {
+    "relevance": "Relevance",
+    "price_asc": "Price: Low to High",
+    "price_desc": "Price: High to Low",
+    "rating": "Top rated",
+    "discount": "Biggest discount"
+  }
 }
