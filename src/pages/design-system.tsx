@@ -40,6 +40,7 @@ const DesignSystemPage: NextPageWithLayout = () => {
     <div className="min-h-screen bg-background text-foreground font-sans">
       <div className={`${WRAP} py-8 max-w-[1100px]`}>
         <div className="flex items-center gap-3 mb-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-icon.png" alt="" className="w-10 h-10 rounded-xl" />
           <span className="font-extrabold italic text-2xl">HYPER<span className="text-primary-600">COMMERCE</span></span>
         </div>

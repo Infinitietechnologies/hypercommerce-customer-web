@@ -98,6 +98,7 @@ const ComponentsPage: NextPageWithLayout = () => {
             gap: 14,
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt=""
             src="/logo-icon.png"

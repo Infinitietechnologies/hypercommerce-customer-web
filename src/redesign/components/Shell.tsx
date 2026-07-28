@@ -34,6 +34,7 @@ function Logo({ height = 42, onClick }: { height?: number; onClick?: () => void 
       onClick={onClick}
       onKeyDown={(e) => e.key === "Enter" && onClick?.()}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         alt=""
         src={LOGO_SRC}

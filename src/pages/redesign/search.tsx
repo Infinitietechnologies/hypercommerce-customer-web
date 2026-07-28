@@ -27,7 +27,7 @@ const SearchPage: NextPageWithLayout = () => {
         header={
           <TextField
             icon="solar:magnifer-linear"
-            placeholder="wireless headphones"
+            placeholder="What you want today"
             style={{
               borderRadius: 14,
               padding: "12px 16px",

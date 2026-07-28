@@ -32,6 +32,7 @@ const RedesignIndex: NextPageWithLayout = () => {
             gap: 12,
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt=""
             src="/logo-icon.png"

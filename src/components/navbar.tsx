@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useState, useSyncExternalStore } from "react";
 import { Link, Image, useDisclosure, Button, Badge } from "@/components/ui";
 import { Icon } from "@iconify/react";
 import LocationSelector from "./Location/LocationSelector";
@@ -69,8 +69,11 @@ export const Navbar: FC = () => {
   const [showDemoWarning, setShowDemoWarning] = useState(true);
   // Gate the client-only cart count so SSR and first client render match
   // (the count comes from redux and is 0/undefined on the server).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const { webSettings, demoMode, systemSettings } = useSettings();
   const router = useRouter();
@@ -282,14 +285,9 @@ export const Navbar: FC = () => {
           </div>
         </header>
 
-        {/* CategoryTabs on home — white strip attached under the header. */}
-        {router.pathname === "/" && (
-          <div className="w-full bg-content1 border-b border-divider">
-            <div className="max-w-site mx-auto px-4 min-[1024px]:px-6">
-              <CategoryTabs className="w-full" />
-            </div>
-          </div>
-        )}
+        {/* CategoryTabs on home — owns its own white strip; renders nothing when
+            there are no categories beyond "All". */}
+        {router.pathname === "/" && <CategoryTabs className="w-full" />}
       </div>
       <OfflineCartDrawer
         isOpen={isOfflineCartOpen}

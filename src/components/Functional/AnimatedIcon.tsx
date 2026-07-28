@@ -45,13 +45,14 @@ interface AnimatedIconProps {
 
 const AnimatedIcon: FC<AnimatedIconProps> = ({
   icon,
+  anim = "float",
   className = "",
 }) => {
-
   return (
     <motion.span
       className="inline-flex"
       style={{ transformOrigin: "center" }}
+      {...MOTIONS[anim]}
     >
       <Icon icon={icon} className={className} />
     </motion.span>

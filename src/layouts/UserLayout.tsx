@@ -23,6 +23,36 @@ interface UserLayoutProps {
   activeTab: string;
 }
 
+interface UserBlockProps {
+  avatarSrc: string;
+  name: string;
+  subtitle: string;
+  size?: "md" | "sm";
+  onAvatarClick: () => void;
+}
+
+const UserBlock: FC<UserBlockProps> = ({
+  avatarSrc,
+  name,
+  subtitle,
+  size = "md",
+  onAvatarClick,
+}) => (
+  <div className="flex items-center gap-3 min-w-0">
+    <Avatar
+      src={avatarSrc}
+      size={size}
+      isBordered
+      className="cursor-pointer shrink-0"
+      onClick={onAvatarClick}
+    />
+    <div className="min-w-0">
+      <div className="text-sm font-bold truncate">{name}</div>
+      <div className="text-xs text-default-500 truncate">{subtitle}</div>
+    </div>
+  </div>
+);
+
 /**
  * Account shell — new amber redesign. Sticky white nav rail with amber-tint
  * active rows on desktop (source: /redesign/account nav rail); a user card plus
@@ -62,24 +92,8 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
   };
 
   const avatarSrc = userData?.profile_image || staticProfileImage;
-
-  const UserBlock = ({ size = "md" as "md" | "sm" }) => (
-    <div className="flex items-center gap-3 min-w-0">
-      <Avatar
-        src={avatarSrc}
-        size={size}
-        isBordered
-        className="cursor-pointer shrink-0"
-        onClick={() => setLightboxOpen(true)}
-      />
-      <div className="min-w-0">
-        <div className="text-sm font-bold truncate">{userData?.name || ""}</div>
-        <div className="text-xs text-default-500 truncate">
-          {userData?.email || t("userLayout.online")}
-        </div>
-      </div>
-    </div>
-  );
+  const userName = userData?.name || "";
+  const userSubtitle = userData?.email || t("userLayout.online");
 
   return (
     <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
@@ -87,7 +101,13 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
       <aside className="hidden md:block md:w-[260px] shrink-0">
         <div className="sticky top-24 rounded-large border border-divider bg-content1 p-2 shadow-sm">
           <div className="p-2.5">
-            <UserBlock size="md" />
+            <UserBlock
+              avatarSrc={avatarSrc}
+              name={userName}
+              subtitle={userSubtitle}
+              size="md"
+              onAvatarClick={() => setLightboxOpen(true)}
+            />
           </div>
           <div className="h-px bg-divider mx-1 my-1.5" />
           <nav className="flex flex-col gap-0.5">
@@ -116,7 +136,13 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
 
       {/* Mobile user card */}
       <div className="md:hidden rounded-large border border-divider bg-content1 shadow-sm p-4">
-        <UserBlock size="md" />
+        <UserBlock
+          avatarSrc={avatarSrc}
+          name={userName}
+          subtitle={userSubtitle}
+          size="md"
+          onAvatarClick={() => setLightboxOpen(true)}
+        />
       </div>
 
       {/* Mobile navigation tabs */}
