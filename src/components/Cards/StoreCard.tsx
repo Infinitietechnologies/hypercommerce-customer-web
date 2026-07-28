@@ -33,8 +33,7 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
               <Image
                 src={store.banner || "/images/roof.png"}
                 alt={store.name}
-                className="w-full h-full object-top absolute inset-0 z-10 rounded-t-lg rounded-b-none 
-               transition-transform duration-300 ease-in-out group-hover:scale-110"
+                className="w-full h-full object-top absolute inset-0 z-10 rounded-t-lg rounded-b-none"
                 removeWrapper
                 loading="eager"
               />

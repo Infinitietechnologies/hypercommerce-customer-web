@@ -12,15 +12,16 @@ import {
   Select,
   SelectItem,
   Sheet,
-  Spinner,
   useDisclosure,
 } from "@/components/ui";
 import BrandCard from "@/components/Cards/BrandCard";
 import CategoryCard from "@/components/Cards/CategoryCard";
 import CategoryFullImageCard from "@/components/Cards/CategoryFullImageCard";
+import CategoryHorizontalCard from "@/components/Cards/CategoryHorizontalCard";
 import CategoryOverlayCard from "@/components/Cards/CategoryOverlayCard";
 import HomeBannerCard from "@/components/Cards/HomeBannerCard";
 import ProductCard from "@/components/Cards/ProductCard";
+import ProductCardSkeleton from "@/components/Skeletons/ProductCardSkeleton";
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import PageHead from "@/SEO/PageHead";
 import { getHomeLayoutSection } from "@/routes/api";
@@ -213,7 +214,7 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
     }
     if (data.type === "brands") {
       return (
-        <div className="grid gap-4 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]">
+        <div className="grid gap-3 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]">
           {(items as Brand[]).map((b) => (
             <BrandCard key={b.id} brand={b} showName={data.style === "image_title"} />
           ))}
@@ -224,7 +225,7 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
       const cats = items as Category[];
       if (data.style === "overlay")
         return (
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
             {cats.map((c) => (
               <CategoryOverlayCard key={c.id} category={c} />
             ))}
@@ -232,14 +233,22 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
         );
       if (data.style === "card")
         return (
-          <div className="grid gap-4 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]">
+          <div className="grid gap-3 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
             {cats.map((c) => (
               <CategoryCard key={c.id} category={c} />
             ))}
           </div>
         );
+      if (data.style === "full")
+        return (
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+            {cats.map((c) => (
+              <CategoryHorizontalCard key={c.id} category={c} />
+            ))}
+          </div>
+        );
       return (
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+        <div className="grid gap-3 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))]">
           {cats.map((c) => (
             <CategoryFullImageCard key={c.id} category={c} />
           ))}
@@ -306,8 +315,10 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
             {renderCards()}
             <InfiniteSentinel hasMore={page < lastPage} isLoading={loading} onLoadMore={loadMore} />
             {loading ? (
-              <div className="flex justify-center py-6">
-                <Spinner color="primary" />
+              <div className="mt-3 grid gap-3 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
               </div>
             ) : null}
           </div>

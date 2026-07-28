@@ -1,6 +1,6 @@
 import { getCookieFromContext, isSSR } from "@/helpers/getters";
 import { GetServerSideProps } from "next";
-import { getHomeLayout } from "@/routes/api";
+import { getHomeLayout, getSettings } from "@/routes/api";
 
 import { HomeLayout, Settings } from "@/types/ApiResponse";
 import HomeBuilder from "@/views/homePage/HomeBuilder";
@@ -52,7 +52,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
       <DynamicSEO
         title={t("pageTitle.home")}
         description={siteDescription}
-        keywords={siteConfig.metaKeywords}
+        keywords={webSettings?.metaKeywords || siteConfig.metaKeywords}
         canonical="/"
         ogType="website"
         ogTitle={siteName}
@@ -88,10 +88,12 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
             per_page: 6,
             market,
           });
+          const settings = await getSettings({ market });
 
           return {
             props: {
               initialLayout: layoutRes.success ? layoutRes.data : null,
+              initialSettings: settings.data,
             },
           };
         } catch (err) {
@@ -99,6 +101,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
           return {
             props: {
               initialLayout: null,
+              initialSettings: null,
               error:
                 err instanceof Error
                   ? err.message

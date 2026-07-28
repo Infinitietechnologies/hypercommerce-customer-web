@@ -3,8 +3,9 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 
-import { EmptyState, Spinner } from "@/components/ui";
+import { EmptyState } from "@/components/ui";
 import HomeSectionRenderer from "@/components/Home/HomeSectionRenderer";
+import HomeSectionSkeleton from "@/components/Skeletons/HomeSectionSkeleton";
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import { getActiveCategory } from "@/helpers/getters";
 import { getHomeLayout } from "@/routes/api";
@@ -66,7 +67,7 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   }, [fetchPage, loading, page, lastPage]);
 
   return (
-    <section className="w-full max-w-site mx-auto px-4 sm:px-6 py-6" id="home-builder">
+    <section className="w-full max-w-site mx-auto px-3 sm:px-6 py-4 sm:py-6" id="home-builder">
       {/* Driven by onHomeCategoryChange / onLocationChange (helpers/events). */}
       <button className="hidden" id="home-sections-refetch" onClick={refetch} />
 
@@ -87,14 +88,9 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
             <HomeSectionRenderer key={section.id} section={section} />
           ))}
           <InfiniteSentinel hasMore={page < lastPage} isLoading={loading} onLoadMore={loadMore} />
+          {loading ? <HomeSectionSkeleton /> : null}
         </>
       )}
-
-      {loading ? (
-        <div className="flex justify-center py-4">
-          <Spinner color="primary" />
-        </div>
-      ) : null}
     </section>
   );
 };

@@ -1,6 +1,6 @@
 import { Order, OrderShipment } from "@/types/ApiResponse";
 import { Card, CardBody, CardHeader, Chip, Divider } from "@heroui/react";
-import { ExternalLink, Package, Truck } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { getFormattedDate } from "@/helpers/getters";
 import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,11 +15,11 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
   const shipments: OrderShipment[] = order.shipments ?? [];
 
   return (
-    <Card shadow="sm" radius="sm">
+    <Card shadow="sm" radius="lg" className="border border-divider">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <Truck className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <Icon icon="solar:delivery-linear" className="w-4 h-4 text-default-500" />
+          <h3 className="text-sm font-medium text-foreground">
             {t("shipments") || t("delivery_info")}
           </h3>
         </div>
@@ -27,8 +27,8 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
       <CardBody className="pt-0">
         {shipments.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-            <Package className="w-6 h-6 text-foreground/30" />
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <Icon icon="solar:box-linear" className="w-6 h-6 text-foreground/30" />
+            <p className="text-xs text-default-500">
               {t("notYetShipped") || "Not yet shipped"}
             </p>
           </div>
@@ -40,14 +40,14 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
               return (
                 <div
                   key={shipment.id}
-                  className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 p-3 space-y-2"
+                  className="rounded-lg border border-divider bg-content2 p-3 space-y-2"
                 >
                   {/* Carrier + status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <Truck className="w-3.5 h-3.5 text-foreground/50 shrink-0" />
-                        <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
+                        <Icon icon="solar:delivery-linear" className="w-3.5 h-3.5 text-foreground/50 shrink-0" />
+                        <span className="text-xs font-medium text-foreground truncate">
                           {shipment.carrier_name || t("na")}
                         </span>
                       </div>
@@ -121,7 +121,7 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
                         className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                       >
                         {t("track") || "Track"}
-                        <ExternalLink className="w-3 h-3" />
+                        <Icon icon="solar:arrow-right-up-linear" className="w-3 h-3" />
                       </a>
                     </>
                   )}

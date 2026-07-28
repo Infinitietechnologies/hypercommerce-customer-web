@@ -110,10 +110,10 @@ const OrdersError = ({ error }: { error: string }) => {
   return (
     <div className="w-full flex items-center justify-center min-h-[400px]">
       <div className="text-center">
-        <div className="text-red-500 text-lg font-medium mb-2">
+        <div className="text-danger text-lg font-medium mb-2">
           {t("pages.ordersPage.errorTitle")}
         </div>
-        <p className="text-gray-600 mb-4">{error}</p>
+        <p className="text-default-500 mb-4">{error}</p>
         <Button
           onPress={() => window.location.reload()}
           size="md"

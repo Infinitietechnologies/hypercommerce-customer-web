@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardBody, CardHeader, Button } from "@heroui/react";
-import { MessageSquare, Star, Store, Edit2 } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { SellerFeedbackItem, OrderItem } from "@/types/ApiResponse";
 import { useTranslation } from "react-i18next";
 
@@ -63,11 +63,11 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
   if (validSellers.length === 0) return null;
 
   return (
-    <Card>
+    <Card shadow="sm" radius="lg" className="border border-divider">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Store className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <Icon icon="solar:shop-linear" className="w-5 h-5 text-default-500" />
+          <h3 className="text-sm font-semibold text-foreground">
             {t("sellerReviewsTitle")}
           </h3>
         </div>
@@ -92,7 +92,7 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Store className="w-4 h-4 text-primary" />
+                          <Icon icon="solar:shop-linear" className="w-4 h-4 text-primary" />
                         </div>
 
                         <div className="flex flex-col">
@@ -113,12 +113,12 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-0.5">
                               {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
+                                <Icon icon="solar:star-bold"
                                   key={star}
                                   className={`w-4 h-4 ${
                                     star <= (fbObj.rating || 0)
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+                                      ? "fill-primary text-primary"
+                                      : "fill-default-200 text-default-200"
                                   }`}
                                 />
                               ))}
@@ -148,7 +148,7 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 pl-10">
-                          <MessageSquare className="w-4 h-4 text-warning" />
+                          <Icon icon="solar:chat-round-linear" className="w-4 h-4 text-warning" />
                           <span className="text-xs text-foreground/60">
                             {t("noSellerReview")}
                           </span>
@@ -163,9 +163,9 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
                       title={isGiven ? t("updateReview") : t("reviewSeller")}
                       startContent={
                         isGiven ? (
-                          <Edit2 className="w-3.5 h-3.5" />
+                          <Icon icon="solar:pen-linear" className="w-3.5 h-3.5" />
                         ) : (
-                          <Star className="w-3.5 h-3.5" />
+                          <Icon icon="solar:star-bold" className="w-3.5 h-3.5" />
                         )
                       }
                       className="min-w-fit shrink-0 text-xs"

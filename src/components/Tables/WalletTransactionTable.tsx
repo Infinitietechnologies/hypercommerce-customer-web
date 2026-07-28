@@ -16,7 +16,7 @@ import {
 import { TransactionQueryArgs, WalletTransaction } from "@/types/ApiResponse";
 import { getWalletTransactions } from "@/routes/api";
 import useSWR from "swr";
-import { Copy, Search } from "lucide-react";
+import { Icon } from "@iconify/react";
 import {
   getFormattedDate,
   getPageFromUrl,
@@ -146,7 +146,7 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
                 title={t("copy_to_clipboard")}
                 className="p-1 rounded cursor-pointer"
               >
-                <Copy className="h-3 w-3" />
+                <Icon icon="solar:copy-linear" className="h-3 w-3" />
               </button>
             )}
           </div>
@@ -165,7 +165,7 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
                 title={t("copy_to_clipboard")}
                 className="p-1 rounded cursor-pointer"
               >
-                <Copy className="h-3 w-3" />
+                <Icon icon="solar:copy-linear" className="h-3 w-3" />
               </button>
             )}
           </div>
@@ -281,9 +281,11 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
           size="sm"
           placeholder={t("search")}
           startContent={
-            <Search
+            <Icon
+              icon="solar:magnifer-linear"
               className="text-base text-default-400 pointer-events-none shrink-0"
-              size={16}
+              width={16}
+              height={16}
             />
           }
           type="search"

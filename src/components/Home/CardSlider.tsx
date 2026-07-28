@@ -15,6 +15,7 @@ interface CardSliderProps {
   autoplay?: boolean;
   loop?: boolean;
   pagination?: boolean;
+  centeredSlides?: boolean;
   /** Applied to each SwiperSlide (e.g. a fixed width for an "auto" rail). */
   slideClassName?: string;
   className?: string;
@@ -33,6 +34,7 @@ const CardSlider: FC<CardSliderProps> = ({
   autoplay = false,
   loop = false,
   pagination = false,
+  centeredSlides = false,
   slideClassName = "",
   className = "",
 }) => {
@@ -48,6 +50,7 @@ const CardSlider: FC<CardSliderProps> = ({
       slidesPerView={slidesPerView}
       spaceBetween={spaceBetween}
       breakpoints={breakpoints}
+      centeredSlides={centeredSlides}
       freeMode={slidesPerView === "auto"}
       loop={loop && slides.length > 1}
       pagination={pagination ? { clickable: true } : false}
@@ -58,10 +61,7 @@ const CardSlider: FC<CardSliderProps> = ({
       }
     >
       {slides.map((slide, i) => (
-        <SwiperSlide
-          key={i}
-          className={slidesPerView === "auto" ? `!w-auto ${slideClassName}` : slideClassName}
-        >
+        <SwiperSlide key={i} className={`!h-auto ${slideClassName}`}>
           {slide}
         </SwiperSlide>
       ))}

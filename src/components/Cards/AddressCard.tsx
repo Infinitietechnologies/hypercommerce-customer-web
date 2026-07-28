@@ -10,18 +10,7 @@ import {
   CardHeader,
   addToast,
 } from "@heroui/react";
-import {
-  MapPin,
-  Phone,
-  Edit3,
-  Trash2,
-  Home,
-  Building,
-  Eye,
-  Navigation,
-  Globe,
-  Building2,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
 import { Address } from "@/types/ApiResponse";
 import AddressGoogleModal from "../Modals/AddressGoogleModal";
 import AddressModal from "../Modals/AddressModal";
@@ -49,11 +38,11 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
   const getAddressTypeIcon = (type: string) => {
     switch (type) {
       case "home":
-        return <Home className="w-4 h-4 text-blue-500" />;
+        return <Icon icon="solar:home-2-linear" className="w-4 h-4" />;
       case "work":
-        return <Building className="w-4 h-4 text-green-500" />;
+        return <Icon icon="solar:buildings-2-linear" className="w-4 h-4" />;
       default:
-        return <MapPin className="w-4 h-4 text-gray-500" />;
+        return <Icon icon="solar:map-point-linear" className="w-4 h-4" />;
     }
   };
 
@@ -125,7 +114,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
 
   return (
     <>
-      <Card className="w-full h-full" shadow="sm">
+      <Card className="w-full h-full border border-divider" shadow="sm" radius="md">
         <CardHeader className="flex items-center justify-between pb-0">
           <div className="flex items-center gap-2">
             <Chip
@@ -158,7 +147,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
             <div className="flex items-center gap-4">
               {address.landmark && (
                 <div className="flex items-center gap-2 text-sm opacity-50 w-fit">
-                  <Building2 className="w-3.5 h-3.5" />
+                  <Icon icon="solar:buildings-2-linear" className="w-3.5 h-3.5" />
                   <span>
                     {address.city}, {address.state} , {address.zipcode}
                   </span>
@@ -168,7 +157,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
             <div className="flex items-center gap-4">
               {address.landmark && (
                 <div className="flex items-center gap-2 text-sm opacity-50 w-fit">
-                  <Navigation className="w-3.5 h-3.5" />
+                  <Icon icon="solar:signpost-2-linear" className="w-3.5 h-3.5" />
                   <span className="truncate">
                     {truncateText(address.landmark, 30)}
                   </span>
@@ -179,7 +168,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
               )}
               {address.country && (
                 <div className="flex items-center gap-2 text-sm opacity-50">
-                  <Globe className="w-3.5 h-3.5" />
+                  <Icon icon="solar:global-linear" className="w-3.5 h-3.5" />
                   <span>{address.country}</span>
                 </div>
               )}
@@ -187,13 +176,13 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
           </div>
 
           <div className="flex justify-start w-full gap-4">
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Phone className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-xs text-default-400">
+              <Icon icon="solar:phone-linear" className="w-3 h-3" />
               <span>{address.mobile}</span>
             </div>
             <Divider orientation="vertical" />
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <MapPin className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-xs text-default-400">
+              <Icon icon="solar:map-point-linear" className="w-3 h-3" />
               <span>
                 {address.latitude.toFixed(4)}, {address.longitude.toFixed(4)}
               </span>
@@ -206,7 +195,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
             size="sm"
             variant="flat"
             color="primary"
-            startContent={<Eye className="w-3 h-3" />}
+            startContent={<Icon icon="solar:eye-linear" className="w-3 h-3" />}
             onPress={onOpen}
             className="flex-1 text-xs"
             isDisabled={isLoading}
@@ -218,7 +207,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
             size="sm"
             variant="flat"
             color="default"
-            startContent={<Edit3 className="w-3 h-3" />}
+            startContent={<Icon icon="solar:pen-linear" className="w-3 h-3" />}
             onPress={editOnOpen}
             className="flex-1 text-xs"
             isDisabled={isLoading}
@@ -230,7 +219,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
             size="sm"
             variant="flat"
             color="danger"
-            startContent={<Trash2 className="w-3 h-3" />}
+            startContent={<Icon icon="solar:trash-bin-trash-linear" className="w-3 h-3" />}
             onPress={() => openConfirm(address.id as number)}
             className="flex-1 text-xs"
             isLoading={isLoading}

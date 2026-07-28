@@ -6,14 +6,14 @@ import { FC, memo } from "react";
 
 interface BrandCardProps {
   brand: Brand;
-  /** `full` style shows the name under the logo; `image_title` shows logo only. */
+  /** `image_title` shows the name under the logo; `full` is a soft-tint logo tile. */
   showName?: boolean;
 }
 
 /**
- * Brand card — new amber redesign: white surface, hairline border, 18px radius,
- * soft shadow that lifts and turns amber on hover. Name sits under the logo.
- * (Source: /redesign cards `BrandCard`.)
+ * Brand card — amber redesign. `image_title` = white card, compact logo, name
+ * below. `full` = a soft amber-tint logo tile (no name), a distinct showcase
+ * treatment. (Source: /redesign cards `BrandCard`.)
  */
 const BrandCard: FC<BrandCardProps> = ({ brand, showName = true }) => {
   const screen = useScreenType();
@@ -21,23 +21,25 @@ const BrandCard: FC<BrandCardProps> = ({ brand, showName = true }) => {
   return (
     <div className="flex flex-col items-center w-full min-w-0">
       <Card
-        className="w-full border border-divider bg-content1 rounded-large shadow-sm
-          transition-all duration-200 hover:border-primary hover:shadow-md
-          overflow-hidden flex items-center justify-center"
+        className={`w-full rounded-large overflow-hidden flex items-center justify-center transition-all duration-200 hover:border-primary hover:shadow-md ${
+          showName
+            ? "border border-divider bg-content1 shadow-sm"
+            : "border border-primary-100 bg-primary-100/40"
+        }`}
         shadow="none"
         isPressable={screen !== "mobile"}
         href={`/brands/${brand.slug}`}
         as={Link}
         title={brand.title}
       >
-        <CardBody className="flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+        <CardBody className="flex items-center justify-center p-2.5 sm:p-3 overflow-hidden">
           <Image
             unselectable="off"
             src={brand.logo}
             alt={brand.title}
             className="object-contain max-w-full"
             classNames={{
-              img: "rounded-md max-w-full h-16 sm:h-20 object-contain",
+              img: "rounded-md max-w-full h-11 sm:h-14 object-contain",
             }}
             loading="eager"
           />
@@ -45,10 +47,10 @@ const BrandCard: FC<BrandCardProps> = ({ brand, showName = true }) => {
       </Card>
 
       {showName && (
-        <div className="h-8 flex items-center w-full min-w-0">
+        <div className="h-7 flex items-center w-full min-w-0">
           <h2
             title={brand.title}
-            className="text-center truncate w-full text-xs font-semibold px-1"
+            className="text-center truncate w-full text-[11px] sm:text-xs font-semibold px-1"
           >
             {brand.title}
           </h2>

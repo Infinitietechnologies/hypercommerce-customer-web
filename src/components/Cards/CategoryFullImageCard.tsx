@@ -23,20 +23,22 @@ const CategoryFullImageCard: FC<CategoryFullImageCardProps> = ({ category }) => 
       title={category.title}
       onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
       className="flex flex-col overflow-hidden rounded-large border border-divider bg-content1 text-foreground
-        shadow-sm transition-colors duration-200 hover:border-primary"
+        shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
     >
-      <div className="aspect-[4/3] w-full overflow-hidden">
+      <div className="aspect-square sm:aspect-[5/3] w-full overflow-hidden bg-content2">
         <Image
           alt={category.title}
           src={category.image || category.banner || ""}
           removeWrapper
           loading="eager"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-contain"
         />
       </div>
-      <div className="px-3.5 py-3">
-        <div className="truncate text-sm font-bold">{category.title}</div>
-        <div className="mt-0.5 text-xs font-semibold text-primary-600">
+      <div className="px-2 py-2 sm:px-3 sm:py-2.5">
+        <div className="line-clamp-2 text-[11px] sm:text-[13px] font-bold leading-tight">
+          {category.title}
+        </div>
+        <div className="mt-0.5 hidden sm:block text-[11px] font-semibold text-primary-600">
           {t("home.shop_now", "Shop now")} →
         </div>
       </div>

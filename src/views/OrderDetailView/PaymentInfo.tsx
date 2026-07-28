@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import { Card, CardBody, CardHeader, Chip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import { CreditCard } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { Order } from "@/types/ApiResponse";
 import { useCurrency } from "@/components/Functional/Price";
 
@@ -21,11 +21,11 @@ const PaymentInfo: FC<PaymentInfoProps> = ({ order }) => {
   const hasWalletUsed = walletAmountUsed > 0;
 
   return (
-    <Card shadow="sm" radius="sm">
+    <Card shadow="sm" radius="lg" className="border border-divider">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <Icon icon="solar:card-linear" className="w-4 h-4 text-default-500" />
+          <h3 className="text-sm font-medium text-foreground">
             {t("paymentDetails")}
           </h3>
         </div>
@@ -33,7 +33,7 @@ const PaymentInfo: FC<PaymentInfoProps> = ({ order }) => {
       <CardBody className="pt-0">
         <div className="space-y-2 text-xs">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-300">
+            <span className="text-default-500">
               {t("paymentMethod")}
             </span>
             <div className="flex gap-1 flex-wrap justify-end">
@@ -66,16 +66,16 @@ const PaymentInfo: FC<PaymentInfoProps> = ({ order }) => {
           </div>
           {hasWalletUsed && (
             <div className="flex justify-between items-center pt-1">
-              <span className="text-gray-600 dark:text-gray-300">
+              <span className="text-default-500">
                 {t("walletAmountUsed")}
               </span>
-              <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              <span className="text-xs font-semibold text-secondary">
                 {formatPrice(walletAmountUsed)}
               </span>
             </div>
           )}
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-300">
+            <span className="text-default-500">
               {t("paymentStatus")}
             </span>
             <Chip

@@ -13,6 +13,8 @@ export interface HomeSectionItem {
   id: number;
   title?: string;
   image: string;
+  /** Optional mobile-specific banner image; falls back to `image`. */
+  mobile_image?: string | null;
   default_image?: string;
   type?: string;
   link_type?: string;

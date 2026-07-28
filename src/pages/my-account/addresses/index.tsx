@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus } from "lucide-react";
+import { Icon } from "@iconify/react";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import { getPageFromUrl, isSSR } from "@/helpers/getters";
@@ -120,10 +120,10 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
             subtitle={t("pages.addresses.subtitle")}
           />
           <div className="w-full p-6 text-center">
-            <div className="text-red-500 text-lg mb-4">
+            <div className="text-danger text-lg mb-4">
               {t("pages.addresses.errorLoading")}
             </div>
-            <div className="text-gray-600 mb-4">{error}</div>
+            <div className="text-default-500 mb-4">{error}</div>
             <Button
               color="primary"
               variant="flat"
@@ -163,7 +163,7 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
               variant="bordered"
               size="sm"
               className="text-xs px-1 md:px-2"
-              startContent={<Plus className="w-4 h-4" />}
+              startContent={<Icon icon="solar:add-circle-linear" className="w-4 h-4" />}
               onPress={onOpen}
             >
               {t("pages.addresses.addNew")}
@@ -212,7 +212,7 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
                 </div>
               )}
 
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-default-500">
                 {t("pages.addresses.showingRange", {
                   from: paginatedData?.from || 0,
                   to: paginatedData?.to || 0,
@@ -224,8 +224,8 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
             !loading && (
               <div className="w-full p-12 text-center rounded-lg">
                 <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
-                    <Plus className="w-8 h-8 text-gray-400" />
+                  <div className="w-16 h-16 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
+                    <Icon icon="solar:map-point-add-linear" className="w-8 h-8 text-primary-600" />
                   </div>
                   <h3 className="text-lg font-medium mb-2">
                     {t("pages.addresses.noAddresses")}
@@ -236,7 +236,7 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
                   <Button
                     color="primary"
                     variant="flat"
-                    startContent={<Plus className="w-4 h-4" />}
+                    startContent={<Icon icon="solar:add-circle-linear" className="w-4 h-4" />}
                     onPress={onOpen}
                   >
                     {t("pages.addresses.addFirst")}

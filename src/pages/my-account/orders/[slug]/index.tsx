@@ -8,7 +8,7 @@ import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { getSpecificOrders, getSettings } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
 import { getAccessTokenFromContext } from "@/helpers/auth";
-import { ArrowLeft } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
 import OrderDetailPageView from "@/views/OrderDetailView";
 import { Button, Spinner } from "@heroui/react";
@@ -103,7 +103,7 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
     return renderContent(
       <>
         <Spinner size="lg" className="mb-4" />
-        <div className="text-gray-600">{t("pages.order.loading")}</div>
+        <div className="text-default-500">{t("pages.order.loading")}</div>
       </>
     );
   }
@@ -112,14 +112,14 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
   if (error) {
     return renderContent(
       <>
-        <div className="text-red-500 text-lg font-medium mb-2">
+        <div className="text-danger text-lg font-medium mb-2">
           {t("pages.order.errorLoading")}
         </div>
-        <p className="text-gray-600 mb-4">{error}</p>
+        <p className="text-default-500 mb-4">{error}</p>
         <Button
           color="primary"
           variant="flat"
-          startContent={<ArrowLeft className="w-4 h-4" />}
+          startContent={<Icon icon="solar:arrow-left-linear" className="w-4 h-4" />}
           onPress={() => router.push("/my-account/orders")}
         >
           {t("pages.order.backToList")}
@@ -132,14 +132,14 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
   if (!order) {
     return renderContent(
       <>
-        <div className="text-gray-500 text-lg font-medium mb-2">
+        <div className="text-default-500 text-lg font-medium mb-2">
           {t("pages.order.notFound")}
         </div>
-        <p className="text-gray-600 mb-4">{t("pages.order.notFoundDesc")}</p>
+        <p className="text-default-500 mb-4">{t("pages.order.notFoundDesc")}</p>
         <Button
           color="primary"
           variant="flat"
-          startContent={<ArrowLeft className="w-4 h-4" />}
+          startContent={<Icon icon="solar:arrow-left-linear" className="w-4 h-4" />}
           onPress={() => router.push("/my-account/orders")}
         >
           {t("pages.order.backToList")}

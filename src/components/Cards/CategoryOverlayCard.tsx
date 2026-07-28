@@ -10,15 +10,16 @@ interface CategoryOverlayCardProps {
 }
 
 /**
- * Category — `overlay` style: 4:3 photo with a bottom gradient scrim and a
- * white label. (Source: /redesign cards `CategoryOverlay`.)
+ * Category — `overlay` style: a photo tile with a clean frosted-glass pill
+ * label pinned bottom-left (dark text on a translucent chip), rather than a
+ * heavy dark scrim. Reads on any image and looks premium.
  */
 const CategoryOverlayCard: FC<CategoryOverlayCardProps> = ({ category }) => (
   <Link
     href={categoryHref(category)}
     title={category.title}
     onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
-    className="relative block aspect-[4/3] overflow-hidden rounded-large border border-divider
+    className="group relative block aspect-square sm:aspect-[4/3] overflow-hidden rounded-large border border-divider
       transition-all duration-200 hover:border-primary hover:shadow-md"
   >
     <Image
@@ -26,12 +27,13 @@ const CategoryOverlayCard: FC<CategoryOverlayCardProps> = ({ category }) => (
       src={category.image || category.banner || ""}
       removeWrapper
       loading="eager"
-      className="absolute inset-0 h-full w-full object-cover"
+      className="absolute inset-0 h-full w-full object-contain"
     />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent to-60%" />
-    <span className="absolute bottom-3.5 start-4 z-10 text-base font-bold text-white">
-      {category.title}
-    </span>
+    <div className="absolute inset-x-2 bottom-2 z-10 flex">
+      <span className="max-w-full truncate rounded-full bg-white/90 px-2.5 py-1 text-[11px] sm:text-[13px] font-bold text-foreground shadow-sm backdrop-blur-md">
+        {category.title}
+      </span>
+    </div>
   </Link>
 );
 

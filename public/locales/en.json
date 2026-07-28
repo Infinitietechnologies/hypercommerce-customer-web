@@ -1182,7 +1182,8 @@
       "table": {
         "title": "Wallet Transactions"
       },
-      "totalFound": "{{total}} Transactions Found"
+      "totalFound": "{{total}} Transactions Found",
+      "availableBalance": "Available balance"
     },
     "wishlistsPage": {
       "confirmDelete": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",

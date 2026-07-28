@@ -19,16 +19,7 @@ import {
   ModalFooter,
 } from "@heroui/react";
 import { FormEvent, useRef, useState, useEffect, useCallback } from "react";
-import {
-  Calendar,
-  Camera,
-  Mail,
-  Trash,
-  User,
-  CheckCircle2,
-  AlertCircle,
-  Smartphone,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
 import CountryList from "country-list-with-dial-code-and-flag";
 import PageHeader from "@/components/custom/PageHeader";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
@@ -554,7 +545,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
               subtitle={t("pages.myAccount.headerSubtitle")}
             />
             <Button
-              startContent={<Trash size={16} />}
+              startContent={<Icon icon="solar:trash-bin-trash-linear" width={16} height={16} />}
               color="danger"
               size="sm"
               className="text-xs"
@@ -564,7 +555,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
             </Button>
           </div>
 
-          <Card shadow="sm" className="p-2">
+          <Card shadow="sm" radius="lg" className="p-2 border border-divider">
             <Form onSubmit={onSubmit}>
               <CardHeader className="pb-0">
                 <div className="flex items-center gap-4">
@@ -601,7 +592,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                       color="primary"
                       onPress={() => fileInputRef.current?.click()}
                     >
-                      <Camera size={16} />
+                      <Icon icon="solar:camera-linear" width={16} height={16} />
                     </Button>
                     <input
                       type="file"
@@ -614,7 +605,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                   <div className="flex-1">
                     <h2 className="text-xl font-semibold">{formData.name}</h2>
                     <p className="flex items-center gap-1 mt-1 opacity-50 text-small">
-                      <Mail size={16} />
+                      <Icon icon="solar:letter-linear" width={16} height={16} />
                       {formData.email}
                     </p>
                   </div>
@@ -624,7 +615,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
-                      <User className="text-primary" size={16} />
+                      <Icon icon="solar:user-linear" className="text-primary" width={16} height={16} />
                       <h3 className="text-medium font-semibold">
                         {t("pages.myAccount.personalInfo")}
                       </h3>
@@ -642,7 +633,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                       }
                       variant="flat"
                       startContent={
-                        <User size={20} className="text-gray-400" />
+                        <Icon icon="solar:user-linear" width={20} height={20} className="text-default-400" />
                       }
                     />
 
@@ -663,14 +654,14 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                           : ""
                       }
                       startContent={
-                        <Calendar size={20} className="text-gray-400" />
+                        <Icon icon="solar:calendar-linear" width={20} height={20} className="text-default-400" />
                       }
                     />
                   </div>
 
                   <div className="flex flex-col gap-5">
                     <div className="flex items-center gap-2">
-                      <Mail className="text-primary" size={16} />
+                      <Icon icon="solar:letter-linear" className="text-primary" width={16} height={16} />
                       <h3 className="text-medium font-semibold">
                         {t("pages.myAccount.contactInfo")}
                       </h3>
@@ -689,7 +680,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                       }
                       variant="flat"
                       startContent={
-                        <Mail size={20} className="text-gray-400" />
+                        <Icon icon="solar:letter-linear" width={20} height={20} className="text-default-400" />
                       }
                       endContent={
                         <div className="flex items-center gap-2 mr-1">
@@ -707,7 +698,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                             </Button>
                           ) : user?.email_verified_at ? (
                             <Chip
-                              startContent={<CheckCircle2 size={16} />}
+                              startContent={<Icon icon="solar:check-circle-bold" width={16} height={16} />}
                               color="success"
                               variant="flat"
                               size="md"
@@ -721,8 +712,10 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                             <div className="flex items-center gap-1.5 translate-y-[1px]">
                               <Chip
                                 startContent={
-                                  <AlertCircle
-                                    size={16}
+                                  <Icon
+                                    icon="solar:danger-circle-linear"
+                                    width={16}
+                                    height={16}
                                     className="text-warning"
                                   />
                                 }
@@ -743,7 +736,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                                 onPress={handleResendVerification}
                                 isLoading={isResending}
                               >
-                                <Mail size={14} className="sm:hidden" />
+                                <Icon icon="solar:letter-linear" width={14} height={14} className="sm:hidden" />
                                 <span className="hidden sm:inline">
                                   {t(
                                     "pages.myAccount.labels.resendVerification",
@@ -796,7 +789,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                             </Button>
                           ) : user?.mobile_verified_at ? (
                             <Chip
-                              startContent={<CheckCircle2 size={16} />}
+                              startContent={<Icon icon="solar:check-circle-bold" width={16} height={16} />}
                               color="success"
                               variant="flat"
                               size="md"
@@ -810,8 +803,10 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                             <div className="flex items-center gap-1.5 translate-y-[1px]">
                               <Chip
                                 startContent={
-                                  <AlertCircle
-                                    size={16}
+                                  <Icon
+                                    icon="solar:danger-circle-linear"
+                                    width={16}
+                                    height={16}
                                     className="text-warning"
                                   />
                                 }
@@ -832,7 +827,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                                 onPress={handleUpdatePhone}
                                 isLoading={isPhoneUpdating}
                               >
-                                <Smartphone size={14} className="sm:hidden" />
+                                <Icon icon="solar:smartphone-linear" width={14} height={14} className="sm:hidden" />
                                 <span className="hidden sm:inline">
                                   {t("pages.myAccount.labels.verify") ||
                                     "Verify"}

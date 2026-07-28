@@ -3,7 +3,7 @@ import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import UserLayout from "@/layouts/UserLayout";
 import { Card, CardBody, Button } from "@heroui/react";
-import { CheckCircle, Copy } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { getReferralInfo } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
@@ -132,7 +132,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
           />
 
           {error ? (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-medium border border-danger-200 bg-danger-50 p-3 text-sm text-danger-700">
               {error}
             </div>
           ) : null}
@@ -141,39 +141,39 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
             /* ── Skeleton ── */
             <div className="space-y-6 animate-pulse">
               {/* Hero banner skeleton */}
-              <div className="rounded-2xl bg-gray-100 dark:bg-default-50 p-6 md:p-8 flex flex-col items-center gap-6 md:flex-row">
+              <div className="rounded-large bg-primary-100 p-6 md:p-8 flex flex-col items-center gap-6 md:flex-row">
                 <div className="w-full md:w-52 flex justify-center md:justify-start">
-                  <div className="w-[180px] h-[180px] rounded-2xl bg-gray-200 dark:bg-default-200" />
+                  <div className="w-[180px] h-[180px] rounded-large bg-default-200" />
                 </div>
                 <div className="flex-1 space-y-3 w-full">
-                  <div className="h-7 w-2/3 rounded-lg bg-gray-200 dark:bg-default-200" />
-                  <div className="h-4 w-full rounded bg-gray-200 dark:bg-default-200" />
-                  <div className="h-4 w-4/5 rounded bg-gray-200 dark:bg-default-200" />
-                  <div className="h-4 w-1/2 rounded bg-gray-200 dark:bg-default-200" />
+                  <div className="h-7 w-2/3 rounded-medium bg-default-200" />
+                  <div className="h-4 w-full rounded bg-default-200" />
+                  <div className="h-4 w-4/5 rounded bg-default-200" />
+                  <div className="h-4 w-1/2 rounded bg-default-200" />
                 </div>
               </div>
 
               {/* Card skeleton */}
-              <div className="rounded-3xl border border-gray-200 dark:border-gray-600 bg-default-50 shadow-lg p-6">
+              <div className="rounded-large border border-divider bg-content1 shadow-sm p-6">
                 <div className="flex flex-col gap-6 lg:flex-row">
                   {/* Referral code box skeleton */}
                   <div className="lg:w-[60%] space-y-3">
-                    <div className="rounded-2xl border border-gray-200 bg-gray-50 dark:bg-default-100 px-4 py-3 flex items-center gap-3">
-                      <div className="flex-1 h-6 rounded bg-gray-200 dark:bg-default-200" />
-                      <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-default-200 shrink-0" />
+                    <div className="rounded-large border border-divider bg-content2 px-4 py-3 flex items-center gap-3">
+                      <div className="flex-1 h-6 rounded bg-default-200" />
+                      <div className="w-10 h-10 rounded-medium bg-default-200 shrink-0" />
                     </div>
-                    <div className="h-3 w-2/3 rounded bg-gray-200 dark:bg-default-200" />
+                    <div className="h-3 w-2/3 rounded bg-default-200" />
                   </div>
 
                   {/* How it works skeleton */}
-                  <div className="lg:w-[40%] lg:border-l lg:border-gray-200 lg:pl-6 space-y-4">
-                    <div className="h-5 w-1/3 rounded bg-gray-200 dark:bg-default-200" />
+                  <div className="lg:w-[40%] lg:border-l lg:border-divider lg:pl-6 space-y-4">
+                    <div className="h-5 w-1/3 rounded bg-default-200" />
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="flex gap-3 items-start">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-default-200 shrink-0" />
+                        <div className="w-10 h-10 rounded-full bg-default-200 shrink-0" />
                         <div className="space-y-2 flex-1">
-                          <div className="h-4 w-1/2 rounded bg-gray-200 dark:bg-default-200" />
-                          <div className="h-3 w-4/5 rounded bg-gray-200 dark:bg-default-200" />
+                          <div className="h-4 w-1/2 rounded bg-default-200" />
+                          <div className="h-3 w-4/5 rounded bg-default-200" />
                         </div>
                       </div>
                     ))}
@@ -183,7 +183,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="rounded-2xl bg-gray-100 dark:bg-default-50 p-6 md:p-8 flex flex-col items-center gap-6 md:flex-row">
+              <div className="rounded-large bg-primary-100 p-6 md:p-8 flex flex-col items-center gap-6 md:flex-row">
                 <div className="w-full md:w-52 flex justify-center md:justify-start">
                   <Image
                     src="/images/refer-&-earn.png"
@@ -194,19 +194,19 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
                   />
                 </div>
                 <div className="flex-1 text-center md:text-left space-y-2">
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-2xl font-semibold text-foreground">
                     {heroTitle}
                   </h2>
-                  <p className="text-sm text-gray-600">{heroDescription}</p>
-                  <p className="text-sm text-gray-500">{rewardLineText}</p>
+                  <p className="text-sm text-default-500">{heroDescription}</p>
+                  <p className="text-sm text-default-500">{rewardLineText}</p>
                 </div>
               </div>
-              <Card className="border border-gray-200 bg-default-50 shadow-lg rounded-3xl border border-gray-200 dark:border-gray-600">
+              <Card className="border border-divider bg-content1 shadow-sm rounded-large" radius="lg">
                 <CardBody className="p-6">
                   <div className="flex flex-col gap-6 lg:flex-row">
                     <div className="lg:w-[60%] space-y-4">
-                      <div className="rounded-2xl border border-gray-200 bg-gray-50 dark:bg-default-50 border border-gray-200 dark:border-gray-600 px-4 py-3 shadow-inner flex items-center gap-3">
-                        <span className="flex-1 text-base font-semibold tracking-[0.3em]">
+                      <div className="rounded-large border border-divider bg-content2 px-4 py-3 flex items-center gap-3">
+                        <span className="flex-1 text-base font-bold tracking-[0.3em] text-primary-600">
                           {referralCode || "—"}
                         </span>
                         <Button
@@ -215,37 +215,38 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
                           variant="solid"
                           size="sm"
                           onPress={handleCopyCode}
-                          className="h-10 w-10 rounded-xl bg-gray-900 text-white hover:bg-black"
+                          className="h-10 w-10"
+                          radius="md"
                           startContent={
                             copied ? (
-                              <CheckCircle className="w-4 h-4" />
+                              <Icon icon="solar:check-circle-bold" className="w-4 h-4" />
                             ) : (
-                              <Copy className="w-4 h-4" />
+                              <Icon icon="solar:copy-linear" className="w-4 h-4" />
                             )
                           }
                         />
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-default-500">
                         {t(
                           "pages.referAndEarnPage.referralCode.helper"
                         ) || "Copy this code and share it with friends."}
                       </p>
                     </div>
-                    <div className="lg:w-[40%] border-l lg:border-l border-transparent lg:border-gray-200 lg:pl-6">
+                    <div className="lg:w-[40%] lg:border-l lg:border-divider lg:pl-6">
                       <h3 className="text-lg font-semibold">
                         {t("pages.referAndEarnPage.howItWorks.title")}
                       </h3>
                       <div className="space-y-4 mt-4">
                         {howItWorksSteps.map((step, index) => (
                           <div key={step.title} className="flex gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-divider bg-primary-100 text-sm font-semibold text-primary-600">
                               {index + 1}
                             </div>
                             <div>
                               <p className="text-sm font-semibold">
                                 {step.title}
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-default-500">
                                 {step.description}
                               </p>
                             </div>

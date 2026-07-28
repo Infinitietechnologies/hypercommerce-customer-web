@@ -1182,7 +1182,8 @@
       "table": {
         "title": "वॉलेट लेनदेन"
       },
-      "totalFound": "{{total}} लेनदेन मिले"
+      "totalFound": "{{total}} लेनदेन मिले",
+      "availableBalance": "उपलब्ध शेष"
     },
     "wishlistsPage": {
       "confirmDelete": "क्या आप वाकई \"{{title}}\" हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",

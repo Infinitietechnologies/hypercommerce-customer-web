@@ -4,7 +4,7 @@ import { orderStatusColorMap } from "@/config/constants";
 import { getOrderStatusBtnConfig } from "@/helpers/getters";
 import { Order, OrderItem } from "@/types/ApiResponse";
 import { Button, Card, CardBody, CardHeader, Chip, Image } from "@heroui/react";
-import { Package, ShoppingBag, Star } from "lucide-react";
+import { Icon } from "@iconify/react";
 import Link from "next/link";
 import React, { FC, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -67,7 +67,7 @@ const OrderItems: FC<OrderItemsProps> = ({
 
     if (!src) {
       return (
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-md object-cover shrink-0 bg-gray-100 dark:bg-gray-700/40 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-[10px] px-2 text-gray-500 dark:text-gray-400 text-center">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-md object-cover shrink-0 bg-content2 border border-divider flex items-center justify-center text-[10px] px-2 text-default-500 text-center">
           {alt || "N/A"}
         </div>
       );
@@ -94,11 +94,11 @@ const OrderItems: FC<OrderItemsProps> = ({
   };
 
   return (
-    <Card shadow="sm" radius="sm">
+    <Card shadow="sm" radius="lg" className="border border-divider">
       <CardHeader className="pb-2 flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3">
         <div className="flex items-center gap-2">
-          <ShoppingBag className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          <Icon icon="solar:bag-check-linear" className="w-4 h-4 text-default-500" />
+          <h3 className="text-sm font-medium text-foreground">
             {t("orderItems")} ({order.items.length})
           </h3>
         </div>
@@ -110,7 +110,7 @@ const OrderItems: FC<OrderItemsProps> = ({
               <Button
                 size="sm"
                 variant="light"
-                startContent={<Package className="w-3 h-3" />}
+                startContent={<Icon icon="solar:box-linear" className="w-3 h-3" />}
                 className="text-xs h-6 sm:h-5"
                 onPress={onCancelOpen}
                 title={t("cancel")}
@@ -127,7 +127,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                 variant="light"
                 className="text-xs h-6 sm:h-5"
                 onPress={onReturnOpen}
-                startContent={<Package className="w-4 h-4" />}
+                startContent={<Icon icon="solar:box-linear" className="w-4 h-4" />}
                 title={t("return")}
               >
                 {t("return")}
@@ -140,16 +140,16 @@ const OrderItems: FC<OrderItemsProps> = ({
           {groupedItems.map((group) => (
             <div
               key={group.store.id}
-              className="bg-gray-50 dark:bg-gray-800/30 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+              className="bg-content2 rounded-lg p-3 border border-divider"
             >
               {/* Store Header */}
-              <div className="mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex flex-wrap items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
+              <div className="mb-3 pb-2 border-b border-divider">
+                <div className="flex flex-wrap items-center gap-1 text-xs text-default-500">
                   <span>{t("soldBySection.storeLabel")}</span>
                   <Link
                     title={group.store.name}
                     href={`/stores/${group.store.slug}`}
-                    className="font-semibold text-gray-900 dark:text-gray-100 hover:text-primary"
+                    className="font-semibold text-foreground hover:text-primary"
                   >
                     {group.store.name}
                   </Link>
@@ -178,7 +178,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                               <Link
                                 title={item.product?.name || ""}
                                 href={`/products/${item.product?.slug}`}
-                                className="hover:text-blue-600 dark:hover:text-blue-400 wrap-break-word"
+                                className="hover:text-primary wrap-break-word"
                               >
                                 {item.product?.name || item.title}
                               </Link>
@@ -188,7 +188,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                           </h3>
 
                           {!(item as any)?.product && (
-                            <p className="text-xxs sm:text-xs text-red-600 dark:text-red-400">
+                            <p className="text-xxs sm:text-xs text-danger">
                               {item.title} product is deleted.
                             </p>
                           )}
@@ -250,13 +250,13 @@ const OrderItems: FC<OrderItemsProps> = ({
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           {/* Price Info */}
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
-                            <span className="text-gray-600 dark:text-gray-300">
+                            <span className="text-default-500">
                               {formatPrice(
                                 Number(item.price) + Number(item.tax_amount),
                               )}{" "}
                               × {item.quantity}
                             </span>
-                            <p className="font-semibold text-gray-900 dark:text-gray-100">
+                            <p className="font-semibold text-foreground">
                               {formatPrice(item.subtotal)}
                             </p>
                           </div>
@@ -291,7 +291,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                                 variant="flat"
                                 color="warning"
                                 className="text-xs h-7 px-3"
-                                startContent={<Star size={12} />}
+                                startContent={<Icon icon="solar:star-bold" width={12} height={12} />}
                                 title={t("review")}
                               >
                                 {t("review")}
@@ -309,7 +309,7 @@ const OrderItems: FC<OrderItemsProps> = ({
 
                     {/* Divider between items */}
                     {itemIndex < group.items.length - 1 && (
-                      <div className="my-3 border-t border-gray-200 dark:border-gray-700" />
+                      <div className="my-3 border-t border-divider" />
                     )}
                   </div>
                 ))}

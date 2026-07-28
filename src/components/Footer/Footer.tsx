@@ -7,6 +7,23 @@ import { useTranslation } from "react-i18next";
 import { Chip, Image } from "@/components/ui";
 import { useSettings } from "@/contexts/SettingsContext";
 
+/** Inline brand glyphs — rendered directly so they never depend on a runtime
+ *  icon fetch. `currentColor` lets them follow the button's hover colour. */
+const SOCIAL_ICON: Record<string, React.ReactNode> = {
+  Facebook: (
+    <path d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.25-1.5 1.55-1.5H17V3.6c-.29-.04-1.28-.12-2.43-.12-2.4 0-4.07 1.47-4.07 4.17v2.24H7.8V13h2.7v8h3z" />
+  ),
+  Instagram: (
+    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zm0 1.8c-3.15 0-3.5.01-4.74.07-.9.04-1.38.19-1.7.32-.43.16-.74.36-1.06.68-.32.32-.52.63-.68 1.06-.13.32-.28.8-.32 1.7-.06 1.24-.07 1.6-.07 4.74s.01 3.5.07 4.74c.04.9.19 1.38.32 1.7.16.43.36.74.68 1.06.32.32.63.52 1.06.68.32.13.8.28 1.7.32 1.24.06 1.6.07 4.74.07s3.5-.01 4.74-.07c.9-.04 1.38-.19 1.7-.32.43-.16.74-.36 1.06-.68.32-.32.52-.63.68-1.06.13-.32.28-.8.32-1.7.06-1.24.07-1.6.07-4.74s-.01-3.5-.07-4.74c-.04-.9-.19-1.38-.32-1.7a2.86 2.86 0 0 0-.68-1.06 2.86 2.86 0 0 0-1.06-.68c-.32-.13-.8-.28-1.7-.32-1.24-.06-1.6-.07-4.74-.07zm0 3.06a4.98 4.98 0 1 1 0 9.96 4.98 4.98 0 0 1 0-9.96zm0 8.22a3.24 3.24 0 1 0 0-6.48 3.24 3.24 0 0 0 0 6.48zm6.34-8.42a1.16 1.16 0 1 1-2.32 0 1.16 1.16 0 0 1 2.32 0z" />
+  ),
+  YouTube: (
+    <path d="M23.5 6.9a3 3 0 0 0-2.1-2.12C19.5 4.25 12 4.25 12 4.25s-7.5 0-9.4.53A3 3 0 0 0 .5 6.9 31.2 31.2 0 0 0 0 12a31.2 31.2 0 0 0 .5 5.1 3 3 0 0 0 2.1 2.12c1.9.53 9.4.53 9.4.53s7.5 0 9.4-.53a3 3 0 0 0 2.1-2.12A31.2 31.2 0 0 0 24 12a31.2 31.2 0 0 0-.5-5.1zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z" />
+  ),
+  X: (
+    <path d="M17.53 3h3.02l-6.6 7.54L21.75 21h-6.08l-4.76-6.22L5.46 21H2.44l7.06-8.07L2.25 3h6.24l4.3 5.69L17.53 3zm-1.06 16.2h1.67L7.6 4.71H5.8l10.67 14.49z" />
+  ),
+};
+
 const LinkColumn = ({
   header,
   links,
@@ -87,14 +104,14 @@ const Footer: FC = () => {
   ];
 
   const socials = [
-    { href: facebookLink, icon: "solar:facebook-linear", label: "Facebook" },
-    { href: instagramLink, icon: "solar:instagram-linear", label: "Instagram" },
-    { href: youtubeLink, icon: "solar:youtube-linear", label: "YouTube" },
-    { href: xLink, icon: "solar:twitter-linear", label: "X" },
+    { href: facebookLink, label: "Facebook" },
+    { href: instagramLink, label: "Instagram" },
+    { href: youtubeLink, label: "YouTube" },
+    { href: xLink, label: "X" },
   ].filter((s) => s.href);
 
   return (
-    <footer className="w-full border-t border-divider bg-gradient-to-b from-primary-100 to-content1 to-55%">
+    <footer className="w-full border-t border-divider bg-content2">
       <div className="w-full max-w-site mx-auto px-4 sm:px-6 pt-10 pb-7">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-7">
           {/* Company */}
@@ -142,12 +159,20 @@ const Footer: FC = () => {
                   <a
                     key={s.label}
                     aria-label={s.label}
-                    className="grid place-items-center w-9 h-9 rounded-full border border-divider bg-content1 text-foreground hover:border-primary hover:text-primary-600 transition-colors"
+                    className="grid place-items-center w-9 h-9 rounded-full border border-divider bg-content1 text-default-600 hover:bg-primary hover:border-primary hover:text-primary-foreground transition-colors"
                     href={s.href as string}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    <Icon className="text-lg" icon={s.icon} />
+                    <svg
+                      aria-hidden="true"
+                      className="h-[18px] w-[18px]"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      {SOCIAL_ICON[s.label]}
+                    </svg>
                   </a>
                 ))}
               </div>

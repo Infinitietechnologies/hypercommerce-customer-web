@@ -61,7 +61,7 @@ const TransactionsPage: NextPageWithLayout<TransactionsPageProps> = ({
           </div>
 
           {/* Error Message */}
-          {error && <div className="mt-4 text-red-500">{error}</div>}
+          {error && <div className="mt-4 text-danger">{error}</div>}
 
           {/* Table */}
           <TransactionTable

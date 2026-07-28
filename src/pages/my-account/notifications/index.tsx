@@ -8,16 +8,7 @@ import {
   CardBody,
   Spinner,
 } from "@heroui/react";
-import {
-  Bell,
-  ShoppingBag,
-  Wallet,
-  Package,
-  RotateCcw,
-  BellOff,
-  ArrowRight,
-  CheckCheck,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
 import useSWR from "swr";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
@@ -84,24 +75,18 @@ const PER_PAGE = 6;
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getNotificationIcon = (type: string) => {
   if (type === "new_order")
-    return <ShoppingBag className="w-5 h-5 text-blue-500" />;
+    return <Icon icon="solar:bag-check-linear" className="w-5 h-5 text-primary-600" />;
   if (type === "order_update")
-    return <Package className="w-5 h-5 text-orange-500" />;
+    return <Icon icon="solar:box-linear" className="w-5 h-5 text-primary-600" />;
   if (type === "return_order" || type === "return_order_update")
-    return <RotateCcw className="w-5 h-5 text-purple-500" />;
+    return <Icon icon="solar:refresh-linear" className="w-5 h-5 text-primary-600" />;
   if (WALLET_TYPES.includes(type))
-    return <Wallet className="w-5 h-5 text-green-500" />;
-  return <Bell className="w-5 h-5 text-gray-500" />;
+    return <Icon icon="solar:wallet-linear" className="w-5 h-5 text-primary-600" />;
+  return <Icon icon="solar:bell-linear" className="w-5 h-5 text-primary-600" />;
 };
 
-const getIconBg = (type: string) => {
-  if (type === "new_order") return "bg-blue-50 dark:bg-blue-500/10";
-  if (type === "order_update") return "bg-orange-50 dark:bg-orange-500/10";
-  if (type === "return_order" || type === "return_order_update")
-    return "bg-purple-50 dark:bg-purple-500/10";
-  if (WALLET_TYPES.includes(type)) return "bg-green-50 dark:bg-green-500/10";
-  return "bg-gray-50 dark:bg-gray-500/10";
-};
+// Redesign uses a single warm amber-tint tile for every notification type.
+const getIconBg = () => "bg-primary-100";
 
 const formatTime = (dateStr: string) => {
   try {
@@ -136,7 +121,7 @@ const notificationsFetcher = async (key: string) => {
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const NotificationSkeleton = () => (
-  <div className="flex items-start gap-4 p-4 rounded-xl bg-default-50 animate-pulse">
+  <div className="flex items-start gap-4 p-4 rounded-large bg-default-50 animate-pulse">
     <div className="w-10 h-10 rounded-full bg-default-200 flex-none" />
     <div className="flex-1 space-y-2">
       <div className="h-4 bg-default-200 rounded w-3/4" />
@@ -173,7 +158,7 @@ const NotificationItem: React.FC<{
         onClick={handleClick}
         disabled={!isClickable}
         className={`
-          w-full text-left flex items-start gap-4 p-4 rounded-xl
+          w-full text-left flex items-start gap-4 p-4 rounded-large
           transition-all duration-200 border border-transparent
           ${
             notification.is_read
@@ -185,11 +170,11 @@ const NotificationItem: React.FC<{
       >
       {/* Type Icon */}
       <div
-        className={`flex-none flex items-center justify-center w-10 h-10 rounded-full relative ${getIconBg(notification.type)}`}
+        className={`flex-none flex items-center justify-center w-10 h-10 rounded-full relative ${getIconBg()}`}
       >
         {getNotificationIcon(notification.type)}
         {!notification.is_read && (
-          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-white dark:border-black" />
+          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-content1" />
         )}
       </div>
 
@@ -227,7 +212,7 @@ const NotificationItem: React.FC<{
       {/* Arrow */}
       {isClickable && (
         <div className="flex-none self-center text-default-400">
-          <ArrowRight className="w-4 h-4" />
+          <Icon icon="solar:arrow-right-linear" className="w-4 h-4" />
         </div>
       )}
     </button>
@@ -343,8 +328,8 @@ const NotificationsPage: NextPageWithLayout = () => {
     if (error) {
       return (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
-            <BellOff className="w-8 h-8 text-red-400" />
+          <div className="w-16 h-16 rounded-full bg-danger-50 flex items-center justify-center">
+            <Icon icon="solar:bell-off-linear" className="w-8 h-8 text-danger" />
           </div>
           <p className="text-default-500 text-sm text-center">
             Failed to load notifications.
@@ -364,8 +349,8 @@ const NotificationsPage: NextPageWithLayout = () => {
     if (!notifications.length) {
       return (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-20 h-20 rounded-full bg-default-100 flex items-center justify-center">
-            <Bell className="w-10 h-10 text-default-300" />
+          <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center">
+            <Icon icon="solar:bell-linear" className="w-10 h-10 text-primary-600" />
           </div>
           <div className="text-center">
             <p className="font-semibold text-default-700 mb-1">
@@ -435,12 +420,12 @@ const NotificationsPage: NextPageWithLayout = () => {
             }
           />
 
-          <Card shadow="none" radius="sm" className="border border-default-100">
+          <Card shadow="sm" radius="lg" className="border border-divider">
             <CardBody className="p-4">
               {/* Toolbar */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-default-500" />
+                  <Icon icon="solar:bell-linear" className="w-4 h-4 text-default-500" />
                   <span className="text-sm font-medium text-default-700">
                     {pagination?.total ?? notifications.length} Total
                   </span>
@@ -461,7 +446,7 @@ const NotificationsPage: NextPageWithLayout = () => {
                       markingAll ? (
                         <Spinner size="sm" />
                       ) : (
-                        <CheckCheck className="w-4 h-4" />
+                        <Icon icon="solar:check-read-linear" className="w-4 h-4" />
                       )
                     }
                     onPress={handleMarkAllRead}

@@ -123,7 +123,7 @@ const BottomNavigation = () => {
         isVisible ? "translate-y-0" : "translate-y-full"
       }`}
     >
-      <div className="shadow-lg bg-background">
+      <div className="shadow-[0_-2px_16px_-12px_rgba(28,26,23,0.25)] bg-content1 border-t border-divider">
         <div className="max-w-md mx-auto">
           <nav className="flex justify-around items-center py-2 px-1 gap-2">
             {navItems.map((item) => {
@@ -137,8 +137,8 @@ const BottomNavigation = () => {
                   }
                   className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-0 flex-1 ${
                     isActive
-                      ? "text-green-600 bg-green-50"
-                      : "text-foreground/50 hover:text-foreground/70"
+                      ? "text-primary-600 bg-primary-100"
+                      : "text-default-500 hover:text-foreground"
                   }`}
                 >
                   <Icon
@@ -149,7 +149,7 @@ const BottomNavigation = () => {
                   />
                   {item.id === "cart" &&
                   (isLoggedIn ? cartCount : offLineCartCount) ? (
-                    <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                    <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
                       {isLoggedIn ? cartCount : offLineCartCount}
                     </span>
                   ) : null}

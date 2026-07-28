@@ -14,6 +14,7 @@ export { default as Chip } from "./Chip";
 export { default as EmptyState } from "./EmptyState";
 export { default as ErrorState } from "./ErrorState";
 export { default as Input } from "./Input";
+export { default as Link } from "./Link";
 export { default as Sheet } from "./Sheet";
 export { default as Skeleton } from "./Skeleton";
 export { default as Textarea } from "./Textarea";
@@ -53,7 +54,6 @@ export {
   Image,
   InputOtp,
   Kbd,
-  Link,
   Listbox,
   ListboxItem,
   Modal,

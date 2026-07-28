@@ -89,7 +89,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
       key={product.id}
       ref={elementRef}
       as="div"
-      className="w-full h-full border border-divider hover:border-primary transition-colors group overflow-hidden text-left"
+      className="w-full h-full border border-divider hover:border-primary hover:shadow-md transition-all duration-200 overflow-hidden text-left"
       disableRipple
       isPressable={screen !== "mobile"}
       shadow="none"
@@ -99,7 +99,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
       }}
     >
       <CardBody className="p-0 overflow-hidden">
-        <div className="relative aspect-square bg-gradient-to-br from-content2 to-background overflow-hidden">
+        <div className="relative aspect-square w-full bg-gradient-to-br from-content2 to-background overflow-hidden">
           {product.main_image ? (
             <Link
               href={`/products/${product.slug}`}
@@ -108,11 +108,11 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
                 handleAdClick();
               }}
               title={product.title}
-              className="block w-full h-full"
+              className="absolute inset-0 block"
             >
               <Image
                 alt={product.title ?? t("product_image_alt")}
-                className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${
+                className={`absolute inset-0 h-full w-full ${
                   product.image_fit === "cover" ? "object-cover object-top" : "object-contain"
                 }`}
                 src={product.main_image}
@@ -122,7 +122,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
               />
             </Link>
           ) : (
-            <div className="w-full h-full bg-content2" />
+            <div className="absolute inset-0 bg-content2" />
           )}
 
           <div className="absolute top-2.5 right-2.5 z-20">
@@ -153,10 +153,10 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
         </div>
       </CardBody>
 
-      <CardFooter className="flex-col items-stretch gap-1 px-4 py-3.5">
+      <CardFooter className="flex-col items-stretch gap-0.5 px-2 py-2 sm:gap-1 sm:px-4 sm:py-3.5">
         <div className="flex items-center justify-between gap-2 min-h-4">
           {product.brand_name ? (
-            <span className="truncate text-[11px] font-semibold uppercase tracking-wide text-default-500">
+            <span className="truncate text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-default-500">
               {product.brand_name}
             </span>
           ) : (
@@ -164,8 +164,8 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
           )}
 
           {hasRating && (
-            <span className="flex items-center gap-1 text-xs font-bold shrink-0">
-              <Icon icon="solar:star-bold" className="text-sm text-rating-star" />
+            <span className="flex items-center gap-0.5 text-[11px] sm:text-xs font-bold shrink-0">
+              <Icon icon="solar:star-bold" className="text-xs sm:text-sm text-rating-star" />
               {rating.toFixed(1)}
               <span className="text-default-400 font-medium">({product.rating_count})</span>
             </span>
@@ -174,22 +174,24 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
 
         <Link
           href={`/products/${product.slug}`}
-          className="text-sm font-medium leading-snug line-clamp-2 min-h-[2.5rem]"
+          className="text-[13px] sm:text-sm font-medium leading-snug line-clamp-2 min-h-[2.25rem] sm:min-h-[2.5rem]"
           title={product.title}
           onClick={handleAdClick}
         >
           {product.title ?? t("untitled_product")}
         </Link>
 
-        <div className="flex items-baseline gap-2 flex-wrap mt-0.5">
-          <span className="text-lg font-extrabold leading-none">
+        <div className="flex items-baseline gap-1.5 flex-wrap mt-0.5">
+          <span className="text-[15px] sm:text-lg font-extrabold leading-none">
             {formatPrice(hasDiscount ? specialPrice : price)}
           </span>
           {hasDiscount && (
-            <span className="text-[13px] text-default-400 line-through">{formatPrice(price)}</span>
+            <span className="text-[11px] sm:text-[13px] text-default-400 line-through">
+              {formatPrice(price)}
+            </span>
           )}
           {discountPercentage > 0 && (
-            <span className="text-xs font-semibold text-primary-600">
+            <span className="text-[11px] sm:text-xs font-semibold text-primary-600">
               {t("discount", { percent: discountPercentage })}
             </span>
           )}

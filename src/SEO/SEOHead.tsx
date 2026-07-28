@@ -22,8 +22,8 @@ export const SEOHead = ({ settings }: HeadProps) => {
     return (
       <NextHead>
         <title>{fullTitle}</title>
-        <meta name="description" content={siteConfig.description} />
-        <meta name="keywords" content={siteConfig.description} />
+        <meta name="description" content={siteConfig.metaDescription} />
+        <meta name="keywords" content={siteConfig.metaKeywords} />
       </NextHead>
     );
   }

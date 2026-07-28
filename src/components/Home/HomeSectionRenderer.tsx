@@ -3,6 +3,7 @@ import { CSSProperties, FC } from "react";
 import BrandCard from "@/components/Cards/BrandCard";
 import CategoryCard from "@/components/Cards/CategoryCard";
 import CategoryFullImageCard from "@/components/Cards/CategoryFullImageCard";
+import CategoryHorizontalCard from "@/components/Cards/CategoryHorizontalCard";
 import CategoryOverlayCard from "@/components/Cards/CategoryOverlayCard";
 import HomeBannerCard from "@/components/Cards/HomeBannerCard";
 import ProductCard from "@/components/Cards/ProductCard";
@@ -13,13 +14,14 @@ import { HomeSection } from "@/types/ApiResponse";
 
 type BgType = "none" | "color" | "image";
 
-/** Fluid card grids, matching the sandbox `grids` tokens. */
+/** Fluid card grids — smaller minimums so cards stay compact. */
 const GRID = {
-  product: "grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
-  categoryCard: "grid-cols-[repeat(auto-fill,minmax(120px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]",
-  categoryOverlay: "grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]",
-  categoryFull: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
-  brand: "grid-cols-[repeat(auto-fill,minmax(110px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]",
+  product: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))]",
+  categoryDefault: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(140px,1fr))]",
+  categoryCard: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
+  categoryOverlay: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
+  categoryFull: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]",
+  brand: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]",
 } as const;
 
 interface HomeSectionRendererProps {
@@ -54,7 +56,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
 
   const wrap = (children: React.ReactNode) => (
     <div
-      className={`relative overflow-hidden ${padded ? "rounded-[20px] p-5 sm:p-6" : ""} ${
+      className={`relative overflow-hidden ${padded ? "rounded-[18px] p-3.5 sm:rounded-[20px] sm:p-6" : ""} ${
         isColorBg ? "shadow-[0_2px_12px_-8px_rgba(28,26,23,0.1)]" : ""
       }`}
       style={panelStyle}
@@ -81,7 +83,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
   }
 
   return (
-    <section className="mb-9">
+    <section className="mb-6 sm:mb-9 rd-fade">
       {title ? (
         <HomeSectionHeader
           title={title}
@@ -93,13 +95,20 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
         ? wrap(
             config?.orientation === "horizontal" ? (
               <CardSlider
-                slideClassName="w-[200px]"
+                slidesPerView={2.3}
+                spaceBetween={10}
+                breakpoints={{
+                  430: { slidesPerView: 3.3, spaceBetween: 10 },
+                  640: { slidesPerView: 3.8, spaceBetween: 14 },
+                  1024: { slidesPerView: 4.3, spaceBetween: 16 },
+                  1280: { slidesPerView: 5.3, spaceBetween: 16 },
+                }}
                 slides={products.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
               />
             ) : (
-              <div className={`grid gap-4 ${GRID.product}`}>
+              <div className={`grid gap-2.5 sm:gap-4 rd-stagger ${GRID.product}`}>
                 {products.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
@@ -111,19 +120,25 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
       {type === "categories"
         ? wrap(
             style === "overlay" ? (
-              <div className={`grid gap-4 ${GRID.categoryOverlay}`}>
+              <div className={`grid gap-3 rd-stagger ${GRID.categoryOverlay}`}>
                 {categories.map((c) => (
                   <CategoryOverlayCard key={c.id} category={c} />
                 ))}
               </div>
             ) : style === "card" ? (
-              <div className={`grid gap-4 ${GRID.categoryCard}`}>
+              <div className={`grid gap-3 rd-stagger ${GRID.categoryCard}`}>
                 {categories.map((c) => (
                   <CategoryCard key={c.id} category={c} />
                 ))}
               </div>
+            ) : style === "full" ? (
+              <div className={`grid gap-3 rd-stagger ${GRID.categoryFull}`}>
+                {categories.map((c) => (
+                  <CategoryHorizontalCard key={c.id} category={c} />
+                ))}
+              </div>
             ) : (
-              <div className={`grid gap-4 ${GRID.categoryFull}`}>
+              <div className={`grid gap-3 rd-stagger ${GRID.categoryDefault}`}>
                 {categories.map((c) => (
                   <CategoryFullImageCard key={c.id} category={c} />
                 ))}
@@ -134,7 +149,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
 
       {type === "brands"
         ? wrap(
-            <div className={`grid gap-4 ${GRID.brand}`}>
+            <div className={`grid gap-2.5 sm:gap-4 rd-stagger ${GRID.brand}`}>
               {brands.map((b) => (
                 <BrandCard key={b.id} brand={b} showName={style === "image_title"} />
               ))}
@@ -147,7 +162,9 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
           autoplay
           loop
           pagination
-          slidesPerView={style === "peek" ? 1.08 : 1}
+          slidesPerView={1}
+          spaceBetween={14}
+          breakpoints={style === "peek" ? { 640: { slidesPerView: 2 } } : undefined}
           slides={items.map((bn) => (
             <HomeBannerCard key={bn.id} item={bn} variant={style === "peek" ? "peek" : "full"} />
           ))}

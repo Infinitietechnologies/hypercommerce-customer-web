@@ -1182,7 +1182,8 @@
       "table": {
         "title": "معاملات المحفظة"
       },
-      "totalFound": "{{total}} من المعاملات تم العثور عليها"
+      "totalFound": "{{total}} من المعاملات تم العثور عليها",
+      "availableBalance": "الرصيد المتاح"
     },
     "wishlistsPage": {
       "confirmDelete": "هل أنت متأكد أنك تريد حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء.",

@@ -33,6 +33,16 @@ interface CategoryTabsProps {
 
 const PER_PAGE = 15;
 
+/**
+ * Full-bleed strip chrome (white surface + hairline). Owned by CategoryTabs so
+ * the strip can vanish entirely when there is nothing but the "All" tab.
+ */
+const StripWrap = ({ children }: { children: React.ReactNode }) => (
+  <div className="w-full bg-content1 border-b border-divider">
+    <div className="max-w-site mx-auto px-4 min-[1024px]:px-6">{children}</div>
+  </div>
+);
+
 const CategoryTabs: React.FC<CategoryTabsProps> = ({
   defaultCategory = "all",
   className = "",
@@ -174,32 +184,40 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   // Don't render until hydrated to prevent SSR/client mismatch
   if (!isHydrated) {
     return (
-      <div className={`w-full relative ${className}`}>
-        <Swiper
-          key={rtl ? "rtl-ct" : "ltr-ct"}
-          dir={rtl ? "rtl" : "ltr"}
-          spaceBetween={8}
-          grabCursor={true}
-          slidesPerView="auto"
-          slidesOffsetAfter={8}
-          modules={[Mousewheel]}
-          mousewheel
-        >
-          <SwiperSlide style={{ width: "auto" }}>
-            <SkeletonTabButton />
-          </SwiperSlide>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <SwiperSlide key={i} style={{ width: "auto" }}>
+      <StripWrap>
+        <div className={`w-full relative ${className}`}>
+          <Swiper
+            key={rtl ? "rtl-ct" : "ltr-ct"}
+            dir={rtl ? "rtl" : "ltr"}
+            spaceBetween={8}
+            grabCursor={true}
+            slidesPerView="auto"
+            slidesOffsetAfter={8}
+            modules={[Mousewheel]}
+            mousewheel
+          >
+            <SwiperSlide style={{ width: "auto" }}>
               <SkeletonTabButton />
             </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <SwiperSlide key={i} style={{ width: "auto" }}>
+                <SkeletonTabButton />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </StripWrap>
     );
   }
 
+  // Only the "All" tab and no real categories → the strip would look empty; hide it.
+  if (!isLoading && categories.length === 0) {
+    return null;
+  }
+
   return (
-    <div className={`w-full relative ${className}`}>
+    <StripWrap>
+    <div className={`w-full relative rd-fade ${className}`}>
       <button
         className="hidden"
         id="home-category-tabs"
@@ -309,6 +327,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
         </div>
       </div>
     </div>
+    </StripWrap>
   );
 };
 

@@ -88,7 +88,7 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
               subtitle={t("pages.walletPage.header.subtitle")}
             />
             {isSSR() && (
-              <div className="text-xs sm:text-sm text-gray-500">
+              <div className="text-xs sm:text-sm text-default-500">
                 {t("pages.walletPage.totalFound", { total })}
               </div>
             )}

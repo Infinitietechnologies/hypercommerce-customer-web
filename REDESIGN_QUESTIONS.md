@@ -100,7 +100,37 @@ _Filter facets in the sandbox are derived from mock data (category/brand/price/r
 ## 5. Checkout  ⚪️
 _blocked on 0.1._
 
-## 6. Account (overview, orders, order detail, addresses, wishlist, wallet, transactions, notifications, refer)  ⚪️
+## 6. Account (overview, orders, order detail, addresses, wishlist, wallet, transactions, notifications, refer)  🟢 (reskinned 2026-07-28)
+
+Ported the whole `my-account/*` area to the amber redesign, matching the
+`/redesign/account` sandbox (sticky nav rail + panes). All API/SSR wiring kept;
+only look changed. Icons moved off `lucide-react` onto the `@iconify/react` solar
+set; every hardcoded gray/blue/green/red/purple/indigo class swapped for HeroUI
+theme tokens (`content1/2/3`, `divider`, `primary-100/600`, `default-500`,
+`secondary`, `success`/`warning`/`danger`). Card treatment → radius-lg (18) +
+`border-divider` + `shadow-sm`. Nav rail: solar icons, sandbox order (overview,
+orders, addresses, wishlists, wallet, transactions, notifications, refer),
+amber-tint active row, 240px.
+
+Deltas vs the sandbox (defaults shipped, flag to change):
+- 🟡 **Overview pane** — the live `my-account/index` is the **profile editor**
+  (name/email/phone + OTP verify + delete account), which the sandbox Overview
+  (user card + quick-links grid) doesn't show. Kept the full editor and reskinned
+  it; navigation to Orders/Addresses/Wallet/… is covered by the nav rail, so the
+  quick-links grid was **not** added. Say if you want the sandbox quick-links row
+  on top of the profile card.
+- 🟡 **Wallet card** — redesigned from the dark credit-card metaphor to the
+  sandbox's warm **amber-tint→surface balance panel** (label + big balance +
+  masked id + deposit action). Logo dropped (dark logo unreadable on the light
+  panel).
+- 🟡 **Notifications** — the sandbox uses one amber tile for every type; replaced
+  the per-type colour icons (blue/orange/purple/green) with a **uniform amber
+  solar tile**. Flag if per-type colour was intentional.
+- 🟡 **Order detail** — richer than the sandbox OrderDetail pane (per-store item
+  groups, shipments, seller feedback, promo/gift-card lines, invoice/reorder).
+  Kept all of it, reskinned to tokens; promo/cashback accents → amber, discounts →
+  success, gift card → violet secondary.
+- New i18n key `pages.walletPage.availableBalance` added to en/hi/ar.
 
 ## 7. Stores  ⚪️
 

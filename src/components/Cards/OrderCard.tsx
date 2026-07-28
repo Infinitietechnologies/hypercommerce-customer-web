@@ -1,12 +1,5 @@
 import { FC, useState } from "react";
-import {
-  Package,
-  Calendar,
-  Store as StoreIcon,
-  Eye,
-  RotateCcw,
-  Ban,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
 import {
   Button,
   Card,
@@ -132,12 +125,12 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
 
   return (
     <>
-      <Card shadow="sm" radius="sm">
+      <Card shadow="sm" radius="md" className="border border-divider">
         <CardHeader className="flex flex-col justify-between w-full">
           <div className="flex items-start justify-between mb-3 w-full gap-2">
             <div className="flex items-start gap-2 min-w-0">
-              <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-md shrink-0">
-                <Package className="w-4 h-4 text-foreground/50" />
+              <div className="p-2 bg-primary-100 rounded-medium shrink-0">
+                <Icon icon="solar:box-linear" width={16} height={16} className="text-primary-600" />
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
@@ -161,7 +154,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
 
                 {item.store?.name && (
                   <div className="flex gap-1 items-center min-w-0">
-                    <StoreIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-foreground/50 shrink-0" />
+                    <Icon icon="solar:shop-linear" className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-foreground/50 shrink-0" />
                     <Link
                       href={
                         item.store?.slug ? `/stores/${item.store.slug}` : "#"
@@ -188,7 +181,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
                   isLoading={isReordering}
                   title={t("reorder")}
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <Icon icon="solar:refresh-linear" className="w-4 h-4" />
                 </Button>
               )}
             </div>
@@ -198,7 +191,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
 
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-foreground/50" />
+              <Icon icon="solar:calendar-linear" className="w-4 h-4 text-foreground/50" />
               <div>
                 <p className="text-xxs sm:text-xs text-foreground/50">
                   {t("date")}
@@ -226,7 +219,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
         </CardHeader>
 
         <CardBody className="pb-1 overflow-hidden">
-          <div className="flex justify-between items-center py-1.5 px-2.5 bg-gray-50 dark:bg-gray-700 rounded-md">
+          <div className="flex justify-between items-center py-1.5 px-2.5 bg-content2 rounded-medium">
             <div className="flex items-center flex-1 min-w-0 space-x-2">
               {productImage ? (
                 <Image
@@ -238,7 +231,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
                   onClick={() => setLightboxOpen(true)}
                 />
               ) : (
-                <div className="w-11 h-11 rounded-md bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-[10px] text-gray-500">
+                <div className="w-11 h-11 rounded-medium bg-content3 flex items-center justify-center text-[10px] text-default-500">
                   {t("na")}
                 </div>
               )}
@@ -284,7 +277,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
             variant="bordered"
             as={Link}
             href={`/my-account/orders/${orderSlug}`}
-            startContent={<Eye className="w-3 h-3" />}
+            startContent={<Icon icon="solar:eye-linear" className="w-3 h-3" />}
             className="text-xs font-medium w-full col-span-3"
             title={t("details")}
           >
@@ -295,7 +288,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
             <Button
               size="sm"
               variant="bordered"
-              startContent={<Ban className="w-3 h-3" />}
+              startContent={<Icon icon="solar:close-circle-linear" className="w-3 h-3" />}
               className="text-xs font-medium w-full col-span-3"
               onPress={onCancelOpen}
               title={t("cancel")}
@@ -310,7 +303,7 @@ const OrderCard: FC<OrderCardProps> = ({ item, onChanged }) => {
               variant="bordered"
               as={Link}
               href={`/my-account/orders/${orderSlug}`}
-              startContent={<RotateCcw className="w-3 h-3" />}
+              startContent={<Icon icon="solar:refresh-linear" className="w-3 h-3" />}
               className="text-xs font-medium w-full col-span-3"
               title={t("return")}
             >

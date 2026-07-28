@@ -65,6 +65,10 @@ const TabButton: React.FC<TabButtonProps> = ({
       ? category.active_icon
       : category?.icon || category?.image;
 
+  // Both states rendered so the strip can crossfade icon → active_icon on select.
+  const stripInactiveIcon = category?.icon || category?.image || "";
+  const stripActiveIcon = category?.active_icon || stripInactiveIcon;
+
   // ---- Flat inline strip (sandbox home category nav) --------------------------
   if (variant === "strip") {
     return (
@@ -73,8 +77,9 @@ const TabButton: React.FC<TabButtonProps> = ({
         onClick={onClick}
         disabled={isLoading}
         className={`
-          flex items-center gap-1.5 whitespace-nowrap px-3.5 py-[11px]
-          border-b-2 transition-colors duration-200
+          flex flex-col items-center gap-1 px-2.5 py-1.5
+          sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-[11px]
+          whitespace-nowrap border-b-2 transition-colors duration-200
           ${
             isSelected
               ? "border-primary text-primary-600"
@@ -83,26 +88,41 @@ const TabButton: React.FC<TabButtonProps> = ({
           ${isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         `}
       >
-        <span className="flex items-center justify-center shrink-0">
-          {iconUrl ? (
-            <Image
-              src={iconUrl}
-              alt={title}
-              loading="eager"
-              radius="none"
-              className={`object-contain w-[25px] h-[25px] ${isSelected ? "" : "opacity-80"}`}
-            />
+        <span className="relative flex items-center justify-center shrink-0 w-7 h-7">
+          {stripInactiveIcon || stripActiveIcon ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={stripInactiveIcon || stripActiveIcon}
+                alt=""
+                loading="eager"
+                className={`absolute inset-0 h-full w-full object-contain transition-all duration-300 ease-out ${
+                  isSelected ? "opacity-0 scale-90" : "opacity-80 scale-100"
+                }`}
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={stripActiveIcon || stripInactiveIcon}
+                alt=""
+                loading="eager"
+                className={`absolute inset-0 h-full w-full object-contain transition-all duration-300 ease-out ${
+                  isSelected ? "opacity-100 scale-100" : "opacity-0 scale-90"
+                }`}
+              />
+            </>
           ) : (
             staticIcon || (
               <Icon
                 icon="solar:widget-2-linear"
-                className={`text-[17px] ${isSelected ? "text-primary-600" : "text-default-400"}`}
+                className={`text-xl sm:text-[17px] transition-colors duration-300 ${
+                  isSelected ? "text-primary-600" : "text-default-400"
+                }`}
               />
             )
           )}
         </span>
         <span
-          className={`text-[13px] leading-none ${
+          className={`text-[11px] sm:text-[13px] leading-none transition-all duration-300 ${
             isSelected ? "font-bold text-primary-600" : "font-semibold"
           }`}
         >

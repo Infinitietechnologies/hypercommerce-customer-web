@@ -1,5 +1,6 @@
 import React, { FC } from "react";
-import { Card, CardBody, CardFooter, CardHeader, Image } from "@heroui/react";
+import { Card, CardBody } from "@heroui/react";
+import { Icon } from "@iconify/react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { userData } from "@/types/ApiResponse";
@@ -11,13 +12,16 @@ type WalletCardPageProps = {
   loading: boolean;
 };
 
+/**
+ * Wallet balance card — amber redesign. Warm amber-tint→surface gradient panel
+ * (source: /redesign/account Wallet pane) with the available balance headline,
+ * the masked wallet id, and the deposit action.
+ */
 const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
   const userData = (useSelector((state: RootState) => state.auth.user) ||
     {}) as userData;
 
-  const { webSettings, formatPrice } = useSettings();
-  const { siteHeaderDarkLogo = "", siteName = "" } = webSettings || {};
-
+  const { formatPrice } = useSettings();
   const { t } = useTranslation();
 
   const formattedId =
@@ -28,64 +32,46 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
       ?.join(" ") || "";
 
   return (
-    <>
-      <Card
-        as="div"
-        disableRipple
-        className="w-full h-44 p-1 relative bg-linear-to-br from-gray-800 to-gray-900 dark:bg-content1 dark:from-transparent dark:to-transparent"
-      >
-        <CardHeader className="flex justify-between pb-0">
-          <div className="font-semibold text-white uppercase tracking-wider text-lg">
-            {t("wallet")}
-          </div>
-          <div className="flex gap-2">
-            <DepositModal />
-          </div>
-        </CardHeader>
-        <CardBody className="text-white overflow-hidden flex flex-col justify-between pb-0">
-          <div className="flex justify-between items-start">
-            {!loading && (
-              <div className="font-mono text-xl md:text-xl tracking-wider">
-                <span>{formatPrice(userData?.wallet_balance)}</span>
+    <Card
+      as="div"
+      disableRipple
+      radius="lg"
+      className="w-full border border-divider bg-linear-to-br from-primary-100 to-content1 shadow-sm"
+    >
+      <CardBody className="p-5 sm:p-6 flex flex-col gap-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-medium bg-primary-100 text-primary-600">
+              <Icon icon="solar:wallet-bold" width={22} height={22} />
+            </div>
+            <div>
+              <div className="text-xs text-default-500">
+                {t("pages.walletPage.availableBalance", "Available balance")}
               </div>
-            )}
+              {!loading && (
+                <div className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+                  {formatPrice(userData?.wallet_balance)}
+                </div>
+              )}
+            </div>
           </div>
+          <DepositModal />
+        </div>
 
-          {!loading && (
-            <div className="font-mono text-medium  tracking-wider mt-auto w-full flex justify-start  h-full">
+        {!loading && (
+          <div className="flex items-end justify-between gap-3 pt-1">
+            <div className="font-mono text-sm tracking-wider text-default-500">
               {formattedId}
             </div>
-          )}
-        </CardBody>
-
-        <CardFooter className="w-full grid grid-cols-2 py-0">
-          <div className="flex items-end justify-start">
-            {!loading && (
-              <h1 className="text-white text-medium font-semibold">
-                {userData?.name || ""}
-              </h1>
+            {userData?.name && (
+              <div className="text-sm font-semibold text-foreground truncate">
+                {userData.name}
+              </div>
             )}
           </div>
-          <div className="flex items-end justify-end h-full">
-            <div className="max-w-full flex items-center">
-              <div className="flex justify-start items-center text-primary-400 gap-1">
-                <Image
-                  loading="eager"
-                  className="object-contain"
-                  src={siteHeaderDarkLogo}
-                  radius="none"
-                  alt={siteName}
-                  classNames={{
-                    img: "h-10 md:h-12 w-full",
-                    wrapper: "cursor-pointer",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </CardFooter>
-      </Card>
-    </>
+        )}
+      </CardBody>
+    </Card>
   );
 };
 

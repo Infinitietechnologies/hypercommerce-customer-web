@@ -7,7 +7,7 @@ import { getFormattedDate, getOrderStatusBtnConfig } from "@/helpers/getters";
 import UserLayout from "@/layouts/UserLayout";
 import { Order, OrderItem } from "@/types/ApiResponse";
 import { Button, Chip, useDisclosure } from "@heroui/react";
-import { ArrowLeft, Download, RotateCcw } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -141,15 +141,15 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 size="sm"
                 onPress={() => router.push("/my-account/orders")}
               >
-                <ArrowLeft className="w-4 h-4" />
+                <Icon icon="solar:arrow-left-linear" className="w-4 h-4" />
               </Button>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <h1 className="text-sm font-semibold text-foreground">
                     {t("order")} #{order.id}
                   </h1>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-default-500">
                   {t("placedOn")} {getFormattedDate(order.created_at)}
                 </p>
               </div>
@@ -172,7 +172,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                   color="primary"
                   variant="flat"
                   size="sm"
-                  startContent={<Download className="w-4 h-4" />}
+                  startContent={<Icon icon="solar:download-minimalistic-linear" className="w-4 h-4" />}
                   onPress={() => {
                     if (order.invoice) {
                       window.open(order.invoice, "_blank");
@@ -190,7 +190,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                   color="primary"
                   variant="bordered"
                   size="sm"
-                  startContent={<RotateCcw className="w-4 h-4" />}
+                  startContent={<Icon icon="solar:refresh-linear" className="w-4 h-4" />}
                   onPress={handleReorder}
                   isLoading={isReordering}
                   title={t("reorder")}
