@@ -12,6 +12,7 @@ const AuthSheetHost = dynamic(
   { ssr: false },
 );
 import DefaultLayout from "@/layouts/default";
+import UserLayout from "@/layouts/UserLayout";
 import { NextPageWithLayout } from "@/types";
 import { fontSans, fontMono } from "@/config/fonts";
 import { trackPageView } from "@/lib/analytics";
@@ -31,6 +32,20 @@ const ProgressBar = dynamic(() => import("@/components/ProgressBar"), {
 
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
+};
+
+// Maps a /my-account/* pathname to its nav-rail key so the account shell can be
+// rendered ONCE (persistent) and only its content pane swaps on navigation.
+const accountTabForPath = (pathname: string): string => {
+  if (pathname.startsWith("/my-account/orders")) return "orders";
+  if (pathname.startsWith("/my-account/addresses")) return "addresses";
+  if (pathname.startsWith("/my-account/wishlists")) return "wishlists";
+  if (pathname.startsWith("/my-account/wallet")) return "wallet";
+  if (pathname.startsWith("/my-account/transactions")) return "transactions";
+  if (pathname.startsWith("/my-account/notifications")) return "notifications";
+  if (pathname.startsWith("/my-account/refer-and-earn")) return "refer-and-earn";
+  // /my-account and /my-account/profile both highlight the overview row.
+  return "my-account";
 };
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
@@ -80,6 +95,19 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
       </DefaultLayout>
     ));
 
+  // Account routes share ONE persistent nav rail (UserLayout). Rendering it here
+  // — rather than inside each page — keeps the rail mounted across navigation so
+  // only the content pane updates. Pages must NOT wrap themselves in UserLayout.
+  const isAccountRoute = router.pathname.startsWith("/my-account");
+  const pageElement = <Component {...pageProps} />;
+  const content = isAccountRoute ? (
+    <UserLayout activeTab={accountTabForPath(router.pathname)}>
+      {pageElement}
+    </UserLayout>
+  ) : (
+    pageElement
+  );
+
   return (
     <HeroUIProvider navigate={router.push}>
       <NextThemesProvider
@@ -109,7 +137,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           }}
         />
         <ReduxProvider>
-          {getLayout(<Component {...pageProps} />)}
+          {getLayout(content)}
           <AuthSheetHost />
         </ReduxProvider>
       </NextThemesProvider>

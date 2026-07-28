@@ -6,51 +6,24 @@ import {
   useDisclosure,
   Textarea,
   Divider,
-} from "@heroui/react";
-import { Shield, Edit } from "lucide-react";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
 import AddressModal from "../../components/Modals/AddressModal";
 import AddressSection from "@/components/Cart/AddressSection";
 import { setOrderNote } from "@/lib/redux/slices/checkoutSlice";
 import { useDispatch } from "react-redux";
 import { debounce } from "lodash";
 import PromoCodeSection from "@/components/Cart/PromoCodeSection";
-import SimilarProductsSection from "@/components/Products/ProductDetailPage/SimilarProductsSection";
-import useSWR from "swr";
-import { getProducts } from "@/routes/api";
 import { useTranslation } from "react-i18next";
 import { CartResponse } from "@/types/ApiResponse";
-import SaveForLaterItems from "./SaveForLaterItems";
 
 interface CartAdditionalInfoProps {
   cart?: CartResponse | null;
 }
 
-const CartAdditionalInfo: FC<CartAdditionalInfoProps> = ({ cart }) => {
+const CartAdditionalInfo: FC<CartAdditionalInfoProps> = () => {
   const { t } = useTranslation();
   const [deliveryInstructions, setDeliveryInstructions] = useState<string>("");
-  const items = cart?.items ?? [];
-
-  const ProductSlugs =
-    items?.length > 0 &&
-    items
-      ?.map((item: { product?: { slug?: string } }) => item?.product?.slug)
-      .filter((slug: string | undefined): slug is string => !!slug)
-      .join(", ");
-
-  const {
-    data: productsData,
-    isLoading: isProductsLoading,
-    mutate,
-  } = useSWR("/you-might-also-like", () =>
-    getProducts({
-      per_page: 10,
-      page: 1,
-      exclude_product: ProductSlugs || "",
-      include_child_categories: 0,
-    })
-  );
-
-  // Fetch similar products for "You might also like" section
 
   const {
     isOpen: isAddressModalOpen,
@@ -72,26 +45,24 @@ const CartAdditionalInfo: FC<CartAdditionalInfoProps> = ({ cart }) => {
 
   return (
     <div className="space-y-4">
-      <button
-        onClick={() => mutate()}
-        id="refetch-similar-products"
-        className="hidden"
-      />
       <AddressSection onAddAddressModalOpen={onAddressModalOpen} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Delivery Instructions */}
-        <Card className="w-full" radius="md" shadow="sm">
+        <Card className="w-full border border-divider" radius="lg" shadow="sm">
           <CardHeader className="flex gap-3 relative flex-col items-start pb-0">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-warning-100 rounded-lg">
-                <Edit className="w-5 h-5 text-warning" />
+              <div className="p-2 bg-primary-100 rounded-xl">
+                <Icon
+                  icon="solar:pen-2-linear"
+                  className="text-xl text-primary-600"
+                />
               </div>
               <div className="flex flex-col">
                 <p className="text-xs md:text-small font-semibold">
                   {t("cart.deliveryInstructions.title")}
                 </p>
-                <p className="text-xxs md:text-xs text-default-500">
+                <p className="text-xxs md:text-xs text-foreground/50">
                   {t("cart.deliveryInstructions.description")}
                 </p>
               </div>
@@ -113,56 +84,6 @@ const CartAdditionalInfo: FC<CartAdditionalInfoProps> = ({ cart }) => {
         {/* Promo Code Section */}
         <PromoCodeSection />
       </div>
-
-      {/* Cancellation Policy */}
-      <Card className="w-full hidden" radius="md" shadow="sm">
-        <CardHeader className="flex gap-3 relative flex-col items-start pb-0">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-default-500" />
-            <div className="flex flex-col">
-              <p className="text-xs md:text-small font-semibold">
-                {t("cart.cancellationPolicy.title")}
-              </p>
-              <p className="text-xxs md:text-xs text-default-500">
-                {t("cart.cancellationPolicy.description")}
-              </p>
-            </div>
-          </div>
-          <Divider orientation="horizontal" className="pb-0" />
-        </CardHeader>
-        <CardBody className="space-y-3">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-success rounded-full"></div>
-              <p className="text-xs">
-                {t("cart.cancellationPolicy.freeCancellation")}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-warning rounded-full"></div>
-              <p className="text-xs">
-                {t("cart.cancellationPolicy.partialRefund")}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-danger rounded-full"></div>
-              <p className="text-xs">{t("cart.cancellationPolicy.noRefund")}</p>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-
-      <SaveForLaterItems moreProductsInline={false} />
-
-      {/* You might also like - similar products */}
-      <SimilarProductsSection
-        initialSimilarProducts={
-          (productsData && productsData.data && productsData.data.data) || []
-        }
-        isLoading={isProductsLoading}
-        title={t("youMightAlsoLike") || "You might also like"}
-        page="cart"
-      />
 
       <AddressModal
         isOpen={isAddressModalOpen}

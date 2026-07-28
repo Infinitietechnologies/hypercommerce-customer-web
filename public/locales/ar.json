@@ -827,7 +827,8 @@
     "transactions": "المعاملات",
     "wallet": "المحفظة",
     "wishlists": "قوائم الأمنيات",
-    "seller-registration": "تسجيل البائع"
+    "seller-registration": "تسجيل البائع",
+    "checkout": "Checkout"
   },
   "pages": {
     "aboutUs": {
@@ -998,7 +999,9 @@
         "otpSentTitle": "تم إرسال رمز التحقق",
         "otpSentDesc": "تم إرسال رمز التحقق إلى هاتفك المحمول.",
         "phoneUpdateSuccess": "تم تحديث رقم الهاتف والتحقق منه بنجاح.",
-        "otpSentTo": "أدخل رمز التحقق المرسل إلى"
+        "otpSentTo": "أدخل رمز التحقق المرسل إلى",
+        "verificationCode": "رمز التحقق",
+        "otpPlaceholder": "أدخل رمز OTP المكوّن من 6 أرقام"
       },
       "personalInfo": "المعلومات الشخصية",
       "saveChanges": "حفظ التغييرات",
@@ -1015,7 +1018,8 @@
         "successTitle": "تم بنجاح",
         "updateFailedDesc": "حدثت مشكلة أثناء تحديث بياناتك.",
         "updateFailedTitle": "فشل التحديث"
-      }
+      },
+      "editProfile": "تعديل الملف الشخصي"
     },
     "shoppingList": {
       "headerTitle": "قائمة التسوق",
@@ -1053,7 +1057,32 @@
       "errorLoading": "خطأ في تحميل الطلب",
       "loading": "جارٍ تحميل تفاصيل الطلب...",
       "notFound": "الطلب غير موجود",
-      "notFoundDesc": "الطلب الذي تبحث عنه غير موجود أو تمت إزالته."
+      "notFoundDesc": "الطلب الذي تبحث عنه غير موجود أو تمت إزالته.",
+      "seeAllUpdates": "عرض كل التحديثات",
+      "refund": "استرداد",
+      "refundAmount": "إجمالي مبلغ الاسترداد",
+      "refundedTo": "تم الاسترداد إلى",
+      "reason": "السبب",
+      "rateProduct": "قيّم هذا المنتج",
+      "totalItemPrice": "إجمالي سعر العنصر",
+      "otherItems": "عناصر أخرى في هذا الطلب",
+      "orderDetails": "تفاصيل الطلب",
+      "orderedOn": "تم الطلب في",
+      "updatesSentTo": "تُرسل التحديثات إلى",
+      "trackingTitle": "تحديثات الطلب",
+      "noUpdates": "لا توجد تحديثات بعد.",
+      "youSaved": "لقد وفّرت",
+      "onThisOrder": "على هذا الطلب",
+      "selectReason": "اختر سببًا",
+      "remarkRequired": "يرجى وصف المشكلة.",
+      "photoRequired": "يرجى إرفاق صورة واحدة على الأقل.",
+      "returnRequested": "تم طلب الإرجاع",
+      "requestReturn": "طلب الإرجاع",
+      "returnReason": "سبب الإرجاع",
+      "remark": "ملاحظة",
+      "remarkPlaceholder": "صف المشكلة",
+      "photos": "الصور",
+      "evidenceHint": "يتطلب هذا السبب ملاحظة وصورة واحدة على الأقل."
     },
     "ordersPage": {
       "emptyMessage": "ليس لديك أي طلبات حتى الآن. ابدأ التسوق لتراها هنا.",
@@ -1118,14 +1147,17 @@
         "shareSocial": "شارك على وسائل التواصل الاجتماعي",
         "title": "شارك رمزك",
         "yourCode": "رمز الإحالة الخاص بك",
-        "helper": "انسخ هذا الرمز وأرسله لأصدقائك."
+        "helper": "انسخ هذا الرمز وأرسله لأصدقائك.",
+        "label": "رمز الإحالة الخاص بك",
+        "copy": "نسخ الرمز"
       },
       "stats": {
         "pending": "قيد الانتظار",
         "successful": "ناجح",
         "totalEarnings": "إجمالي الأرباح",
         "totalReferrals": "إجمالي الإحالات"
-      }
+      },
+      "errorTitle": "تعذّر تحميل معلومات الإحالة"
     },
     "returnRefundPolicy": {
       "description": "تعرّف على عملية الإرجاع وشروط الاسترداد.",
@@ -1172,7 +1204,8 @@
         "subtitle": "شاهد معلومات معاملاتك وحالتها",
         "title": "معاملاتي"
       },
-      "totalFound": "{{total}} تم العثور عليها"
+      "totalFound": "{{total}} تم العثور عليها",
+      "errorTitle": "تعذّر تحميل المعاملات"
     },
     "walletPage": {
       "header": {
@@ -1183,7 +1216,8 @@
         "title": "معاملات المحفظة"
       },
       "totalFound": "{{total}} من المعاملات تم العثور عليها",
-      "availableBalance": "الرصيد المتاح"
+      "availableBalance": "الرصيد المتاح",
+      "errorTitle": "تعذّر تحميل المعاملات"
     },
     "wishlistsPage": {
       "confirmDelete": "هل أنت متأكد أنك تريد حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
@@ -1195,7 +1229,9 @@
         "network": "حدث خطأ في الشبكة",
         "removeItem": "فشل في إزالة العنصر من قائمة الأمنيات",
         "updateFailed": "فشل في تحديث قائمة الأمنيات"
-      }
+      },
+      "confirmDeleteTitle": "حذف قائمة الأمنيات؟",
+      "subtitle": "المنتجات التي حفظتها لوقت لاحق"
     },
     "sellerRegister": {
       "pageTitle": "تسجيل البائع",
@@ -1398,6 +1434,18 @@
         "desc": "ابدأ بتقديم تفاصيل عملك أدناه.",
         "registerLabel": "📋 سجّل عملك أدناه"
       }
+    },
+    "notifications": {
+      "new": "جديد",
+      "errorTitle": "تعذّر تحميل الإشعارات",
+      "errorDescription": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+      "emptyTitle": "لا توجد إشعارات بعد",
+      "emptyDescription": "لقد اطّلعت على كل شيء! تحقق لاحقًا.",
+      "subtitle": "ابقَ على اطّلاع بطلباتك ومحفظتك والمزيد",
+      "unreadCount": "{{count}} غير مقروء",
+      "totalCount": "{{count}} الإجمالي",
+      "newCount": "{{count}} جديد",
+      "markAllRead": "تحديد الكل كمقروء"
     }
   },
   "partially_refunded": "تم استرداد جزء من المبلغ",
@@ -1976,7 +2024,9 @@
     "select_wishlist": "اختر قائمة الأمنيات",
     "select_wishlist_label": "اختر قائمة الأمنيات",
     "select_wishlist_placeholder": "اختر القائمة",
-    "wishlist_removeConfirmation": "هل أنت متأكد أنك تريد إزالة \"{{product}}\" من قائمة الأمنيات الخاصة بك؟"
+    "wishlist_removeConfirmation": "هل أنت متأكد أنك تريد إزالة \"{{product}}\" من قائمة الأمنيات الخاصة بك؟",
+    "moveItem": "نقل",
+    "removeItemTitle": "إزالة العنصر؟"
   },
   "wishlist_button_create": "إنشاء قائمة أمنيات",
   "wishlist_button_creating": "جارٍ إنشاء قائمة الأمنيات...",
@@ -2004,5 +2054,29 @@
     "price_desc": "السعر: من الأعلى للأقل",
     "rating": "الأعلى تقييماً",
     "discount": "أكبر خصم"
-  }
+  },
+  "orderStatus": {
+    "processing": "قيد المعالجة",
+    "shipped": "تم الشحن",
+    "delivered": "تم التوصيل",
+    "on_hold": "معلّق",
+    "return_requested": "تم طلب الإرجاع",
+    "returned": "تم الإرجاع",
+    "refunded": "تم الاسترداد",
+    "cancelled": "ملغى"
+  },
+  "off": "off",
+  "share": "Share",
+  "link_copied": "Link copied to clipboard",
+  "share_product_text": "Check out {{title}}!",
+  "add_to_wishlist": "Add to wishlist",
+  "additionalDetails.title": "Additional Details",
+  "additionalDetails.subtitle": "Find the additional info of the Product",
+  "retry": "إعادة المحاولة",
+  "wishlist_emptyListsTitle": "لا توجد قوائم أمنيات بعد",
+  "wishlist_emptyListsDescription": "أنشئ قائمة أمنياتك الأولى لبدء حفظ منتجاتك المفضلة",
+  "wishlist_emptyItemsTitle": "لا توجد عناصر في قائمة الأمنيات هذه",
+  "wishlist_emptyItemsDescription": "ابدأ بإضافة العناصر لتظهر هنا",
+  "cart.calculatedAtCheckout": "Delivery, taxes & fees calculated at checkout",
+  "copied": "تم النسخ"
 }

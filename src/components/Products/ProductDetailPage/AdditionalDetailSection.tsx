@@ -39,20 +39,23 @@ const AdditionalDetailSection: React.FC<AdditionalDetailSectionProps> = ({
   return (
     <section className="mt-4">
       <PageHeader
-        title="Additional Details"
-        subtitle="Find the additional info of the Product"
+        title={t("additionalDetails.title", "Additional Details")}
+        subtitle={t(
+          "additionalDetails.subtitle",
+          "Find the additional info of the Product",
+        )}
       />
 
       {/* Custom fields Table */}
       {customFields && Object.keys(customFields).length > 0 ? (
-        <div className="mb-6 overflow-x-auto">
+        <div className="mb-6 overflow-hidden rounded-2xl border border-divider">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-800">
-                <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-foreground">
+              <tr className="bg-content2">
+                <th className="border-b border-divider px-4 py-3 text-start text-sm font-semibold text-foreground">
                   {t("attribute")}
                 </th>
-                <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-foreground">
+                <th className="border-b border-divider px-4 py-3 text-start text-sm font-semibold text-foreground">
                   {t("value")}
                 </th>
               </tr>
@@ -61,16 +64,12 @@ const AdditionalDetailSection: React.FC<AdditionalDetailSectionProps> = ({
               {Object.entries(customFields).map(([key, value], index) => (
                 <tr
                   key={key}
-                  className={
-                    index % 2 === 0
-                      ? "bg-white dark:bg-gray-900"
-                      : "bg-gray-50 dark:bg-gray-800/50"
-                  }
+                  className={index % 2 === 0 ? "bg-content1" : "bg-content2/50"}
                 >
-                  <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm font-medium text-foreground/80 capitalize">
+                  <td className="border-b border-divider px-4 py-3 text-sm font-medium capitalize text-foreground/80">
                     {key.replace(/_/g, " ")}
                   </td>
-                  <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm text-foreground">
+                  <td className="border-b border-divider px-4 py-3 text-sm text-foreground">
                     {String(value)}
                   </td>
                 </tr>

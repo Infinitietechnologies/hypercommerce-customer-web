@@ -6,8 +6,8 @@ import {
   Pagination,
   Input,
   Card,
-} from "@heroui/react";
-import { Search, HelpCircle } from "lucide-react";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { FC, useState, useMemo } from "react";
 import useSWR from "swr";
 import debounce from "lodash/debounce";
@@ -78,7 +78,12 @@ const ProductFaqSection: FC<ProductFaqSectionProps> = ({ productSlug }) => {
             placeholder={t("productFaqs.searchPlaceholder")}
             aria-label={t("productFaqs.searchAriaLabel")}
             size="sm"
-            startContent={<Search className="w-4 h-4 text-foreground/50" />}
+            startContent={
+              <Icon
+                icon="solar:magnifer-linear"
+                className="text-base text-foreground/50"
+              />
+            }
             onChange={(e) => debouncedSearch(e.target.value)}
             className="max-w-48"
           />
@@ -108,10 +113,10 @@ const ProductFaqSection: FC<ProductFaqSectionProps> = ({ productSlug }) => {
                     aria-label={`${t("productFaqs.faqAriaLabel")} ${faq.id}`}
                     title={faq.question}
                     classNames={{
-                      base: "mx-0",
+                      base: "mx-0 border border-divider shadow-none",
                       titleWrapper: "p-0",
-                      title: "text-xs sm:text-medium",
-                      content: "text-xs sm:text-medium text-foreground/50",
+                      title: "text-xs sm:text-medium font-medium",
+                      content: "text-xs sm:text-medium text-foreground/60",
                     }}
                   >
                     {faq.answer}
@@ -144,11 +149,14 @@ const ProductFaqSection: FC<ProductFaqSectionProps> = ({ productSlug }) => {
       ) : (
         /* ❌ Empty State UI */
         <Card
-          className="w-full flex flex-col items-center justify-center py-10"
-          shadow="sm"
+          className="w-full flex flex-col items-center justify-center border border-divider py-10"
+          shadow="none"
         >
-          <div className="p-4 bg-white dark:bg-gray-600 shadow-sm rounded-full mb-4">
-            <HelpCircle className="w-12 h-12 text-gray-400" />
+          <div className="mb-4 rounded-full bg-content2 p-4">
+            <Icon
+              icon="solar:question-circle-linear"
+              className="text-5xl text-foreground/30"
+            />
           </div>
 
           <h3 className="text-xl font-semibold text-foreground/70">

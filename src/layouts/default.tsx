@@ -266,7 +266,7 @@ export default function DefaultLayout({
               // Show normal layout with navbar, content, and footer
               <>
                 <Navbar />
-                <main className="w-full max-w-384 min-h-[80vh] px-2 md:px-6 grow pb-4">
+                <main className="w-full max-w-site mx-auto min-h-[80vh] px-4 sm:px-6 grow pb-4">
                   {children}
                 </main>
                 <Footer />

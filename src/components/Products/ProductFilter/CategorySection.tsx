@@ -6,9 +6,9 @@ import {
   Badge,
   Checkbox,
   ScrollShadow,
-} from "@heroui/react";
+} from "@/components/ui";
 import { Category } from "@/types/ApiResponse";
-import { ChevronLeft } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 
 interface CategorySectionProps {
@@ -68,7 +68,7 @@ const CategorySection: FC<CategorySectionProps> = ({
                 badge: "text-xs",
               }}
             >
-              <ChevronLeft size={20} />
+              <Icon icon="solar:alt-arrow-left-linear" className="text-xl" />
             </Badge>
           )}
         >

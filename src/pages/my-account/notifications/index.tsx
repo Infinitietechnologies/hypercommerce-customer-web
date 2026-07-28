@@ -10,9 +10,10 @@ import {
 } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import useSWR from "swr";
+import { useTranslation } from "react-i18next";
+import { EmptyState, ErrorState } from "@/components/ui";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
-import UserLayout from "@/layouts/UserLayout";
 import PageHead from "@/SEO/PageHead";
 import { NextPageWithLayout } from "@/types";
 import {
@@ -153,68 +154,44 @@ const NotificationItem: React.FC<{
   };
 
   return (
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={!isClickable}
-        className={`
-          w-full text-left flex items-start gap-4 p-4 rounded-large
-          transition-all duration-200 border border-transparent
-          ${
-            notification.is_read
-              ? "bg-default-50/50 dark:bg-default-100/20"
-              : "bg-primary/5 dark:bg-primary/10 border-primary/10"
-          }
-          ${isClickable ? "cursor-pointer hover:scale-[1.005] hover:shadow-sm" : "cursor-default"}
-        `}
-      >
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={!isClickable}
+      className={`flex w-full items-start gap-3 rounded-medium border p-4 text-left transition-colors ${
+        notification.is_read
+          ? "border-divider bg-content1"
+          : "border-primary-200 bg-primary-100/40"
+      } ${isClickable ? "cursor-pointer hover:border-primary" : "cursor-default"}`}
+    >
       {/* Type Icon */}
-      <div
-        className={`flex-none flex items-center justify-center w-10 h-10 rounded-full relative ${getIconBg()}`}
-      >
+      <div className={`relative flex h-9 w-9 flex-none items-center justify-center rounded-medium ${getIconBg()}`}>
         {getNotificationIcon(notification.type)}
         {!notification.is_read && (
-          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-content1" />
+          <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-content1 bg-primary" />
         )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2 mb-0.5">
-          <p
-            className={`text-sm leading-snug line-clamp-1 ${
-              notification.is_read
-                ? "font-normal text-default-700"
-                : "font-semibold text-default-900"
-            }`}
-          >
-            {notification.title}
-          </p>
-          {!notification.is_read && (
-            <Chip
-              size="sm"
-              color="primary"
-              variant="flat"
-              className="flex-none h-5 text-[10px]"
-            >
-              New
-            </Chip>
-          )}
+      <div className="min-w-0 flex-1">
+        <div
+          className={`text-[13px] leading-snug line-clamp-1 ${
+            notification.is_read
+              ? "font-medium text-foreground"
+              : "font-semibold text-foreground"
+          }`}
+        >
+          {notification.title}
         </div>
-        <p className="text-xs text-default-500 line-clamp-2">
+        <p className="mt-0.5 text-xs text-default-500 line-clamp-2">
           {notification.message}
-        </p>
-        <p className="text-[11px] text-default-400 mt-1.5">
-          {formatTime(notification.created_at)}
         </p>
       </div>
 
-      {/* Arrow */}
-      {isClickable && (
-        <div className="flex-none self-center text-default-400">
-          <Icon icon="solar:arrow-right-linear" className="w-4 h-4" />
-        </div>
-      )}
+      {/* Time */}
+      <div className="flex-none whitespace-nowrap text-[11px] text-default-500">
+        {formatTime(notification.created_at)}
+      </div>
     </button>
   );
 };
@@ -222,6 +199,7 @@ const NotificationItem: React.FC<{
 // ── Page ──────────────────────────────────────────────────────────────────────
 const NotificationsPage: NextPageWithLayout = () => {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [currentPage, setCurrentPage] = useState(
     parseInt(router.query.page as string) || 1,
@@ -327,40 +305,30 @@ const NotificationsPage: NextPageWithLayout = () => {
 
     if (error) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="w-16 h-16 rounded-full bg-danger-50 flex items-center justify-center">
-            <Icon icon="solar:bell-off-linear" className="w-8 h-8 text-danger" />
-          </div>
-          <p className="text-default-500 text-sm text-center">
-            Failed to load notifications.
-          </p>
-          <Button
-            size="sm"
-            variant="flat"
-            color="danger"
-            onPress={() => revalidate()}
-          >
-            Retry
-          </Button>
-        </div>
+        <ErrorState
+          title={t("pages.notifications.errorTitle", "Couldn't load notifications")}
+          description={t(
+            "pages.notifications.errorDescription",
+            "Something went wrong. Please try again.",
+          )}
+          retryLabel={t("retry", "Retry")}
+          onRetry={() => revalidate()}
+        />
       );
     }
 
     if (!notifications.length) {
       return (
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center">
-            <Icon icon="solar:bell-linear" className="w-10 h-10 text-primary-600" />
-          </div>
-          <div className="text-center">
-            <p className="font-semibold text-default-700 mb-1">
-              No notifications yet
-            </p>
-            <p className="text-sm text-default-400">
-              You&apos;re all caught up! Check back later.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          icon={
+            <Icon icon="solar:bell-linear" width={40} height={40} className="text-primary-600" />
+          }
+          title={t("pages.notifications.emptyTitle", "No notifications yet")}
+          description={t(
+            "pages.notifications.emptyDescription",
+            "You're all caught up! Check back later.",
+          )}
+        />
       );
     }
 
@@ -402,21 +370,32 @@ const NotificationsPage: NextPageWithLayout = () => {
 
   return (
     <>
-      <PageHead pageTitle="Notifications" />
+      <PageHead pageTitle={t("userLayout.notifications", "Notifications")} />
       <MyBreadcrumbs
         breadcrumbs={[
-          { href: "/my-account", label: "My Account" },
-          { href: "/my-account/notifications", label: "Notifications" },
+          { href: "/my-account", label: t("pageTitle.my-account", "My Account") },
+          {
+            href: "/my-account/notifications",
+            label: t("userLayout.notifications", "Notifications"),
+          },
         ]}
       />
 
-      <UserLayout activeTab="notifications">
+
         <div className="w-full">
           <PageHeader
-            title="Notifications"
-            subtitle="Stay updated with your orders, wallet, and more"
+            title={t("userLayout.notifications", "Notifications")}
+            subtitle={t(
+              "pages.notifications.subtitle",
+              "Stay updated with your orders, wallet, and more",
+            )}
             highlightText={
-              unreadCount > 0 ? `${unreadCount} unread` : undefined
+              unreadCount > 0
+                ? t("pages.notifications.unreadCount", {
+                    count: unreadCount,
+                    defaultValue: "{{count}} unread",
+                  })
+                : undefined
             }
           />
 
@@ -427,11 +406,17 @@ const NotificationsPage: NextPageWithLayout = () => {
                 <div className="flex items-center gap-2">
                   <Icon icon="solar:bell-linear" className="w-4 h-4 text-default-500" />
                   <span className="text-sm font-medium text-default-700">
-                    {pagination?.total ?? notifications.length} Total
+                    {t("pages.notifications.totalCount", {
+                      count: pagination?.total ?? notifications.length,
+                      defaultValue: "{{count}} Total",
+                    })}
                   </span>
                   {unreadCount > 0 && (
                     <Chip size="sm" color="primary" variant="flat" classNames={{ base: "text-xs" }}>
-                      {unreadCount} new
+                      {t("pages.notifications.newCount", {
+                        count: unreadCount,
+                        defaultValue: "{{count}} new",
+                      })}
                     </Chip>
                   )}
                 </div>
@@ -452,7 +437,7 @@ const NotificationsPage: NextPageWithLayout = () => {
                     onPress={handleMarkAllRead}
                     className="text-xs"
                   >
-                    mark all read
+                    {t("pages.notifications.markAllRead", "Mark all read")}
                   </Button>
                 )}
               </div>
@@ -461,7 +446,7 @@ const NotificationsPage: NextPageWithLayout = () => {
             </CardBody>
           </Card>
         </div>
-      </UserLayout>
+      
     </>
   );
 };

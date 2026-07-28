@@ -4,9 +4,9 @@ import { Button as HeroButton, Spinner, extendVariants } from "@heroui/react";
 import { forwardRef } from "react";
 
 /**
- * The storefront button (redesign): radius 12 (`rounded-small`), amber fill
- * with near-black label, 48px tall on mobile and 40px from tablet up. The
- * primary CTA carries a soft amber glow (`shadow-primary`); other colours stay
+ * The storefront button (redesign): radius 12 (`rounded-small`), slate fill
+ * with white label, 48px tall on mobile and 40px from tablet up. The
+ * primary CTA carries a soft slate lift (`shadow-primary`); other colours stay
  * flat — see the `Button` component below.
  */
 const StyledButton = extendVariants(HeroButton, {

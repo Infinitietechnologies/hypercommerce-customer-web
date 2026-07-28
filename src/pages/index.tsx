@@ -6,6 +6,7 @@ import { HomeLayout, Settings } from "@/types/ApiResponse";
 import HomeBuilder from "@/views/homePage/HomeBuilder";
 import { NextPageWithLayout } from "@/types";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
+import { getAccessTokenFromContext } from "@/helpers/auth";
 import { loadTranslations } from "../../i18n";
 import { useTranslation } from "react-i18next";
 import DynamicSEO from "@/SEO/DynamicSEO";
@@ -73,6 +74,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
           await loadTranslations(context);
 
           const market = getMarketFromContext(context);
+          const access_token = (await getAccessTokenFromContext(context)) || "";
 
           // Category from query if present, else the saved home-category cookie.
           const queryCategory = context.query.category as string | undefined;
@@ -87,6 +89,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
             page: 1,
             per_page: 6,
             market,
+            access_token,
           });
           const settings = await getSettings({ market });
 

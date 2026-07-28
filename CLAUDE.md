@@ -25,6 +25,15 @@ The web storefront is **being reskinned to the new amber redesign** (see the red
 
 Open redesign items and data gaps are tracked in `THEME_REDESIGN.md` and `REDESIGN_QUESTIONS.md` — read them before starting a phase, update them as items close. (`GAP_ANALYSIS.md` holds the older modernization backlog.)
 
+> **Global scheme (2026-07 →).** The brand primary is now **slate `#0f172a`**
+> (tint `#eef1f6` (100), dark `#0b1120` (600), label-on-slate `#ffffff`), set in
+> `src/theme/tokens.ts` (`brand` ramp) + `heroui.ts`. It replaces the amber accent
+> everywhere `primary`/`focus`/tint fills were used. Amber `#f5a623` remains **only**
+> as the `warning` semantic; rating star stays `#EEAB18`. The amber references below
+> describe the prior reskin — the token pipeline and non-colour foundations
+> (surfaces, radii, shadows, type) still hold; read "amber `#f5a623` primary" as
+> "slate `#0f172a` primary".
+>
 > **Redesign (2026-07 →) — the amber reskin.** The pixel target is the
 > **`src/redesign/` sandbox** (rendered at the `/redesign/*` routes), built from the
 > `ecommerce-website-design/*.dc.html` exports. It is the single visual source of
@@ -518,7 +527,7 @@ npm run scan:i18n
 ## 9. Do NOT
 
 1. **No second component library.** HeroUI is it. No MUI, no shadcn, no Chakra, no Radix-direct, no Ant.
-2. **No HeroUI default theme colors.** Amber `#f5a623` is the brand (redesign — supersedes the retired `#eba513` and `#FFB616`; see Redesign note in §1). Blue `#3b82f6` anywhere in the codebase is a bug, and so is any lingering `#eba513`/`#FFB616`.
+2. **No HeroUI default theme colors.** Slate `#0f172a` is the brand primary (global scheme, 2026-07 — supersedes the retired amber `#f5a623`/`#eba513`/`#FFB616`). HeroUI default blue `#3b82f6` anywhere is a bug, and so is any lingering amber `#f5a623`/`#eba513`/`#FFB616` as a primary/accent. (Amber `#f5a623` survives only as the `warning` semantic and `#EEAB18` as the rating star.)
 3. **No new dependency without recording it in §2 of this file** — in the same commit that adds it. Justify it; prefer what's already installed.
 4. **No scope creep.** Do exactly the screen or fix that was asked. Note anything else you spot and move on.
 5. **No skipping the redesign reference.** If you did not open the `/redesign` counterpart, you are guessing at the design. Match it, don't invent.

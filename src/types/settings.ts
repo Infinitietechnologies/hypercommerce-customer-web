@@ -71,6 +71,13 @@ export type SystemSettings = {
   currency: string;
   currencySymbol: string;
 
+  // Customer-facing order status codes (CustomerItemStatusEnum::values()) —
+  // drives the order-listing status filter.
+  orderStatusEnum: string[];
+
+  // Return reasons (ReturnReasonCodeEnum::options()) as {code: label}.
+  returnReasonEnum: Record<string, string>;
+
   // Third-party integrations
   enableThirdPartyStoreSync: boolean;
   Shopify: boolean;

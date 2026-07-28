@@ -1,13 +1,5 @@
 import { FC, useState } from "react";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  addToast,
-} from "@heroui/react";
+import { Sheet, Button, toast } from "@/components/ui";
 import PaymentMethods from "../PaymentMethods";
 import { handleCheckout } from "@/helpers/functionalHelpers";
 import { useRouter } from "next/router";
@@ -34,7 +26,7 @@ const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
 
   const handleContinue = async () => {
     if (!selectedPayment) {
-      return addToast({
+      return toast({
         title: t("please_select_payment_method"),
         color: "warning",
       });
@@ -68,81 +60,74 @@ const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
   };
 
   return (
-    <>
-      <Modal
-        isOpen={open}
-        onOpenChange={onOpenChange}
-        backdrop="blur"
-        size="xl"
-        scrollBehavior="inside"
-      >
-        <ModalContent>
-          <ModalHeader>
-            <h2 className="font-semibold">{t("select_payment_method")}</h2>
-          </ModalHeader>
-
-          <ModalBody>
-            <PaymentMethods
-              selectedPayment={selectedPayment}
-              setSelectedPayment={setSelectedPayment}
-              hideCOD={false}
+    <Sheet
+      isOpen={open}
+      onOpenChange={onOpenChange}
+      backdrop="blur"
+      size="xl"
+      title={
+        <h2 className="text-base font-bold">{t("select_payment_method")}</h2>
+      }
+      footer={
+        <div className="w-full">
+          {(selectedPayment === "cod" ||
+            selectedPayment === "directBankTransfer") && (
+            <Button
+              color="primary"
+              onPress={handleContinue}
               isLoading={isLoading}
+              className="w-full"
+            >
+              {t("continue")}
+            </Button>
+          )}
+
+          {selectedPayment === "stripePayment" && (
+            <Stripe
+              onSuccess={handlePaymentSuccess}
+              onError={handleError}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
             />
-          </ModalBody>
+          )}
 
-          <ModalFooter>
-            {(selectedPayment === "cod" ||
-              selectedPayment === "directBankTransfer") && (
-              <Button
-                color="primary"
-                onPress={handleContinue}
-                isLoading={isLoading}
-                className="w-full"
-              >
-                {t("continue")}
-              </Button>
-            )}
+          {selectedPayment === "razorpayPayment" && (
+            <RazorPay
+              onSuccess={handlePaymentSuccess}
+              onError={handleError}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+            />
+          )}
 
-            {selectedPayment === "stripePayment" && (
-              <Stripe
-                onSuccess={handlePaymentSuccess}
-                onError={handleError}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-              />
-            )}
+          {selectedPayment === "paystackPayment" && (
+            <PayStack
+              onSuccess={handlePaymentSuccess}
+              onError={handleError}
+              setIsLoading={setIsLoading}
+              isLoading={isLoading}
+              usageType="order"
+            />
+          )}
 
-            {selectedPayment === "razorpayPayment" && (
-              <RazorPay
-                onSuccess={handlePaymentSuccess}
-                onError={handleError}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-              />
-            )}
-
-            {selectedPayment === "paystackPayment" && (
-              <PayStack
-                onSuccess={handlePaymentSuccess}
-                onError={handleError}
-                setIsLoading={setIsLoading}
-                isLoading={isLoading}
-                usageType="order"
-              />
-            )}
-
-            {selectedPayment === "flutterwavePayment" && (
-              <FlutterwavePayment
-                onSuccess={handlePaymentSuccess}
-                onError={handleError}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-              />
-            )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+          {selectedPayment === "flutterwavePayment" && (
+            <FlutterwavePayment
+              onSuccess={handlePaymentSuccess}
+              onError={handleError}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+            />
+          )}
+        </div>
+      }
+    >
+      <PaymentMethods
+        selectedPayment={selectedPayment}
+        setSelectedPayment={setSelectedPayment}
+        hideCOD={false}
+        isLoading={isLoading}
+      />
+    </Sheet>
   );
 };
 

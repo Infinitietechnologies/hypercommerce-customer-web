@@ -1,9 +1,8 @@
 import { Product } from "@/types/ApiResponse";
-import { Card, CardHeader, Avatar } from "@heroui/react";
-import Link from "next/link";
+import { Card, CardHeader, Avatar, Link } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { Star } from "lucide-react"; // ⭐ Lucide icon
 
 const SoldBySection: FC<{ product: Product }> = ({ product }) => {
   const { t } = useTranslation();
@@ -12,40 +11,35 @@ const SoldBySection: FC<{ product: Product }> = ({ product }) => {
   const seller_rating = seller_ratings?.average_rating || 0;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border border-divider" shadow="none">
       <CardHeader className="flex items-center gap-3">
         <Avatar
           size="lg"
-          src="https://placehold.co/600x400/000000/FFFFFF.png?text=Seller"
           name={seller || t("soldBySection.noLogo")}
           radius="lg"
+          className="bg-primary-100 text-primary-600"
         />
-        <div className="flex flex-col">
-          <div className="flex gap-2 justify-start items-center">
-            <h3 className="text-medium font-semibold">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-foreground">
               {seller || t("soldBySection.noSellerInfo")}
             </h3>
-
-            {/* Seller rating */}
-            <div className="flex items-center gap-1 mt-0.5">
-              <Star size={16} className="text-yellow-500 fill-yellow-500" />
-              <span className="text-sm font-medium">
-                {!isNaN(Number(seller_rating))
-                  ? Number(seller_rating).toFixed(1)
-                  : ""}
-              </span>
-            </div>
+            <span className="inline-flex items-center gap-1 rounded-lg bg-primary-100 px-1.5 py-0.5 text-xs font-bold text-primary-600">
+              <Icon icon="solar:star-bold" className="text-[12px]" />
+              {!isNaN(Number(seller_rating))
+                ? Number(seller_rating).toFixed(1)
+                : ""}
+            </span>
           </div>
 
-          {/* Store link */}
           {defaultVariant?.store_slug && (
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2">
               <span className="text-xs text-foreground/50">
                 {t("soldBySection.storeLabel")}
               </span>
               <Link
                 href={`/stores/${defaultVariant.store_slug}`}
-                className="text-xs text-foreground/50"
+                className="text-xs font-medium text-primary-600"
                 title={defaultVariant.store_name}
               >
                 {defaultVariant.store_name}

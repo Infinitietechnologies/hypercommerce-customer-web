@@ -37,7 +37,14 @@ export function setCookie<T>(
   }
 
   Object.entries(rest).forEach(([key, val]) => {
-    cookieString += `; ${key}${val ? `=${val}` : ""}`;
+    // `secure` is a valueless boolean flag — emit it only when true, otherwise
+    // the cookie is tagged Secure and gets rejected over plain http (e.g. a LAN
+    // IP like 192.168.x.x, which is not a secure context the way localhost is).
+    if (key === "secure") {
+      if (val) cookieString += `; secure`;
+    } else if (val) {
+      cookieString += `; ${key}=${val}`;
+    }
   });
 
   document.cookie = cookieString;

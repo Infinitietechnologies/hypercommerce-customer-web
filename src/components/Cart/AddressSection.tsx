@@ -189,7 +189,7 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
       case "work":
         return "primary" as const;
       case "other":
-        return "warning" as const;
+        return "default" as const;
       default:
         return "default" as const;
     }

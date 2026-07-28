@@ -1,28 +1,23 @@
-import { Button } from "@heroui/react";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Icon } from "@iconify/react";
+import { EmptyState } from "@/components/ui";
 
 const OrdersEmpty: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-gray-500 text-lg font-medium mb-2">
-            {t("orders_empty_title")}
-          </div>
-          <p className="text-gray-600 mb-4">{t("orders_empty_description")}</p>
-          <Button
-            onPress={() => (window.location.href = "/")}
-            className="text-xs"
-            size="sm"
-          >
-            {t("orders_empty_button")}
-          </Button>
-        </div>
-      </div>
-    </div>
+    <EmptyState
+      icon={
+        <Icon icon="solar:box-linear" width={40} height={40} className="text-primary-600" />
+      }
+      title={t("orders_empty_title")}
+      description={t("orders_empty_description")}
+      actionLabel={t("orders_empty_button")}
+      onAction={() => {
+        window.location.href = "/";
+      }}
+    />
   );
 };
 

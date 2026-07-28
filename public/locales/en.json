@@ -827,7 +827,8 @@
     "transactions": "Transactions",
     "wallet": "Wallet",
     "wishlists": "Wishlists",
-    "seller-registration": "Seller Registration"
+    "seller-registration": "Seller Registration",
+    "checkout": "Checkout"
   },
   "pages": {
     "aboutUs": {
@@ -998,7 +999,9 @@
         "otpSentTitle": "OTP Sent",
         "otpSentDesc": "Verification code sent to your mobile.",
         "phoneUpdateSuccess": "Phone number updated and verified successfully.",
-        "otpSentTo": "Enter the OTP sent to"
+        "otpSentTo": "Enter the OTP sent to",
+        "verificationCode": "Verification Code",
+        "otpPlaceholder": "Enter 6-digit OTP"
       },
       "personalInfo": "Personal Information",
       "saveChanges": "Save Changes",
@@ -1015,7 +1018,8 @@
         "successTitle": "Success",
         "updateFailedDesc": "There was an issue updating your data.",
         "updateFailedTitle": "Update Failed"
-      }
+      },
+      "editProfile": "Edit profile"
     },
     "shoppingList": {
       "headerTitle": "Shopping List",
@@ -1053,7 +1057,32 @@
       "errorLoading": "Error Loading Order",
       "loading": "Loading order details...",
       "notFound": "Order Not Found",
-      "notFoundDesc": "The order you're looking for doesn't exist or has been removed."
+      "notFoundDesc": "The order you're looking for doesn't exist or has been removed.",
+      "seeAllUpdates": "See all updates",
+      "refund": "Refund",
+      "refundAmount": "Total refund amount",
+      "refundedTo": "Refunded to",
+      "reason": "Reason",
+      "rateProduct": "Rate this product",
+      "totalItemPrice": "Total item price",
+      "otherItems": "Other items in this order",
+      "orderDetails": "Order details",
+      "orderedOn": "Ordered on",
+      "updatesSentTo": "Updates sent to",
+      "trackingTitle": "Order updates",
+      "noUpdates": "No updates yet.",
+      "youSaved": "You saved",
+      "onThisOrder": "on this order",
+      "selectReason": "Select a reason",
+      "remarkRequired": "Please describe the problem.",
+      "photoRequired": "Please attach at least one photo.",
+      "returnRequested": "Return requested",
+      "requestReturn": "Request return",
+      "returnReason": "Return reason",
+      "remark": "Remark",
+      "remarkPlaceholder": "Describe the problem",
+      "photos": "Photos",
+      "evidenceHint": "This reason needs a remark and at least one photo."
     },
     "ordersPage": {
       "emptyMessage": "You don't have any orders yet. Start shopping to see them here.",
@@ -1118,14 +1147,17 @@
         "shareSocial": "Share on Social Media",
         "title": "Share Your Code",
         "yourCode": "Your Referral Code",
-        "helper": "Copy this code and share it with friends."
+        "helper": "Copy this code and share it with friends.",
+        "label": "Your referral code",
+        "copy": "Copy code"
       },
       "stats": {
         "pending": "Pending",
         "successful": "Successful",
         "totalEarnings": "Total Earnings",
         "totalReferrals": "Total Referrals"
-      }
+      },
+      "errorTitle": "Couldn't load referral info"
     },
     "returnRefundPolicy": {
       "description": "Learn about our return process and refund conditions.",
@@ -1172,7 +1204,8 @@
         "subtitle": "See your Transactions information and Status",
         "title": "My Transactions"
       },
-      "totalFound": "{{total}} Found"
+      "totalFound": "{{total}} Found",
+      "errorTitle": "Couldn't load transactions"
     },
     "walletPage": {
       "header": {
@@ -1183,7 +1216,8 @@
         "title": "Wallet Transactions"
       },
       "totalFound": "{{total}} Transactions Found",
-      "availableBalance": "Available balance"
+      "availableBalance": "Available balance",
+      "errorTitle": "Couldn't load transactions"
     },
     "wishlistsPage": {
       "confirmDelete": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
@@ -1195,7 +1229,9 @@
         "network": "Network error occurred",
         "removeItem": "Failed to remove item from wishlist",
         "updateFailed": "Failed to update wishlist"
-      }
+      },
+      "confirmDeleteTitle": "Delete wishlist?",
+      "subtitle": "Products you saved for later"
     },
     "sellerRegister": {
       "pageTitle": "Seller Registration",
@@ -1398,6 +1434,18 @@
         "desc": "Get started by submitting your business details below.",
         "registerLabel": "📋 Register Your Business Below"
       }
+    },
+    "notifications": {
+      "new": "New",
+      "errorTitle": "Couldn't load notifications",
+      "errorDescription": "Something went wrong. Please try again.",
+      "emptyTitle": "No notifications yet",
+      "emptyDescription": "You're all caught up! Check back later.",
+      "subtitle": "Stay updated with your orders, wallet, and more",
+      "unreadCount": "{{count}} unread",
+      "totalCount": "{{count}} Total",
+      "newCount": "{{count}} new",
+      "markAllRead": "Mark all read"
     }
   },
   "partially_refunded": "Partially Refunded",
@@ -1977,7 +2025,9 @@
     "select_wishlist": "Select Wishlist",
     "select_wishlist_label": "Select Wishlist",
     "select_wishlist_placeholder": "Choose wishlist",
-    "wishlist_removeConfirmation": "Are you sure you want to remove \"{{product}}\" from your wishlist?"
+    "wishlist_removeConfirmation": "Are you sure you want to remove \"{{product}}\" from your wishlist?",
+    "moveItem": "Move",
+    "removeItemTitle": "Remove item?"
   },
   "wishlist_button_create": "Create Wishlist",
   "wishlist_button_creating": "Creating Wishlist...",
@@ -2005,5 +2055,29 @@
     "price_desc": "Price: High to Low",
     "rating": "Top rated",
     "discount": "Biggest discount"
-  }
+  },
+  "orderStatus": {
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "on_hold": "On hold",
+    "return_requested": "Return requested",
+    "returned": "Returned",
+    "refunded": "Refunded",
+    "cancelled": "Cancelled"
+  },
+  "off": "off",
+  "share": "Share",
+  "link_copied": "Link copied to clipboard",
+  "share_product_text": "Check out {{title}}!",
+  "add_to_wishlist": "Add to wishlist",
+  "additionalDetails.title": "Additional Details",
+  "additionalDetails.subtitle": "Find the additional info of the Product",
+  "retry": "Retry",
+  "wishlist_emptyListsTitle": "No wishlists yet",
+  "wishlist_emptyListsDescription": "Create your first wishlist to start saving your favorite products",
+  "wishlist_emptyItemsTitle": "No items in this wishlist",
+  "wishlist_emptyItemsDescription": "Start adding items to see them here",
+  "cart.calculatedAtCheckout": "Delivery, taxes & fees calculated at checkout",
+  "copied": "Copied"
 }

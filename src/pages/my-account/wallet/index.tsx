@@ -4,7 +4,6 @@ import PageHeader from "@/components/custom/PageHeader";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import { isSSR } from "@/helpers/getters";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
-import UserLayout from "@/layouts/UserLayout";
 import { setUserDataRedux } from "@/lib/redux/slices/authSlice";
 import { getSettings, getUserData, getWalletTransactions } from "@/routes/api";
 import {
@@ -23,6 +22,7 @@ import { loadTranslations } from "../../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
 import WalletTransactionTable from "@/components/Tables/WalletTransactionTable";
+import { ErrorState } from "@/components/ui";
 import { loginRedirect } from "@/guards/authGuard";
 
 type WalletPageProps = {
@@ -52,6 +52,7 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
   total,
   initialUserData,
   initialQuery,
+  error,
 }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -79,7 +80,7 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
       />
       <PageHead pageTitle={t("pageTitle.wallet")} />
 
-      <UserLayout activeTab="wallet">
+      
         <div className="w-full">
           {/* Header */}
           <div className="flex items-center gap-4 justify-between">
@@ -98,16 +99,25 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
             <WalletCard loading={false} />
 
             {/* Table */}
-            <WalletTransactionTable
-              initialTransactions={transactions}
-              initialTotal={total}
-              per_page={perPage}
-              tableTitle={t("pages.walletPage.table.title")}
-              initialQuery={initialQuery}
-            />
+            {error ? (
+              <ErrorState
+                title={t("pages.walletPage.errorTitle", "Couldn't load transactions")}
+                description={error}
+                retryLabel={t("retry", "Retry")}
+                onRetry={() => window.location.reload()}
+              />
+            ) : (
+              <WalletTransactionTable
+                initialTransactions={transactions}
+                initialTotal={total}
+                per_page={perPage}
+                tableTitle={t("pages.walletPage.table.title")}
+                initialQuery={initialQuery}
+              />
+            )}
           </div>
         </div>
-      </UserLayout>
+      
     </>
   );
 };

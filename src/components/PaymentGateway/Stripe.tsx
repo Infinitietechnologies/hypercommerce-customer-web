@@ -13,6 +13,8 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { addToast, Button } from "@heroui/react";
+
+import { brand } from "@/theme/tokens";
 import { useSettings } from "@/contexts/SettingsContext";
 import { getCartDataFromRedux, getUserDataFromRedux } from "@/helpers/getters";
 import { handleCheckout } from "@/helpers/functionalHelpers";
@@ -336,7 +338,7 @@ const Stripe: React.FC<StripeProps> = ({
     clientSecret,
     appearance: {
       theme: "stripe" as const,
-      variables: { colorPrimary: "#2563eb" },
+      variables: { colorPrimary: brand[500] },
     },
   };
 

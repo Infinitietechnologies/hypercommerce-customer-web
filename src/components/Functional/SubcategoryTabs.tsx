@@ -76,16 +76,16 @@ const SubcategoryTabs: React.FC<Props> = ({
 
   return (
     <div
-      className={`relative w-full py-2 bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 sticky top-0 z-20 ${className}`}
+      className={`relative w-full bg-content1 border-b border-divider sticky top-0 z-20 ${className}`}
       aria-label={t("subcategories")}
     >
-      <div className="flex gap-0.5 py-1 items-end">
+      <div className="flex gap-0.5 items-stretch">
         <TabButton
+          variant="strip"
           slug="all"
           title={t("all_products")}
           isSelected={!selectedSubcategory}
           onClick={() => handleClick("all")}
-          size="lg"
         />
 
         {/* Swiper wrapper — shadows scoped here so they don't cover "All Products" */}
@@ -93,18 +93,18 @@ const SubcategoryTabs: React.FC<Props> = ({
           {/* Left shadow — only inside swiper area */}
           {showLeftShadow && (
             <div
-              className="absolute left-0 top-0 bottom-0 w-8 
-              bg-linear-to-r from-white via-white/80 to-transparent 
-              dark:from-gray-900 dark:via-gray-900/80 pointer-events-none z-10"
+              className="absolute left-0 top-0 bottom-0 w-8
+              bg-gradient-to-r from-content1 via-content1/80 to-transparent
+              pointer-events-none z-10"
             />
           )}
 
           {/* Right shadow */}
           {showRightShadow && (
             <div
-              className="absolute right-0 top-0 bottom-0 w-8 
-              bg-linear-to-l from-white via-white/80 to-transparent 
-              dark:from-gray-900 dark:via-gray-900/80 pointer-events-none z-10"
+              className="absolute right-0 top-0 bottom-0 w-8
+              bg-gradient-to-l from-content1 via-content1/80 to-transparent
+              pointer-events-none z-10"
             />
           )}
 
@@ -135,18 +135,18 @@ const SubcategoryTabs: React.FC<Props> = ({
             {isLoading
               ? Array.from({ length: 6 }).map((_, i) => (
                   <SwiperSlide key={i} style={{ width: "auto" }}>
-                    <SkeletonTabButton size="lg" />
+                    <SkeletonTabButton />
                   </SwiperSlide>
                 ))
               : subcategories.map((cat) => (
                   <SwiperSlide key={cat.id} style={{ width: "auto" }}>
                     <TabButton
+                      variant="strip"
                       slug={cat.slug}
                       title={cat.title}
                       isSelected={selectedSubcategory === cat.slug}
                       category={cat}
                       onClick={() => handleClick(cat.slug)}
-                      size="lg"
                     />
                   </SwiperSlide>
                 ))}
@@ -154,12 +154,12 @@ const SubcategoryTabs: React.FC<Props> = ({
             {hasMore && (
               <SwiperSlide style={{ width: "auto" }}>
                 <TabButton
+                  variant="strip"
                   slug="see-more"
                   title={isLoadingMore ? t("loading") : t("see_more")}
                   isSelected={false}
                   isLoading={isLoadingMore}
                   onClick={handleSeeMore}
-                  size="lg"
                 />
               </SwiperSlide>
             )}

@@ -1,36 +1,20 @@
 import {
-  Badge,
   Button,
   Card,
   CardBody,
   CardFooter,
   CardHeader,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
   Select,
   SelectItem,
   Divider,
-  useDisclosure,
   Input,
   ScrollShadow,
-} from "@heroui/react";
+} from "@/components/ui";
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
+import { Icon } from "@iconify/react";
 import BrandSection from "./BrandSection";
 import CategorySection from "./CategorySection";
-import {
-  ListFilter,
-  ArrowUpDown,
-  TrendingUp,
-  TrendingDown,
-  Star,
-  Search,
-  ThumbsUp,
-  Flame,
-  Sparkles,
-} from "lucide-react";
+import ListingFilters from "./ListingFilters";
 import { useTranslation } from "react-i18next";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
@@ -65,27 +49,32 @@ interface ProductFilterProps {
   sidebarValue?: string;
   hideBrandFilter?: boolean;
   hideCategoryFilter?: boolean;
+  /** When provided, use these facets directly instead of fetching from the API
+   *  (e.g. the home-section "see all", whose facets are derived from its rows). */
+  facets?: SidebarFilters | null;
 }
 
 const ProductFilter: FC<ProductFilterProps> = ({
   selectedFilters,
   onApplyFilters,
-  totalProducts = 0,
   searchComponent = false,
   sidebarType,
   sidebarValue,
   hideBrandFilter = false,
   hideCategoryFilter = false,
+  facets = null,
 }) => {
   const [searchInput, setSearchInput] = useState(selectedFilters?.search || "");
   const [pendingFilters, setPendingFilters] =
     useState<SelectedFilters>(selectedFilters);
   const debouncedSearch = useDebouncedValue(searchInput, 500);
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const { t } = useTranslation();
 
   const [sidebarData, setSidebarData] = useState<SidebarFilters | null>(null);
   const [isSidebarLoading, setIsSidebarLoading] = useState(false);
+
+  // Caller-supplied facets (section see-all) win over the fetched ones.
+  const effectiveSidebar = facets ?? sidebarData;
 
   const selectedFiltersRef = useRef(selectedFilters);
   const onApplyFiltersRef = useRef(onApplyFilters);
@@ -135,10 +124,11 @@ const ProductFilter: FC<ProductFilterProps> = ({
     [sidebarType, sidebarValue],
   );
 
-  // Fetch sidebar data when filters change
+  // Fetch sidebar data when filters change (skipped when facets are supplied).
   useEffect(() => {
+    if (facets) return;
     fetchSidebarFilters(pendingFilters);
-  }, [pendingFilters, fetchSidebarFilters]);
+  }, [pendingFilters, fetchSidebarFilters, facets]);
 
   // Keep the latest pending filters reachable from the imperative refetch below.
   const pendingFiltersRef = useRef(pendingFilters);
@@ -156,23 +146,23 @@ const ProductFilter: FC<ProductFilterProps> = ({
 
   // Prune pending filters if they become disabled in the new sidebar data
   useEffect(() => {
-    if (!sidebarData) return;
+    if (!effectiveSidebar) return;
 
     const newCategories = pendingFilters.categories.filter((slug) => {
-      const cat = sidebarData.categories.find((c) => c.slug === slug);
+      const cat = effectiveSidebar.categories.find((c) => c.slug === slug);
       if (cat && cat.enabled === false) return false;
       return true;
     });
 
     const newBrands = pendingFilters.brands.filter((slug) => {
-      const br = sidebarData.brands.find((b) => b.slug === slug);
+      const br = effectiveSidebar.brands.find((b) => b.slug === slug);
       if (br && br.enabled === false) return false;
       return true;
     });
 
     const newAttrValues = pendingFilters.attribute_values.filter((id) => {
       const valId = Number(id);
-      const attributeValue = sidebarData.attributes
+      const attributeValue = effectiveSidebar.attributes
         .flatMap((attr) => attr.values)
         .find((v) => v.id === valId);
       if (attributeValue && attributeValue.enabled === false) return false;
@@ -206,7 +196,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
       });
     }
   }, [
-    sidebarData,
+    effectiveSidebar,
     pendingFilters.categories,
     pendingFilters.brands,
     pendingFilters.attribute_values,
@@ -254,32 +244,32 @@ const ProductFilter: FC<ProductFilterProps> = ({
     {
       key: "relevance",
       label: t("productFilter.sort.relevance"),
-      icon: Star,
+      icon: "solar:star-linear",
     },
     {
       key: "price_asc",
       label: t("productFilter.sort.priceLowToHigh"),
-      icon: TrendingUp,
+      icon: "solar:alt-arrow-up-linear",
     },
     {
       key: "price_desc",
       label: t("productFilter.sort.priceHighToLow"),
-      icon: TrendingDown,
+      icon: "solar:alt-arrow-down-linear",
     },
     {
       key: "avg_rated",
       label: t("productFilter.sort.highestRated"),
-      icon: ThumbsUp,
+      icon: "solar:like-linear",
     },
     {
       key: "best_seller",
       label: t("productFilter.sort.bestSeller"),
-      icon: Flame,
+      icon: "solar:fire-linear",
     },
     {
       key: "featured",
       label: t("productFilter.sort.featured"),
-      icon: Sparkles,
+      icon: "solar:magic-stars-linear",
     },
   ];
 
@@ -319,145 +309,24 @@ const ProductFilter: FC<ProductFilterProps> = ({
         aria-hidden
       />
 
-      {/* Mobile Filter Button */}
-      <div className="md:hidden flex items-start w-full justify-between gap-2 mb-4">
-        <Badge
-          color="primary"
-          content={getActiveFiltersCount() || undefined}
-          classNames={{ badge: "text-xs min-w-4 h-4" }}
-        >
-          <Button
-            size="sm"
-            variant="bordered"
-            color="default"
-            startContent={<ListFilter className="w-4 h-4" />}
-            className="text-xs"
-            onPress={onOpen}
-          >
-            {t("productFilter.filters")}
-          </Button>
-        </Badge>
-
-        <div className="flex-1 flex flex-col justify-center">
-          <Input
-            size="sm"
-            placeholder={t("search") || "Search products..."}
-            value={searchInput}
-            onValueChange={setSearchInput}
-            startContent={<Search className="w-4 h-4 text-default-400" />}
-            classNames={{
-              input: "text-sm",
-              inputWrapper: "h-9",
-            }}
-          />
-        </div>
-
-        {/* Mobile Sort Dropdown */}
-        <Select
-          aria-label="select-sort-mobile"
-          size="sm"
-          placeholder={t("productFilter.sortBy")}
-          selectedKeys={[selectedFilters.sort]}
-          onSelectionChange={(keys) => {
-            const newSort = Array.from(keys)[0] as SortOption;
-            if (newSort) {
-              const updatedFilters = { ...selectedFiltersRef.current, sort: newSort };
-              onApplyFilters(updatedFilters);
-            }
-          }}
-          className="max-w-44"
-          startContent={<ArrowUpDown className="w-4 h-4" />}
-          classNames={{
-            trigger: "h-8 min-h-unit-8",
-            value: "text-xs",
-          }}
-        >
-          {sortOptions.map((option) => (
-            <SelectItem
-              key={option.key}
-              startContent={<option.icon className="w-4 h-4" />}
-              textValue={option.label}
-            >
-              {option.label}
-            </SelectItem>
-          ))}
-        </Select>
-      </div>
-
-      {/* Mobile Drawer */}
-      <Drawer placement="left" isOpen={isOpen} onClose={onClose}>
-        <DrawerContent className="w-80">
-          <DrawerHeader className="border-b p-4 flex items-center justify-between">
-            <div className="flex flex-col">
-              <h3 className="text-lg font-semibold">
-                {t("productFilter.filtersAndSort")}
-              </h3>
-              <p className="text-xs text-default-500">
-                {t("productFilter.productsCount", { count: totalProducts })}
-              </p>
-            </div>
-          </DrawerHeader>
-
-          <DrawerBody className="p-4 flex flex-col gap-4">
-            {/* Filter Sections */}
-            <div className="flex flex-col gap-4">
-              {!hideCategoryFilter && (
-                <section id="product-filter-category-section">
-                  <CategorySection
-                    categories={sidebarData?.categories || []}
-                    isLoading={isSidebarLoading}
-                    selectedFilters={pendingFilters}
-                    setSelectedFilters={setPendingFilters}
-                  />
-                </section>
-              )}
-
-              {!hideBrandFilter && (
-                <section id="product-filter-brand-section">
-                  <BrandSection
-                    brands={sidebarData?.brands || []}
-                    isLoading={isSidebarLoading}
-                    selectedFilters={pendingFilters}
-                    setSelectedFilters={setPendingFilters}
-                  />
-                </section>
-              )}
-
-              <section id="product-filter-attribute-section">
-                <AttributeSection
-                  attributes={sidebarData?.attributes || []}
-                  selectedFilters={pendingFilters}
-                  setSelectedFilters={setPendingFilters}
-                />
-              </section>
-            </div>
-          </DrawerBody>
-
-          <DrawerFooter className="border-t p-4 flex gap-2">
-            <Button
-              className="flex-1 text-xs"
-              color="secondary"
-              variant="bordered"
-              onPress={() => {
-                clearAllFilters();
-                onClose();
-              }}
-            >
-              {t("productFilter.clearAll")}
-            </Button>
-            <Button
-              className="flex-1 text-xs"
-              color="primary"
-              onPress={() => {
-                onApplyFilters(pendingFilters);
-                onClose();
-              }}
-            >
-              {t("productFilter.applyFilters")}
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      {/* Mobile — Myntra-style bottom bar + sort/filter sheets */}
+      <ListingFilters
+        activeCount={getActiveFiltersCount()}
+        attributes={effectiveSidebar?.attributes || []}
+        brands={effectiveSidebar?.brands || []}
+        categories={effectiveSidebar?.categories || []}
+        hideBrandFilter={hideBrandFilter}
+        hideCategoryFilter={hideCategoryFilter}
+        pendingFilters={pendingFilters}
+        setPendingFilters={setPendingFilters}
+        sort={selectedFilters.sort}
+        sortOptions={sortOptions}
+        onApply={() => onApplyFilters(pendingFilters)}
+        onClear={clearAllFilters}
+        onSort={(key) =>
+          onApplyFilters({ ...selectedFiltersRef.current, sort: key })
+        }
+      />
 
       {/* Desktop Filter Panel */}
       <div className="w-64 min-w-64 hidden md:block">
@@ -465,7 +334,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
           <CardHeader className="pb-2">
             <div className="w-full flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ListFilter className="w-4 h-4" />
+                <Icon icon="solar:filter-linear" className="text-base" />
                 <h3 className="text-base font-semibold">
                   {t("productFilter.filters")}
                 </h3>
@@ -482,7 +351,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
                   placeholder={t("search") || "Search products..."}
                   value={searchInput}
                   onValueChange={setSearchInput}
-                  startContent={<Search className="w-4 h-4 text-default-400" />}
+                  startContent={<Icon icon="solar:magnifer-linear" className="text-base text-default-400" />}
                   classNames={{
                     input: "text-sm",
                     inputWrapper: "h-9",
@@ -492,7 +361,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
               )}
 
               <div className="flex items-center gap-2">
-                <ArrowUpDown className="w-4 h-4" />
+                <Icon icon="solar:sort-vertical-linear" className="text-base" />
                 <h4 className="text-sm font-medium">
                   {t("productFilter.sortBy")}
                 </h4>
@@ -515,7 +384,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
                 {sortOptions.map((option) => (
                   <SelectItem
                     key={option.key}
-                    startContent={<option.icon className="w-4 h-4" />}
+                    startContent={<Icon icon={option.icon} className="text-base" />}
                     textValue={option.label}
                   >
                     {option.label}
@@ -531,7 +400,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
               {!hideCategoryFilter && (
                 <section id="product-filter-category-section">
                   <CategorySection
-                    categories={sidebarData?.categories || []}
+                    categories={effectiveSidebar?.categories || []}
                     isLoading={isSidebarLoading}
                     selectedFilters={pendingFilters}
                     setSelectedFilters={setPendingFilters}
@@ -542,7 +411,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
               {!hideBrandFilter && (
                 <section id="product-filter-brand-section">
                   <BrandSection
-                    brands={sidebarData?.brands || []}
+                    brands={effectiveSidebar?.brands || []}
                     isLoading={isSidebarLoading}
                     selectedFilters={pendingFilters}
                     setSelectedFilters={setPendingFilters}
@@ -552,7 +421,7 @@ const ProductFilter: FC<ProductFilterProps> = ({
 
               <section id="product-filter-attribute-section">
                 <AttributeSection
-                  attributes={sidebarData?.attributes || []}
+                  attributes={effectiveSidebar?.attributes || []}
                   selectedFilters={pendingFilters}
                   setSelectedFilters={setPendingFilters}
                 />

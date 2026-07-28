@@ -1,5 +1,6 @@
 import PageHeader from "@/components/custom/PageHeader";
-import { Select, SelectItem, Pagination, Card } from "@heroui/react";
+import { Select, SelectItem, Pagination, Card } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { FC, useState } from "react";
 import AverageRatingSection from "./AverageRatingSection";
 import { getProductReviews } from "@/routes/api";
@@ -7,7 +8,6 @@ import useSWR from "swr";
 import ProductReviewsSectionSkeleton from "@/components/Skeletons/ProductReviewsSectionSkeleton";
 import { useTranslation } from "react-i18next";
 import ReviewCard from "@/components/Cards/ReviewCard";
-import { MessageSquareOff } from "lucide-react";
 
 interface ProductReviewsSectionProps {
   productSlug: string;
@@ -116,11 +116,14 @@ const ProductReviewsSection: FC<ProductReviewsSectionProps> = ({
             <>
               {/* ⭐ Empty State UI when no reviews */}
               <Card
-                className="w-full flex flex-col items-center justify-center py-10"
-                shadow="sm"
+                className="w-full flex flex-col items-center justify-center border border-divider py-10"
+                shadow="none"
               >
-                <div className="p-4 bg-white dark:bg-gray-600 shadow-sm rounded-full mb-4">
-                  <MessageSquareOff className="w-12 h-12 text-gray-400" />
+                <div className="mb-4 rounded-full bg-content2 p-4">
+                  <Icon
+                    icon="solar:chat-square-like-linear"
+                    className="text-5xl text-foreground/30"
+                  />
                 </div>
                 <h3 className="text-sm md:text-xl font-semibold text-foreground/70">
                   {t("productReviews.noReviewsYet") || "No Reviews Yet"}

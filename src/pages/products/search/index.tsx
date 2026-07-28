@@ -318,7 +318,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
             />
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 pb-28 md:pb-0">
             <InfiniteScroll
               hasMore={hasMore}
               isLoading={isLoadingMore}

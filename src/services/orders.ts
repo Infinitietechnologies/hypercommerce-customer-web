@@ -70,16 +70,26 @@ export const cancelOrderItem = async (
 export const returnOrderItem = async (
   params: {
     orderItemId?: string;
+    reason_code?: string;
     reason?: string;
+    quantity?: number;
     images?: File[];
   } = {},
 ): Promise<ApiResponse<[]>> => {
   try {
     const formData = new FormData();
 
-    // Do NOT send orderItemId in the body
+    // Do NOT send orderItemId in the body.
+    // Backend (CreateItemReturnRequest): reason_code (ReturnReasonCodeEnum) +
+    // reason + images, images/reason required for evidence-critical reasons.
+    if (params.reason_code) {
+      formData.append("reason_code", params.reason_code);
+    }
     if (params.reason) {
       formData.append("reason", params.reason);
+    }
+    if (params.quantity != null) {
+      formData.append("quantity", String(params.quantity));
     }
 
     if (params?.images && params.images.length > 0) {

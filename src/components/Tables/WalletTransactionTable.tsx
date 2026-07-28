@@ -1,17 +1,11 @@
 import { FC, useState } from "react";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Pagination,
   Chip,
   Select,
   SelectItem,
   Input,
-  Spinner,
+  Skeleton,
 } from "@heroui/react";
 import { TransactionQueryArgs, WalletTransaction } from "@/types/ApiResponse";
 import { getWalletTransactions } from "@/routes/api";
@@ -109,128 +103,51 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
   const total = data?.data?.total || 0;
   const totalPages = Math.ceil(total / per_page);
 
-  const columns = [
-    { key: "id", label: t("id") },
-    { key: "transaction_reference", label: t("payment_id") },
-    { key: "transaction_type", label: t("type") },
-    { key: "status", label: t("status") },
-    { key: "amount", label: t("amount") },
-    { key: "payment_method", label: t("payment_method") },
-    { key: "created_at", label: t("date") },
-  ];
-
-  const renderCell = (transaction: WalletTransaction, columnKey: string) => {
-    switch (columnKey) {
-      case "transaction_reference":
-        return (
-          <div className="flex items-center gap-2 text-xxs md:text-xs">
-            <span className="font-medium">
-              {transaction.transaction_reference
-                ? transaction.transaction_reference
-                : transaction.payment_method === "wallet"
-                  ? `# ${transaction.order_id}`
-                  : "-"}
+  const TxnRow = ({ tx }: { tx: WalletTransaction }) => {
+    const positive = tx.transaction_type === "deposit";
+    const reference =
+      tx.transaction_reference ||
+      (tx.payment_method === "wallet" && tx.order_id
+        ? `# ${tx.order_id}`
+        : tx.payment_method || "");
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-medium border border-divider bg-content1 px-4 py-3 transition-colors hover:border-primary">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-[13px] font-semibold text-foreground">
+              {t(positive ? "deposit_title" : tx.transaction_type)}
             </span>
-
-            {(transaction.transaction_reference ||
-              (transaction.payment_method === "wallet" &&
-                transaction.order_id)) && (
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    transaction.transaction_reference ||
-                      `${transaction.order_id}` ||
-                      ""
-                  )
-                }
-                title={t("copy_to_clipboard")}
-                className="p-1 rounded cursor-pointer"
-              >
-                <Icon icon="solar:copy-linear" className="h-3 w-3" />
-              </button>
-            )}
+            <Chip
+              size="sm"
+              radius="full"
+              variant="flat"
+              color={
+                tx.status === "completed"
+                  ? "success"
+                  : tx.status === "pending"
+                    ? "warning"
+                    : "danger"
+              }
+              classNames={{ content: "text-[10px] font-semibold" }}
+            >
+              {t(tx.status)}
+            </Chip>
           </div>
-        );
-      case "order_id":
-        return (
-          <div className="flex items-center gap-2 text-xxs md:text-xs">
-            <span className="font-medium">{transaction.order_id || "-"}</span>
-            {transaction.order_id && (
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    transaction.order_id?.toString() || ""
-                  )
-                }
-                title={t("copy_to_clipboard")}
-                className="p-1 rounded cursor-pointer"
-              >
-                <Icon icon="solar:copy-linear" className="h-3 w-3" />
-              </button>
-            )}
+          <div className="mt-0.5 truncate text-[11.5px] text-default-500">
+            {getFormattedDate(tx.created_at)}
+            {reference ? ` · ${reference}` : ""}
           </div>
-        );
-      case "transaction_type":
-        return (
-          <Chip
-            color={
-              transaction.transaction_type === "deposit" ? "success" : "danger"
-            }
-            variant="flat"
-            size="sm"
-            classNames={{ content: "text-xxs md:text-xs" }}
-          >
-            {t(
-              transaction.transaction_type === "deposit"
-                ? "deposit_title"
-                : transaction.transaction_type
-            )}
-          </Chip>
-        );
-      case "status":
-        return (
-          <Chip
-            color={
-              transaction.status === "completed"
-                ? "success"
-                : transaction.status === "pending"
-                  ? "warning"
-                  : "danger"
-            }
-            variant="flat"
-            size="sm"
-            classNames={{ content: "text-xxs md:text-xs" }}
-          >
-            {t(transaction.status)}
-          </Chip>
-        );
-      case "amount":
-        return (
-          <span className="text-xxs md:text-xs">
-            {transaction.formatted_amount}{" "}
-          </span>
-        );
-      case "payment_method":
-        return (
-          <span className="text-xxs md:text-xs">
-            {transaction.payment_method || "-"}
-          </span>
-        );
-      case "created_at":
-        return (
-          <span className="text-xxs md:text-xs">
-            {getFormattedDate(transaction.created_at)}
-          </span>
-        );
-      case "description":
-        return (
-          <span className="text-xxs md:text-xs">
-            {transaction.description || "-"}
-          </span>
-        );
-      default:
-        return transaction[columnKey as keyof WalletTransaction] || "-";
-    }
+        </div>
+        <span
+          className={`shrink-0 text-[13.5px] font-bold ${
+            positive ? "text-primary-600" : "text-foreground"
+          }`}
+        >
+          {positive ? "+ " : "− "}
+          {tx.formatted_amount}
+        </span>
+      </div>
+    );
   };
 
   const statusOptions = [
@@ -349,34 +266,25 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
 
   return (
     <div className="w-full">
-      <Table
-        aria-label={t("wallet_transactions_table")}
-        topContent={topContent}
-        classNames={{
-          th: "text-xs font-semibold",
-          loadingWrapper: "mt-[12vh] sm:mt-[8vh]",
-        }}
-      >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn key={column.key}>{column.label}</TableColumn>
-          )}
-        </TableHeader>
-        <TableBody
-          items={transactions}
-          loadingContent={<Spinner />}
-          isLoading={isLoading}
-          emptyContent={t("no_transactions_found")}
-        >
-          {(item: WalletTransaction) => (
-            <TableRow key={item.id}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey as string)}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      {topContent}
+
+      <div className="mt-4 flex flex-col gap-2">
+        {isLoading ? (
+          Array.from({ length: per_page }).map((_, i) => (
+            <Skeleton key={i} className="rounded-medium">
+              <div className="h-16 w-full bg-default-200" />
+            </Skeleton>
+          ))
+        ) : transactions.length === 0 ? (
+          <div className="py-14 text-center text-sm text-default-500">
+            {t("no_transactions_found")}
+          </div>
+        ) : (
+          transactions.map((tx: WalletTransaction) => (
+            <TxnRow key={tx.id} tx={tx} />
+          ))
+        )}
+      </div>
 
       {totalPages > 1 && (
         <div className="mt-4 flex justify-center">

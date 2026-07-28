@@ -1,19 +1,7 @@
 import { FC, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Icon } from "@iconify/react";
 
-import {
-  Button,
-  Checkbox,
-  EmptyState,
-  Input,
-  Radio,
-  RadioGroup,
-  Select,
-  SelectItem,
-  Sheet,
-  useDisclosure,
-} from "@/components/ui";
+import { EmptyState } from "@/components/ui";
 import BrandCard from "@/components/Cards/BrandCard";
 import CategoryCard from "@/components/Cards/CategoryCard";
 import CategoryFullImageCard from "@/components/Cards/CategoryFullImageCard";
@@ -22,6 +10,9 @@ import CategoryOverlayCard from "@/components/Cards/CategoryOverlayCard";
 import HomeBannerCard from "@/components/Cards/HomeBannerCard";
 import ProductCard from "@/components/Cards/ProductCard";
 import ProductCardSkeleton from "@/components/Skeletons/ProductCardSkeleton";
+import ProductFilter, {
+  SelectedFilters,
+} from "@/components/Products/ProductFilter";
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import PageHead from "@/SEO/PageHead";
 import { getHomeLayoutSection } from "@/routes/api";
@@ -31,6 +22,7 @@ import {
   HomeBannerItem,
   HomeSectionType,
   Product,
+  SidebarFilters,
 } from "@/types/ApiResponse";
 
 type Row = Product | Category | Brand | HomeBannerItem;
@@ -45,7 +37,14 @@ export interface HomeSectionDetailData {
   lastPage: number;
 }
 
-type Sort = "relevance" | "price_asc" | "price_desc" | "rating" | "discount";
+const EMPTY_FILTERS: SelectedFilters = {
+  categories: [],
+  brands: [],
+  colors: [],
+  attribute_values: [],
+  sort: "relevance",
+  search: "",
+};
 
 const productPrice = (p: Product) => {
   const v = p.variants?.find((x) => x.is_default) || p.variants?.[0];
@@ -54,22 +53,15 @@ const productPrice = (p: Product) => {
   return special > 0 && special < price ? special : price;
 };
 
-const productDiscount = (p: Product) => {
-  const v = p.variants?.find((x) => x.is_default) || p.variants?.[0];
-  const price = Number(v?.price) || 0;
-  const special = Number(v?.special_price) || 0;
-  return special > 0 && special < price ? Math.round(((price - special) / price) * 100) : 0;
-};
-
 /**
  * "See all" page for a home-builder section — paginated content of
- * `/home-layout/sections/{id}` with infinite scroll. Product sections add a
- * client-side filter sidebar (brand / price / rating) and sort over the
- * loaded items (the section endpoint itself takes only page/per_page).
+ * `/home-layout/sections/{id}` with infinite scroll. Product sections reuse the
+ * shared `ProductFilter` (same rail/drawer/sort as the listing pages), applied
+ * client-side over the loaded rows since the section endpoint takes only
+ * page/per_page.
  */
 const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) => {
   const { t } = useTranslation();
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [items, setItems] = useState<Row[]>(data.items);
   const [page, setPage] = useState(data.currentPage);
@@ -78,11 +70,7 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
 
   const isProducts = data.type === "products";
 
-  const [sort, setSort] = useState<Sort>("relevance");
-  const [brandFilter, setBrandFilter] = useState<string[]>([]);
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-  const [minRating, setMinRating] = useState("0");
+  const [filters, setFilters] = useState<SelectedFilters>(EMPTY_FILTERS);
 
   const loadMore = useCallback(async () => {
     if (loading || page >= lastPage) return;
@@ -96,116 +84,58 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
     setLoading(false);
   }, [loading, page, lastPage, data.sectionId]);
 
-  const brandOptions = useMemo(() => {
-    if (!isProducts) return [];
-    return Array.from(
-      new Set((items as Product[]).map((p) => p.brand_name).filter(Boolean) as string[]),
-    ).sort();
-  }, [items, isProducts]);
-
+  // Client-side apply — the section endpoint can't filter, so filter/sort the
+  // loaded rows by category / brand / search / sort from the shared filter.
   const visibleProducts = useMemo(() => {
     if (!isProducts) return [];
     let list = [...(items as Product[])];
-    if (brandFilter.length) list = list.filter((p) => p.brand_name && brandFilter.includes(p.brand_name));
-    const min = Number(priceMin);
-    const max = Number(priceMax);
-    if (priceMin) list = list.filter((p) => productPrice(p) >= min);
-    if (priceMax) list = list.filter((p) => productPrice(p) <= max);
-    const rt = Number(minRating);
-    if (rt > 0) list = list.filter((p) => Number(p.ratings) >= rt);
-
-    switch (sort) {
+    if (filters.categories.length) list = list.filter((p) => filters.categories.includes(p.category));
+    if (filters.brands.length) list = list.filter((p) => filters.brands.includes(p.brand));
+    if (filters.search?.trim()) {
+      const q = filters.search.trim().toLowerCase();
+      list = list.filter((p) => p.title?.toLowerCase().includes(q));
+    }
+    switch (filters.sort) {
       case "price_asc":
         return list.sort((a, b) => productPrice(a) - productPrice(b));
       case "price_desc":
         return list.sort((a, b) => productPrice(b) - productPrice(a));
-      case "rating":
+      case "avg_rated":
         return list.sort((a, b) => Number(b.ratings) - Number(a.ratings));
-      case "discount":
-        return list.sort((a, b) => productDiscount(b) - productDiscount(a));
       default:
         return list;
     }
-  }, [items, isProducts, brandFilter, priceMin, priceMax, minRating, sort]);
+  }, [items, isProducts, filters]);
 
-  const clearFilters = () => {
-    setBrandFilter([]);
-    setPriceMin("");
-    setPriceMax("");
-    setMinRating("0");
-  };
+  // The section endpoint has no /sidebar-filters scope, so derive the facets
+  // (categories + brands present in the loaded rows) and feed them to the shared
+  // filter — otherwise it would fetch an unscoped, empty facet set.
+  const derivedFacets = useMemo<SidebarFilters | null>(() => {
+    if (!isProducts) return null;
+    const cats = new Map<string, string>();
+    const brands = new Map<string, string>();
+    (items as Product[]).forEach((p) => {
+      if (p.category) cats.set(p.category, p.category_name || p.category);
+      if (p.brand) brands.set(p.brand, p.brand_name || p.brand);
+    });
+    return {
+      categories: [...cats].map(([slug, title]) => ({ slug, title, enabled: true })),
+      brands: [...brands].map(([slug, title]) => ({ slug, title, enabled: true })),
+      attributes: [],
+      categories_count: cats.size,
+      brands_count: brands.size,
+      attributes_count: 0,
+      // Only slug/title/enabled are read by the filter; the full Category/Brand
+      // shapes aren't available from a section row, so widen through unknown.
+    } as unknown as SidebarFilters;
+  }, [items, isProducts]);
 
-  const activeFilterCount =
-    brandFilter.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minRating !== "0" ? 1 : 0);
-
-  const FilterControls = (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h3 className="mb-2.5 text-sm font-bold">{t("filters.brand", "Brand")}</h3>
-        <div className="flex max-h-56 flex-col gap-2 overflow-y-auto">
-          {brandOptions.length === 0 ? (
-            <span className="text-xs text-default-400">{t("filters.none", "No options yet")}</span>
-          ) : (
-            brandOptions.map((b) => (
-              <Checkbox
-                key={b}
-                isSelected={brandFilter.includes(b)}
-                size="sm"
-                onValueChange={(on) =>
-                  setBrandFilter((prev) => (on ? [...prev, b] : prev.filter((x) => x !== b)))
-                }
-              >
-                <span className="text-sm">{b}</span>
-              </Checkbox>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="mb-2.5 text-sm font-bold">{t("filters.price", "Price")}</h3>
-        <div className="flex items-center gap-2">
-          <Input
-            aria-label={t("filters.min", "Min")}
-            placeholder={t("filters.min", "Min")}
-            size="sm"
-            type="number"
-            value={priceMin}
-            onValueChange={setPriceMin}
-          />
-          <span className="text-default-400">–</span>
-          <Input
-            aria-label={t("filters.max", "Max")}
-            placeholder={t("filters.max", "Max")}
-            size="sm"
-            type="number"
-            value={priceMax}
-            onValueChange={setPriceMax}
-          />
-        </div>
-      </div>
-
-      <div>
-        <h3 className="mb-2.5 text-sm font-bold">{t("filters.rating", "Rating")}</h3>
-        <RadioGroup size="sm" value={minRating} onValueChange={setMinRating}>
-          <Radio value="0">{t("filters.any", "Any")}</Radio>
-          <Radio value="4">4★ &amp; up</Radio>
-          <Radio value="3">3★ &amp; up</Radio>
-        </RadioGroup>
-      </div>
-
-      {activeFilterCount > 0 ? (
-        <Button size="sm" variant="flat" onPress={clearFilters}>
-          {t("filters.clear", "Clear all")}
-        </Button>
-      ) : null}
-    </div>
-  );
+  const applyFilters = useCallback((next: SelectedFilters) => setFilters(next), []);
 
   const renderCards = () => {
     if (isProducts) {
       return (
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+        <div className="grid gap-2.5 sm:gap-4 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))]">
           {visibleProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -268,54 +198,29 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
     <div className="w-full max-w-site mx-auto px-4 sm:px-6 py-6">
       <PageHead pageTitle={data.title || t("see_all")} />
 
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-foreground sm:text-2xl">{data.title}</h1>
-        {isProducts ? (
-          <div className="flex items-center gap-2">
-            <Button
-              className="min-[1024px]:hidden"
-              size="sm"
-              startContent={<Icon icon="solar:filter-linear" className="text-base" />}
-              variant="flat"
-              onPress={onOpen}
-            >
-              {t("filters.title", "Filters")}
-              {activeFilterCount ? ` (${activeFilterCount})` : ""}
-            </Button>
-            <Select
-              aria-label={t("filters.sort", "Sort")}
-              className="w-44"
-              selectedKeys={[sort]}
-              size="sm"
-              onChange={(e) => setSort(e.target.value as Sort)}
-            >
-              <SelectItem key="relevance">{t("sort.relevance", "Relevance")}</SelectItem>
-              <SelectItem key="price_asc">{t("sort.price_asc", "Price: Low to High")}</SelectItem>
-              <SelectItem key="price_desc">{t("sort.price_desc", "Price: High to Low")}</SelectItem>
-              <SelectItem key="rating">{t("sort.rating", "Top rated")}</SelectItem>
-              <SelectItem key="discount">{t("sort.discount", "Biggest discount")}</SelectItem>
-            </Select>
-          </div>
-        ) : null}
-      </div>
+      <h1 className="mb-4 text-xl font-bold text-foreground sm:text-2xl">{data.title}</h1>
 
       {items.length === 0 ? (
         <EmptyState icon={null} title={t("home.empty.title", "Nothing here yet")} />
       ) : (
-        <div className="flex gap-6">
+        <div className="flex w-full gap-4 flex-col md:flex-row">
           {isProducts ? (
-            <aside className="hidden w-60 shrink-0 min-[1024px]:block">
-              <div className="sticky top-24 rounded-large border border-divider bg-content1 p-4">
-                {FilterControls}
-              </div>
-            </aside>
+            <div className="flex-none">
+              <ProductFilter
+                selectedFilters={filters}
+                setSelectedFilters={setFilters}
+                onApplyFilters={applyFilters}
+                totalProducts={visibleProducts.length}
+                facets={derivedFacets}
+              />
+            </div>
           ) : null}
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 pb-28 md:pb-0">
             {renderCards()}
             <InfiniteSentinel hasMore={page < lastPage} isLoading={loading} onLoadMore={loadMore} />
             {loading ? (
-              <div className="mt-3 grid gap-3 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+              <div className="mt-3 grid gap-2.5 sm:gap-4 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))]">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
                 ))}
@@ -324,12 +229,6 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
           </div>
         </div>
       )}
-
-      {isProducts ? (
-        <Sheet isOpen={isOpen} title={t("filters.title", "Filters")} onOpenChange={(o) => !o && onClose()}>
-          <div className="pb-4">{FilterControls}</div>
-        </Sheet>
-      ) : null}
     </div>
   );
 };

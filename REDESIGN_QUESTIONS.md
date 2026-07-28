@@ -89,8 +89,43 @@ Applied against the live builder after review:
   IntersectionObserver/scroll callbacks). The page-2 fetch + append path is
   verified; the sentinel renders when more pages exist.
 
-## 2. Product detail (PDP)  ⚪️
+## 2. Product detail (PDP)  🟢 (reskinned 2026-07-28)
 _Redesign shows: brand, title, rating badge, reviews count, price/mrp/off%, 3 delivery promises, description, related. Live PDP has variants, seller info, reviews list, Q&A, wishlist — deltas logged at port time._
+
+Ported `pages/products/[slug]` to the amber redesign, matching the `/redesign/pdp`
+sandbox. All API data kept, all sections retained (client confirmed "show all API
+data"); qty inc/dec logic untouched; the product image plugin (Swiper main +
+thumbs + `yet-another-react-lightbox` + hover-zoom) kept — only its containers
+restyled. Every file in `components/Products/ProductDetailPage/` moved off
+`@heroui/react` + `lucide-react` onto `@/components/ui` + solar; import boundary
+now clean across the folder.
+
+- **Detail column** (`ProductDetailSection`) — brand eyebrow (amber) → title →
+  rating pill + review link + category → cart-count chip → price (special +
+  strikethrough mrp + **`%off`**) → tax note → variant/attribute selector +
+  stock/SKU → quantity → actions → tags → promises box.
+- **Action row** — client chose "keep both + add wishlist": Add to Cart + Buy Now
+  (full buttons) + share icon + **wishlist heart** (new; reuses `toggleFavorite`
+  + login gate, same as `ProductCard`). Out-of-stock card replaces the buttons.
+- **Promises box** (`AdditionalSection`) — grid cards → redesign vertical list
+  (delivery / returns / cancellation / warranty / guarantee / origin). Client
+  confirmed the data is in the API: mapped to real fields
+  (`estimated_delivery_time`, `is_returnable`/`returnable_days`, `is_cancelable`/
+  `cancelable_till`, `warranty_period`, `guarantee_period`, `made_in`). Rows
+  render only when their field is present — no hardcoded promises.
+- **Quantity** (`QtyInput`) — reskinned stepper; validation logic (min / max /
+  step / stock toasts) unchanged.
+- **Bottom tabs** kept (client chose "keep tabs, reskin"): Details / Reviews /
+  FAQs / Sold By, all API-backed, restyled to amber. Tab bodies
+  (`AdditionalDetailSection`, `ProductReviewsSection`, `ProductFaqSection`,
+  `SellerReviewSection`, `SoldBySection`, `AverageRatingSection`) reskinned —
+  warm tokens, bordered cards, amber progress/pills, solar empty-state icons.
+- **Image column** — same plugin; containers now `bg-content2` + `rounded-2xl`
+  + `border-divider`, amber active thumbnail.
+- **Load transitions** — `rd-fade` on the top / similar / bottom sections.
+- New i18n keys (×3 locales): `off`, `share`, `link_copied`, `share_product_text`,
+  `add_to_wishlist`, `additionalDetails.title/subtitle`.
+- Related products still use the shared `ProductCard` (already redesign-spec).
 
 ## 3. Listing (search / category / brand)  ⚪️
 _Filter facets in the sandbox are derived from mock data (category/brand/price/rating/discount/stock). Live must map to real API facets — logged at port._

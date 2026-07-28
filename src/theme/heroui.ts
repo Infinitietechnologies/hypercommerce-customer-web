@@ -1,6 +1,6 @@
 import type { ConfigThemes } from "@heroui/theme";
 
-import { brand, dark, light, onBrand, radius, secondaryAccent, status } from "./tokens";
+import { brand, dark, light, onBrand, onWarning, radius, secondaryAccent, status } from "./tokens";
 
 const primary = { ...brand, DEFAULT: brand[500], foreground: onBrand };
 
@@ -10,16 +10,16 @@ const primary = { ...brand, DEFAULT: brand[500], foreground: onBrand };
  * warm-black (dark) surface ramps rather than Material greys.
  */
 const defaultLight = {
-  50: "#f7f5f0",
-  100: light.surface2, // #f0ede5
-  200: light.surface3, // #ece8df
-  300: light.surface4, // #d8d2c4
-  400: "#b5ad9c",
-  500: light.muted, // #6d6656
-  600: "#544e40",
-  700: "#3d382d",
-  800: "#2a2620",
-  900: "#181510",
+  50: "#f8fafc",
+  100: light.surface2, // #f1f4f8
+  200: light.surface3, // #e8edf3
+  300: light.surface4, // #dde3ec
+  400: "#9aa4b2",
+  500: light.muted, // #667085
+  600: "#475467",
+  700: "#344054",
+  800: "#1d2939",
+  900: "#101828",
   foreground: light.foreground,
   DEFAULT: light.surface3,
 } as const;
@@ -71,7 +71,7 @@ export const heroThemes: ConfigThemes = {
       primary,
       secondary: { DEFAULT: secondaryAccent.light, foreground: "#ffffff" },
       success: { DEFAULT: status.success, foreground: "#ffffff" },
-      warning: { DEFAULT: status.warning, foreground: onBrand },
+      warning: { DEFAULT: status.warning, foreground: onWarning },
       danger: { DEFAULT: status.error, foreground: "#ffffff" },
     },
   },
@@ -90,7 +90,7 @@ export const heroThemes: ConfigThemes = {
       primary,
       secondary: { DEFAULT: secondaryAccent.dark, foreground: "#0d0820" },
       success: { DEFAULT: status.successDark, foreground: "#08110b" },
-      warning: { DEFAULT: status.warning, foreground: onBrand },
+      warning: { DEFAULT: status.warning, foreground: onWarning },
       danger: { DEFAULT: status.errorDark, foreground: "#1a0605" },
     },
   },

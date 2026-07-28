@@ -20,6 +20,8 @@ export const getHomeLayout = async (
     market?: string;
     /** Storefront platform layout; the web storefront uses "web". */
     platform?: "app" | "web";
+    /** SSR-only: forwarded as a Bearer token so per-user data (favorites) resolves. */
+    access_token?: string;
   } = {},
 ): Promise<ApiResponse<HomeLayout>> => {
   try {
@@ -39,6 +41,8 @@ export const getHomeLayoutSection = async (
     page?: string | number;
     per_page?: string | number;
     market?: string;
+    /** SSR-only: forwarded as a Bearer token so per-user data (favorites) resolves. */
+    access_token?: string;
   },
 ): Promise<PaginatedResponse<HomeSection[]>> => {
   try {

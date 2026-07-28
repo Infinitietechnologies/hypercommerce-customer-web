@@ -6,9 +6,9 @@ import {
   Badge,
   Checkbox,
   ScrollShadow,
-} from "@heroui/react";
+} from "@/components/ui";
 import { FilterAttribute } from "@/types/ApiResponse";
-import { ChevronLeft } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 interface AttributeSectionProps {
   attributes: FilterAttribute[];
@@ -71,7 +71,7 @@ const AttributeSection: FC<AttributeSectionProps> = ({
                       badge: "text-xs",
                     }}
                   >
-                    <ChevronLeft size={20} />
+                    <Icon icon="solar:alt-arrow-left-linear" className="text-xl" />
                   </Badge>
                 );
               }}

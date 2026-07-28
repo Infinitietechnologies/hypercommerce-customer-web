@@ -7,28 +7,29 @@
  */
 
 /**
- * Brand amber. 500 is the brand primary.
- * Source: the new HyperCommerce redesign (`ecommerce-website-design/` +
- * `src/redesign/`). Anchored on the three stops the design fixes —
- * tint `#fdf1dc` (100), primary `#f5a623` (500), amber-dark `#c9790a` (600) —
- * with the rest of the ramp filled to stay monotonic. Supersedes the old
- * `#eba513` handoff.
+ * Brand slate/ink. 500 is the brand primary.
+ * Global scheme (2026-07): a neutral slate anchor replaces the amber accent —
+ * tint `#eef1f6` (100), primary `#0f172a` (500), dark `#0b1120` (600) — ramp
+ * filled to stay monotonic. Supersedes the amber `#f5a623` / `#eba513` handoffs.
  */
 export const brand = {
-  50: "#fef8ee",
-  100: "#fdf1dc",
-  200: "#fadfab",
-  300: "#f8c976",
-  400: "#f6b649",
-  500: "#f5a623",
-  600: "#c9790a",
-  700: "#9d5f0b",
-  800: "#7e4d11",
-  900: "#6a4111",
+  50: "#f5f7fa",
+  100: "#eef1f6",
+  200: "#d6dde8",
+  300: "#aab6c9",
+  400: "#526079",
+  500: "#0f172a",
+  600: "#0b1120",
+  700: "#080d18",
+  800: "#050810",
+  900: "#020617",
 } as const;
 
-/** Label colour on brand fills. Redesign uses near-black `#1a1200`. */
-export const onBrand = "#1a1200";
+/** Label colour on brand (slate) fills — white for contrast. */
+export const onBrand = "#ffffff";
+
+/** Label colour on the amber `warning` fill — near-black for contrast. */
+export const onWarning = "#1a1200";
 
 /** Material greys, matching the grey.shadeN values used throughout the app. */
 export const neutralLight = {
@@ -63,17 +64,17 @@ export const neutralDark = {
 // Source: `src/redesign/tokens.ts` (bg #faf8f5, surface #fff, line #ece8e2,
 // ink #1c1a17, ink-soft #7a7570).
 export const light = {
-  background: "#ffffff",
-  foreground: "#1c1a17",
+  background: "#f7f8fa",
+  foreground: "#101828",
   surface1: "#ffffff",
-  surface2: "#f4f1ec",
-  surface3: "#efeae2",
-  surface4: "#e6e0d5",
-  divider: "#ece8e2",
-  outline: "#ece8e2",
-  muted: "#7a7570",
+  surface2: "#f1f4f8",
+  surface3: "#e8edf3",
+  surface4: "#dde3ec",
+  divider: "#e6e9ee",
+  outline: "#e6e9ee",
+  muted: "#667085",
   subCategoryCard: "#E5FBFF",
-  collapsedAppBar: "#f4f1ec",
+  collapsedAppBar: "#f1f4f8",
 } as const;
 
 /**
@@ -149,10 +150,10 @@ export const spacing = {
  * hover lifts to `md`; banners/overlays use `lg`/`overlay`.
  */
 export const shadow = {
-  sm: "0 2px 10px -6px rgba(28,26,23,0.08)",
-  md: "0 12px 26px -14px rgba(28,26,23,0.18)",
-  lg: "0 14px 30px -18px rgba(28,26,23,0.28)",
-  overlay: "0 8px 24px -12px rgba(28,26,23,0.30)",
-  // Amber glow under the primary CTA — the redesign's signature button lift.
-  primary: "0 8px 20px -10px rgba(245,166,35,0.5)",
+  sm: "0 2px 10px -6px rgba(16,24,40,0.08)",
+  md: "0 12px 26px -14px rgba(16,24,40,0.18)",
+  lg: "0 14px 30px -18px rgba(16,24,40,0.28)",
+  overlay: "0 8px 24px -12px rgba(16,24,40,0.30)",
+  // Slate lift under the primary CTA — the signature button shadow.
+  primary: "0 8px 20px -10px rgba(15,23,42,0.4)",
 } as const;

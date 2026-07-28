@@ -1,5 +1,4 @@
-import { Card, CardBody } from "@heroui/react";
-import { RotateCcw, Shield, MapPin, XCircle } from "lucide-react"; // Added XCircle
+import { Icon } from "@iconify/react";
 import { FC } from "react";
 import type { Product } from "@/types/ApiResponse";
 import { useTranslation } from "react-i18next";
@@ -8,6 +7,11 @@ interface AdditionalSectionProps {
   product: Product;
 }
 
+/**
+ * Redesign "promises" box (sandbox PDP) — a vertical list of the delivery /
+ * returns / warranty / guarantee / cancellation / origin commitments, each
+ * backed by a real product field. Rows only render when their field is present.
+ */
 const AdditionalSection: FC<AdditionalSectionProps> = ({ product }) => {
   const { t } = useTranslation();
   const {
@@ -18,102 +22,75 @@ const AdditionalSection: FC<AdditionalSectionProps> = ({ product }) => {
     returnable_days,
     is_cancelable,
     cancelable_till,
+    estimated_delivery_time,
   } = product;
 
-  // Helper logic to determine the correct text for Returns
   const getReturnLabel = () => {
-    if (!is_returnable) return t("not_returnable");
-    if (returnable_days) {
-      // Passes the count to i18n for pluralization (e.g., "7 Days Return")
+    if (returnable_days)
       return t("return_days_policy", { count: returnable_days });
-    }
     return t("returnable");
   };
 
-  // Helper logic to determine the correct text for Cancellations
   const getCancelLabel = () => {
-    if (!is_cancelable) return t("not_cancelable");
-    if (cancelable_till) {
-      // You might want to format 'cancelable_till' if it is a raw date string
+    if (cancelable_till)
       return t("cancel_till_policy", { date: cancelable_till });
-    }
     return t("cancelable");
   };
 
-  const infoCards = [
+  const rows = [
     {
-      icon: <RotateCcw className="h-5 w-5" />,
+      icon: "solar:delivery-linear",
+      label: t("delivery"),
+      value: estimated_delivery_time
+        ? `${estimated_delivery_time} ${t("mins")}`
+        : null,
+      available: !!estimated_delivery_time,
+    },
+    {
+      icon: "solar:refresh-linear",
       label: t("returns"),
       value: getReturnLabel(),
       available: !!is_returnable,
-      baseColor: "green",
     },
     {
-      icon: <XCircle className="h-5 w-5" />,
+      icon: "solar:close-circle-linear",
       label: t("cancellation"),
       value: getCancelLabel(),
       available: !!is_cancelable,
-      baseColor: "red",
     },
     {
-      icon: <Shield className="h-5 w-5" />,
+      icon: "solar:shield-check-linear",
       label: t("warranty"),
-      value: warranty_period || "Not Specified",
-      available: warranty_period && warranty_period != "0",
-      baseColor: "purple",
+      value: warranty_period,
+      available: !!warranty_period && warranty_period !== "0",
     },
     {
-      icon: <Shield className="h-5 w-5" />,
+      icon: "solar:medal-ribbon-star-linear",
       label: t("guarantee"),
-      labelKey: "guarantee",
-      value: guarantee_period || "Not Specified",
-      available: guarantee_period && guarantee_period != "0",
-      baseColor: "purple",
+      value: guarantee_period,
+      available: !!guarantee_period && guarantee_period !== "0",
     },
     {
-      icon: <MapPin className="h-5 w-5" />,
+      icon: "solar:map-point-linear",
       label: t("origin"),
-      value: made_in || "Not Specified",
+      value: made_in,
       available: !!made_in,
-      baseColor: "orange",
     },
-  ].filter((card) => card.available);
+  ].filter((r) => r.available);
 
-  if (infoCards.length === 0) return null;
+  if (rows.length === 0) return null;
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-        {infoCards.map((card, index) => (
-          <Card
-            key={index}
-            isHoverable
-            radius="sm"
-            shadow="none"
-            className="border border-gray-100 dark:border-default-100"
-          >
-            <CardBody>
-              <div className={`flex items-center justify-between w-full`}>
-                <span className={`text-${card.baseColor}-600`}>
-                  {card.icon}
-                </span>
-
-                <div className="flex flex-col gap-0 items-end">
-                  <p className="text-xs font-medium text-foreground/50 uppercase">
-                    {card.label}
-                  </p>
-                  <p
-                    className={`text-xs font-semibold text-${card.baseColor}-600 dark:text-white truncate max-w-[100px]`}
-                    title={card.value}
-                  >
-                    {card.value}
-                  </p>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-        ))}
-      </div>
+    <div className="flex flex-col gap-3 rounded-2xl border border-divider bg-content1 p-4">
+      {rows.map((row) => (
+        <div key={row.label} className="flex items-center gap-3 text-sm">
+          <Icon icon={row.icon} className="shrink-0 text-xl text-primary-600" />
+          <span className="text-foreground/60">{row.label}</span>
+          <span className="ms-auto font-semibold text-foreground">
+            {row.value}
+          </span>
+        </div>
+      ))}
     </div>
   );
 };

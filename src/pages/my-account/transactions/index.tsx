@@ -1,10 +1,10 @@
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import TransactionTable from "@/components/Tables/TransactionTable";
+import { ErrorState } from "@/components/ui";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import { isSSR } from "@/helpers/getters";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
-import UserLayout from "@/layouts/UserLayout";
 import { getSettings, getTransactions, getUserData } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
 import {
@@ -50,7 +50,7 @@ const TransactionsPage: NextPageWithLayout<TransactionsPageProps> = ({
         ]}
       />
 
-      <UserLayout activeTab="transactions">
+      
         <div className="w-full">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -60,18 +60,24 @@ const TransactionsPage: NextPageWithLayout<TransactionsPageProps> = ({
             />
           </div>
 
-          {/* Error Message */}
-          {error && <div className="mt-4 text-danger">{error}</div>}
-
           {/* Table */}
-          <TransactionTable
-            initialTransactions={transactions}
-            initialTotal={total}
-            per_page={perPage}
-            initialQuery={initialQuery}
-          />
+          {error ? (
+            <ErrorState
+              title={t("pages.transactionsPage.errorTitle", "Couldn't load transactions")}
+              description={error}
+              retryLabel={t("retry", "Retry")}
+              onRetry={() => window.location.reload()}
+            />
+          ) : (
+            <TransactionTable
+              initialTransactions={transactions}
+              initialTotal={total}
+              per_page={perPage}
+              initialQuery={initialQuery}
+            />
+          )}
         </div>
-      </UserLayout>
+      
     </>
   );
 };

@@ -6,8 +6,8 @@ import {
   Image,
   Badge,
   ScrollShadow,
-} from "@heroui/react";
-import { ChevronLeft } from "lucide-react";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { FC } from "react";
 import { SelectedFilters } from ".";
 import { Brand as BrandType } from "@/types/ApiResponse";
@@ -61,7 +61,7 @@ const BrandSection: FC<BrandSectionProps> = ({
                 badge: "text-xs",
               }}
             >
-              <ChevronLeft size={20} />
+              <Icon icon="solar:alt-arrow-left-linear" className="text-xl" />
             </Badge>
           )}
         >

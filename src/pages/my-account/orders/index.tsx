@@ -1,14 +1,14 @@
 import OrderCard from "@/components/Cards/OrderCard";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
-import UserLayout from "@/layouts/UserLayout";
 import { GetServerSideProps } from "next";
 import { OrderListItem, PaginatedResponse } from "@/types/ApiResponse";
 import { isSSR } from "@/helpers/getters";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { getOrders, getSettings } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
-import { Button, Pagination, Select, SelectItem } from "@heroui/react";
+import { Pagination, Select, SelectItem } from "@heroui/react";
+import { ErrorState } from "@/components/ui";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import { useRouter } from "next/router";
 import useSWR from "swr";
@@ -18,6 +18,7 @@ import { loadTranslations } from "../../../../i18n";
 import { useTranslation } from "react-i18next";
 import PageHead from "@/SEO/PageHead";
 import OrderCardSkeleton from "@/components/Skeletons/OrderCardSkeleton";
+import { useSettings } from "@/contexts/SettingsContext";
 import { getCookie } from "@/lib/cookies";
 import { loginRedirect } from "@/guards/authGuard";
 
@@ -77,7 +78,7 @@ const OrdersLayout = ({ children, rightContent }: { children: ReactNode; rightCo
         ]}
       />
 
-      <UserLayout activeTab="orders">
+      
         <div className="w-full">
           <PageHeader
             title={t("pageTitle.orders")}
@@ -86,7 +87,7 @@ const OrdersLayout = ({ children, rightContent }: { children: ReactNode; rightCo
           />
           {children}
         </div>
-      </UserLayout>
+      
     </>
   );
 };
@@ -94,7 +95,7 @@ const OrdersLayout = ({ children, rightContent }: { children: ReactNode; rightCo
 // Loading component
 const OrdersLoading = () => {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
+    <div className="flex flex-col gap-4">
       {Array(PER_PAGE)
         .fill(0)
         .map((_, index) => (
@@ -108,23 +109,12 @@ const OrdersLoading = () => {
 const OrdersError = ({ error }: { error: string }) => {
   const { t } = useTranslation();
   return (
-    <div className="w-full flex items-center justify-center min-h-[400px]">
-      <div className="text-center">
-        <div className="text-danger text-lg font-medium mb-2">
-          {t("pages.ordersPage.errorTitle")}
-        </div>
-        <p className="text-default-500 mb-4">{error}</p>
-        <Button
-          onPress={() => window.location.reload()}
-          size="md"
-          variant="flat"
-          color="warning"
-          className="px-4 py-2 text-xs"
-        >
-          {t("pages.ordersPage.tryAgain")}
-        </Button>
-      </div>
-    </div>
+    <ErrorState
+      title={t("pages.ordersPage.errorTitle")}
+      description={error}
+      retryLabel={t("pages.ordersPage.tryAgain")}
+      onRetry={() => window.location.reload()}
+    />
   );
 };
 
@@ -139,8 +129,8 @@ const OrdersContent = ({
   const router = useRouter();
   return (
     <div className="w-full">
-      {/* Orders List — flat, one card per order ITEM */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-start">
+      {/* Orders List — single-column list, one card per order ITEM */}
+      <div className="flex flex-col gap-4">
         {orders.data.map((item: OrderListItem) => (
           <OrderCard key={item.id} item={item} onChanged={onChanged} />
         ))}
@@ -182,6 +172,7 @@ const OrdersPage: NextPageWithLayout<OrdersPageProps> = ({
 }) => {
   const router = useRouter();
   const { t } = useTranslation();
+  const { systemSettings } = useSettings();
   const shouldFetch = typeof window !== "undefined" && router.isReady;
 
   const [currentPage, setCurrentPage] = useState(
@@ -248,21 +239,19 @@ const OrdersPage: NextPageWithLayout<OrdersPageProps> = ({
     { label: t("filters.last_365_days") || "Last 365 Days", value: "last_365_days" },
   ];
 
+  // Customer-facing status codes come from settings (orderStatusEnum), so the
+  // filter always mirrors what the API actually returns/accepts.
+  const humanize = (code: string) =>
+    code
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
   const statusOptions = [
     { label: t("filters.all") || "All Status", value: "" },
-    { label: t("statusFilters.pending") || "Pending", value: "pending" },
-    { label: t("statusFilters.awaiting_store_response") || "Awaiting Store Response", value: "awaiting_store_response" },
-    { label: t("statusFilters.partially_accepted") || "Partially Accepted", value: "partially_accepted" },
-    { label: t("statusFilters.rejected_by_seller") || "Rejected", value: "rejected_by_seller" },
-    { label: t("statusFilters.accepted_by_seller") || "Accepted", value: "accepted_by_seller" },
-    { label: t("statusFilters.ready_for_pickup") || "Ready for Pickup", value: "ready_for_pickup" },
-    { label: t("statusFilters.assigned") || "Assigned", value: "assigned" },
-    { label: t("statusFilters.preparing") || "Preparing", value: "preparing" },
-    { label: t("statusFilters.collected") || "Collected", value: "collected" },
-    { label: t("statusFilters.out_for_delivery") || "Out for Delivery", value: "out_for_delivery" },
-    { label: t("statusFilters.delivered") || "Delivered", value: "delivered" },
-    { label: t("statusFilters.cancelled") || "Cancelled", value: "cancelled" },
-    { label: t("statusFilters.failed") || "Failed", value: "failed" },
+    ...(systemSettings?.orderStatusEnum ?? []).map((code) => ({
+      value: code,
+      label: t(`orderStatus.${code}`, humanize(code)),
+    })),
   ];
 
   const handleFilterChange = (key: string, value: string) => {

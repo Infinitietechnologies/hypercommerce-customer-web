@@ -264,7 +264,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                           {/* Status Chip — customer-friendly headline */}
                           <Chip
                             size="sm"
-                            color={orderStatusColorMap(item?.status)}
+                            color={orderStatusColorMap(item?.customer_status?.code)}
                             variant="flat"
                             radius="sm"
                             className="hover:cursor-pointer"

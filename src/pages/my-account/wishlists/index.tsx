@@ -1,269 +1,67 @@
-import { useEffect, useState, useCallback } from "react";
-import UserLayout from "@/layouts/UserLayout";
-import { useDisclosure } from "@heroui/react";
-import {
-  getAllWishlistTitles,
-  getWishlistById,
-  UpdateWishlistById,
-  deleteWishlistById,
-  toggleFavorite,
-  getSettings,
-} from "@/routes/api";
-import { Wishlist, WishlistItem, WishTitle } from "@/types/ApiResponse";
-import { GetServerSideProps } from "next";
+import { useState } from "react";
+import type { GetServerSideProps } from "next";
+import useSWR from "swr";
+import dynamic from "next/dynamic";
+import { getFavoriteWishlist, toggleFavorite } from "@/routes/api";
+import { Wishlist, WishlistItem } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { isSSR } from "@/helpers/getters";
-import { getMarketFromContext } from "@/helpers/functionalHelpers";
-import useSWR from "swr";
 import { getAccessTokenFromContext } from "@/helpers/auth";
-import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
-import dynamic from "next/dynamic";
-import { loadTranslations } from "../../../../i18n";
-import PageHead from "@/SEO/PageHead";
-import { useTranslation } from "react-i18next";
 import { loginRedirect } from "@/guards/authGuard";
+import { loadTranslations } from "../../../../i18n";
+import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
+import PageHead from "@/SEO/PageHead";
+import { toastError } from "@/components/ui";
+import { useTranslation } from "react-i18next";
 
-const EditWishlistModal = dynamic(
-  () => import("@/components/Modals/EditWishlistModal"),
-  { ssr: false }
-);
 const WishListPageView = dynamic(() => import("@/views/WishListPageView"), {
   ssr: false,
 });
 
-interface LoadingState {
-  wishlists: boolean;
-  wishlistDetails: boolean;
-  updating: boolean;
-  deleting: string | null;
-  removingItem: number | null;
-}
-
-interface ErrorState {
-  message: string;
-  type: "error" | "warning" | "info";
-}
-
-interface EditingWishlist {
-  id: string | number;
-  title: string;
-}
-
-interface WishlistsPageProps {
-  initialWishlists: WishTitle[] | null;
-  error?: string;
-}
-
-const WishlistsPage: NextPageWithLayout<WishlistsPageProps> = ({
-  initialWishlists,
-  error: initialError,
-}) => {
-  const [wishlists, setWishlists] = useState<WishTitle[]>(
-    initialWishlists || []
-  );
-  const [selectedWishlist, setSelectedWishlist] = useState<Wishlist | null>(
-    null
-  );
+const WishlistsPage: NextPageWithLayout = () => {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState<LoadingState>({
-    wishlists: !initialWishlists,
-    wishlistDetails: false,
-    updating: false,
-    deleting: null,
-    removingItem: null,
-  });
-  const [error, setError] = useState<ErrorState | null>(
-    initialError ? { message: initialError, type: "error" } : null
-  );
+  const [removingId, setRemovingId] = useState<number | null>(null);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [editingWishlist, setEditingWishlist] =
-    useState<EditingWishlist | null>(null);
-
-  const { data: wishlistsData, error: wishlistsError } = useSWR(
-    !isSSR() ? "/api/wishlists" : null,
+  const { data, isLoading, error, mutate } = useSWR(
+    "/api/wishlists/favorite",
     async () => {
-      const response = await getAllWishlistTitles();
-      if (response.success && response.data) {
-        return Array.isArray(response.data) ? response.data : [response.data];
-      }
-      console.error(
-        response.message || t("pages.wishlistsPage.errors.fetchFailed")
-      );
+      const res = await getFavoriteWishlist();
+      if (res.success && res.data) return res.data as Wishlist;
+      throw new Error(res.message || t("pages.wishlistsPage.errors.fetchFailed"));
     },
-    {
-      fallbackData: initialWishlists || undefined,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: true,
-      dedupingInterval: 3000,
-    }
+    { revalidateOnFocus: false, revalidateOnReconnect: true, dedupingInterval: 3000 },
   );
 
-  useEffect(() => {
-    if (wishlistsData) {
-      setWishlists(wishlistsData);
-      setLoading((prev) => ({ ...prev, wishlists: false }));
-    }
-    if (wishlistsError) {
-      setError({ message: wishlistsError.message, type: "error" });
-    }
-  }, [wishlistsData, wishlistsError]);
+  const items = data?.items ?? [];
 
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
-
-  const showError = useCallback(
-    (message: string, type: ErrorState["type"] = "error") => {
-      setError({ message, type });
-    },
-    []
-  );
-
-  const updateLoading = useCallback(
-    (key: keyof LoadingState, value: boolean | string | number | null) => {
-      setLoading((prev) => ({ ...prev, [key]: value }));
-    },
-    []
-  );
-
-  const fetchWishlists = async () => {
-    updateLoading("wishlists", true);
+  const handleRemove = async (item: WishlistItem) => {
+    setRemovingId(item.id);
+    mutate(
+      (prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.filter((i) => i.id !== item.id),
+              items_count: Math.max(0, (prev.items_count || 1) - 1),
+            }
+          : prev,
+      false,
+    );
     try {
-      const response = await getAllWishlistTitles();
-      if (response.success && response.data) {
-        const wishlistData = Array.isArray(response.data)
-          ? response.data
-          : [response.data];
-        setWishlists(wishlistData);
-      } else {
-        showError(
-          response.message || t("pages.wishlistsPage.errors.fetchFailed")
-        );
-      }
-    } catch {
-      showError(t("pages.wishlistsPage.errors.network"));
-    } finally {
-      updateLoading("wishlists", false);
-    }
-  };
-
-  const fetchWishlistDetails = async (id: string, forceFetch?: boolean) => {
-    if (selectedWishlist?.id.toString() === id && !forceFetch) return;
-
-    updateLoading("wishlistDetails", true);
-    try {
-      const response = await getWishlistById(id);
-      if (response.success && response.data) {
-        setSelectedWishlist(response.data);
-      } else {
-        showError(
-          response.message || t("pages.wishlistsPage.errors.fetchDetails")
-        );
-        setSelectedWishlist(null);
-      }
-    } catch {
-      showError(t("pages.wishlistsPage.errors.network"));
-      setSelectedWishlist(null);
-    } finally {
-      updateLoading("wishlistDetails", false);
-    }
-  };
-
-  const handleUpdateWishlist = async () => {
-    if (!editingWishlist || !editingWishlist.title.trim()) {
-      showError(t("pages.wishlistsPage.errors.invalidTitle"), "warning");
-      return;
-    }
-
-    updateLoading("updating", true);
-    try {
-      const response = await UpdateWishlistById({
-        id:
-          typeof editingWishlist.id === "string"
-            ? parseInt(editingWishlist.id)
-            : editingWishlist.id,
-        title: editingWishlist.title.trim(),
-      });
-
-      if (response.success) {
-        await fetchWishlists();
-        if (selectedWishlist?.id === editingWishlist.id) {
-          setSelectedWishlist((prev) =>
-            prev ? { ...prev, title: editingWishlist.title } : null
-          );
-        }
-        onClose();
-        setEditingWishlist(null);
-      } else {
-        showError(
-          response.message || t("pages.wishlistsPage.errors.updateFailed")
-        );
-      }
-    } catch {
-      showError(t("pages.wishlistsPage.errors.network"));
-    } finally {
-      updateLoading("updating", false);
-    }
-  };
-
-  const handleDeleteWishlist = async (id: string) => {
-    updateLoading("deleting", id);
-    try {
-      const response = await deleteWishlistById(id);
-      if (response.success) {
-        await fetchWishlists();
-        if (selectedWishlist?.id.toString() === id) {
-          setSelectedWishlist(null);
-        }
-      } else {
-        showError(
-          response.message || t("pages.wishlistsPage.errors.deleteFailed")
-        );
-      }
-    } catch {
-      showError(t("pages.wishlistsPage.errors.network"));
-    } finally {
-      updateLoading("deleting", null);
-    }
-  };
-
-  // Per-item removal is only available on the system "Favorite" list, where
-  // it maps to toggling the favorite off (the backend has no per-item delete).
-  const handleRemoveItem = async (item: WishlistItem, forceFetch: boolean) => {
-    updateLoading("removingItem", item.id);
-    try {
-      const response = await toggleFavorite({
+      const res = await toggleFavorite({
         product_id: item.product.id,
         product_variant_id: item.variant?.id ?? null,
         store_id: item.store.id,
       });
-      if (response.success) {
-        if (selectedWishlist) {
-          await fetchWishlistDetails(
-            selectedWishlist.id.toString(),
-            forceFetch
-          );
-        }
-        await fetchWishlists();
-      } else {
-        showError(
-          response.message || t("pages.wishlistsPage.errors.removeItem")
-        );
+      if (!res.success) {
+        toastError(res.message || t("pages.wishlistsPage.errors.removeItem"));
+        mutate();
       }
     } catch {
-      showError(t("pages.wishlistsPage.errors.network"));
+      toastError(t("pages.wishlistsPage.errors.network"));
+      mutate();
     } finally {
-      updateLoading("removingItem", null);
-    }
-  };
-
-  const confirmDelete = (id: string, title: string) => {
-    if (window.confirm(t("pages.wishlistsPage.confirmDelete", { title }))) {
-      handleDeleteWishlist(id);
+      setRemovingId(null);
     }
   };
 
@@ -276,83 +74,28 @@ const WishlistsPage: NextPageWithLayout<WishlistsPageProps> = ({
       />
       <PageHead pageTitle={t("pageTitle.wishlists")} />
 
-      <UserLayout activeTab="wishlists">
-        <WishListPageView
-          error={error}
-          setError={setError}
-          loading={loading}
-          wishlists={wishlists}
-          selectedWishlist={selectedWishlist}
-          fetchWishlistDetails={fetchWishlistDetails}
-          setEditingWishlist={setEditingWishlist}
-          onOpen={onOpen}
-          confirmDelete={confirmDelete}
-          handleRemoveItem={handleRemoveItem}
-          fetchWishlists={fetchWishlists}
-        />
-
-        <EditWishlistModal
-          isOpen={isOpen}
-          onClose={onClose}
-          editingWishlist={editingWishlist}
-          setEditingWishlist={setEditingWishlist}
-          loading={loading}
-          handleUpdateWishlist={handleUpdateWishlist}
-        />
-      </UserLayout>
+      <WishListPageView
+        items={items}
+        loading={isLoading && !data}
+        error={error ? error.message : undefined}
+        removingId={removingId}
+        onRemove={handleRemove}
+        onRetry={() => mutate()}
+      />
     </>
   );
 };
 
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
-      try {
-        const access_token = (await getAccessTokenFromContext(context)) || "";
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
-        await loadTranslations(context);
-
-        const wishlistsResponse = await getAllWishlistTitles({ access_token });
-        const market = getMarketFromContext(context);
-        const settingsResponse = await getSettings({ market });
-
-        if (wishlistsResponse.success && wishlistsResponse.data) {
-          return {
-            props: {
-              initialWishlists: Array.isArray(wishlistsResponse.data)
-                ? wishlistsResponse.data
-                : [wishlistsResponse.data],
-              initialSettings: settingsResponse.data,
-            },
-          };
-        } else {
-          return {
-            props: {
-              initialWishlists: null,
-              initialSettings: settingsResponse.data,
-              error: wishlistsResponse.message || "Failed to fetch wishlists",
-            },
-          };
-        }
-      } catch (err) {
-        console.error("Error in getServerSideProps:", err);
+      const access_token = (await getAccessTokenFromContext(context)) || "";
+      if (!access_token) {
         return {
-          props: {
-            initialWishlists: null,
-            initialSettings: null,
-            error:
-              err instanceof Error
-                ? err.message
-                : "An error occurred during SSR",
-          },
+          redirect: { destination: loginRedirect(context), permanent: false },
         };
       }
+      await loadTranslations(context);
+      return { props: {} };
     }
   : undefined;
 

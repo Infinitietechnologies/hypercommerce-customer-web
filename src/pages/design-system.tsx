@@ -29,7 +29,7 @@ import {
 const WRAP = "w-full max-w-site mx-auto px-6";
 
 const SWATCHES: [string, string][] = [
-  ["Primary", "#eba513"], ["Primary 600", "#c2870a"], ["Primary 100", "#fdf2d5"],
+  ["Primary", "#0f172a"], ["Primary 600", "#0b1120"], ["Primary 100", "#eef1f6"],
   ["Foreground", "#181510"], ["Default 500", "#6d6656"], ["Divider", "#ece8df"],
   ["Content1", "#ffffff"], ["Background", "#f4f2ec"], ["Success", "#178a4e"],
   ["Danger", "#d6453f"], ["Secondary", "#6d5ae0"], ["Blue", "#2f6fed"],
@@ -45,9 +45,9 @@ const DesignSystemPage: NextPageWithLayout = () => {
           <span className="font-extrabold italic text-2xl">HYPER<span className="text-primary-600">COMMERCE</span></span>
         </div>
         <h1 className="text-2xl font-extrabold">Design System — Atoms &amp; Components</h1>
-        <p className="text-sm text-default-500 mt-1 mb-7 max-w-[680px]">Built on HeroUI primitives, themed amber. Buttons, inputs, selection controls, chips, feedback, navigation and overlays — interactive pieces are live.</p>
+        <p className="text-sm text-default-500 mt-1 mb-7 max-w-[680px]">Built on HeroUI primitives, themed slate. Buttons, inputs, selection controls, chips, feedback, navigation and overlays — interactive pieces are live.</p>
 
-        <Panel title="Foundations" sub="Colour tokens & type scale. Primary is amber #eba513.">
+        <Panel title="Foundations" sub="Colour tokens & type scale. Primary is slate #0f172a.">
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
             {SWATCHES.map(([name, hex]) => (
               <div key={name}>

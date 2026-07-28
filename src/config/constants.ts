@@ -1,5 +1,3 @@
-import { OrderStatus } from "@/types/ApiResponse";
-
 export const fallbackPaginateRes = {
   success: false,
   message: "An error occurred.",
@@ -38,19 +36,26 @@ export const fallbackApiRes = {
   data: undefined,
 };
 
+// Keyed by the customer-facing status code (settings `orderStatusEnum` /
+// CustomerStatus.code): processing, shipped, delivered, on_hold,
+// return_requested, returned, refunded, cancelled.
 export const orderStatusColorMap = (
-  status: OrderStatus | undefined
+  status: string | undefined
 ): "default" | "primary" | "secondary" | "success" | "warning" | "danger" => {
   switch (status) {
-    case "awaiting_store_response":
-      return "warning";
-    case "ready_for_pickup":
-      return "secondary";
-    case "assigned":
+    case "processing":
       return "primary";
-    case "out_for_delivery":
-      return "warning";
+    case "shipped":
+      return "secondary";
     case "delivered":
+      return "success";
+    case "on_hold":
+      return "warning";
+    case "return_requested":
+      return "warning";
+    case "returned":
+      return "secondary";
+    case "refunded":
       return "success";
     case "cancelled":
       return "danger";

@@ -1,9 +1,7 @@
-"use client";
-
 import { FC, useState } from "react";
-import { addToast, Button, Image } from "@heroui/react";
+import { toast, Button, Image } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { Trash2, ShoppingCart } from "lucide-react";
 import { getSaveForLaterItems, removeItemFromCart } from "@/routes/api";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import { updateCartData } from "@/helpers/updators";
@@ -52,13 +50,13 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
       const response = await removeItemFromCart(selectedItemId);
       if (response.success) {
         mutate();
-        addToast({
+        toast({
           title: t("cartItems.itemRemoved.title"),
           description: t("cartItems.itemRemoved.description"),
           color: "success",
         });
       } else {
-        addToast({
+        toast({
           title: t("cartItems.removeFailed.title"),
           description:
             response.message || t("cartItems.removeFailed.description"),
@@ -67,7 +65,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
       }
     } catch (error) {
       console.error(error);
-      addToast({
+      toast({
         title: t("cartItems.networkError.title"),
         description: t("cartItems.networkError.description"),
         color: "danger",
@@ -92,7 +90,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
       });
 
       if (res && typeof res !== "string" && "success" in res && "data" in res) {
-        addToast({
+        toast({
           title: t("saveForLater.moveSuccess.title"),
           description: t("saveForLater.moveSuccess.description"),
           color: "success",
@@ -101,7 +99,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
         mutate();
         updateCartData(true, false);
       } else {
-        addToast({
+        toast({
           title: t("saveForLater.moveFailed.title"),
           description: t("saveForLater.moveFailed.description"),
           color: "danger",
@@ -109,7 +107,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
       }
     } catch (error) {
       console.error(error);
-      addToast({
+      toast({
         title: t("saveForLater.moveFailed.title"),
         description: t("saveForLater.moveFailed.description"),
         color: "danger",
@@ -124,8 +122,8 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
   }
 
   return (
-    <div className="w-full bg-default-50 rounded-xl p-4 border border-default-200">
-      <h2 className="text-lg font-semibold mb-3">
+    <div className="w-full bg-content2 rounded-2xl p-4 border border-divider">
+      <h2 className="text-lg font-bold mb-3">
         {t("saveForLater.title") || "Saved for Later"}
       </h2>
 
@@ -146,13 +144,13 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
       >
         {items.map((item) => (
           <SwiperSlide key={item.id}>
-            <div className="flex flex-col bg-white dark:bg-default-100 border border-default-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 p-3">
+            <div className="flex flex-col bg-content1 border border-divider rounded-2xl shadow-sm hover:shadow-md hover:border-primary transition-all duration-200 p-3">
               <div className="relative w-full flex justify-center">
                 <Image
                   loading="lazy"
                   src={item.product.image}
                   alt={item.variant.title || ""}
-                  className="w-24 h-24 object-contain rounded-lg cursor-pointer"
+                  className="w-24 h-24 object-contain rounded-xl cursor-pointer bg-content2"
                   onClick={() => {
                     setLightboxImages([{ src: item.product.image }]);
                     setLightboxOpen(true);
@@ -161,15 +159,15 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
 
                 <Button
                   title={t("remove_item")}
-                  className="absolute z-50 top-0 right-0 bg-transparent rounded-full"
+                  aria-label={t("remove_item")}
+                  className="absolute z-50 top-0 right-0 bg-content1/80 backdrop-blur-sm rounded-full text-danger"
                   size="sm"
                   isDisabled={isLoading}
                   isIconOnly
-                  startContent={
-                    <Trash2 size={16} className="text-danger-500" />
-                  }
                   onPress={() => setSelectedItemId(item.id)}
-                />
+                >
+                  <Icon icon="solar:trash-bin-trash-linear" className="text-base" />
+                </Button>
               </div>
 
               <div className="mt-2 text-center">
@@ -229,7 +227,9 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
                   variant="flat"
                   color="primary"
                   className="mt-2 w-full text-xs"
-                  startContent={<ShoppingCart size={14} />}
+                  startContent={
+                    <Icon icon="solar:cart-plus-linear" className="text-sm" />
+                  }
                   onPress={() => handleMoveToCart(item)}
                 >
                   {t("saveForLater.moveToCart")}
@@ -245,7 +245,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
         onClose={() => setSelectedItemId(null)}
         onConfirm={handleRemoveItem}
         title={t("cartItems.removeItemModal.title")}
-        icon={<Trash2 className="w-4 h-4" />}
+        icon={<Icon icon="solar:trash-bin-trash-linear" className="text-base" />}
         description={t("cartItems.removeItemModal.description")}
         confirmText={t("cartItems.removeItemModal.confirmText")}
         cancelText={t("cartItems.removeItemModal.cancelText")}

@@ -8,10 +8,11 @@ import {
   Button,
   Switch,
   useDisclosure,
-  addToast,
+  toast,
   Divider,
   Alert,
-} from "@heroui/react";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
 import PaymentModal from "@/components/Modals/PaymentModal";
 import CartItems from "./CartItems";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -21,7 +22,6 @@ import { updateCartData } from "@/helpers/updators";
 import { setPromoCode, setUseWallet } from "@/lib/redux/slices/checkoutSlice";
 import { clearCart } from "@/routes/api";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal";
-import { Trash2, Tag, Wallet } from "lucide-react";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { handleCheckout } from "@/helpers/functionalHelpers";
@@ -63,7 +63,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
   const handleCheckoutClick = async (walletOnly = false) => {
     try {
       if (!selectedAddress) {
-        addToast({
+        toast({
           title: t("checkout.noAddressSelected.title"),
           description: t("checkout.noAddressSelected.description"),
           color: "warning",
@@ -93,7 +93,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
             .filter(Boolean)
             .join(", ");
 
-          addToast({
+          toast({
             title: t("checkout.attachmentsRequired.title", {
               defaultValue: "Attachments Required",
             }),
@@ -117,7 +117,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
           dispatch(setPromoCode(""));
           updateCartData(true, false);
         } else {
-          addToast({
+          toast({
             title: t("checkout.failed.title"),
             description: res?.message || t("checkout.failed.description"),
             color: "danger",
@@ -131,7 +131,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
       }
     } catch (error) {
       console.error("Error in handleCheckoutClick:", error);
-      addToast({
+      toast({
         title: t("general.error.title"),
         description: t("general.error.somethingWentWrong"),
         color: "danger",
@@ -228,24 +228,28 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
   const hasValidationErrors = validationErrors.length > 0;
 
   return (
-    <div className="w-full flex justify-end">
-      <Card radius="md" className="w-full p-2" shadow="sm">
+    <div className="w-full flex justify-end md:sticky md:top-24">
+      <Card radius="lg" className="w-full border border-divider p-2" shadow="sm">
         <CardHeader className="flex w-full justify-between items-center">
-          <h2 className="font-semibold">{t("checkout.yourOrder")}</h2>
+          <h2 className="text-base font-bold">{t("checkout.yourOrder")}</h2>
           <Button
             size="sm"
-            className="h-6 text-xs"
+            variant="light"
+            className="h-7 text-xs"
             color="danger"
             title={t("checkout.clearCart")}
+            startContent={
+              <Icon icon="solar:trash-bin-trash-linear" className="text-sm" />
+            }
             onPress={() => setShowClearCartModal(true)}
           >
             {t("checkout.clearCart")}
           </Button>
         </CardHeader>
         <CardBody>
-          <CartItems items={cart.items} />
+          <CartItems items={cart.items} scrollable />
         </CardBody>
-        <CardFooter className="space-y-6 flex flex-col w-full border-t-1 border-gray-200 dark:border-default-100">
+        <CardFooter className="space-y-6 flex flex-col w-full border-t border-divider">
           <div className="space-y-3 pt-4 w-full text-sm">
             <div className="flex justify-between">
               <span>{t("checkout.itemsTotal")}</span>
@@ -253,12 +257,12 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 {formatPrice(payment_summary.items_total)}
               </span>
             </div>
-            <div className="w-full -mt-2 text-start text-xs text-gray-500">
+            <div className="w-full -mt-2 text-start text-xs text-foreground/50">
               {`${t("checkout.allPricesIncludeTaxes")}`}
             </div>
 
             {payment_summary.total_saving > 0 && (
-              <div className="flex justify-between text-green-600">
+              <div className="flex justify-between text-success-600">
                 <span>
                   {t("checkout.totalSaving", { defaultValue: "Total savings" })}
                 </span>
@@ -275,12 +279,12 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 {isFreeShipping && isInstantPromo ? (
                   <span className="flex items-center gap-2">
                     {/* Strikethrough original amount */}
-                    <span className="line-through text-gray-500">
+                    <span className="line-through text-foreground/50">
                       {formatPrice(payment_summary.delivery_charges)}
                     </span>
 
                     {/* Free Shipping text */}
-                    <span className="text-green-600 font-semibold">
+                    <span className="text-success-600 font-semibold">
                       {t("checkout.freeShipping")}
                     </span>
                   </span>
@@ -347,7 +351,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 {payment_summary.tax_breakdown?.map((tax) => (
                   <div
                     key={tax.tax_rate_id}
-                    className="flex justify-between pl-2 text-xs text-gray-500"
+                    className="flex justify-between pl-2 text-xs text-foreground/50"
                   >
                     <span>
                       {tax.title} ({tax.rate}%)
@@ -430,11 +434,11 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 {payment_summary.promo_applied &&
                   payment_summary.promo_discount > 0 &&
                   isInstantPromo && (
-                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between text-green-700">
+                    <div className="bg-success-50 p-3 rounded-lg border border-success-200">
+                      <div className="flex items-center justify-between text-success-700">
                         <div className="w-full flex flex-col gap-1">
                           <div className="flex items-center gap-2">
-                            <Tag className="w-4 h-4" />
+                            <Icon icon="solar:tag-linear" className="text-base" />
                             <span className="font-medium">
                               {t("checkout.promo")}:{" "}
                               {payment_summary?.promo_code}
@@ -445,7 +449,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                         {/* Right side value - deduction */}
                         <span className="font-semibold inline-block whitespace-nowrap">
                           {isFreeShipping ? (
-                            <span className="text-green-600 whitespace-nowrap">
+                            <span className="text-success-600 whitespace-nowrap">
                               {t("checkout.freeShipping")}
                             </span>
                           ) : (
@@ -460,19 +464,19 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 {payment_summary.promo_applied &&
                   payment_summary.promo_discount > 0 &&
                   isCashbackPromo && (
-                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <div className="flex justify-between items-start text-blue-700">
+                    <div className="bg-secondary-50 p-3 rounded-lg border border-secondary-200">
+                      <div className="flex justify-between items-start text-secondary-700">
                         {/* Left Section */}
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
-                            <Wallet className="w-4 h-4" />
+                            <Icon icon="solar:wallet-linear" className="text-base" />
                             <span className="font-medium">
                               {t("checkout.promo")}:{" "}
                               {payment_summary?.promo_code}
                             </span>
                           </div>
 
-                          <p className="text-xs text-blue-600 dark:text-blue-400 italic">
+                          <p className="text-xs text-secondary-600 italic">
                             {t("cashbackPendingNote")}
                           </p>
                         </div>
@@ -480,12 +484,12 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                         {/* Right Section */}
                         <div className="flex flex-col items-end gap-1">
                           {isFreeShipping && (
-                            <span className="text-green-600 font-semibold whitespace-nowrap">
+                            <span className="text-success-600 font-semibold whitespace-nowrap">
                               {t("checkout.freeShipping")}
                             </span>
                           )}
 
-                          <span className="font-semibold whitespace-nowrap text-blue-600">
+                          <span className="font-semibold whitespace-nowrap text-secondary-600">
                             + {formatPrice(payment_summary.promo_discount)}
                           </span>
                         </div>
@@ -496,7 +500,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 {/* Promo error */}
                 {payment_summary.promo_error && (
                   <div className="flex items-center gap-2 text-danger text-xs">
-                    <Tag className="w-3.5 h-3.5" />
+                    <Icon icon="solar:tag-linear" className="text-sm" />
                     <span>{payment_summary.promo_error}</span>
                   </div>
                 )}
@@ -528,7 +532,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
 
             {isWalletUse && payment_summary.wallet_amount_used > 0 ? (
               <>
-                <div className="flex justify-between text-green-600">
+                <div className="flex justify-between text-success-600">
                   <span>{t("checkout.walletAmountUsed")}</span>
                   <span>
                     {formatPrice(-payment_summary.wallet_amount_used)}
@@ -536,7 +540,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 </div>
 
                 {/* Remaining Wallet Balance */}
-                <div className="flex justify-between text-blue-600">
+                <div className="flex justify-between text-secondary-600">
                   <span>{t("checkout.remainingWalletBalance")}</span>
                   <span>
                     {formatPrice(
@@ -607,7 +611,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
         onConfirm={async () => {
           await clearCart();
           setShowClearCartModal(false);
-          addToast({
+          toast({
             title: t("checkout.cartCleared.title"),
             description: t("checkout.cartCleared.description"),
             color: "success",
@@ -616,7 +620,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
           updateCartData(true, false);
         }}
         title="Clear Cart"
-        icon={<Trash2 className="w-4 h-4" />}
+        icon={<Icon icon="solar:trash-bin-trash-linear" className="text-base" />}
         description={t("checkout.clearCartModal.description")}
         confirmText={t("checkout.clearCartModal.confirmText")}
         cancelText={t("checkout.clearCartModal.cancelText")}

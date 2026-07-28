@@ -9,9 +9,10 @@ import {
   DrawerHeader,
   Image,
   ScrollShadow,
-  addToast,
+  toast,
   useDisclosure,
-} from "@heroui/react";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
@@ -20,7 +21,6 @@ import {
   removeOfflineCartItem,
   updateOfflineCartItemQuantity,
 } from "@/lib/redux/slices/offlineCartSlice";
-import { ChevronRight, Minus, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal";
@@ -93,7 +93,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
 
     // Check minimum quantity
     if (newQuantity < minQty) {
-      addToast({
+      toast({
         title: t("min_quantity_error_title"),
         description: t("min_quantity_error_description", {
           min: minQty,
@@ -105,7 +105,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
 
     // Check stock limit
     if (stock && newQuantity > stock) {
-      addToast({
+      toast({
         title: t("stock_limit_error_title"),
         description: t("stock_limit_error_description", {
           stock: stock,
@@ -117,7 +117,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
 
     // Check maximum quantity
     if (newQuantity > maxLimit) {
-      addToast({
+      toast({
         title: t("max_quantity_error_title"),
         description: t("max_quantity_error_description", {
           max: maxLimit,
@@ -130,7 +130,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
     // Check step size
     if (step > 1) {
       if (newQuantity % step !== 0) {
-        addToast({
+        toast({
           title: t("step_error_title"),
           description: t("step_error_description", { step: step }),
           color: "danger",
@@ -138,7 +138,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
         return;
       }
     } else if ((newQuantity - minQty) % step !== 0) {
-      addToast({
+      toast({
         title: t("step_error_title"),
         description: t("step_error_description", { step: step }),
         color: "danger",
@@ -160,14 +160,14 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
       dispatch(removeOfflineCartItem(selectedItemId));
       setSelectedItemId(null);
 
-      addToast({
+      toast({
         title: t("cartItems.itemRemoved.title"),
         description: t("cartItems.itemRemoved.description"),
         color: "success",
       });
     } catch (error) {
       console.error("Error removing item:", error);
-      addToast({
+      toast({
         title: t("cartItems.removeFailed.title"),
         description: t("cartItems.removeFailed.description"),
         color: "danger",
@@ -206,7 +206,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error(error);
-      addToast({
+      toast({
         title: t("general.error.title"),
         description: t("general.error.somethingWentWrong"),
         color: "danger",
@@ -222,7 +222,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
         <DrawerContent className="max-w-md">
           <DrawerHeader className="flex flex-col gap-1">
             <p className="text-lg font-semibold">{t("cart_title")}</p>
-            <p className="text-sm text-default-500">
+            <p className="text-sm text-foreground/60">
               {t("cart.login_required") || "Please login to continue"}
             </p>
           </DrawerHeader>
@@ -234,17 +234,17 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                   {offlineCart.items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex gap-3 rounded-large border border-default-200/70 p-3"
+                      className="flex gap-3 rounded-2xl border border-divider bg-content1 p-3"
                     >
                       {item.image ? (
                         <Image
                           alt={item.name}
                           src={item.image}
                           removeWrapper
-                          className="h-16 w-16 rounded-medium object-contain"
+                          className="h-16 w-16 rounded-xl object-contain bg-content2"
                         />
                       ) : (
-                        <div className="h-16 w-16 rounded-medium bg-default-100 text-default-500 flex items-center justify-center text-sm font-semibold uppercase">
+                        <div className="h-16 w-16 rounded-xl bg-content2 text-foreground/50 flex items-center justify-center text-sm font-semibold uppercase">
                           {item.name?.slice(0, 2)}
                         </div>
                       )}
@@ -262,21 +262,25 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                             size="sm"
                             color="danger"
                             variant="light"
-                            className="text-xs"
-                            startContent={<Trash2 size={14} />}
+                            aria-label={t("cartItems.removeItemModal.title")}
                             onPress={() => setSelectedItemId(item.id)}
-                          />
+                          >
+                            <Icon
+                              icon="solar:trash-bin-trash-linear"
+                              className="text-base"
+                            />
+                          </Button>
                         </div>
                         {item.storeName && (
                           <Link
                             href={`/stores/${item.storeSlug}`}
-                            className="text-xxs sm:text-xs text-default-500"
+                            className="text-xxs sm:text-xs text-foreground/60"
                           >
                             {item.storeName}
                           </Link>
                         )}
                         <div className="flex flex-col gap-2">
-                          <div className="flex sm:items-center flex-col sm:flex-row justify-between text-xs text-default-500">
+                          <div className="flex sm:items-center flex-col sm:flex-row justify-between text-xs text-foreground/60">
                             <div className="flex gap-2">
                               <span>
                                 {t("product_modal.qty") + ":"} {item.quantity}
@@ -293,11 +297,13 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center gap-0">
+                            <div className="flex items-center gap-1 rounded-xl border border-divider p-1">
                               <Button
                                 isIconOnly
-                                variant="flat"
-                                className="w-7 h-7 min-w-7"
+                                size="sm"
+                                variant="light"
+                                aria-label={t("decrease_quantity", "Decrease quantity")}
+                                className="w-7 h-7 min-w-7 text-primary-600"
                                 onPress={() =>
                                   handleQuantityChange(
                                     item.id,
@@ -310,15 +316,17 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                                   )
                                 }
                               >
-                                <Minus size={12} />
+                                <Icon icon="solar:minus-square-linear" className="text-lg" />
                               </Button>
-                              <span className="w-10 text-center text-sm font-semibold">
+                              <span className="w-8 text-center text-sm font-bold tabular-nums">
                                 {item.quantity}
                               </span>
                               <Button
                                 isIconOnly
-                                variant="flat"
-                                className="w-7 h-7 min-w-7"
+                                size="sm"
+                                variant="light"
+                                aria-label={t("increase_quantity", "Increase quantity")}
+                                className="w-7 h-7 min-w-7 text-primary-600"
                                 onPress={() =>
                                   handleQuantityChange(
                                     item.id,
@@ -331,10 +339,10 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                                   )
                                 }
                               >
-                                <Plus size={12} />
+                                <Icon icon="solar:add-square-linear" className="text-lg" />
                               </Button>
                             </div>
-                            <p className="text-sm font-semibold text-default-900 whitespace-nowrap">
+                            <p className="text-sm font-bold text-foreground whitespace-nowrap">
                               {formatPrice(
                                 (item.price +
                                   (item.addons?.reduce(
@@ -349,19 +357,19 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                           <button
                             onClick={() => handleCustomize(item)}
                             disabled={isCustomizing}
-                            className="text-xxs font-semibold mt-1 flex items-center gap-0.5 hover:opacity-80 transition-opacity"
+                            className="text-xxs font-semibold mt-1 flex items-center gap-0.5 text-primary-600 hover:opacity-80 transition-opacity"
                           >
-                            <span className="text-black dark:text-white cursor-pointer">
+                            <span className="cursor-pointer">
                               {isCustomizing &&
                               customizingProduct?.slug === item.slug
                                 ? t("loading")
                                 : t("cartItems.customize") || "Customize"}
                             </span>
-                            <ChevronRight size={12} className="text-primary" />
+                            <Icon icon="solar:alt-arrow-right-linear" className="text-sm" />
                           </button>
 
                           {item.addons && item.addons.length > 0 && (
-                            <div className="text-xxs text-default-400 leading-tight mt-1 break-words">
+                            <div className="text-xxs text-foreground/40 leading-tight mt-1 break-words">
                               {item.addons
                                 .map((addon: any) => {
                                   const groupTitle =
@@ -383,18 +391,18 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                   ))}
                 </ScrollShadow>
 
-                <Divider className="text-foreground/50" />
+                <Divider />
 
-                <div className="flex flex-col gap-2 rounded-large border border-default-200/70 p-4">
+                <div className="flex flex-col gap-2 rounded-2xl border border-divider bg-content2 p-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-default-500">
+                    <span className="text-foreground/60">
                       {t("checkout.itemsTotal")}
                     </span>
-                    <span className="font-semibold text-default-900">
+                    <span className="font-bold text-foreground">
                       {formatPrice(offlineCart.subtotal)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-default-500">
+                  <div className="flex items-center justify-between text-xs text-foreground/60">
                     <span>{t("items") || "items"}</span>
                     <span>{offlineCart.totalQuantity}</span>
                   </div>
@@ -412,7 +420,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                 <p className="text-base font-semibold">
                   {t("cart.cartEmptyTitle")}
                 </p>
-                <p className="text-sm text-default-500">
+                <p className="text-sm text-foreground/60">
                   {t("cart.cartEmptyDescription")}
                 </p>
               </div>
@@ -431,7 +439,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
         onClose={() => setSelectedItemId(null)}
         onConfirm={handleRemoveItem}
         title={t("cartItems.removeItemModal.title")}
-        icon={<Trash2 className="w-4 h-4" />}
+        icon={<Icon icon="solar:trash-bin-trash-linear" className="text-base" />}
         description={t("cartItems.removeItemModal.description")}
         confirmText={t("cartItems.removeItemModal.confirmText")}
         cancelText={t("cartItems.removeItemModal.cancelText")}

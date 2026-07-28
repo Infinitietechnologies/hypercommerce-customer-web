@@ -1,4 +1,4 @@
-import { Select, SelectItem, Pagination } from "@heroui/react";
+import { Select, SelectItem, Pagination } from "@/components/ui";
 import { FC, useState, useMemo } from "react";
 import AverageRatingSection from "./AverageRatingSection";
 import { getSellerReviews } from "@/routes/api";

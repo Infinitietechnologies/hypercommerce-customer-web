@@ -827,7 +827,8 @@
     "transactions": "लेन-देन",
     "wallet": "वॉलेट",
     "wishlists": "इच्छा सूची",
-    "seller-registration": "विक्रेता पंजीकरण"
+    "seller-registration": "विक्रेता पंजीकरण",
+    "checkout": "Checkout"
   },
   "pages": {
     "aboutUs": {
@@ -998,7 +999,9 @@
         "otpSentTitle": "ओटीपी भेजा गया",
         "otpSentDesc": "सत्यापन कोड आपके मोबाइल पर भेजा गया है।",
         "phoneUpdateSuccess": "फोन नंबर सफलतापूर्वक अपडेट और सत्यापित किया गया।",
-        "otpSentTo": "भेजा गया ओटीपी दर्ज करें"
+        "otpSentTo": "भेजा गया ओटीपी दर्ज करें",
+        "verificationCode": "सत्यापन कोड",
+        "otpPlaceholder": "6 अंकों का OTP दर्ज करें"
       },
       "personalInfo": "व्यक्तिगत जानकारी",
       "saveChanges": "परिवर्तन सहेजें",
@@ -1015,7 +1018,8 @@
         "successTitle": "सफलता",
         "updateFailedDesc": "आपका डेटा अपडेट करते समय कोई समस्या हुई।",
         "updateFailedTitle": "अपडेट विफल"
-      }
+      },
+      "editProfile": "प्रोफ़ाइल संपादित करें"
     },
     "shoppingList": {
       "headerTitle": "शॉपिंग सूची",
@@ -1053,7 +1057,32 @@
       "errorLoading": "ऑर्डर लोड करने में त्रुटि",
       "loading": "ऑर्डर विवरण लोड हो रहा है...",
       "notFound": "ऑर्डर नहीं मिला",
-      "notFoundDesc": "आप जिस ऑर्डर की तलाश कर रहे हैं, वह मौजूद नहीं है या हटा दिया गया है।"
+      "notFoundDesc": "आप जिस ऑर्डर की तलाश कर रहे हैं, वह मौजूद नहीं है या हटा दिया गया है।",
+      "seeAllUpdates": "सभी अपडेट देखें",
+      "refund": "रिफंड",
+      "refundAmount": "कुल रिफंड राशि",
+      "refundedTo": "रिफंड यहाँ भेजा गया",
+      "reason": "कारण",
+      "rateProduct": "उत्पाद को रेट करें",
+      "totalItemPrice": "कुल आइटम मूल्य",
+      "otherItems": "इस ऑर्डर के अन्य आइटम",
+      "orderDetails": "ऑर्डर विवरण",
+      "orderedOn": "ऑर्डर किया गया",
+      "updatesSentTo": "अपडेट यहाँ भेजे गए",
+      "trackingTitle": "ऑर्डर अपडेट",
+      "noUpdates": "अभी कोई अपडेट नहीं।",
+      "youSaved": "आपने बचाया",
+      "onThisOrder": "इस ऑर्डर पर",
+      "selectReason": "कारण चुनें",
+      "remarkRequired": "कृपया समस्या बताएं।",
+      "photoRequired": "कृपया कम से कम एक फ़ोटो जोड़ें।",
+      "returnRequested": "वापसी अनुरोधित",
+      "requestReturn": "वापसी का अनुरोध करें",
+      "returnReason": "वापसी का कारण",
+      "remark": "टिप्पणी",
+      "remarkPlaceholder": "समस्या बताएं",
+      "photos": "फ़ोटो",
+      "evidenceHint": "इस कारण के लिए टिप्पणी और कम से कम एक फ़ोटो आवश्यक है।"
     },
     "ordersPage": {
       "emptyMessage": "आपके पास अभी तक कोई ऑर्डर नहीं है। खरीदारी शुरू करें ताकि वे यहाँ दिखें।",
@@ -1118,14 +1147,17 @@
         "shareSocial": "सोशल मीडिया पर साझा करें",
         "title": "अपना कोड साझा करें",
         "yourCode": "आपका रेफरल कोड",
-        "helper": "इस कोड को कॉपी करें और दोस्तों को भेजें।"
+        "helper": "इस कोड को कॉपी करें और दोस्तों को भेजें।",
+        "label": "आपका रेफ़रल कोड",
+        "copy": "कोड कॉपी करें"
       },
       "stats": {
         "pending": "लंबित",
         "successful": "सफल",
         "totalEarnings": "कुल कमाई",
         "totalReferrals": "कुल रेफरल्स"
-      }
+      },
+      "errorTitle": "रेफ़रल जानकारी लोड नहीं हो सकी"
     },
     "returnRefundPolicy": {
       "description": "हमारी वापसी प्रक्रिया और रिफंड शर्तों के बारे में जानें।",
@@ -1172,7 +1204,8 @@
         "subtitle": "अपने लेनदेन की जानकारी और स्थिति देखें",
         "title": "मेरे लेनदेन"
       },
-      "totalFound": "{{total}} मिला"
+      "totalFound": "{{total}} मिला",
+      "errorTitle": "लेन-देन लोड नहीं हो सके"
     },
     "walletPage": {
       "header": {
@@ -1183,7 +1216,8 @@
         "title": "वॉलेट लेनदेन"
       },
       "totalFound": "{{total}} लेनदेन मिले",
-      "availableBalance": "उपलब्ध शेष"
+      "availableBalance": "उपलब्ध शेष",
+      "errorTitle": "लेन-देन लोड नहीं हो सके"
     },
     "wishlistsPage": {
       "confirmDelete": "क्या आप वाकई \"{{title}}\" हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
@@ -1195,7 +1229,9 @@
         "network": "नेटवर्क त्रुटि हुई",
         "removeItem": "विशलिस्ट से आइटम हटाने में विफल",
         "updateFailed": "विशलिस्ट अपडेट करने में विफल"
-      }
+      },
+      "confirmDeleteTitle": "विशलिस्ट हटाएं?",
+      "subtitle": "बाद के लिए सहेजे गए उत्पाद"
     },
     "sellerRegister": {
       "pageTitle": "विक्रेता पंजीकरण",
@@ -1398,6 +1434,18 @@
         "desc": "नीचे अपने व्यवसाय विवरण सबमिट करके शुरू करें।",
         "registerLabel": "📋 नीचे अपना व्यवसाय पंजीकृत करें"
       }
+    },
+    "notifications": {
+      "new": "नया",
+      "errorTitle": "सूचनाएं लोड नहीं हो सकीं",
+      "errorDescription": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+      "emptyTitle": "अभी तक कोई सूचना नहीं",
+      "emptyDescription": "आप पूरी तरह अपडेट हैं! बाद में देखें।",
+      "subtitle": "अपने ऑर्डर, वॉलेट और अधिक से अपडेट रहें",
+      "unreadCount": "{{count}} अपठित",
+      "totalCount": "कुल {{count}}",
+      "newCount": "{{count}} नए",
+      "markAllRead": "सभी पढ़ा हुआ चिह्नित करें"
     }
   },
   "partially_refunded": "आंशिक रूप से रिफंड किया गया",
@@ -1978,7 +2026,9 @@
     "select_wishlist": "विशलिस्ट चुनें",
     "select_wishlist_label": "विशलिस्ट चुनें",
     "select_wishlist_placeholder": "विशलिस्ट चुनें",
-    "wishlist_removeConfirmation": "क्या आप वाकई \"{{product}}\" को अपनी विशलिस्ट से हटाना चाहते हैं?"
+    "wishlist_removeConfirmation": "क्या आप वाकई \"{{product}}\" को अपनी विशलिस्ट से हटाना चाहते हैं?",
+    "moveItem": "स्थानांतरित करें",
+    "removeItemTitle": "आइटम हटाएं?"
   },
   "wishlist_button_create": "विशलिस्ट बनाएं",
   "wishlist_button_creating": "विशलिस्ट बनाई जा रही है...",
@@ -2006,5 +2056,29 @@
     "price_desc": "कीमत: अधिक से कम",
     "rating": "शीर्ष रेटेड",
     "discount": "सबसे बड़ी छूट"
-  }
+  },
+  "orderStatus": {
+    "processing": "प्रोसेसिंग",
+    "shipped": "भेजा गया",
+    "delivered": "डिलीवर किया गया",
+    "on_hold": "होल्ड पर",
+    "return_requested": "वापसी अनुरोधित",
+    "returned": "लौटाया गया",
+    "refunded": "रिफंड किया गया",
+    "cancelled": "रद्द किया गया"
+  },
+  "off": "off",
+  "share": "Share",
+  "link_copied": "Link copied to clipboard",
+  "share_product_text": "Check out {{title}}!",
+  "add_to_wishlist": "Add to wishlist",
+  "additionalDetails.title": "Additional Details",
+  "additionalDetails.subtitle": "Find the additional info of the Product",
+  "retry": "पुनः प्रयास करें",
+  "wishlist_emptyListsTitle": "अभी तक कोई विशलिस्ट नहीं",
+  "wishlist_emptyListsDescription": "अपने पसंदीदा उत्पाद सहेजने के लिए पहली विशलिस्ट बनाएं",
+  "wishlist_emptyItemsTitle": "इस विशलिस्ट में कोई आइटम नहीं",
+  "wishlist_emptyItemsDescription": "यहाँ देखने के लिए आइटम जोड़ना शुरू करें",
+  "cart.calculatedAtCheckout": "Delivery, taxes & fees calculated at checkout",
+  "copied": "कॉपी किया गया"
 }

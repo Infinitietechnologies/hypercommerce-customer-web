@@ -127,6 +127,32 @@ export interface Order {
   payment_response: any | null;
 }
 
+/** One event inside a tracker step (order/item/return timeline). */
+export interface TimelineEvent {
+  code: string;
+  label: string;
+  done: boolean;
+  at: string | null;
+  is_exception: boolean;
+  meta?: {
+    courier?: string;
+    tracking_id?: string;
+    tracking_url?: string;
+  };
+}
+
+/** A tracker step — a main status (e.g. "Shipped", "Delivered") + its events. */
+export interface TimelineStep {
+  key: string;
+  /** Step-level label, e.g. "Shipped" (labels.step_<key>). */
+  label?: string;
+  done: boolean;
+  current?: boolean;
+  marker?: "done" | "current" | "pending";
+  at: string | null;
+  events: TimelineEvent[];
+}
+
 export interface OrderItemReturnRequest {
   id: number;
   order_item_id: number;
@@ -135,12 +161,17 @@ export interface OrderItemReturnRequest {
   seller_id: number;
   store_id: number;
   delivery_boy_id: number | null;
+  quantity?: number;
   reason: string;
   seller_comment: string | null;
   images: string[];
   refund_amount: number;
   pickup_status: string;
   return_status: string;
+  /** Shopper-facing return status (code/label/stage). */
+  customer_status?: CustomerStatus;
+  /** Return-specific tracker steps. */
+  return_timeline?: TimelineStep[];
   seller_approved_at: string | null;
   picked_up_at: string | null;
   received_at: string | null;
@@ -182,7 +213,7 @@ export interface OrderItem {
   /** Shopper-facing derived status for this item. */
   customer_status: CustomerStatus;
   /** Per-item tracker steps (scoped to this item's parcel + return/refund). */
-  timeline?: unknown;
+  timeline?: TimelineStep[];
   can_cancel: boolean;
   cancelable_quantity: number;
   /** Snapshot ETA + upcoming delivery-date window. */
@@ -222,6 +253,7 @@ export interface OrderItem {
   };
 
   return_eligible: boolean;
+  can_return: boolean;
   return_deadline: string | null;
   returns: OrderItemReturnRequest[];
   attachments: string[];
@@ -241,6 +273,8 @@ export interface OrderProduct {
   returnable_days: number;
   is_cancelable: boolean;
   cancelable_till: string | null;
+  brand?: string;
+  category?: string;
 }
 
 export interface OrderVariant {

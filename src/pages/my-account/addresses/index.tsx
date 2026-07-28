@@ -4,11 +4,11 @@ import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import { getPageFromUrl, isSSR } from "@/helpers/getters";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
-import UserLayout from "@/layouts/UserLayout";
 import { getAddresses, getSettings } from "@/routes/api";
 import { Address, PaginatedResponse } from "@/types/ApiResponse";
 import { GetServerSideProps } from "next";
 import { Button, useDisclosure, Pagination } from "@heroui/react";
+import { EmptyState, ErrorState } from "@/components/ui";
 import AddressCard from "@/components/Cards/AddressCard";
 import AddressModal from "@/components/Modals/AddressModal";
 import { getAccessTokenFromContext } from "@/helpers/auth";
@@ -114,26 +114,18 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
         />
         <PageHead pageTitle={t("pageTitle.addresses")} />
 
-        <UserLayout activeTab="addresses">
+        
           <PageHeader
             title={t("pages.addresses.myAddresses")}
             subtitle={t("pages.addresses.subtitle")}
           />
-          <div className="w-full p-6 text-center">
-            <div className="text-danger text-lg mb-4">
-              {t("pages.addresses.errorLoading")}
-            </div>
-            <div className="text-default-500 mb-4">{error}</div>
-            <Button
-              color="primary"
-              variant="flat"
-              onPress={handleRetry}
-              isLoading={loading}
-            >
-              {t("pages.addresses.tryAgain")}
-            </Button>
-          </div>
-        </UserLayout>
+          <ErrorState
+            title={t("pages.addresses.errorLoading")}
+            description={error}
+            retryLabel={t("pages.addresses.tryAgain")}
+            onRetry={handleRetry}
+          />
+        
       </>
     );
   }
@@ -148,7 +140,7 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
 
       <PageHead pageTitle={t("pageTitle.addresses")} />
 
-      <UserLayout activeTab="addresses">
+      
         <div className="w-full">
           <div className="flex justify-between items-center">
             <PageHeader
@@ -171,7 +163,7 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
           </div>
 
           {loading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="mt-4 flex flex-col gap-2.5">
               {Array.from({ length: 6 }).map((_, index) => (
                 <AddressCardSkeleton key={index} />
               ))}
@@ -179,8 +171,8 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
           )}
 
           {addresses.length > 0 ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="mt-4 space-y-6">
+              <div className="flex flex-col gap-2.5">
                 {addresses.map((address) => (
                   <AddressCard
                     key={address.id}
@@ -222,31 +214,19 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
             </div>
           ) : (
             !loading && (
-              <div className="w-full p-12 text-center rounded-lg">
-                <div className="max-w-md mx-auto">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
-                    <Icon icon="solar:map-point-add-linear" className="w-8 h-8 text-primary-600" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">
-                    {t("pages.addresses.noAddresses")}
-                  </h3>
-                  <p className="mb-6 text-xs text-foreground/50">
-                    {t("pages.addresses.noAddressesDesc")}
-                  </p>
-                  <Button
-                    color="primary"
-                    variant="flat"
-                    startContent={<Icon icon="solar:add-circle-linear" className="w-4 h-4" />}
-                    onPress={onOpen}
-                  >
-                    {t("pages.addresses.addFirst")}
-                  </Button>
-                </div>
-              </div>
+              <EmptyState
+                icon={
+                  <Icon icon="solar:map-point-add-linear" width={40} height={40} className="text-primary-600" />
+                }
+                title={t("pages.addresses.noAddresses")}
+                description={t("pages.addresses.noAddressesDesc")}
+                actionLabel={t("pages.addresses.addFirst")}
+                onAction={onOpen}
+              />
             )
           )}
         </div>
-      </UserLayout>
+      
 
       <AddressModal
         isOpen={isOpen}

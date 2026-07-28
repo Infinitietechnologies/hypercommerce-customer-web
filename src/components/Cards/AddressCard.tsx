@@ -1,15 +1,5 @@
 import { FC, useState } from "react";
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Button,
-  Chip,
-  useDisclosure,
-  Divider,
-  CardHeader,
-  addToast,
-} from "@heroui/react";
+import { Button, Chip, useDisclosure, addToast } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { Address } from "@/types/ApiResponse";
 import AddressGoogleModal from "../Modals/AddressGoogleModal";
@@ -112,123 +102,83 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
     closeConfirm();
   };
 
+  const typeLabel = t(
+    address.address_type == "home" ? "home_title" : address.address_type,
+  );
+
   return (
     <>
-      <Card className="w-full h-full border border-divider" shadow="sm" radius="md">
-        <CardHeader className="flex items-center justify-between pb-0">
+      <div className="flex items-start justify-between gap-3 rounded-medium border border-divider bg-content1 p-4 transition-colors hover:border-primary">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
             <Chip
               size="sm"
+              radius="full"
               color={getAddressTypeColor(address.address_type)}
               variant="flat"
-              className="capitalize text-xs"
+              className="capitalize"
+              classNames={{ content: "text-[11px] font-semibold" }}
               startContent={
-                <div className="mr-1">
+                <span className="ms-1 flex">
                   {getAddressTypeIcon(address.address_type)}
-                </div>
+                </span>
               }
-              title={t(
-                `${address.address_type == "home" ? "home_title" : address.address_type}`
-              )}
             >
-              {t(
-                `${address.address_type == "home" ? "home_title" : address.address_type}`
-              )}
+              {typeLabel}
             </Chip>
           </div>
-        </CardHeader>
 
-        <CardBody className="space-y-3 pb-0">
-          <div className="space-y-2">
-            <div className="text-sm font-medium">{address.address_line1}</div>
-            {address.address_line2 && (
-              <div className="text-sm opacity-80">{address.address_line2}</div>
-            )}
-            <div className="flex items-center gap-4">
-              {address.landmark && (
-                <div className="flex items-center gap-2 text-sm opacity-50 w-fit">
-                  <Icon icon="solar:buildings-2-linear" className="w-3.5 h-3.5" />
-                  <span>
-                    {address.city}, {address.state} , {address.zipcode}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              {address.landmark && (
-                <div className="flex items-center gap-2 text-sm opacity-50 w-fit">
-                  <Icon icon="solar:signpost-2-linear" className="w-3.5 h-3.5" />
-                  <span className="truncate">
-                    {truncateText(address.landmark, 30)}
-                  </span>
-                </div>
-              )}
-              {address.landmark && address.country && (
-                <Divider orientation="vertical" className="h-4" />
-              )}
-              {address.country && (
-                <div className="flex items-center gap-2 text-sm opacity-50">
-                  <Icon icon="solar:global-linear" className="w-3.5 h-3.5" />
-                  <span>{address.country}</span>
-                </div>
-              )}
-            </div>
+          <div className="mt-2 text-[13.5px] font-bold text-foreground">
+            {address.address_line1}
           </div>
-
-          <div className="flex justify-start w-full gap-4">
-            <div className="flex items-center gap-2 text-xs text-default-400">
-              <Icon icon="solar:phone-linear" className="w-3 h-3" />
-              <span>{address.mobile}</span>
-            </div>
-            <Divider orientation="vertical" />
-            <div className="flex items-center gap-2 text-xs text-default-400">
-              <Icon icon="solar:map-point-linear" className="w-3 h-3" />
-              <span>
-                {address.latitude.toFixed(4)}, {address.longitude.toFixed(4)}
-              </span>
-            </div>
+          <div className="mt-1 text-xs text-default-500 line-clamp-2">
+            {[
+              address.address_line2,
+              address.landmark && truncateText(address.landmark, 30),
+              `${address.city}, ${address.state} ${address.zipcode}`,
+              address.country,
+            ]
+              .filter(Boolean)
+              .join(", ")}
           </div>
-        </CardBody>
+          <div className="mt-1 flex items-center gap-1.5 text-xs text-default-500">
+            <Icon icon="solar:phone-linear" width={12} height={12} />
+            <span>{address.mobile}</span>
+          </div>
+        </div>
 
-        <CardFooter className="flex gap-2">
+        <div className="flex shrink-0 items-center gap-0.5">
           <Button
+            isIconOnly
             size="sm"
-            variant="flat"
-            color="primary"
-            startContent={<Icon icon="solar:eye-linear" className="w-3 h-3" />}
+            variant="light"
             onPress={onOpen}
-            className="flex-1 text-xs"
             isDisabled={isLoading}
-            title={t("view_map")}
+            aria-label={t("view_map")}
           >
-            {t("view_map")}
+            <Icon icon="solar:map-point-linear" width={16} height={16} />
           </Button>
-          <Button
-            size="sm"
-            variant="flat"
-            color="default"
-            startContent={<Icon icon="solar:pen-linear" className="w-3 h-3" />}
-            onPress={editOnOpen}
-            className="flex-1 text-xs"
-            isDisabled={isLoading}
-            title={t("edit")}
+          <button
+            type="button"
+            onClick={editOnOpen}
+            disabled={isLoading}
+            className="px-2 text-[12.5px] font-semibold text-primary-600 disabled:opacity-50"
           >
             {t("edit")}
-          </Button>
+          </button>
           <Button
+            isIconOnly
             size="sm"
-            variant="flat"
+            variant="light"
             color="danger"
-            startContent={<Icon icon="solar:trash-bin-trash-linear" className="w-3 h-3" />}
             onPress={() => openConfirm(address.id as number)}
-            className="flex-1 text-xs"
             isLoading={isLoading}
-            title={t("delete")}
+            aria-label={t("delete")}
           >
-            {t("delete")}
+            <Icon icon="solar:trash-bin-trash-linear" width={16} height={16} />
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
 
       <AddressGoogleModal
         isOpen={isOpen}

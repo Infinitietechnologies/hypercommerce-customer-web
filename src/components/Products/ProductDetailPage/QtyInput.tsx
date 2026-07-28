@@ -1,5 +1,5 @@
-import { Button, addToast } from "@heroui/react";
-import { Minus, Plus } from "lucide-react";
+import { Button, toast } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,7 +24,7 @@ const QtyInput: FC<QtyInputProps> = ({
 
   const handleChange = (newQty: number) => {
     if (newQty < min) {
-      addToast({
+      toast({
         title: t("min_quantity_error_title"),
         description: t("min_quantity_error_description", { min }),
         color: "danger",
@@ -33,7 +33,7 @@ const QtyInput: FC<QtyInputProps> = ({
     }
 
     if (newQty > max) {
-      addToast({
+      toast({
         title: t("max_quantity_error_title"),
         description: t("max_quantity_error_description", { max }),
         color: "danger",
@@ -42,7 +42,7 @@ const QtyInput: FC<QtyInputProps> = ({
     }
 
     if (newQty > stock) {
-      addToast({
+      toast({
         title: t("stock_limit_error_title"),
         description: t("stock_limit_error_description", { stock }),
         color: "danger",
@@ -51,7 +51,7 @@ const QtyInput: FC<QtyInputProps> = ({
     }
 
     if ((newQty - min) % step !== 0) {
-      addToast({
+      toast({
         title: t("step_error_title"),
         description: t("step_error_description", { step }),
         color: "danger",
@@ -68,33 +68,34 @@ const QtyInput: FC<QtyInputProps> = ({
   return (
     <div
       id="qty-input"
-      className="w-full grid grid-cols-[27%_48%_27%] rounded-xl p-2 items-center border-default-300 dark:border-default-100 max-w-28"
+      className="inline-flex items-center gap-1 rounded-xl border border-divider bg-content1 p-1"
     >
-      <div className="flex justify-center">
-        <Button
-          radius="full"
-          isIconOnly
-          onPress={decrement}
-          color="primary"
-          size="sm"
-          isDisabled={quantity == 1}
-        >
-          <Minus size={12} />
-        </Button>
-      </div>
-      <div className="text-center font-medium text-lg">{quantity}</div>
-      <div className="flex justify-center">
-        <Button
-          radius="full"
-          isIconOnly
-          onPress={increment}
-          color="primary"
-          size="sm"
-          // isDisabled={quantity >= max || quantity >= stock}
-        >
-          <Plus size={12} />
-        </Button>
-      </div>
+      <Button
+        radius="lg"
+        isIconOnly
+        variant="light"
+        onPress={decrement}
+        size="sm"
+        aria-label={t("decrease_quantity", "Decrease quantity")}
+        isDisabled={quantity <= min}
+        className="text-primary-600"
+      >
+        <Icon icon="solar:minus-square-linear" className="text-xl" />
+      </Button>
+      <span className="min-w-9 text-center text-base font-bold tabular-nums">
+        {quantity}
+      </span>
+      <Button
+        radius="lg"
+        isIconOnly
+        variant="light"
+        onPress={increment}
+        size="sm"
+        aria-label={t("increase_quantity", "Increase quantity")}
+        className="text-primary-600"
+      >
+        <Icon icon="solar:add-square-linear" className="text-xl" />
+      </Button>
     </div>
   );
 };

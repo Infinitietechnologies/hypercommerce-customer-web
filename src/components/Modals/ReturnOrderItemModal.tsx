@@ -685,7 +685,7 @@ const ReturnOrderItemModal: FC<ReturnOrderItemModalProps> = ({
                     size="sm"
                     radius="sm"
                     variant="flat"
-                    color={orderStatusColorMap(selectedItem.status)}
+                    color={orderStatusColorMap(selectedItem.customer_status?.code)}
                     classNames={{ content: "text-xxs", base: "p-0 ml-auto" }}
                   >
                     {formatString(selectedItem.status)}

@@ -245,7 +245,7 @@ const CancelOrderItemModal: FC<CancelOrderItemModalProps> = ({
                             size="sm"
                             radius="sm"
                             variant="flat"
-                            color={orderStatusColorMap(item?.status)}
+                            color={orderStatusColorMap(item?.customer_status?.code)}
                             classNames={{ content: "text-xxs", base: "p-0" }}
                           >
                             {formatString(item?.status)}

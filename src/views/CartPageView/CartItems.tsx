@@ -1,15 +1,15 @@
 import { FC, useState, useMemo } from "react";
 import { CartItem, Product, ProductVariant } from "@/types/ApiResponse";
 import {
-  addToast,
+  toast,
   Button,
   Divider,
   Image,
   ScrollShadow,
   useDisclosure,
-} from "@heroui/react";
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { Trash2, Bookmark } from "lucide-react";
 import CartQuantityControl from "@/components/CartQuantityControl";
 import {
   removeItemFromCart,
@@ -17,7 +17,6 @@ import {
   getProductBySlug,
 } from "@/routes/api";
 import dynamic from "next/dynamic";
-import { ChevronRight } from "lucide-react";
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
   ssr: false,
@@ -35,9 +34,11 @@ import type { AttachmentFile } from "@/components/Cart/AttachmentUploader";
 
 interface CartItemsProps {
   items: CartItem[];
+  /** Cap height and scroll internally (checkout summary). Off = flows with page (cart page). */
+  scrollable?: boolean;
 }
 
-const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
+const CartItems: FC<CartItemsProps> = ({ items = [], scrollable = false }) => {
   const { t } = useTranslation();
   const { formatPrice, systemSettings, isSingleVendor } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
@@ -101,13 +102,13 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
     try {
       const response = await removeItemFromCart(selectedItemId);
       if (response.success) {
-        addToast({
+        toast({
           title: t("cartItems.itemRemoved.title"),
           description: t("cartItems.itemRemoved.description"),
           color: "success",
         });
       } else {
-        addToast({
+        toast({
           title: t("cartItems.removeFailed.title"),
           description:
             response.message || t("cartItems.removeFailed.description"),
@@ -116,7 +117,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
       }
     } catch (error) {
       console.error(error);
-      addToast({
+      toast({
         title: t("cartItems.networkError.title"),
         description: t("cartItems.networkError.description"),
         color: "danger",
@@ -135,19 +136,19 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
       if (res.success) {
         mutate("/save-for-later");
         updateCartData(true, false);
-        addToast({
+        toast({
           title: t("saveForLater.movedMessage"),
           color: "success",
         });
       } else {
-        addToast({
+        toast({
           title: t("saveForLater.errorMessage"),
           color: "success",
         });
       }
     } catch (error) {
       console.error(error);
-      addToast({
+      toast({
         title: t("cartItems.networkError.title"),
         description: t("cartItems.networkError.description"),
         color: "danger",
@@ -197,7 +198,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
       }
     } catch (error) {
       console.error(error);
-      addToast({
+      toast({
         title: t("general.error.title"),
         description: t("general.error.somethingWentWrong"),
         color: "danger",
@@ -208,16 +209,18 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
   };
 
   return (
-    <ScrollShadow className="w-full max-h-[50vh] py-1 flex flex-col gap-6">
+    <ScrollShadow
+      className={`w-full py-1 flex flex-col gap-4 ${scrollable ? "max-h-[50vh]" : ""}`}
+    >
       {groupedItems.length > 0 &&
         groupedItems.map((group) => (
           <div
             key={group.store.id}
-            className="bg-default-50 rounded-lg p-4 border border-default-200"
+            className="bg-content2 rounded-2xl p-4 border border-divider"
           >
             {/* Store Header */}
             {!isSingleVendor && (
-              <div className="mb-4 pb-3 border-b border-default-200 flex gap-1 w-full justify-between flex-wrap sm:flex-nowrap">
+              <div className="mb-4 pb-3 border-b border-divider flex gap-1 w-full justify-between flex-wrap sm:flex-nowrap">
                 <div className="flex gap-1 flex-wrap sm:flex-nowrap">
                   <span className="text-sm text-foreground inline-flex items-center gap-1">
                     {t("cartItems.from")}:
@@ -251,7 +254,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
                           loading="eager"
                           src={item.product.image}
                           alt={item.variant.title || ""}
-                          className="w-16 h-16 sm:w-full sm:h-16 object-cover rounded-md cursor-pointer"
+                          className="w-16 h-16 sm:w-full sm:h-16 object-cover rounded-xl cursor-pointer bg-content1"
                           onClick={() => {
                             setLightboxImages([{ src: item.product.image }]);
                             setLightboxOpen(true);
@@ -277,7 +280,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
                                 {item.variant.title}
                               </span>
                               {isLowStock && (
-                                <span className="text-orange-500 font-semibold text-xxs bg-orange-50 dark:bg-orange-900/20 px-1.5 py-0.5 rounded whitespace-nowrap">
+                                <span className="text-warning-600 font-semibold text-xxs bg-warning-50 px-1.5 py-0.5 rounded whitespace-nowrap">
                                   {t("product_modal.low_stock_alert", {
                                     stock: item.variant.stock,
                                   })}
@@ -315,17 +318,17 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
                             <button
                               onClick={() => handleCustomize(item)}
                               disabled={isCustomizing}
-                              className="text-[10px] md:text-xs font-semibold mt-1 flex items-center gap-0.5 hover:opacity-80 transition-opacity"
+                              className="text-[10px] md:text-xs font-semibold mt-1 flex items-center gap-0.5 text-primary-600 hover:opacity-80 transition-opacity"
                             >
-                              <span className="text-black dark:text-white cursor-pointer">
+                              <span className="cursor-pointer">
                                 {isCustomizing &&
                                 customizingProduct?.slug === item.product.slug
                                   ? t("loading")
                                   : t("cartItems.customize")}
                               </span>
-                              <ChevronRight
-                                size={14}
-                                className="mt-0.5 text-primary"
+                              <Icon
+                                icon="solar:alt-arrow-right-linear"
+                                className="mt-0.5 text-sm"
                               />
                             </button>
                           )}
@@ -365,40 +368,34 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
                       <div className="flex flex-col sm:flex-row items-center gap-0 sm:gap-1 -mt-2">
                         <Button
                           title={t("saveForLater.title")}
-                          className="p-0 bg-transparent min-w-0"
+                          aria-label={t("saveForLater.title")}
+                          className="p-0 bg-transparent min-w-0 text-primary-600"
                           size="sm"
                           isDisabled={isLoading}
                           isIconOnly
-                          startContent={
-                            <Bookmark
-                              size={14}
-                              className="text-primary-500 sm:w-4 sm:h-4"
-                            />
-                          }
                           onPress={() =>
                             handleSaveForLater(item.id, item.quantity)
                           }
-                        />
+                        >
+                          <Icon icon="solar:bookmark-linear" className="text-base" />
+                        </Button>
                         <Button
                           title={t("remove_item")}
-                          className="p-0 bg-transparent min-w-0"
+                          aria-label={t("remove_item")}
+                          className="p-0 bg-transparent min-w-0 text-danger"
                           size="sm"
                           isDisabled={isLoading}
                           isIconOnly
-                          startContent={
-                            <Trash2
-                              size={14}
-                              className="text-danger-500 sm:w-4 sm:h-4"
-                            />
-                          }
                           onPress={() => setSelectedItemId(item.id)}
-                        />
+                        >
+                          <Icon icon="solar:trash-bin-trash-linear" className="text-base" />
+                        </Button>
                       </div>
                     </div>
 
                     {/* Attachment Section - Full Width Below Item */}
                     {item.product.is_attachment_required && (
-                      <div className="w-full mt-3 mb-2 space-y-3 rounded-lg border border-default-200 p-3 bg-default-50">
+                      <div className="w-full mt-3 mb-2 space-y-3 rounded-xl border border-divider p-3 bg-content1">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <p className="text-xxs font-semibold text-foreground">
                             {item.product.attachment_mode === "required"
@@ -446,7 +443,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [] }) => {
         onClose={() => setSelectedItemId(null)}
         onConfirm={handleRemoveItem}
         title={t("cartItems.removeItemModal.title")}
-        icon={<Trash2 className="w-4 h-4" />}
+        icon={<Icon icon="solar:trash-bin-trash-linear" className="text-base" />}
         description={t("cartItems.removeItemModal.description")}
         confirmText={t("cartItems.removeItemModal.confirmText")}
         cancelText={t("cartItems.removeItemModal.cancelText")}

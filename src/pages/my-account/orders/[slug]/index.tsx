@@ -1,6 +1,5 @@
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
-import UserLayout from "@/layouts/UserLayout";
 import { GetServerSideProps } from "next";
 import { Order } from "@/types/ApiResponse";
 import { isSSR } from "@/helpers/getters";
@@ -11,7 +10,7 @@ import { getAccessTokenFromContext } from "@/helpers/auth";
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
 import OrderDetailPageView from "@/views/OrderDetailView";
-import { Button, Spinner } from "@heroui/react";
+import { Skeleton, EmptyState, ErrorState } from "@/components/ui";
 import useSWR from "swr";
 import { loadTranslations } from "../../../../../i18n";
 import { useTranslation } from "react-i18next";
@@ -82,7 +81,7 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
 
       <PageHead pageTitle={`${t("order")} #${order?.id || ""}`} />
 
-      <UserLayout activeTab="orders">
+      
         <div className="w-full">
           <PageHeader
             title={t("pages.order.details")}
@@ -92,59 +91,53 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
             <div className="text-center">{content}</div>
           </div>
         </div>
-      </UserLayout>
+      
     </>
   );
 
-  // Loading state (only show spinner if actively fetching and no data yet)
+  // Loading state (skeleton mirroring the detail layout)
   const isClientLoading = isLoading && !order;
 
   if (isClientLoading) {
     return renderContent(
-      <>
-        <Spinner size="lg" className="mb-4" />
-        <div className="text-default-500">{t("pages.order.loading")}</div>
-      </>
+      <div className="grid w-full grid-cols-1 gap-4 text-left lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-28 w-full rounded-large" />
+          <Skeleton className="h-20 w-full rounded-large" />
+          <Skeleton className="h-40 w-full rounded-large" />
+        </div>
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-32 w-full rounded-large" />
+          <Skeleton className="h-24 w-full rounded-large" />
+        </div>
+      </div>
     );
   }
 
   // Error state
   if (error) {
     return renderContent(
-      <>
-        <div className="text-danger text-lg font-medium mb-2">
-          {t("pages.order.errorLoading")}
-        </div>
-        <p className="text-default-500 mb-4">{error}</p>
-        <Button
-          color="primary"
-          variant="flat"
-          startContent={<Icon icon="solar:arrow-left-linear" className="w-4 h-4" />}
-          onPress={() => router.push("/my-account/orders")}
-        >
-          {t("pages.order.backToList")}
-        </Button>
-      </>
+      <ErrorState
+        title={t("pages.order.errorLoading")}
+        description={error}
+        retryLabel={t("retry", "Retry")}
+        onRetry={() => router.reload()}
+      />
     );
   }
 
   // Order not found
   if (!order) {
     return renderContent(
-      <>
-        <div className="text-default-500 text-lg font-medium mb-2">
-          {t("pages.order.notFound")}
-        </div>
-        <p className="text-default-500 mb-4">{t("pages.order.notFoundDesc")}</p>
-        <Button
-          color="primary"
-          variant="flat"
-          startContent={<Icon icon="solar:arrow-left-linear" className="w-4 h-4" />}
-          onPress={() => router.push("/my-account/orders")}
-        >
-          {t("pages.order.backToList")}
-        </Button>
-      </>
+      <EmptyState
+        icon={
+          <Icon icon="solar:box-linear" width={40} height={40} className="text-primary-600" />
+        }
+        title={t("pages.order.notFound")}
+        description={t("pages.order.notFoundDesc")}
+        actionLabel={t("pages.order.backToList")}
+        onAction={() => router.push("/my-account/orders")}
+      />
     );
   }
 

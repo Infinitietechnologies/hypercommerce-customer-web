@@ -1,12 +1,5 @@
-import { Button, Card, Chip, Divider, Link, addToast } from "@heroui/react";
-import {
-  Clock,
-  MoveRight,
-  ShoppingBag,
-  Star,
-  Users,
-  Share2,
-} from "lucide-react";
+import { Button, Card, Chip, Divider, Link, toast } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { FC, useEffect, useState } from "react";
 import QtyInput from "./QtyInput";
 import AdditionalSection from "./AdditionalSection";
@@ -16,6 +9,7 @@ import {
   makeTabClick,
   handleOfflineAddToCart,
 } from "@/helpers/functionalHelpers";
+import { toggleFavorite } from "@/routes/api";
 import { useSettings } from "@/contexts/SettingsContext";
 import AttributeSelector from "@/components/Functional/AttributeSelector";
 import { useRouter } from "next/router";
@@ -52,6 +46,11 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
     null,
   );
 
+  const [isFavorited, setIsFavorited] = useState(
+    Array.isArray(initialProduct.favorite) && initialProduct.favorite.length > 0,
+  );
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+
   const cartCount = Number(initialProduct.item_count_in_cart) || 0;
 
   const {
@@ -75,6 +74,11 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const isOutOfStock = selectedVariant
     ? !selectedVariant.availability || selectedVariant.stock <= 0
     : false;
+
+  const price = Number(selectedVariant?.price) || 0;
+  const special = Number(selectedVariant?.special_price) || 0;
+  const hasDiscount = special > 0 && special < price;
+  const offPct = hasDiscount ? Math.round(((price - special) / price) * 100) : 0;
 
   // Initialize selected attributes and variant when product changes
   useEffect(() => {
@@ -114,11 +118,59 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
     }));
   };
 
+  const handleShare = () => {
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/share/products/${initialProduct.slug}`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: title,
+          text: t("share_product_text", { title }),
+          url: shareUrl,
+        })
+        .catch(console.error);
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      toast({ title: t("link_copied"), color: "success" });
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!isLoggedIn) {
+      document.getElementById("login-btn")?.click();
+      toast({ title: t("please_login"), color: "warning" });
+      return;
+    }
+    if (!selectedVariant) return;
+
+    setIsTogglingFavorite(true);
+    try {
+      const res = await toggleFavorite({
+        product_id: initialProduct.id,
+        product_variant_id: selectedVariant.id ?? null,
+        store_id: selectedVariant.store_id,
+      });
+      if (res.success && res.data) {
+        setIsFavorited(res.data.is_favorited);
+      } else {
+        toast({
+          title: res.message || t("something_went_wrong"),
+          color: "danger",
+        });
+      }
+    } catch {
+      toast({ title: t("something_went_wrong"), color: "danger" });
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
+
   const AddToCart = async (buyNow = false) => {
     setLoading({ add: !buyNow, buyNow });
     try {
       if (!selectedVariant) {
-        addToast({
+        toast({
           title: t("please_select_variant"),
           color: "warning",
         });
@@ -135,7 +187,6 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
 
       // Handle offline cart when user is not logged in
       if (!isLoggedIn) {
-        // Add to offline cart
         const res = handleOfflineAddToCart({
           product: initialProduct,
           variant: selectedVariant,
@@ -172,157 +223,112 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       setLoading({ buyNow: false, add: false });
     }
   };
+
   return (
-    <div className="md:px-4 w-full flex flex-col gap-2">
-      <div className="flex gap-2 items-center flex-wrap">
-        {/* Product Category */}
-        <Link
-          href={`/categories/${category}`}
-          className="text-foreground/50 text-xs md:text-medium capitalize"
-        >
-          {category_name}
-        </Link>
+    <div className="flex w-full flex-col gap-3 md:ps-4">
+      {/* Brand eyebrow + featured */}
+      <div className="flex flex-wrap items-center gap-2">
+        {brand_name && (
+          <Link
+            href={`/brands/${brand}`}
+            className="text-xs font-bold uppercase tracking-wide text-primary-600"
+          >
+            {brand_name}
+          </Link>
+        )}
         {featured == "1" && (
           <Chip
-            className="text-xxs bg-linear-to-r from-secondary-300 to-secondary-400 capitalize text-white font-semibold shadow-sm tracking-wide"
-            classNames={{
-              base: "p-1 h-5",
-              content: "p-1 text-xs",
-            }}
+            size="sm"
             radius="sm"
-            startContent={<Star size={10} className="fill-current" />}
-            title={t("featured")}
+            variant="flat"
+            color="secondary"
+            startContent={
+              <Icon icon="solar:star-bold" className="text-[11px]" />
+            }
+            classNames={{ content: "text-xxs font-semibold px-1" }}
           >
             {t("featured")}
           </Chip>
         )}
+        {indicator && <ProductIndicator indicator={indicator} size={18} />}
       </div>
 
-      <div className="flex justify-between items-start gap-4">
-        <h1 className="font-semibold text-medium md:text-3xl flex-1">
-          {title}
-        </h1>
-        <Button
-          isIconOnly
-          variant="light"
-          radius="full"
-          onPress={() => {
-            const baseUrl = window.location.origin;
-            const shareUrl = `${baseUrl}/share/products/${initialProduct.slug}`;
+      {/* Title */}
+      <h1 className="text-xl font-bold leading-snug text-foreground md:text-2xl">
+        {title}
+      </h1>
 
-            if (navigator.share) {
-              navigator
-                .share({
-                  title: title,
-                  text: `Check out ${title} on Hyper Local!`,
-                  url: shareUrl,
-                })
-                .catch(console.error);
-            } else {
-              // Fallback: Copy to clipboard
-              navigator.clipboard.writeText(shareUrl);
-              addToast({
-                title: "Link copied to clipboard",
-                color: "success",
-              });
-            }
-          }}
-          className="text-foreground/50 hover:text-primary"
-        >
-          <Share2 size={20} />
-        </Button>
-      </div>
-      <p className="text-foreground/50 text-xs md:text-medium">
-        {short_description}
-      </p>
+      {short_description && (
+        <p className="text-sm text-foreground/60">{short_description}</p>
+      )}
 
-      <div className="flex gap-4 items-center mt-2">
-        {/* Rating and Reviews */}
-        <article className="flex items-center gap-2">
-          <Star className="fill-yellow-400 text-yellow-400 w-4 h-4 md:w-5 md:h-5" />
-          <p className="font-medium text-xs md:text-medium">{`${ratings} Rating`}</p>
-          <Link
-            onPress={() => {
-              makeTabClick("reviews");
-            }}
-            className="text-foreground/50 underline cursor-pointer text-xs md:text-medium"
-          >
-            {`(${rating_count} ${t("reviews")})`}
-          </Link>
-        </article>
-        {brand_name && (
+      {/* Rating pill + count + category */}
+      <div className="flex flex-wrap items-center gap-3">
+        {rating_count > 0 && (
           <>
-            <span className="text-foreground/40">|</span>
-
+            <span className="inline-flex items-center gap-1 rounded-lg bg-primary-100 px-2 py-1 text-xs font-bold text-primary-600">
+              {ratings}
+              <Icon icon="solar:star-bold" className="text-[13px]" />
+            </span>
             <Link
-              href={`/brands/${brand}`}
-              className="text-primary text-xs md:text-medium capitalize font-semibold"
+              onPress={() => makeTabClick("reviews")}
+              className="cursor-pointer text-xs text-foreground/50 underline md:text-sm"
             >
-              {brand_name}
+              {`${rating_count} ${t("reviews")}`}
             </Link>
           </>
         )}
-
-        {indicator && (
+        {category_name && (
           <>
-            <span className="text-foreground/40">|</span>
-
-            <ProductIndicator indicator={indicator} size={18} />
+            <span className="text-foreground/30">|</span>
+            <Link
+              href={`/categories/${category}`}
+              className="text-xs capitalize text-foreground/50 md:text-sm"
+            >
+              {category_name}
+            </Link>
           </>
         )}
       </div>
 
       {cartCount > 0 && (
-        <div className="flex items-center gap-1.5 py-1">
-          <Chip
-            className="text-xs bg-linear-to-r from-orange-500 to-red-500 text-white font-semibold shadow-sm"
-            classNames={{
-              base: "h-5 px-2",
-              content: "px-1 text-xs flex items-center gap-1",
-            }}
-            radius="sm"
-            startContent={<Users size={14} className="shrink-0" />}
-          >
-            {cartCount > 99 ? "99+" : cartCount} {t("product_modal.in_cart")}
-          </Chip>
-        </div>
+        <Chip
+          size="sm"
+          radius="sm"
+          variant="flat"
+          color="primary"
+          startContent={
+            <Icon icon="solar:cart-check-linear" className="text-sm" />
+          }
+          classNames={{ content: "text-xs font-semibold px-1" }}
+        >
+          {cartCount > 99 ? "99+" : cartCount} {t("product_modal.in_cart")}
+        </Chip>
       )}
-      {/* Price Section */}
-      <div className="mt-3 flex gap-2 items-center">
-        <div>
-          {selectedVariant && selectedVariant?.special_price > 0 ? (
-            <div className="flex items-center gap-2">
-              <div
-                // className="text-xl md:text-3xl text-white font-bold bg-[#329537]  px-2 py-1 rounded-lg
-                // shadow-[4px_4px_0px_rgba(0,0,0,0.6)]"
-                className="text-xl md:text-3xl font-bold"
-              >
-                <span className=" ml-1">
-                  {formatPrice(selectedVariant?.special_price)}
-                </span>
-              </div>
 
-              <span className="text-xs md:text-medium text-foreground/50 line-through mt-2">
-                {formatPrice(selectedVariant?.price)}
-              </span>
-            </div>
-          ) : (
-            <div>
-              <span className="text-lg font-semibold text-primary">
-                {formatPrice(selectedVariant?.price)}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {is_inclusive_tax && (
-          <span className="text-xs md:text-sm text-foreground/50">
-            {t("inclusiveTax")}
-          </span>
+      {/* Price */}
+      <div className="mt-1 flex flex-wrap items-baseline gap-2.5">
+        <span className="text-2xl font-bold text-foreground md:text-3xl">
+          {formatPrice(hasDiscount ? special : price)}
+        </span>
+        {hasDiscount && (
+          <>
+            <span className="text-sm text-foreground/50 line-through md:text-base">
+              {formatPrice(price)}
+            </span>
+            <span className="text-sm font-bold text-primary-600 md:text-base">
+              {offPct}% {t("off")}
+            </span>
+          </>
         )}
       </div>
-      <Divider className="my-4" />
+      {is_inclusive_tax && (
+        <span className="text-xs text-foreground/50">{t("inclusiveTax")}</span>
+      )}
 
+      <Divider className="my-2" />
+
+      {/* Variant / attribute selection */}
       {variants && variants.length > 1 && initialProduct.attributes && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-foreground">
@@ -333,19 +339,17 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
               <span className="text-foreground/50">
                 {t("stockAvailable", { stock: selectedVariant?.stock })}
               </span>
-              <div className="flex flex-col gap-0.5">
-                {quantity_step_size > 1 ? (
-                  <span className="text-foreground/50 text-xs font-medium">
-                    {t("quantityStepSize") || "Step Size"}: {quantity_step_size}
+              {quantity_step_size > 1 ? (
+                <span className="text-xs font-medium text-foreground/50">
+                  {t("quantityStepSize") || "Step Size"}: {quantity_step_size}
+                </span>
+              ) : (
+                minimum_order_quantity > 1 && (
+                  <span className="text-xs font-medium text-foreground/50">
+                    {t("minOrder")}: {minimum_order_quantity}
                   </span>
-                ) : (
-                  minimum_order_quantity > 1 && (
-                    <span className="text-foreground/50 text-xs font-medium">
-                      {t("minOrder")}: {minimum_order_quantity}
-                    </span>
-                  )
-                )}
-              </div>
+                )
+              )}
             </div>
             {selectedVariant?.sku && (
               <span className="text-foreground/50">
@@ -366,24 +370,22 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
 
       {/* Stock and SKU info for single variant products */}
       {variants && variants.length === 1 && selectedVariant && (
-        <div className="flex items-center justify-between text-xxs sm:text-xs mb-2">
+        <div className="mb-1 flex items-center justify-between text-xxs sm:text-xs">
           <div className="flex flex-col">
             <span className="text-foreground/50">
               {t("stockAvailable", { stock: selectedVariant.stock })}
             </span>
-            <div className="flex flex-col gap-0.5">
-              {quantity_step_size > 1 ? (
-                <span className="text-foreground/50 text-xs font-medium">
-                  {t("quantityStepSize") || "Step Size"}: {quantity_step_size}
+            {quantity_step_size > 1 ? (
+              <span className="text-xs font-medium text-foreground/50">
+                {t("quantityStepSize") || "Step Size"}: {quantity_step_size}
+              </span>
+            ) : (
+              minimum_order_quantity > 1 && (
+                <span className="text-xs font-medium text-foreground/50">
+                  {t("minOrder")}: {minimum_order_quantity}
                 </span>
-              ) : (
-                minimum_order_quantity > 1 && (
-                  <span className="text-foreground/50 text-xs font-medium">
-                    {t("minOrder")}: {minimum_order_quantity}
-                  </span>
-                )
-              )}
-            </div>
+              )
+            )}
           </div>
           {selectedVariant.sku && (
             <span className="text-foreground/50">
@@ -393,119 +395,119 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         </div>
       )}
 
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <div className="w-full flex justify-between max-w-md items-center">
-            {!isOutOfStock ? (
-              <>
-                <div className="flex items-center gap-4 w-full">
-                  <label htmlFor="qty-input" className="font-medium">
-                    {t("quantity")}
-                  </label>
-                  <QtyInput
-                    quantity={quantity}
-                    setQuantity={setQuantity}
-                    min={
-                      initialProduct.quantity_step_size > 1
-                        ? initialProduct.quantity_step_size
-                        : initialProduct.minimum_order_quantity || 1
-                    }
-                    step={initialProduct.quantity_step_size || 1}
-                    max={initialProduct.total_allowed_quantity || 9999}
-                    stock={selectedVariant?.stock}
-                  />
-                </div>
-                {/* Estimated Delivery Time on right side */}
-                {initialProduct?.estimated_delivery_time ? (
-                  <div className="flex gap-4">
-                    <Button
-                      variant="flat"
-                      color="primary"
-                      as={"div"}
-                      size="sm"
-                      className="text-xs"
-                      startContent={
-                        <Clock className="w-4 h-4 text-primary-500" />
-                      }
-                    >
-                      <div className="text-xs text-primary-500 font-semibold whitespace-nowrap flex items-center">
-                        <span className="mr-2">{t("delivery")}:</span>
-                        {initialProduct.estimated_delivery_time} {t("mins")}
-                      </div>
-                    </Button>
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-          </div>
+      {/* Quantity */}
+      {!isOutOfStock && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="qty-input" className="text-sm font-medium">
+            {t("quantity")}
+          </label>
+          <QtyInput
+            quantity={quantity}
+            setQuantity={setQuantity}
+            min={
+              initialProduct.quantity_step_size > 1
+                ? initialProduct.quantity_step_size
+                : initialProduct.minimum_order_quantity || 1
+            }
+            step={initialProduct.quantity_step_size || 1}
+            max={initialProduct.total_allowed_quantity || 9999}
+            stock={selectedVariant?.stock}
+          />
         </div>
+      )}
 
-        {isOutOfStock ? (
-          <Card
-            shadow="none"
-            className="max-w-md border p-3 border-gray-100 dark:border-default-100"
-          >
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-full">
-                <ShoppingBag className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold mb-1 text-red-600">
-                  {t("out_of_stock")}
-                </h3>
-                <p className="text-foreground/50 text-xs">
-                  {t("out_of_stock_message")}
-                </p>
-              </div>
+      {/* Actions */}
+      {isOutOfStock ? (
+        <Card
+          shadow="none"
+          className="border border-divider p-3"
+        >
+          <div className="flex items-start gap-3">
+            <Icon
+              icon="solar:bag-cross-linear"
+              className="mt-0.5 text-2xl text-danger"
+            />
+            <div className="flex-1">
+              <h3 className="mb-1 text-sm font-bold text-danger">
+                {t("out_of_stock")}
+              </h3>
+              <p className="text-xs text-foreground/50">
+                {t("out_of_stock_message")}
+              </p>
             </div>
-          </Card>
-        ) : (
-          // Store is OPEN - Show normal buttons
-          <div className="flex justify-between items-center max-w-md gap-4">
-            <Button
-              color="primary"
-              fullWidth
-              startContent={<ShoppingBag className="w-4 h-4" />}
-              isLoading={loading.add}
-              isDisabled={loading.buyNow}
-              onPress={() => AddToCart(false)}
-            >
-              {t("addToBucket")}
-            </Button>
-            <Button
-              endContent={<MoveRight className="w-4 h-4" />}
-              color="secondary"
-              fullWidth
-              isLoading={loading.buyNow}
-              isDisabled={loading.add}
-              onPress={() => AddToCart(true)}
-            >
-              {t("buyNow")}
-            </Button>
           </div>
-        )}
-
-        {/* Product Tags */}
-        {initialProduct?.tags && initialProduct.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {initialProduct.tags.map((tag: string, index: number) => (
-              <Chip
-                title={`# ${tag}`}
-                color="primary"
-                variant="flat"
-                key={index}
-                radius="sm"
-              >
-                {`# ${tag}`}
-              </Chip>
-            ))}
-          </div>
-        )}
-
-        <div>
-          <AdditionalSection product={initialProduct} />
+        </Card>
+      ) : (
+        <div className="flex items-center gap-2.5">
+          <Button
+            color="primary"
+            className="flex-1"
+            startContent={
+              !loading.add && (
+                <Icon icon="solar:bag-4-linear" className="text-lg" />
+              )
+            }
+            isLoading={loading.add}
+            isDisabled={loading.buyNow}
+            onPress={() => AddToCart(false)}
+          >
+            {t("addToBucket")}
+          </Button>
+          <Button
+            color="secondary"
+            className="flex-1"
+            endContent={
+              !loading.buyNow && (
+                <Icon icon="solar:arrow-right-linear" className="text-lg" />
+              )
+            }
+            isLoading={loading.buyNow}
+            isDisabled={loading.add}
+            onPress={() => AddToCart(true)}
+          >
+            {t("buyNow")}
+          </Button>
+          <Button
+            isIconOnly
+            variant="bordered"
+            aria-label={t("share")}
+            onPress={handleShare}
+          >
+            <Icon icon="solar:share-linear" className="text-xl" />
+          </Button>
+          <Button
+            isIconOnly
+            variant="bordered"
+            aria-label={t("add_to_wishlist", "Add to wishlist")}
+            isLoading={isTogglingFavorite}
+            onPress={handleToggleFavorite}
+          >
+            <Icon
+              icon={isFavorited ? "solar:heart-bold" : "solar:heart-linear"}
+              className={isFavorited ? "text-xl text-danger" : "text-xl"}
+            />
+          </Button>
         </div>
-      </div>
+      )}
+
+      {/* Product Tags */}
+      {initialProduct?.tags && initialProduct.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {initialProduct.tags.map((tag: string, index: number) => (
+            <Chip
+              title={`# ${tag}`}
+              color="primary"
+              variant="flat"
+              key={index}
+              radius="sm"
+            >
+              {`# ${tag}`}
+            </Chip>
+          ))}
+        </div>
+      )}
+
+      <AdditionalSection product={initialProduct} />
     </div>
   );
 };

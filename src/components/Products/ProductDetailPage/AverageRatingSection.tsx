@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardBody, Divider, Progress } from "@heroui/react"; // Replace with the actual Hero UI progress component import if different.
+import { Card, CardBody, Divider, Progress } from "@/components/ui";
 import RatingStars from "@/components/RatingStars";
 import { useTranslation } from "react-i18next";
 
@@ -19,36 +19,34 @@ const AverageRatingSection: React.FC<AverageRatingSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <Card className="w-full" radius="sm">
-      <CardBody className="flex flex-col sm:flex-row gap-4 p-4 px-10">
+    <Card className="w-full border border-divider" shadow="none">
+      <CardBody className="flex flex-col gap-6 p-5 sm:flex-row sm:px-8">
         {/* Left Section: Average Rating */}
-        <div className="flex flex-col items-center justify-center">
-          <div aria-label="Average Rating" className="text-center">
-            <p className="text-4xl font-bold">{averageRating.toFixed(1)}</p>
-          </div>
-          <div aria-label="Star Ratings" className="flex justify-center mt-2">
-            <RatingStars rating={averageRating} size={20} />
-          </div>
-          <div aria-label="Total Ratings" className="text-sm mt-2">
-            <p>
-              {totalReviews} {t("ratings")}
-            </p>
-          </div>
+        <div className="flex flex-col items-center justify-center gap-1">
+          <p className="text-4xl font-bold text-foreground">
+            {averageRating.toFixed(1)}
+          </p>
+          <RatingStars rating={averageRating} size={20} />
+          <p className="mt-1 text-sm text-foreground/60">
+            {totalReviews} {t("ratings")}
+          </p>
         </div>
 
-        <Divider orientation="vertical" />
+        <Divider className="hidden sm:block" orientation="vertical" />
 
         {/* Right Section: Ratings Breakdown */}
-        <div className="flex flex-col gap-2 w-full">
+        <div className="flex w-full flex-col gap-2.5">
           {ratingsBreakdown.map(({ rating, count }) => (
-            <div key={rating} className="flex items-center space-x-4">
-              <RatingStars rating={rating} size={20} />
+            <div key={rating} className="flex items-center gap-3">
+              <RatingStars rating={rating} size={16} />
               <Progress
-                value={(count / totalReviews) * 100}
-                className="grow bg-gray-200 hidden sm:flex"
+                value={totalReviews ? (count / totalReviews) * 100 : 0}
+                className="hidden grow sm:flex"
+                color="primary"
+                size="sm"
                 aria-label={`Progress for ${rating} stars`}
               />
-              <span className="text-sm whitespace-nowrap">
+              <span className="whitespace-nowrap text-sm text-foreground/60">
                 {count} {t("review")}
               </span>
             </div>

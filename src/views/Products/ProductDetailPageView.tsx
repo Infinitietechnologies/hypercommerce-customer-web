@@ -9,7 +9,7 @@ import {
 } from "@/components/Products/ProductDetailPage";
 import { Product, ProductVariant } from "@/types/ApiResponse";
 import ProductDetailSectionSkeleton from "@/components/Skeletons/ProductDetailSectionSkeleton";
-import { useDisclosure } from "@heroui/react";
+import { useDisclosure } from "@/components/ui";
 import dynamic from "next/dynamic";
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
@@ -83,10 +83,10 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-2 sm:gap-10">
+    <div className="w-full h-full flex flex-col gap-6 sm:gap-10">
       <section
         id="productPage-top-section"
-        className="w-full h-full grid grid-cols-1 md:grid-cols-2 gap-0 sm:gap-10"
+        className="rd-fade w-full h-full grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10"
       >
         <div className="w-full flex justify-start">
           <ProductImgSection
@@ -113,7 +113,7 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
         </div>
       </section>
 
-      <section id="similar-product-section">
+      <section id="similar-product-section" className="rd-fade">
         <SimilarProductsSection
           initialSimilarProducts={initialSimilarProducts}
           isLoading={isSimilarProductsLoading}
@@ -127,7 +127,7 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
           />
         </section>
       )}
-      <section id="productPage-bottom-section">
+      <section id="productPage-bottom-section" className="rd-fade">
         <BottomSection initialProduct={initialProduct} />
       </section>
 

@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 
 import { Navigation, Pagination, Mousewheel } from "swiper/modules";
-import { Image } from "@heroui/react";
+import { Image } from "@/components/ui";
 import ProductImgSectionSkeleton from "@/components/Skeletons/ProductImgSectionSkeleton";
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
@@ -113,7 +113,7 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
           >
             {allImages.map((image, index) => (
               <SwiperSlide key={index}>
-                <div className="h-[40vh] md:h-[60vh] w-full flex justify-center items-center bg-gray-100 dark:bg-gray-950 rounded-lg overflow-hidden">
+                <div className="h-[40vh] md:h-[60vh] w-full flex justify-center items-center bg-content2 border border-divider rounded-2xl overflow-hidden">
                   <Image
                     src={image}
                     alt={`Main Image ${index + 1}`}
@@ -128,7 +128,7 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
             {/* Video Slide (appended as last slide) */}
             {hasVideo && (
               <SwiperSlide key="video">
-                <div className="h-[40vh] md:h-[60vh] w-full flex justify-center items-center bg-black rounded-lg overflow-hidden">
+                <div className="h-[40vh] md:h-[60vh] w-full flex justify-center items-center bg-black rounded-2xl overflow-hidden">
                   {video?.type === "youtube" && youTubeId ? (
                     <iframe
                       title="product-video"
@@ -151,10 +151,7 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
 
           {/* Zoom Window Outside the Main Image */}
           {isHover && activeIndex < allImages.length && (
-            <div
-              className="absolute top-0 -right-[10vw] md:-right-[20vw] w-[20vw] h-[20vw] border border-gray-300 rounded-lg overflow-hidden bg-gray-100 dark:border-default-200 dark:bg-gray-950 z-50"
-              style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
-            >
+            <div className="absolute top-0 -right-[10vw] md:-right-[20vw] w-[20vw] h-[20vw] border border-divider rounded-2xl overflow-hidden bg-content2 z-50 shadow-md">
               <Image
                 disableSkeleton
                 disableAnimation
@@ -206,11 +203,11 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
                   <div
                     className={`h-16 ${
                       isVertical ? "md:h-28" : "md:h-20"
-                    } w-full object-contain rounded-lg flex justify-center items-center bg-gray-100 dark:bg-gray-950 active:scale-95 transition-transform duration-100 dark:border-default-100 ${
+                    } w-full object-contain rounded-xl flex justify-center items-center bg-content2 active:scale-95 transition-all duration-150 ${
                       activeIndex === index
-                        ? "border-primary dark:border-default-400"
-                        : "border-gray-300"
-                    } border`}
+                        ? "border-primary border-2"
+                        : "border-divider border"
+                    }`}
                   >
                     <Image
                       loading="eager"
@@ -235,10 +232,10 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
                   <div
                     className={`h-16 ${
                       isVertical ? "md:h-28" : "md:h-20"
-                    } w-full rounded-lg flex justify-center items-center bg-gray-900 dark:bg-gray-950 relative active:scale-95 transition-transform duration-100 border ${
+                    } w-full rounded-xl flex justify-center items-center bg-gray-900 relative active:scale-95 transition-all duration-150 ${
                       activeIndex === allImages.length
-                        ? "border-primary dark:border-default-400"
-                        : "border-gray-300 dark:border-default-100"
+                        ? "border-primary border-2"
+                        : "border-divider border"
                     }`}
                   >
                     {/* Use YouTube thumbnail when possible */}
