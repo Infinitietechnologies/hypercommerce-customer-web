@@ -51,7 +51,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         isLoading={false}
         isDisabled={props.isDisabled || isLoading}
         {...props}
-        className={`${isSolidPrimary ? "shadow-primary" : "shadow-none"} ${props.className ?? ""}`}
+        className={`font-medium ${isSolidPrimary ? "shadow-primary" : "shadow-none"} ${props.className ?? ""}`}
       >
         {isLoading ? <Spinner size="sm" color="current" /> : children}
       </StyledButton>

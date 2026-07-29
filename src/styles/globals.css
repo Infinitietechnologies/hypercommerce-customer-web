@@ -299,3 +299,9 @@ button[aria-label="Toggle fullscreen view"] {
     height: 16px !important;
   }
 }
+
+/* Figtree is loaded from Google Fonts via a <link> in _document.tsx.
+   Expose it as the Tailwind `--font-sans` variable used across the app. */
+:root {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}

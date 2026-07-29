@@ -10,10 +10,13 @@ const primary = { ...brand, DEFAULT: brand[500], foreground: onBrand };
  * warm-black (dark) surface ramps rather than Material greys.
  */
 const defaultLight = {
-  50: "#f8fafc",
-  100: light.surface2, // #f1f4f8
-  200: light.surface3, // #e8edf3
-  300: light.surface4, // #dde3ec
+  // 50–300 are neutral greys (decoupled from the blue-tinted content surfaces)
+  // so component fills/hovers — Select, Autocomplete, flat chips — sit in the
+  // same #f4f4f4 family as `content2` rather than the old slate tint.
+  50: "#fafafa",
+  100: light.surface2, // #f4f4f4
+  200: "#ececec", // flat hover (e.g. Select trigger data-[hover=true]:bg-default-200)
+  300: "#e4e4e4", // hover border / dividers
   400: "#9aa4b2",
   500: light.muted, // #667085
   600: "#475467",
@@ -21,7 +24,7 @@ const defaultLight = {
   800: "#1d2939",
   900: "#101828",
   foreground: light.foreground,
-  DEFAULT: light.surface3,
+  DEFAULT: "#ececec",
 } as const;
 
 const defaultDark = {

@@ -186,7 +186,7 @@ const DesignSystemPage: NextPageWithLayout = () => {
               </div>
             </div>
             <div>
-              <div className="border-[1.5px] border-primary bg-primary-100/50 rounded-medium px-4 py-3.5 mb-5">
+              <div className="border-[1.5px] border-primary bg-primary-50/50 rounded-medium px-4 py-3.5 mb-5">
                 <div className="flex items-center justify-between mb-1.5"><span className="text-[13px] font-extrabold">Home</span><span className="text-[11px] font-extrabold text-primary-600 bg-content1 px-2 py-0.5 rounded-small">DEFAULT</span></div>
                 <div className="text-[13px] text-default-500 leading-snug">Shri Swaminarayan Circle, Ghanshyam Nagar, Bhuj, Gujarat 370001</div>
               </div>
@@ -194,7 +194,7 @@ const DesignSystemPage: NextPageWithLayout = () => {
             </div>
           </div>
           <div className="border border-dashed border-divider rounded-large p-9 text-center mt-5">
-            <div className="w-16 h-16 rounded-large bg-primary-100/60 grid place-items-center mx-auto mb-3.5"><Icon icon="solar:box-linear" className="text-3xl text-primary-600" /></div>
+            <div className="w-16 h-16 rounded-large bg-primary-50/60 grid place-items-center mx-auto mb-3.5"><Icon icon="solar:box-linear" className="text-3xl text-primary-600" /></div>
             <div className="text-base font-extrabold mb-1">Nothing here yet</div>
             <div className="text-[13px] text-default-500 mb-4">Your saved items will show up here.</div>
             <Button color="primary" className="font-extrabold">Start shopping</Button>
@@ -292,7 +292,7 @@ function FilterChips() {
         const active = !!on[n];
         return (
           <button key={n} onClick={() => setOn((s) => ({ ...s, [n]: !s[n] }))}
-            className={"flex items-center gap-1.5 px-4 py-2 rounded-full border-[1.5px] font-bold text-[13px] transition-colors " + (active ? "border-primary bg-primary-100/50 text-primary-600" : "border-divider bg-content1")}>
+            className={"flex items-center gap-1.5 px-4 py-2 rounded-full border-[1.5px] font-bold text-[13px] transition-colors " + (active ? "border-primary bg-primary-50/50 text-primary-600" : "border-divider bg-content1")}>
             {active && <Icon icon="solar:check-read-linear" className="text-base" />}{n}
           </button>
         );
@@ -313,7 +313,7 @@ function TrackerStep({ icon, label, state }: { icon?: string; label: string; sta
 }
 
 function InlineAlert({ color, icon, text }: { color: "success" | "danger" | "primary" | "secondary"; icon: string; text: string }) {
-  const bg = { success: "bg-success/10", danger: "bg-danger/10", primary: "bg-primary-100/60", secondary: "bg-secondary/10" }[color];
+  const bg = { success: "bg-success/10", danger: "bg-danger/10", primary: "bg-primary-50/60", secondary: "bg-secondary/10" }[color];
   const fg = { success: "text-success", danger: "text-danger", primary: "text-primary-600", secondary: "text-secondary" }[color];
   return <div className={"flex items-center gap-2.5 px-4 py-3 rounded-medium " + bg}><Icon icon={icon} className={"text-xl " + fg} /><span className="text-[13px] font-semibold">{text}</span></div>;
 }

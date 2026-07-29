@@ -1,6 +1,4 @@
 import { Html, Head, Main, NextScript } from "next/document";
-import clsx from "clsx";
-import { fontSans } from "@/config/fonts";
 
 export default function Document() {
   return (
@@ -15,20 +13,20 @@ export default function Document() {
           content="myEMkqRat5aCxpIq0mD1HfuiWYhtSUOYILkM_fothqo"
         />
 
-        {/* Preconnect to Google Fonts for better performance */}
+        {/* Google Fonts — Figtree (site sans typeface). Consumed via the
+            `--font-sans` CSS variable defined in styles/globals.css. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap"
+          rel="stylesheet"
+        />
       </Head>
-      <body
-        className={clsx(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable
-        )}
-      >
+      <body className="min-h-screen bg-background font-sans antialiased">
         <Main />
         <NextScript />
       </body>

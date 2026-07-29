@@ -41,7 +41,7 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
       <CardBody className="p-5 sm:p-6 flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-medium bg-primary-100 text-primary-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-medium bg-primary-50 text-primary-600">
               <Icon icon="solar:wallet-bold" width={22} height={22} />
             </div>
             <div>

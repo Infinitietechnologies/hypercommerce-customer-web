@@ -52,7 +52,7 @@ const CartAdditionalInfo: FC<CartAdditionalInfoProps> = () => {
         <Card className="w-full border border-divider" radius="lg" shadow="sm">
           <CardHeader className="flex gap-3 relative flex-col items-start pb-0">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary-100 rounded-xl">
+              <div className="p-2 bg-primary-50 rounded-xl">
                 <Icon
                   icon="solar:pen-2-linear"
                   className="text-xl text-primary-600"

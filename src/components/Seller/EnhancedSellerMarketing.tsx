@@ -231,7 +231,7 @@ export default function EnhancedSellerMarketing() {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 bg-primary-100 text-primary-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 px-3 py-1.5 rounded-full text-xs font-semibold">
               <Target className="w-3.5 h-3.5" />
               {t("pages.enhancedSellerMarketing.about.badge")}
             </div>

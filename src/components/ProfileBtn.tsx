@@ -16,14 +16,14 @@ const ProfileBtn: FC = () => {
     <Link
       href="/my-account"
       title={t("nav.account", "Account")}
-      className="group flex flex-col items-center gap-0.5 text-foreground text-2xl"
+      className="group flex flex-col items-center gap-0.5 text-shell-foreground text-2xl"
     >
       <AnimatedIcon
         icon="solar:user-circle-linear"
         anim="float"
-        className="text-[23px] transition-colors group-hover:text-primary-600"
+        className="text-[23px] transition-colors group-hover:text-primary-500"
       />
-      <span className="text-[11px] font-medium group-hover:text-primary-600 transition-colors">
+      <span className="text-[11px] font-semibold group-hover:text-primary-500 transition-colors">
         {t("nav.account", "Account")}
       </span>
     </Link>

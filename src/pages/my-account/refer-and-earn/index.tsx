@@ -123,7 +123,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
             /* ── Skeleton ── */
             <div className="space-y-6 animate-pulse">
               {/* Hero banner skeleton */}
-              <div className="rounded-large bg-primary-100 p-6 md:p-8 flex flex-col items-center gap-6 md:flex-row">
+              <div className="rounded-large bg-primary-50 p-6 md:p-8 flex flex-col items-center gap-6 md:flex-row">
                 <div className="w-full md:w-52 flex justify-center md:justify-start">
                   <div className="w-[180px] h-[180px] rounded-large bg-default-200" />
                 </div>
@@ -206,7 +206,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   {howItWorksSteps.map((step, index) => (
                     <div key={step.title} className="flex gap-3 sm:flex-col">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-divider bg-primary-100 text-sm font-semibold text-primary-600">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-divider bg-primary-50 text-sm font-semibold text-primary-600">
                         {index + 1}
                       </div>
                       <div>

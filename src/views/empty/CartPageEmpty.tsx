@@ -10,7 +10,7 @@ const CartPageEmpty = () => {
   return (
     <div className="min-h-[60vh] w-full flex items-center justify-center">
       <div className="max-w-md w-full px-4 py-6 text-center flex flex-col items-center gap-4">
-        <div className="grid h-24 w-24 place-items-center rounded-full bg-primary-100">
+        <div className="grid h-24 w-24 place-items-center rounded-full bg-primary-50">
           <Icon
             icon="solar:cart-large-2-linear"
             className="text-5xl text-primary-600"

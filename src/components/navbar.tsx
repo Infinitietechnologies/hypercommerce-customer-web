@@ -34,13 +34,13 @@ const HeaderAction = ({
     href={href ?? "#"}
     title={label}
     onClick={onClick}
-    className="group flex flex-col items-center gap-0.5 text-foreground text-2xl"
+    className="group flex flex-col items-center gap-0.5 text-shell-foreground text-2xl"
   >
     <AnimatedIcon
       icon={icon}
-      className="text-[23px] transition-colors group-hover:text-primary-600"
+      className="text-[23px] transition-colors group-hover:text-primary-500"
     />
-    <span className="text-label font-medium group-hover:text-primary-600 transition-colors">
+    <span className="text-label font-semibold group-hover:text-primary-500 transition-colors">
       {label}
     </span>
   </Link>
@@ -91,7 +91,7 @@ export const Navbar: FC = () => {
     onClose: closeOfflineCart,
   } = useDisclosure();
   const {
-    siteHeaderLogo = "https://placehold.co/160x40?text=Logo",
+    siteHeaderDarkLogo = "https://placehold.co/160x40?text=Logo",
     siteName = "Site Logo",
   } = webSettings || {};
 
@@ -139,12 +139,17 @@ export const Navbar: FC = () => {
     >
       <Image
         loading="eager"
-        src={siteHeaderLogo}
+        // Keep the logo static: no skeleton/fade replay when the header
+        // re-renders (e.g. after a settings refetch), so it never appears to
+        // "reload" while the src is unchanged.
+        disableSkeleton
+        disableAnimation
+        src={siteHeaderDarkLogo}
         alt={siteName}
         radius="none"
         className="object-contain"
         classNames={{
-          img: "h-12 sm:h-10 min-[1024px]:h-12 w-auto max-w-[160px]",
+          img: "h-14 sm:h-12 min-[1024px]:h-14 w-auto max-w-[160px]",
           wrapper: "cursor-pointer",
         }}
       />
@@ -164,14 +169,14 @@ export const Navbar: FC = () => {
       id="login-btn"
       aria-label={t("nav.account", "Account")}
       onClick={() => authSheetStore.open()}
-      className="group flex flex-col items-center gap-0.5 text-foreground cursor-pointer text-2xl"
+      className="group flex flex-col items-center gap-0.5 text-shell-foreground cursor-pointer text-2xl"
     >
       <AnimatedIcon
         icon="solar:user-circle-linear"
         anim="float"
-        className="text-[23px] transition-colors group-hover:text-primary-600"
+        className="text-[23px] transition-colors group-hover:text-primary-500"
       />
-      <span className="text-label font-medium group-hover:text-primary-600 transition-colors">
+      <span className="text-label font-semibold group-hover:text-primary-500 transition-colors">
         {t("nav.account", "Account")}
       </span>
     </button>
@@ -241,7 +246,7 @@ export const Navbar: FC = () => {
         )}
 
         {/* ---------- desktop header (>= 1024px) ---------- */}
-        <header className="hidden min-[1024px]:block w-full sticky top-0 z-40 bg-content1 border-b border-divider shadow-[0_2px_16px_-12px_rgba(28,26,23,0.15)]">
+        <header className="hidden min-[1024px]:block w-full sticky top-0 z-40 bg-shell border-b border-shell-divider shadow-[0_2px_16px_-12px_rgba(0,0,0,0.6)]">
           <div className="w-full max-w-site mx-auto px-6 py-3.5 flex items-center gap-5">
             <div className="shrink-0">{SiteLogo}</div>
 
@@ -263,7 +268,7 @@ export const Navbar: FC = () => {
         </header>
 
         {/* ---------- mobile / tablet header (< 1024px) ---------- */}
-        <header className="min-[1024px]:hidden w-full sticky top-0 z-40 bg-content1 border-b border-divider">
+        <header className="min-[1024px]:hidden w-full sticky top-0 z-40 bg-shell border-b border-shell-divider">
           <div className="w-full max-w-site mx-auto px-4 py-3 flex flex-col gap-3">
             <div className="flex items-center gap-2.5">
               <div className="flex-1 min-w-0">

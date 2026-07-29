@@ -267,7 +267,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       <div className="flex flex-wrap items-center gap-3">
         {rating_count > 0 && (
           <>
-            <span className="inline-flex items-center gap-1 rounded-lg bg-primary-100 px-2 py-1 text-xs font-bold text-primary-600">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-primary-50 px-2 py-1 text-xs font-bold text-primary-600">
               {ratings}
               <Icon icon="solar:star-bold" className="text-[13px]" />
             </span>

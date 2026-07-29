@@ -304,7 +304,7 @@ const LocationSelector = () => {
         return (
           <Icon
             icon="solar:map-point-linear"
-            className="text-lg text-default-500"
+            className="text-lg text-primary"
           />
         );
     }
@@ -333,23 +333,23 @@ const LocationSelector = () => {
         onClick={onOpen}
         disabled={!isInitialized}
         className="flex max-w-full items-center gap-2 min-[1024px]:w-auto shrink-0 text-left transition-colors disabled:opacity-60
-          rounded-medium border border-divider bg-content1 px-3.5 h-11 shadow-sm hover:border-primary"
+          rounded-medium border border-shell-divider bg-transparent text-shell-foreground px-3.5 h-11 hover:border-primary"
       >
         <Icon
           icon="solar:map-point-bold"
-          className="text-lg text-primary-600 shrink-0"
+          className="text-lg text-primary-500 shrink-0"
         />
         <span className="leading-tight min-w-0 flex-1 min-[1024px]:flex-none">
-          <span className="block text-xxs font-semibold text-default-500">
+          <span className="block text-xxs font-semibold text-shell-muted">
             {t("locationSelector.deliverTo")}
           </span>
-          <span className="block text-compact font-semibold truncate min-[1024px]:max-w-[150px]">
+          <span className="block text-compact font-semibold truncate min-[1024px]:max-w-[150px] text-shell-foreground">
             {getButtonText()}
           </span>
         </span>
         <Icon
           icon="solar:alt-arrow-down-linear"
-          className="text-base text-default-400 shrink-0"
+          className="text-base text-shell-muted shrink-0"
         />
       </button>
 

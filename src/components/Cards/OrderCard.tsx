@@ -45,7 +45,7 @@ const OrderCard: FC<OrderCardProps> = ({ item }) => {
       className="flex items-center gap-3.5 rounded-medium border border-divider bg-content1 p-3.5 shadow-sm transition-all hover:border-primary hover:shadow-md"
     >
       {/* Thumbnail */}
-      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-medium bg-primary-100 flex items-center justify-center">
+      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-medium bg-primary-50 flex items-center justify-center">
         {productImage ? (
           <Image
             src={productImage}

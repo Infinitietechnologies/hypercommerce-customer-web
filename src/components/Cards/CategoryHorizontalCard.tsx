@@ -9,40 +9,53 @@ interface CategoryHorizontalCardProps {
   category: Category;
 }
 
-/** Soft, readable pastel tints — cycled per category for a colourful row. */
+/** Paired pastel tint + matching darker title colour, cycled per category. */
 const TINTS = [
-  "bg-primary-100",
-  "bg-secondary-100",
-  "bg-success-100",
-  "bg-warning-100",
-  "bg-danger-100",
+  { bg: "bg-primary-50", text: "text-primary-700" },
+  { bg: "bg-secondary-100", text: "text-secondary-700" },
+  { bg: "bg-success-100", text: "text-success-700" },
+  { bg: "bg-warning-100", text: "text-warning-700" },
+  { bg: "bg-danger-100", text: "text-danger-700" },
 ];
 
 /**
- * Category — `full` style: a horizontal pill with a small image and the name on
- * a soft, colourful background (a pastel tint chosen per category). Text stays
- * dark so it reads on every tint.
+ * Category — `full` style: a soft colored tile with the title pinned top-start
+ * and the product image resting in the lower-end corner. Background and title
+ * colours come from the category's own theme (`background_color` / `font_color`),
+ * falling back to a pastel tint cycled per category so the row stays colourful.
  */
 const CategoryHorizontalCard: FC<CategoryHorizontalCardProps> = ({ category }) => {
   const tint = TINTS[(category.id ?? 0) % TINTS.length];
+  const backgroundColor = category.background_color || undefined;
+  const color = category.font_color || undefined;
 
   return (
     <Link
       href={categoryHref(category)}
       title={category.title}
       onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
-      className={`flex flex-col sm:flex-row items-center gap-3 rounded-large p-2.5 pe-4 transition-shadow duration-200 hover:shadow-md ${tint}`}
+      className={`group relative block aspect-[16/10] overflow-hidden rounded-large
+        shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
+        ${tint.bg}`}
     >
-      <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-medium bg-white/80">
+      <div className="relative z-10 max-w-[55%] p-3 sm:p-4">
+        <div
+          style={{ color }}
+          className={`line-clamp-3 text-sm sm:text-lg font-bold leading-tight ${color ? "" : tint.text}`}
+        >
+          {category.title}
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute inset-y-0 end-0 flex w-[58%] items-end justify-end p-2">
         <Image
           alt={category.title}
-          src={category.image || ""}
+          src={category.image || category.banner || ""}
           removeWrapper
           loading="eager"
-          className="h-9 w-9 object-contain"
+          className="max-h-full max-w-full object-contain transition-transform duration-200 group-hover:scale-105"
         />
       </div>
-      <span className="min-w-0 text-sm font-bold text-foreground">{category.title}</span>
     </Link>
   );
 };

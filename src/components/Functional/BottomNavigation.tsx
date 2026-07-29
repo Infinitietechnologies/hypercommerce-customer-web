@@ -137,7 +137,7 @@ const BottomNavigation = () => {
                   }
                   className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-0 flex-1 ${
                     isActive
-                      ? "text-primary-600 bg-primary-100"
+                      ? "text-primary-600 bg-primary-50"
                       : "text-default-500 hover:text-foreground"
                   }`}
                 >

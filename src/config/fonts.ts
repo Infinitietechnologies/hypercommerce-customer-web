@@ -1,19 +1,17 @@
-import { Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 
-// Plus Jakarta Sans — the typeface of the HyperCommerce amber redesign
-// (Claude Design 6302fd32…). Supersedes Figtree as the storefront's `sans`.
-// next/font requires plain object literals here: no spreads, no shared consts.
-export const fontSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  style: "normal",
-  variable: "--font-sans",
-  display: "swap",
-  preload: true,
-  adjustFontFallback: true,
-  fallback: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "arial"],
-});
+// Figtree is loaded globally from Google Fonts via the <link> in _document.tsx
+// and exposed to Tailwind through the `--font-sans` CSS variable (globals.css).
+// This plain descriptor keeps existing imports (e.g. `_app`'s `fonts` export)
+// resolving to the Figtree family without bundling a second, self-hosted copy.
+export const fontSans = {
+  className: "",
+  variable: "",
+  style: {
+    fontFamily:
+      '"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif',
+  },
+} as const;
 
 export const fontMono = localFont({
   src: "../assets/fonts/Figtree-VariableFont_wght.ttf",

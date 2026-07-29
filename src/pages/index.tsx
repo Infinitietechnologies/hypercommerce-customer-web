@@ -38,7 +38,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
   const siteName = webSettings?.siteName || siteConfig.name;
   const siteDescription =
     webSettings?.metaDescription || siteConfig.metaDescription;
-  const siteLogo = webSettings?.siteHeaderLogo || "/logo.png";
+  const siteLogo = webSettings?.siteHeaderDarkLogo || "/logo.png";
 
   const organizationSchema = generateOrganizationSchema(
     siteName,

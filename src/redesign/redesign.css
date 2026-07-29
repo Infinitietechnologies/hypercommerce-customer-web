@@ -21,7 +21,7 @@
   min-height: 100vh;
   background: var(--rd-bg);
   color: var(--rd-ink);
-  font-family: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--font-sans), "Figtree", system-ui, sans-serif;
   position: relative;
 }
 
@@ -228,5 +228,5 @@
 
 /* The drawer paints its own surface; keep HeroUI's default padding rhythm. */
 :is(.rd, .rd-vars) [data-slot="base"] {
-  font-family: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--font-sans), "Figtree", system-ui, sans-serif;
 }

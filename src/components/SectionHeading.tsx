@@ -20,7 +20,7 @@ const SectionHeading: FC<SectionHeadingProps> = ({
 }) => {
   return (
     <div className="flex items-center gap-3">
-      <div className="grid place-items-center p-2.5 rounded-large bg-primary-100 text-primary-600 shrink-0">
+      <div className="grid place-items-center p-2.5 rounded-large bg-primary-50 text-primary-600 shrink-0">
         {icon}
       </div>
 

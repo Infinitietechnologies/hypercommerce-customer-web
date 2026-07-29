@@ -122,7 +122,7 @@ const ConfirmationModal: FC<ConfirmationModalProps> = ({
         };
       case "primary":
         return {
-          iconBg: "bg-primary-100 dark:bg-primary-100/20",
+          iconBg: "bg-primary-50 dark:bg-primary-50/20",
           iconColor: "text-primary-600 dark:text-primary-400",
           confirmButton: "primary",
         };

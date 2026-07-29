@@ -100,7 +100,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order }) => {
         {/* Promo / Cashback */}
         <div className="space-y-3 py-2">
           {order.promo_line && (
-            <div className="bg-primary-100 rounded-lg p-3 space-y-2">
+            <div className="bg-primary-50 rounded-lg p-3 space-y-2">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-2 flex-1">
                   {order.promo_line.cashback_flag ? (

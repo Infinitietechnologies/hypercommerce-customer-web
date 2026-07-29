@@ -87,7 +87,7 @@ const getNotificationIcon = (type: string) => {
 };
 
 // Redesign uses a single warm amber-tint tile for every notification type.
-const getIconBg = () => "bg-primary-100";
+const getIconBg = () => "bg-primary-50";
 
 const formatTime = (dateStr: string) => {
   try {
@@ -161,7 +161,7 @@ const NotificationItem: React.FC<{
       className={`flex w-full items-start gap-3 rounded-medium border p-4 text-left transition-colors ${
         notification.is_read
           ? "border-divider bg-content1"
-          : "border-primary-200 bg-primary-100/40"
+          : "border-primary-200 bg-primary-50/40"
       } ${isClickable ? "cursor-pointer hover:border-primary" : "cursor-default"}`}
     >
       {/* Type Icon */}

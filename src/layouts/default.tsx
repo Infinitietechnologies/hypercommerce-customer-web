@@ -109,11 +109,14 @@ export default function DefaultLayout({
     "/settings",
     fetcher,
     {
+      // Only fetch settings on mount (i.e. navigation / hard refresh), not on
+      // a timer or window focus — otherwise the header logo & other settings-
+      // driven UI visibly "reload" every few seconds. Reconnect stays on so a
+      // dropped connection still recovers fresh settings.
       revalidateOnMount: !isSSR(),
-      revalidateOnFocus: true,
-      focusThrottleInterval: 30000,
+      revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      refreshInterval: 5 * 60 * 1000,
+      refreshInterval: 0,
       fallbackData: initialSettings ?? null,
     },
   );

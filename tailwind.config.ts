@@ -1,7 +1,7 @@
 import { heroui } from "@heroui/theme";
 
 import { heroLayout, heroThemes } from "./src/theme/heroui";
-import { accent, dark, light, radius, shadow, spacing } from "./src/theme/tokens";
+import { accent, dark, light, radius, shadow, shell, spacing } from "./src/theme/tokens";
 
 /** @type {import('tailwindcss').Config} */
 const config: import("tailwindcss").Config = {
@@ -57,6 +57,12 @@ const config: import("tailwindcss").Config = {
         "collapsed-appbar": light.collapsedAppBar,
         "bottom-nav": dark.bottomNav,
         "bottom-nav-inactive": dark.bottomNavInactive,
+        // Storefront shell (black header/footer) — the only dark surfaces.
+        shell: shell.background,
+        "shell-foreground": shell.foreground,
+        "shell-muted": shell.muted,
+        "shell-divider": shell.divider,
+        "shell-surface": shell.surface,
       },
       screens: {
         xxs: "320px",

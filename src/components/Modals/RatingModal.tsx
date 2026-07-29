@@ -384,7 +384,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
                         onMouseLeave={() => setHoveredRating(0)}
                         className={`relative p-2 rounded-full transition-all duration-200 ease-out
                           hover:scale-110 active:scale-95
-                          ${isSelected ? "bg-primary-100 shadow-lg" : "hover:bg-default-100"}
+                          ${isSelected ? "bg-primary-50 shadow-lg" : "hover:bg-default-100"}
                           ${isActive ? "opacity-100" : "opacity-40 hover:opacity-70"}`}
                       >
                         <span

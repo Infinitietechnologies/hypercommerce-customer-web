@@ -17,14 +17,14 @@ const SoldBySection: FC<{ product: Product }> = ({ product }) => {
           size="lg"
           name={seller || t("soldBySection.noLogo")}
           radius="lg"
-          className="bg-primary-100 text-primary-600"
+          className="bg-primary-50 text-primary-600"
         />
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-foreground">
               {seller || t("soldBySection.noSellerInfo")}
             </h3>
-            <span className="inline-flex items-center gap-1 rounded-lg bg-primary-100 px-1.5 py-0.5 text-xs font-bold text-primary-600">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-primary-50 px-1.5 py-0.5 text-xs font-bold text-primary-600">
               <Icon icon="solar:star-bold" className="text-[12px]" />
               {!isNaN(Number(seller_rating))
                 ? Number(seller_rating).toFixed(1)
