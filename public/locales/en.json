@@ -297,6 +297,10 @@
   "change": "Change",
   "check_back_later": "Check back later for new exciting offers!",
   "checkout": {
+    "confirmingPayment": "Confirming payment…",
+    "paymentConfirmed": "Payment confirmed",
+    "paymentFailed": "Payment failed",
+    "paymentPending": "We'll notify you once your payment is confirmed.",
     "cartCleared": {
       "description": "Your cart has been cleared successfully",
       "title": "Cart Cleared"
@@ -828,7 +832,8 @@
     "wallet": "Wallet",
     "wishlists": "Wishlists",
     "seller-registration": "Seller Registration",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "payment": "Payment"
   },
   "pages": {
     "aboutUs": {
@@ -1082,7 +1087,10 @@
       "remark": "Remark",
       "remarkPlaceholder": "Describe the problem",
       "photos": "Photos",
-      "evidenceHint": "This reason needs a remark and at least one photo."
+      "evidenceHint": "This reason needs a remark and at least one photo.",
+      "reorder": "Reorder",
+      "reorderSuccess": "Items added to your cart",
+      "reorderFailed": "Couldn't reorder"
     },
     "ordersPage": {
       "emptyMessage": "You don't have any orders yet. Start shopping to see them here.",
@@ -1459,7 +1467,8 @@
   "payments": {
     "cod": {
       "name": "Cash On Delivery",
-      "tagline": "Pay at your door."
+      "tagline": "Pay at your door.",
+      "notAvailable": "Not available for this order"
     },
     "directBankTransfer": {
       "name": "Direct Bank Transfer",

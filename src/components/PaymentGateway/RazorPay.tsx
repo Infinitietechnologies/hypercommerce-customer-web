@@ -1,12 +1,9 @@
 import { useSettings } from "@/contexts/SettingsContext";
-import { handleCheckout } from "@/helpers/functionalHelpers";
-import { getCartDataFromRedux, getUserDataFromRedux } from "@/helpers/getters";
-import { setPromoCode } from "@/lib/redux/slices/checkoutSlice";
-import { createRazorPayOrder } from "@/routes/api";
+import { getUserDataFromRedux } from "@/helpers/getters";
+import { payOrder } from "@/services/orders";
 import { RazorpayOrderData } from "@/types/ApiResponse";
 import { addToast, Button } from "@heroui/react";
 import React, { FC, useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 
 // ✅ Razorpay Types
 interface RazorpayPaymentResponse {
@@ -69,12 +66,13 @@ declare global {
 }
 
 const RazorPay: FC<{
-  onSuccess: () => void;
+  onSuccess: (slug?: string) => void;
   onError: () => void;
   setIsLoading: (value: boolean) => void;
   isLoading: boolean;
   usageType?: "order" | "wallet";
   walletOrderData?: any;
+  orderSlug?: string;
   triggerRef?: React.MutableRefObject<(() => void) | null>;
 }> = ({
   onSuccess,
@@ -83,13 +81,13 @@ const RazorPay: FC<{
   setIsLoading,
   usageType = "order",
   walletOrderData,
+  orderSlug,
   triggerRef,
 }) => {
   const [sdkReady, setSdkReady] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const { paymentSettings } = useSettings();
   const userData = getUserDataFromRedux();
-  const dispatch = useDispatch();
 
   // ✅ Load Razorpay script dynamically
   useEffect(() => {
@@ -121,8 +119,7 @@ const RazorPay: FC<{
     setIsLoading(true);
 
     try {
-      let order: RazorpayOrderData;
-      let transactionId: string | undefined;
+      let options: RazorpayOptions;
 
       // ✅ Wallet Flow: Use pre-prepared order data
       if (usageType === "wallet") {
@@ -131,126 +128,100 @@ const RazorPay: FC<{
             title: "Invalid wallet order data",
             color: "danger",
           });
+          setIsLoading(false);
           return console.error("Wallet order data is missing");
         }
 
-        order = {
+        const order = {
           id: walletOrderData.payment_response.id,
           amount: walletOrderData.payment_response.amount / 100,
           currency: walletOrderData.payment_response.currency,
           receipt: walletOrderData.payment_response.receipt,
         } as RazorpayOrderData;
 
-        transactionId = walletOrderData.transaction?.id?.toString();
-      } else {
-        const cartData = getCartDataFromRedux();
-        const res = await createRazorPayOrder({
-          amount: cartData?.payment_summary.payable_amount || 1,
-          currency: "INR",
-          receipt: new Date().toISOString(),
-        });
-
-        if (!res.success || !res.data) {
-          addToast({
-            title: res.message || "Failed to Create Order!",
-            color: "danger",
-          });
-          return console.error("Failed to create Razorpay order");
-        }
-
-        order = res.data;
-      }
-
-      const options: RazorpayOptions = {
-        key: paymentSettings?.razorpayKeyId || "",
-        amount: order.amount * 100,
-        currency: order.currency,
-        description: usageType === "wallet" ? "Wallet Recharge" : "Pay Safe",
-        order_id: order.id,
-        handler: async (response: RazorpayPaymentResponse) => {
-          setIsConfirming(true);
-
-          try {
-            console.log("Payment success response:", response);
-
-            const checkoutData: any = {
-              razorpay_order_id: response.razorpay_order_id,
-              transaction_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            };
-
-            if (usageType === "wallet" && transactionId) {
-              checkoutData.wallet_transaction_id = transactionId;
-            }
-
-            const res =
-              usageType === "wallet" && transactionId
-                ? { success: true, message: "Wallet Recharge Done !" }
-                : await handleCheckout("razorpayPayment", checkoutData);
-
-            if (res?.success) {
-              onSuccess();
+        options = {
+          key: paymentSettings?.razorpayKeyId || "",
+          amount: order.amount * 100,
+          currency: order.currency,
+          description: "Wallet Recharge",
+          order_id: order.id,
+          handler: async () => {
+            setIsConfirming(true);
+            onSuccess();
+            addToast({
+              title: "Wallet Recharged Successfully!",
+              color: "success",
+            });
+            setIsLoading(false);
+          },
+          prefill: {
+            name: userData?.name || "",
+            email: userData?.email || "",
+            contact: userData?.mobile || "",
+          },
+          notes: walletOrderData?.payment_response?.notes || {
+            timeOfPayment: order.receipt,
+          },
+          modal: {
+            ondismiss: () => {
               addToast({
-                title:
-                  usageType === "wallet"
-                    ? "Wallet Recharged Successfully!"
-                    : "Order Placed Successfully!",
-                color: "success",
+                title: "Payment Cancelled",
+                description: "You have closed the Razorpay checkout.",
+                color: "warning",
               });
-
-              if (usageType !== "wallet") {
-                dispatch(setPromoCode(""));
-              }
-            } else {
               setIsConfirming(false);
               setIsLoading(false);
-              addToast({
-                title:
-                  usageType === "wallet"
-                    ? "Wallet Recharge Failed!"
-                    : "Order Placement Failed!",
-                color: "danger",
-                description:
-                  res?.message ||
-                  "Something went wrong while processing the payment.",
-              });
-            }
-          } catch (error) {
-            console.error("Error while processing Razorpay payment:", error);
-            addToast({
-              title: "Unexpected Error",
-              color: "danger",
-              description:
-                "An error occurred while processing your payment. Please try again.",
-            });
-            setIsConfirming(false);
-          } finally {
-            setIsLoading(false);
-          }
-        },
-        prefill: {
-          name: userData?.name || "",
-          email: userData?.email || "",
-          contact: userData?.mobile || "",
-        },
-        notes:
-          usageType === "wallet" && walletOrderData?.payment_response?.notes
-            ? walletOrderData.payment_response.notes
-            : { timeOfPayment: order.receipt },
-        modal: {
-          ondismiss: () => {
-            addToast({
-              title: "Payment Cancelled",
-              description: "You have closed the Razorpay checkout.",
-              color: "warning",
-            });
-            setIsConfirming(false);
-            setIsLoading(false);
-            onError();
+              onError();
+            },
+            confirm_close: true,
           },
-          confirm_close: true,
-        },
-      };
+        };
+      } else {
+        // Open Razorpay for the existing pending order via its /pay intent.
+        const res = await payOrder(orderSlug || "");
+        const pr = res?.data?.payment_response;
+
+        if (!res?.success || !pr?.razorpay_order_id || !orderSlug) {
+          addToast({
+            title: res?.message || "Failed to start payment",
+            color: "danger",
+          });
+          setIsLoading(false);
+          onError();
+          return;
+        }
+
+        options = {
+          key: pr.key_id || paymentSettings?.razorpayKeyId || "",
+          amount: pr.amount || 0,
+          currency: pr.currency || "INR",
+          description: "Pay Safe",
+          order_id: pr.razorpay_order_id,
+          handler: async () => {
+            setIsConfirming(true);
+            onSuccess(orderSlug);
+          },
+          prefill: {
+            name: userData?.name || "",
+            email: userData?.email || "",
+            contact: userData?.mobile || "",
+          },
+          notes: { orderSlug },
+          modal: {
+            ondismiss: () => {
+              addToast({
+                title: "Payment Cancelled",
+                description: "You have closed the Razorpay checkout.",
+                color: "warning",
+              });
+              setIsConfirming(false);
+              setIsLoading(false);
+              onError();
+            },
+            confirm_close: true,
+          },
+        };
+      }
 
       const rzp = new window.Razorpay(options);
 
@@ -287,7 +258,7 @@ const RazorPay: FC<{
     onError,
     userData,
     setIsConfirming,
-    dispatch,
+    orderSlug,
   ]);
 
   // ✅ Expose handlePayment via triggerRef for auto-triggering

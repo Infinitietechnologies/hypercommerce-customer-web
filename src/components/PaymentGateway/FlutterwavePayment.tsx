@@ -1,20 +1,28 @@
-import { handleCheckout } from "@/helpers/functionalHelpers";
-import { Button } from "@heroui/react";
+import { payOrder } from "@/services/orders";
+import { addToast, Button } from "@heroui/react";
 import { FC } from "react";
 
 const FlutterwavePayment: FC<{
-  onSuccess: () => void;
+  onSuccess: (slug?: string) => void;
   onError: () => void;
   setIsLoading: (value: boolean) => void;
   isLoading: boolean;
-}> = ({ onSuccess, onError, isLoading, setIsLoading }) => {
+  orderSlug?: string;
+}> = ({ onError, isLoading, setIsLoading, orderSlug }) => {
   const handlePayment = async () => {
     setIsLoading(true);
-
     try {
-      await handleCheckout("flutterwavePayment", {});
-
-      onSuccess();
+      const res = await payOrder(orderSlug || "");
+      const link = res?.data?.payment_response?.link;
+      if (res?.success && link) {
+        window.location.href = link;
+        return;
+      }
+      addToast({
+        title: res?.message || "Failed to start payment",
+        color: "danger",
+      });
+      onError();
     } catch (err) {
       console.error(err);
       onError();

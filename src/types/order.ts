@@ -415,8 +415,17 @@ export interface OrderCheckoutResponse {
   created_at: string;
   updated_at: string;
   payment_response?: {
-    link: string;
-  };
+    link?: string;
+    clientSecret?: string;
+    paymentIntentId?: string;
+    razorpay_order_id?: string;
+    key_id?: string;
+    amount?: number;
+    currency?: string;
+    authorization_url?: string;
+    access_code?: string;
+    reference?: string;
+  } | null;
 }
 
 export interface PaymentDetails {

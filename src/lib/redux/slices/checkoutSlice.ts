@@ -6,6 +6,7 @@ export interface CheckoutState {
   orderNote: string;
   useWallet: boolean;
   promoCode: string;
+  idempotencyKey: string;
 }
 
 const initialState: CheckoutState = {
@@ -13,6 +14,7 @@ const initialState: CheckoutState = {
   orderNote: "",
   useWallet: false,
   promoCode: "",
+  idempotencyKey: "",
 };
 
 const checkoutSlice = createSlice({
@@ -31,6 +33,9 @@ const checkoutSlice = createSlice({
     setPromoCode: (state, action: PayloadAction<string>) => {
       state.promoCode = action.payload;
     },
+    setIdempotencyKey: (state, action: PayloadAction<string>) => {
+      state.idempotencyKey = action.payload;
+    },
   },
 });
 
@@ -39,5 +44,6 @@ export const {
   setOrderNote,
   setUseWallet,
   setPromoCode,
+  setIdempotencyKey,
 } = checkoutSlice.actions;
 export default checkoutSlice.reducer;

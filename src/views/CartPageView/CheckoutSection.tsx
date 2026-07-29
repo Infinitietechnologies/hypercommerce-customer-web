@@ -126,7 +126,6 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
 
         return;
       } else {
-        // Open payment selection modal
         onOpen();
       }
     } catch (error) {

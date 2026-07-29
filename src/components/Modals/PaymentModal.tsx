@@ -4,18 +4,19 @@ import PaymentMethods from "../PaymentMethods";
 import { handleCheckout } from "@/helpers/functionalHelpers";
 import { useRouter } from "next/router";
 import { updateCartData } from "@/helpers/updators";
-import RazorPay from "../PaymentGateway/RazorPay";
-import Stripe from "../PaymentGateway/Stripe";
 import { useTranslation } from "react-i18next";
-import PayStack from "../PaymentGateway/Paystack";
-import FlutterwavePayment from "../PaymentGateway/FlutterwavePayment";
 import { useDispatch } from "react-redux";
-import { setPromoCode } from "@/lib/redux/slices/checkoutSlice";
+import { setIdempotencyKey } from "@/lib/redux/slices/checkoutSlice";
 
 interface PaymentModalProps {
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
+
+const genKey = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `idem_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
 const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
   const [selectedPayment, setSelectedPayment] = useState("");
@@ -32,31 +33,41 @@ const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
       });
     }
 
-    if (selectedPayment === "cod") {
-      setIsLoading(true);
-      try {
-        const res = await handleCheckout("cod", {});
-        if (res?.success) {
-          onOpenChange(false);
-          await router.push("/my-account/orders");
-          dispatch(setPromoCode(""));
-        }
-      } finally {
-        setIsLoading(false);
-        updateCartData(true, false);
-      }
-    } else if (selectedPayment === "directBankTransfer") {
+    if (selectedPayment === "directBankTransfer") {
       document.getElementById("bank_transfer_modal_btn")?.click();
+      return;
     }
-  };
 
-  const handlePaymentSuccess = async () => {
-    onOpenChange(false);
-    await router.push("/my-account/orders");
-  };
+    setIsLoading(true);
+    try {
+      // Fresh idempotency key per submit — so switching the gateway always
+      // creates a new order with the chosen gateway (a double-tap is blocked
+      // by the disabled button, not by key reuse).
+      dispatch(setIdempotencyKey(genKey()));
 
-  const handleError = () => {
-    // onOpenChange(false);
+      const res = await handleCheckout(selectedPayment, {});
+      if (!res?.success) {
+        toast({
+          title: res?.message || t("checkout.failed.title"),
+          color: "danger",
+        });
+        return;
+      }
+
+      const slug = res?.data?.slug;
+      onOpenChange(false);
+
+      if (selectedPayment === "cod" || selectedPayment === "wallet") {
+        await router.push(
+          slug ? `/my-account/orders/${slug}` : "/my-account/orders",
+        );
+      } else {
+        await router.push(`/payment/${slug}`);
+      }
+    } finally {
+      setIsLoading(false);
+      updateCartData(true, false);
+    }
   };
 
   return (
@@ -70,54 +81,14 @@ const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
       }
       footer={
         <div className="w-full">
-          {(selectedPayment === "cod" ||
-            selectedPayment === "directBankTransfer") && (
-            <Button
-              color="primary"
-              onPress={handleContinue}
-              isLoading={isLoading}
-              className="w-full"
-            >
-              {t("continue")}
-            </Button>
-          )}
-
-          {selectedPayment === "stripePayment" && (
-            <Stripe
-              onSuccess={handlePaymentSuccess}
-              onError={handleError}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-            />
-          )}
-
-          {selectedPayment === "razorpayPayment" && (
-            <RazorPay
-              onSuccess={handlePaymentSuccess}
-              onError={handleError}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-            />
-          )}
-
-          {selectedPayment === "paystackPayment" && (
-            <PayStack
-              onSuccess={handlePaymentSuccess}
-              onError={handleError}
-              setIsLoading={setIsLoading}
-              isLoading={isLoading}
-              usageType="order"
-            />
-          )}
-
-          {selectedPayment === "flutterwavePayment" && (
-            <FlutterwavePayment
-              onSuccess={handlePaymentSuccess}
-              onError={handleError}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-            />
-          )}
+          <Button
+            color="primary"
+            onPress={handleContinue}
+            isLoading={isLoading}
+            className="w-full"
+          >
+            {t("continue")}
+          </Button>
         </div>
       }
     >

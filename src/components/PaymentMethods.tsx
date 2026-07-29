@@ -1,4 +1,5 @@
 import { useSettings } from "@/contexts/SettingsContext";
+import { getCartDataFromRedux } from "@/helpers/getters";
 import { Image, Radio, RadioGroup, ScrollShadow } from "@heroui/react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,9 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
   const { t } = useTranslation();
   const { paymentSettings } = useSettings();
 
+  const cartData = getCartDataFromRedux();
+  const codAvailable = cartData?.payment_summary?.cod_available ?? true;
+
   const allMethods = [
     {
       id: "cod",
@@ -26,6 +30,10 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.cod.tagline"),
       icon: "/Payments/cod.png",
       isEnabled: paymentSettings?.cod === true && !hideCOD,
+      disabled: !codAvailable,
+      disabledReason: t("payments.cod.notAvailable", {
+        defaultValue: "Not available for this order",
+      }),
     },
     {
       id: "directBankTransfer",
@@ -33,6 +41,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.directBankTransfer.tagline"),
       icon: "/Payments/bank_transfer.png",
       isEnabled: false,
+      disabled: false,
+      disabledReason: "",
     },
     {
       id: "stripePayment",
@@ -40,6 +50,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.stripe.tagline"),
       icon: "/Payments/stripe.png",
       isEnabled: paymentSettings?.stripePayment === true,
+      disabled: false,
+      disabledReason: "",
     },
     {
       id: "flutterwavePayment",
@@ -47,6 +59,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.flutterwave.tagline"),
       icon: "/Payments/flutterwave.png",
       isEnabled: paymentSettings?.flutterwavePayment === true,
+      disabled: false,
+      disabledReason: "",
     },
     {
       id: "paypal",
@@ -54,6 +68,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.paypal.tagline"),
       icon: "/Payments/paypal.png",
       isEnabled: false,
+      disabled: false,
+      disabledReason: "",
     },
     {
       id: "razorpayPayment",
@@ -61,6 +77,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.razorpay.tagline"),
       icon: "/Payments/razorpay.png",
       isEnabled: paymentSettings?.razorpayPayment === true,
+      disabled: false,
+      disabledReason: "",
     },
     {
       id: "paystackPayment",
@@ -68,6 +86,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.paystack.tagline"),
       icon: "/Payments/paystack.png",
       isEnabled: paymentSettings?.paystackPayment === true,
+      disabled: false,
+      disabledReason: "",
     },
     {
       id: "phonepe",
@@ -75,6 +95,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.phonepe.tagline"),
       icon: "/Payments/phonepe-logo.png",
       isEnabled: false,
+      disabled: false,
+      disabledReason: "",
     },
   ];
 
@@ -92,6 +114,7 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
           <Radio
             key={method.id}
             value={method.id}
+            isDisabled={method.disabled}
             classNames={{
               base: "inline-flex m-0 items-center justify-between flex-row-reverse max-w-full cursor-pointer rounded-lg gap-4 p-3 border border-gray-200 dark:border-default-100 data-[selected=true]:border-primary-500 data-[selected=true]:bg-primary-50 dark:data-[selected=true]:bg-content1",
               control: "text-primary-600",
@@ -108,6 +131,11 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
               <div>
                 <h4 className="font-medium text-sm">{method.name}</h4>
                 <p className="text-xs opacity-50">{method.tagline}</p>
+                {method.disabled && method.disabledReason && (
+                  <p className="text-xs text-danger mt-0.5">
+                    {method.disabledReason}
+                  </p>
+                )}
               </div>
             </div>
           </Radio>

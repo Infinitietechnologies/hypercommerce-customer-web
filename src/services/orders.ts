@@ -162,9 +162,7 @@ export const createOrder = async (
         use_wallet?: boolean | string | number;
         address_id?: string | number;
         order_note?: string;
-        transaction_id?: string;
-        razorpay_order_id?: string;
-        razorpay_signature?: string;
+        idempotency_key?: string;
         redirect_url?: string;
       }
     | FormData = {},
@@ -178,6 +176,32 @@ export const createOrder = async (
           }
         : undefined,
     });
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
+// Re-issue a fresh gateway intent for an existing pending order (retry).
+export const payOrder = async (
+  slug: string,
+): Promise<ApiResponse<OrderCheckoutResponse>> => {
+  try {
+    const response = await api.post(`/user/orders/${slug}/pay`);
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
+// Mark a pending order's payment as failed and release its stock (user cancel).
+export const cancelOrderPayment = async (
+  slug: string,
+): Promise<ApiResponse<OrderCheckoutResponse>> => {
+  try {
+    const response = await api.post(`/user/orders/${slug}/cancel-payment`);
     return response.data;
   } catch (error) {
     console.error("API error:", error);

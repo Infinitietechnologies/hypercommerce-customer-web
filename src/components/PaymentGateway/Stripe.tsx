@@ -16,19 +16,16 @@ import { addToast, Button } from "@heroui/react";
 
 import { brand } from "@/theme/tokens";
 import { useSettings } from "@/contexts/SettingsContext";
-import { getCartDataFromRedux, getUserDataFromRedux } from "@/helpers/getters";
-import { handleCheckout } from "@/helpers/functionalHelpers";
-import { createStripeIntent } from "@/routes/api";
-import { setPromoCode } from "@/lib/redux/slices/checkoutSlice";
-import { useDispatch } from "react-redux";
+import { getUserDataFromRedux } from "@/helpers/getters";
+import { payOrder } from "@/services/orders";
 
 const CheckoutForm: React.FC<{
-  onSuccess: () => void;
+  onSuccess: (slug?: string) => void;
   onError: () => void;
   setIsLoading: (value: boolean) => void;
   isLoading: boolean;
   usageType?: "order" | "wallet";
-  walletOrderData?: any;
+  orderSlug?: string;
   triggerRef?: React.MutableRefObject<(() => void) | null>;
 }> = ({
   onError,
@@ -36,7 +33,7 @@ const CheckoutForm: React.FC<{
   isLoading,
   setIsLoading,
   usageType = "order",
-  walletOrderData,
+  orderSlug,
   triggerRef,
 }) => {
   const stripe = useStripe();
@@ -44,7 +41,6 @@ const CheckoutForm: React.FC<{
   const [message, setMessage] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const userData = getUserDataFromRedux();
-  const dispatch = useDispatch();
 
   // Wait for PaymentElement to be fully ready
   useEffect(() => {
@@ -77,8 +73,6 @@ const CheckoutForm: React.FC<{
       setMessage(null);
 
       try {
-        console.log("🚀 Confirming payment...");
-
         const { error, paymentIntent } = await stripe.confirmPayment({
           elements,
           confirmParams: {
@@ -90,10 +84,7 @@ const CheckoutForm: React.FC<{
           redirect: "if_required",
         });
 
-        console.log("✅ Payment response:", { error, paymentIntent });
-
         if (error) {
-          console.error("❌ Payment error:", error);
           onError();
           addToast({
             title: error.message,
@@ -104,59 +95,21 @@ const CheckoutForm: React.FC<{
         }
 
         if (!paymentIntent) {
-          console.error("❌ Payment Intent is undefined");
           setMessage("Payment failed. No payment intent returned.");
           onError();
           return;
         }
 
-        console.log(
-          "✅ Payment Intent received:",
-          paymentIntent.id,
-          paymentIntent.status
-        );
-
-        // Handle wallet vs order flow
-        let res;
-        if (usageType === "wallet" && walletOrderData?.transaction?.id) {
-          res = {
-            success: true,
-            message: "Wallet Recharge Done!",
-          };
-        } else {
-          res = await handleCheckout("stripePayment", {
-            transaction_id: paymentIntent.id,
-          });
-        }
-
-        if (res.success) {
-          onSuccess();
-          addToast({
-            title:
-              usageType === "wallet"
-                ? "Wallet Recharged Successfully!"
-                : "Order Placed Successfully!",
-            color: "success",
-          });
-
-          if (usageType !== "wallet") {
-            dispatch(setPromoCode(""));
-          }
-        } else {
-          setMessage(
+        // Order already exists (order-first) or wallet recharge — the webhook
+        // captures it server-side once payment succeeds.
+        onSuccess(usageType === "wallet" ? undefined : orderSlug);
+        addToast({
+          title:
             usageType === "wallet"
-              ? "Wallet Recharge Failed!"
-              : "Order Placement Failed!"
-          );
-          addToast({
-            title:
-              usageType === "wallet"
-                ? "Wallet Recharge Failed!"
-                : "Order Placement Failed!",
-            color: "danger",
-            description: `${res.message || ""}`,
-          });
-        }
+              ? "Wallet Recharged Successfully!"
+              : "Order Placed Successfully!",
+          color: "success",
+        });
       } catch (err) {
         addToast({ title: "An unexpected error occurred.", color: "danger" });
         setMessage("An unexpected error occurred.");
@@ -172,11 +125,10 @@ const CheckoutForm: React.FC<{
       isReady,
       userData?.email,
       usageType,
-      walletOrderData?.transaction?.id,
+      orderSlug,
       onSuccess,
       onError,
       setIsLoading,
-      dispatch,
     ]
   );
 
@@ -221,12 +173,13 @@ const CheckoutForm: React.FC<{
 };
 
 interface StripeProps {
-  onSuccess: () => void;
+  onSuccess: (slug?: string) => void;
   onError: () => void;
   setIsLoading: (value: boolean) => void;
   isLoading: boolean;
   usageType?: "order" | "wallet";
   walletOrderData?: any;
+  orderSlug?: string;
   triggerRef?: React.MutableRefObject<(() => void) | null>;
 }
 
@@ -237,6 +190,7 @@ const Stripe: React.FC<StripeProps> = ({
   setIsLoading,
   usageType = "order",
   walletOrderData,
+  orderSlug,
   triggerRef,
 }) => {
   const { paymentSettings } = useSettings();
@@ -244,14 +198,10 @@ const Stripe: React.FC<StripeProps> = ({
   const [error, setError] = useState<string>("");
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
-  const cartData = getCartDataFromRedux();
   const calledRef = useRef(false);
 
-  // Get amount based on usage type
-  const amount =
-    usageType === "wallet"
-      ? walletOrderData?.transaction?.amount
-      : cartData?.payment_summary?.payable_amount;
+  // Wallet amount comes from the prepared wallet order.
+  const amount = walletOrderData?.transaction?.amount;
 
   // Dynamically load Stripe when publishable key is available
   const stripePromise = useMemo(() => {
@@ -265,7 +215,7 @@ const Stripe: React.FC<StripeProps> = ({
     setIsInitializing(true);
     setError("");
     setClientSecret("");
-  }, [walletOrderData, usageType]);
+  }, [walletOrderData, usageType, orderSlug]);
 
   useEffect(() => {
     const createPaymentIntent = async () => {
@@ -289,17 +239,14 @@ const Stripe: React.FC<StripeProps> = ({
           return;
         }
 
-        // For orders, create new payment intent
-        const res = await createStripeIntent({
-          amount: amount || 0,
-          currency: paymentSettings?.stripeCurrencyCode || "usd",
-        });
+        // For orders, fetch a fresh Stripe intent for the existing pending order.
+        const res = await payOrder(orderSlug || "");
+        const secret = res?.data?.payment_response?.clientSecret;
 
-        if (res.success && res.data?.clientSecret) {
-          setClientSecret(res.data.clientSecret);
+        if (res?.success && secret) {
+          setClientSecret(secret);
         } else {
-          setError(res.message || "Failed to initialize payment");
-          console.error("Error creating payment intent:", res.message);
+          setError(res?.message || "Failed to initialize payment");
         }
       } catch (err) {
         console.error("Payment intent creation error:", err);
@@ -309,12 +256,14 @@ const Stripe: React.FC<StripeProps> = ({
       }
     };
 
-    if (paymentSettings?.stripeCurrencyCode && amount) {
+    const ready =
+      usageType === "wallet" ? Boolean(amount) : Boolean(orderSlug);
+    if (ready) {
       createPaymentIntent();
     } else {
       setIsInitializing(false);
     }
-  }, [paymentSettings?.stripeCurrencyCode, amount, usageType, walletOrderData]);
+  }, [amount, usageType, walletOrderData, orderSlug]);
 
   if (error) {
     return (
@@ -351,7 +300,7 @@ const Stripe: React.FC<StripeProps> = ({
           isLoading={isLoading}
           setIsLoading={setIsLoading}
           usageType={usageType}
-          walletOrderData={walletOrderData}
+          orderSlug={orderSlug}
           triggerRef={triggerRef}
         />
       </Elements>

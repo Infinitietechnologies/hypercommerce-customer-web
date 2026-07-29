@@ -207,6 +207,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         quantity: quantity,
         onClose: () => {},
         renderToast: true,
+        buyNow,
       });
 
       if (res?.success) {

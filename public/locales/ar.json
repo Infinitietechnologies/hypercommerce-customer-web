@@ -297,6 +297,10 @@
   "change": "تغيير",
   "check_back_later": "تحقق لاحقًا للحصول على عروض جديدة ومثيرة!",
   "checkout": {
+    "confirmingPayment": "جارٍ تأكيد الدفع…",
+    "paymentConfirmed": "تم تأكيد الدفع",
+    "paymentFailed": "فشل الدفع",
+    "paymentPending": "سنُعلمك بمجرد تأكيد دفعتك.",
     "cartCleared": {
       "description": "تم مسح سلتك بنجاح",
       "title": "تم مسح السلة"
@@ -828,7 +832,8 @@
     "wallet": "المحفظة",
     "wishlists": "قوائم الأمنيات",
     "seller-registration": "تسجيل البائع",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "payment": "الدفع"
   },
   "pages": {
     "aboutUs": {
@@ -1082,7 +1087,10 @@
       "remark": "ملاحظة",
       "remarkPlaceholder": "صف المشكلة",
       "photos": "الصور",
-      "evidenceHint": "يتطلب هذا السبب ملاحظة وصورة واحدة على الأقل."
+      "evidenceHint": "يتطلب هذا السبب ملاحظة وصورة واحدة على الأقل.",
+      "reorder": "إعادة الطلب",
+      "reorderSuccess": "تمت إضافة العناصر إلى سلتك",
+      "reorderFailed": "تعذّرت إعادة الطلب"
     },
     "ordersPage": {
       "emptyMessage": "ليس لديك أي طلبات حتى الآن. ابدأ التسوق لتراها هنا.",
@@ -1459,7 +1467,8 @@
   "payments": {
     "cod": {
       "name": "الدفع عند الاستلام",
-      "tagline": "ادفع عند باب منزلك."
+      "tagline": "ادفع عند باب منزلك.",
+      "notAvailable": "غير متوفر لهذا الطلب"
     },
     "directBankTransfer": {
       "name": "تحويل بنكي مباشر",

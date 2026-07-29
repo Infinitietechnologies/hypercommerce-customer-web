@@ -1,11 +1,6 @@
-import { handleCheckout } from "@/helpers/functionalHelpers";
-import { getCartDataFromRedux } from "@/helpers/getters";
-import { setPromoCode } from "@/lib/redux/slices/checkoutSlice";
-import { paystackCreateOrder } from "@/routes/api";
-import { ApiResponse, PaystackCreateOrderResponse } from "@/types/ApiResponse";
+import { payOrder } from "@/services/orders";
 import { addToast, Button } from "@heroui/react";
 import React, { FC, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 
 // ✅ PayStack Types
 interface PayStackResponse {
@@ -15,24 +10,6 @@ interface PayStackResponse {
   trans: string;
   transaction: string;
   trxref: string;
-}
-
-interface PayStackOrderData {
-  transaction: {
-    id: number;
-    transaction_id: string;
-    uuid: string;
-    amount: string;
-    currency?: string;
-    currency_code?: string;
-    payment_method: string;
-    payment_status: string;
-  };
-  payment_response: {
-    authorization_url: string;
-    access_code: string;
-    reference: string;
-  };
 }
 
 declare global {
@@ -50,12 +27,13 @@ declare global {
 }
 
 const PayStack: FC<{
-  onSuccess: () => void;
+  onSuccess: (slug?: string) => void;
   onError: () => void;
   setIsLoading: (value: boolean) => void;
   isLoading: boolean;
   usageType?: "order" | "wallet";
   walletOrderData?: any;
+  orderSlug?: string;
   triggerRef?: React.MutableRefObject<(() => void) | null>;
 }> = ({
   onSuccess,
@@ -64,16 +42,16 @@ const PayStack: FC<{
   setIsLoading,
   usageType = "order",
   walletOrderData,
+  orderSlug,
   triggerRef,
 }) => {
   const [sdkReady, setSdkReady] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
-  const dispatch = useDispatch();
 
   // ✅ Load PayStack script dynamically
   useEffect(() => {
     if (document.getElementById("paystack-sdk")) {
-      setSdkReady(true);
+      queueMicrotask(() => setSdkReady(true));
       return;
     }
 
@@ -100,12 +78,11 @@ const PayStack: FC<{
     setIsLoading(true);
 
     try {
-      let orderData: PayStackOrderData;
-      let transactionId: string | undefined = undefined;
+      let accessCode: string | undefined;
 
       // ✅ Wallet Flow: Use pre-prepared order data
       if (usageType === "wallet") {
-        if (!walletOrderData?.payment_response) {
+        if (!walletOrderData?.payment_response?.access_code) {
           addToast({
             title: "Invalid wallet order data",
             color: "danger",
@@ -114,108 +91,49 @@ const PayStack: FC<{
           return console.error("Wallet order data is missing");
         }
 
-        orderData = walletOrderData;
-        transactionId = walletOrderData.transaction?.id?.toString();
+        accessCode = walletOrderData.payment_response.access_code;
       } else {
-        // ✅ Order Flow: Create new PayStack order
-        const cartData = getCartDataFromRedux();
+        // Open Paystack for the existing pending order via its /pay intent.
+        const res = await payOrder(orderSlug || "");
+        const pr = res?.data?.payment_response;
 
-        // ✅ Always create a fresh order to avoid duplicate reference errors
-        const res: ApiResponse<PaystackCreateOrderResponse> =
-          await paystackCreateOrder({
-            amount: cartData?.payment_summary.payable_amount || 1 * 100,
-          });
-
-        if (!res.success || !res.data) {
+        if (!res?.success || !pr?.access_code || !orderSlug) {
           addToast({
-            title: res.message || "Failed to Create Order!",
+            title: res?.message || "Failed to start payment",
             color: "danger",
           });
           setIsLoading(false);
-          return console.error("Failed to create PayStack order");
+          onError();
+          return;
         }
 
-        orderData = res.data;
-
-        // ✅ Ensure we have a valid, unique reference
-        if (!orderData.payment_response?.reference) {
-          addToast({
-            title: "Invalid payment reference",
-            color: "danger",
-          });
-          setIsLoading(false);
-          return console.error("Payment reference is missing");
-        }
+        accessCode = pr.access_code;
       }
 
-      const processPayment = async (response: PayStackResponse) => {
+      if (!accessCode) {
+        setIsLoading(false);
+        onError();
+        return;
+      }
+
+      const confirmSuccess = () => {
         setIsConfirming(true);
-
-        try {
-          const checkoutData: any = {
-            reference: response.reference,
-            transaction_id: response.reference,
-          };
-
-          if (usageType === "wallet" && transactionId) {
-            checkoutData.wallet_transaction_id = transactionId;
-          }
-
-          const res =
-            usageType === "wallet" && transactionId
-              ? { success: true, message: "Wallet Recharge Done!" }
-              : await handleCheckout("paystackPayment", checkoutData);
-
-          if (res?.success) {
-            onSuccess();
-            addToast({
-              title:
-                usageType === "wallet"
-                  ? "Wallet Recharged Successfully!"
-                  : "Order Placed Successfully!",
-              color: "success",
-            });
-
-            if (usageType !== "wallet") {
-              dispatch(setPromoCode(""));
-            }
-          } else {
-            setIsConfirming(false);
-            setIsLoading(false);
-            addToast({
-              title:
-                usageType === "wallet"
-                  ? "Wallet Recharge Failed!"
-                  : "Order Placement Failed!",
-              color: "danger",
-              description:
-                res?.message ||
-                "Something went wrong while processing the payment.",
-            });
-          }
-        } catch (error) {
-          console.error("Error while processing PayStack payment:", error);
-          addToast({
-            title: "Unexpected Error",
-            color: "danger",
-            description:
-              "An error occurred while processing your payment. Please try again.",
-          });
-          setIsConfirming(false);
-        } finally {
-          setIsLoading(false);
-        }
+        onSuccess(usageType === "wallet" ? undefined : orderSlug);
+        addToast({
+          title:
+            usageType === "wallet"
+              ? "Wallet Recharged Successfully!"
+              : "Order Placed Successfully!",
+          color: "success",
+        });
+        setIsLoading(false);
       };
 
       const popup = new window.PaystackPop();
 
-      popup.resumeTransaction(orderData.payment_response.access_code, {
-        onSuccess: (response: PayStackResponse) => {
-          // ✅ Payment successful, process it
-          processPayment(response);
-        },
+      popup.resumeTransaction(accessCode, {
+        onSuccess: () => confirmSuccess(),
         onCancel: () => {
-          // ✅ User closed the popup
           addToast({
             title: "Payment Cancelled",
             description: "You have closed the PayStack checkout.",
@@ -246,7 +164,7 @@ const PayStack: FC<{
     onSuccess,
     onError,
     setIsConfirming,
-    dispatch,
+    orderSlug,
   ]);
 
   // ✅ Expose handlePayment via triggerRef for auto-triggering

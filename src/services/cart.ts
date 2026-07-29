@@ -28,6 +28,22 @@ export const addToCart = async (params: {
   }
 };
 
+// Buy now — keep only this item in the active cart, move the rest to Save for Later
+export const buyNowCart = async (params: {
+  product_variant_id: string | number;
+  store_id: string | number;
+  quantity: string | number;
+  addons?: { addon_group_id: number; addon_item_id: number }[];
+}): Promise<ApiResponse<CartResponse>> => {
+  try {
+    const response = await api.post("/user/cart/buy-now", params);
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
 export const getCart = async (
   params: {
     address_id?: string | number;

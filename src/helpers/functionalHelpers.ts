@@ -2,6 +2,7 @@ import { setUserDataRedux } from "@/lib/redux/slices/authSlice";
 import { store } from "@/lib/redux/store";
 import {
   addToCart,
+  buyNowCart,
   createOrder,
   getUserData,
   updateCartItem,
@@ -25,8 +26,8 @@ import {
 } from "@/lib/redux/slices/cartSlice";
 import { fallbackApiRes } from "@/config/constants";
 import i18n from "../../i18n";
-import { isValidUrl } from "./validator";
 import {
+  setIdempotencyKey,
   setPromoCode,
   setSelectedAddress,
   setUseWallet,
@@ -156,9 +157,10 @@ export const handleAddToCart = async (params: {
   onClose: () => void;
   renderToast: boolean;
   replace_quantity?: boolean;
+  buyNow?: boolean;
   addons?: { addon_group_id: number; addon_item_id: number }[];
 }) => {
-  const { onClose = () => {}, renderToast = true } = params;
+  const { onClose = () => {}, renderToast = true, buyNow = false } = params;
 
   try {
     const isLoggedIn = store.getState().auth.isLoggedIn;
@@ -181,7 +183,9 @@ export const handleAddToCart = async (params: {
 
     store.dispatch(setCartLoading(true));
 
-    const addRes: ApiResponse<CartResponse> = await addToCart(params);
+    const addRes: ApiResponse<CartResponse> = buyNow
+      ? await buyNowCart(params)
+      : await addToCart(params);
 
     if (addRes.success) {
       onClose();
@@ -450,6 +454,7 @@ export const resetCheckOutState = () => {
   store.dispatch(setPromoCode(""));
   store.dispatch(setUseWallet(false));
   store.dispatch(setSelectedAddress(null));
+  store.dispatch(setIdempotencyKey(""));
   // Clear attachments from window
   if (typeof window !== "undefined") {
     (window as any).__cartAttachments = {};
@@ -478,6 +483,12 @@ export const handleCheckout = async (
     // Always use FormData
     const formData = new FormData();
     formData.append("payment_type", payment_type);
+    const idempotencyKey =
+      state?.checkout?.idempotencyKey ||
+      (typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `idem_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+    formData.append("idempotency_key", idempotencyKey);
     formData.append("promo_code", promo_code);
     formData.append("gift_card", "");
     formData.append("gift_card_discount", "");
@@ -525,33 +536,23 @@ export const handleCheckout = async (
         );
       }
 
-      const paymentLink = response?.data?.payment_response?.link || "";
+      // Online gateways are paid on the dedicated payment page — the order is
+      // only pending here, so don't show a success toast or clear the cart.
+      const opensSdk = [
+        "razorpayPayment",
+        "stripePayment",
+        "paystackPayment",
+        "flutterwavePayment",
+      ].includes(payment_type);
 
-      if (payment_type === "flutterwavePayment") {
-        if (isValidUrl(paymentLink)) {
-          resetCheckOutState();
-          window.location.href = paymentLink;
-
-          return { success: true, data: null, message: "Redirected" };
-        } else {
-          addToast({
-            title: i18n.t("checkout.flutterwave_link_invalid"),
-            description:
-              i18n.t("checkout.flutterwave_link_error_message") ||
-              "Payment link is invalid or missing. Please try again.",
-            color: "danger",
-          });
-          console.error("Invalid Flutterwave payment link:", paymentLink);
-          return response; // stop here if invalid
-        }
+      if (!opensSdk) {
+        addToast({
+          title: i18n.t("checkout.success"),
+          size: "lg",
+        });
+        document.getElementById("confetti-btn")?.click();
+        resetCheckOutState();
       }
-
-      addToast({
-        title: i18n.t("checkout.success"),
-        size: "lg",
-      });
-      document.getElementById("confetti-btn")?.click();
-      resetCheckOutState();
     } else {
       addToast({
         title: response.message || i18n.t("checkout.error_title"),

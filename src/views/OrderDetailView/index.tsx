@@ -10,7 +10,17 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 
-import { Button, Card, Chip, Sheet, useDisclosure } from "@/components/ui";
+import {
+  Button,
+  Card,
+  Chip,
+  Link,
+  Sheet,
+  useDisclosure,
+  toastError,
+  toastSuccess,
+} from "@/components/ui";
+import { reorderOrder } from "@/routes/api";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHead from "@/SEO/PageHead";
 import { useCurrency } from "@/components/Functional/Price";
@@ -133,10 +143,28 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
     );
 
   const [breakupOpen, setBreakupOpen] = useState(false);
+  const [reordering, setReordering] = useState(false);
   const timelineSheet = useDisclosure();
   const cancelSheet = useDisclosure();
   const returnSheet = useDisclosure();
   const ratingSheet = useDisclosure();
+
+  const handleReorder = async () => {
+    setReordering(true);
+    try {
+      const res = await reorderOrder(order.id);
+      if (res.success) {
+        toastSuccess(t("pages.order.reorderSuccess", "Items added to your cart"));
+        router.push("/cart");
+      } else {
+        toastError(res.message || t("pages.order.reorderFailed", "Couldn't reorder"));
+      }
+    } catch {
+      toastError(t("pages.order.reorderFailed", "Couldn't reorder"));
+    } finally {
+      setReordering(false);
+    }
+  };
 
   if (!selected) {
     return (
@@ -209,16 +237,31 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           {/* Hero */}
           <Card shadow="sm" radius="lg" className="border border-divider">
             <div className="flex gap-4 p-4">
-              <Thumb item={selected} size={72} />
+              {selected.product?.slug ? (
+                <Link href={`/products/${selected.product.slug}`} className="shrink-0">
+                  <Thumb item={selected} size={72} />
+                </Link>
+              ) : (
+                <Thumb item={selected} size={72} />
+              )}
               <div className="min-w-0 flex-1">
                 {selected.product?.brand && (
                   <div className="text-[11px] font-semibold uppercase tracking-wide text-default-500">
                     {selected.product.brand}
                   </div>
                 )}
-                <div className="font-semibold text-foreground line-clamp-2">
-                  {selected.product?.name || selected.title}
-                </div>
+                {selected.product?.slug ? (
+                  <Link
+                    href={`/products/${selected.product.slug}`}
+                    className="block font-semibold text-foreground line-clamp-2 hover:text-primary-600"
+                  >
+                    {selected.product?.name || selected.title}
+                  </Link>
+                ) : (
+                  <div className="font-semibold text-foreground line-clamp-2">
+                    {selected.product?.name || selected.title}
+                  </div>
+                )}
                 {selected.variant_title && (
                   <div className="text-xs text-default-500 mt-0.5">
                     {selected.variant_title}
@@ -327,6 +370,15 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
+            <Button
+              size="md"
+              color="primary"
+              startContent={<Icon icon="solar:refresh-circle-linear" />}
+              isLoading={reordering}
+              onPress={handleReorder}
+            >
+              {t("pages.order.reorder", "Reorder")}
+            </Button>
             {selected.can_cancel && (
               <Button
                 size="md"

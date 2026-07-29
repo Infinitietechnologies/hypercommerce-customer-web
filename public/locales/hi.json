@@ -297,6 +297,10 @@
   "change": "बदलें",
   "check_back_later": "नई रोमांचक ऑफ़र के लिए बाद में जांचें!",
   "checkout": {
+    "confirmingPayment": "भुगतान की पुष्टि हो रही है…",
+    "paymentConfirmed": "भुगतान की पुष्टि हो गई",
+    "paymentFailed": "भुगतान विफल",
+    "paymentPending": "भुगतान की पुष्टि होते ही हम आपको सूचित करेंगे।",
     "cartCleared": {
       "description": "आपकी कार्ट सफलतापूर्वक साफ़ कर दी गई है",
       "title": "कार्ट साफ़ की गई"
@@ -828,7 +832,8 @@
     "wallet": "वॉलेट",
     "wishlists": "इच्छा सूची",
     "seller-registration": "विक्रेता पंजीकरण",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "payment": "भुगतान"
   },
   "pages": {
     "aboutUs": {
@@ -1082,7 +1087,10 @@
       "remark": "टिप्पणी",
       "remarkPlaceholder": "समस्या बताएं",
       "photos": "फ़ोटो",
-      "evidenceHint": "इस कारण के लिए टिप्पणी और कम से कम एक फ़ोटो आवश्यक है।"
+      "evidenceHint": "इस कारण के लिए टिप्पणी और कम से कम एक फ़ोटो आवश्यक है।",
+      "reorder": "फिर से ऑर्डर करें",
+      "reorderSuccess": "आइटम आपके कार्ट में जोड़ दिए गए",
+      "reorderFailed": "फिर से ऑर्डर नहीं हो सका"
     },
     "ordersPage": {
       "emptyMessage": "आपके पास अभी तक कोई ऑर्डर नहीं है। खरीदारी शुरू करें ताकि वे यहाँ दिखें।",
@@ -1459,7 +1467,8 @@
   "payments": {
     "cod": {
       "name": "डिलीवरी पर नकद भुगतान",
-      "tagline": "अपने दरवाजे पर भुगतान करें।"
+      "tagline": "अपने दरवाजे पर भुगतान करें।",
+      "notAvailable": "इस ऑर्डर के लिए उपलब्ध नहीं है"
     },
     "directBankTransfer": {
       "name": "प्रत्यक्ष बैंक ट्रांसफर",
