@@ -12,7 +12,7 @@ const ShippingInfo: FC<ShippingInfoProps> = ({ order }) => {
   const { t } = useTranslation();
 
   return (
-    <Card shadow="sm" radius="lg" className="border border-divider">
+    <Card shadow="none" radius="lg" className="border border-divider">
       <CardHeader className="pb-2 flex justify-between items-start">
         <div className="flex items-center gap-2">
           <Icon icon="solar:map-point-linear" className="w-4 h-4 text-default-500" />

@@ -16,9 +16,9 @@ type BgType = "none" | "color" | "image";
 
 /** Fluid card grids — smaller minimums so cards stay compact. */
 const GRID = {
-  product: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
+  product: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
   categoryDefault: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(140px,1fr))]",
-  categoryCard: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
+  categoryCard: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
   categoryOverlay: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
   categoryFull: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]",
   brand: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]",

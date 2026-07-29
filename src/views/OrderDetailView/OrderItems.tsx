@@ -94,7 +94,7 @@ const OrderItems: FC<OrderItemsProps> = ({
   };
 
   return (
-    <Card shadow="sm" radius="lg" className="border border-divider">
+    <Card shadow="none" radius="lg" className="border border-divider">
       <CardHeader className="pb-2 flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3">
         <div className="flex items-center gap-2">
           <Icon icon="solar:bag-check-linear" className="w-4 h-4 text-default-500" />

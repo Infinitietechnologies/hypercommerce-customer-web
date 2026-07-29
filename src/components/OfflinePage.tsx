@@ -25,7 +25,7 @@ const OfflinePage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 transition-colors duration-300">
-      <Card className="relative max-w-md w-full p-8 md:p-12" shadow="sm">
+      <Card className="relative max-w-md w-full p-8 md:p-12" shadow="none">
         <CardBody className="p-0">
           {/* Floating wifi icon with pulse animation */}
           <div className="flex justify-center mb-8 relative">

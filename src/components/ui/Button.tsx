@@ -13,9 +13,9 @@ const StyledButton = extendVariants(HeroButton, {
   variants: {
     size: {
       // Kept for call sites migrated from components/custom/MyButton.
-      xs: "p-2 min-w-12 h-7 text-tiny gap-1 rounded-small",
+      xs: "p-2 min-w-12 h-7 text-[12px] gap-1 rounded-small",
       responsive: `
-      px-3 py-2 min-w-16 h-8 text-tiny gap-2 rounded-small
+      px-3 py-2 min-w-16 h-8 text-[12px] gap-2 rounded-small
       sm:px-4 sm:py-2.5 sm:min-w-16 sm:h-10 sm:text-base sm:gap-3 sm:rounded-small
       md:px-4 md:py-2.5 md:min-w-18 md:h-10 md:text-small md:gap-2 md:rounded-small
     `,

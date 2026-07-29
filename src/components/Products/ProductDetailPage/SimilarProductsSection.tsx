@@ -30,11 +30,11 @@ const SimilarProductsSection: FC<SimilarProductProps> = ({
     return initialSimilarProducts.map((product) => (
       <SwiperSlide key={product.id}>
         <div className="py-0.5">
-          <ProductCard product={product} />
+          <ProductCard product={product} showAddToCart={cartPage} />
         </div>
       </SwiperSlide>
     ));
-  }, [initialSimilarProducts]);
+  }, [initialSimilarProducts, cartPage]);
 
   const skeletonSlides = useMemo(() => {
     return Array.from({ length: 7 }).map((_, index) => (

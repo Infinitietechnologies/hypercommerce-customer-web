@@ -39,7 +39,7 @@ const OrderSummary: FC<OrderSummaryProps> = ({ order }) => {
   const hasWalletUsed = walletAmountUsed > 0;
 
   return (
-    <Card shadow="sm" radius="lg" className="w-full border border-divider">
+    <Card shadow="none" radius="lg" className="w-full border border-divider">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Icon icon="solar:bill-list-linear" className="w-5 h-5 text-default-500" />

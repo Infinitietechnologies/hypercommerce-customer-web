@@ -303,7 +303,7 @@ const ShoppingListPageComponent: NextPageWithLayout = () => {
           subtitle={t("pages.shoppingList.headerSubtitle")}
         />
 
-        <Card shadow="sm" className="border border-default-200">
+        <Card shadow="none" className="border border-default-200">
           <CardBody className="space-y-3 p-4">
             <form onSubmit={handleKeywordSubmit} className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-2">
@@ -446,7 +446,7 @@ const ShoppingListPageComponent: NextPageWithLayout = () => {
 
 const LoadingCarousel = () => {
   return (
-    <Card shadow="sm" className="border border-default-200">
+    <Card shadow="none" className="border border-default-200">
       <CardBody className="p-4">
         {/* Top title skeleton */}
         <div className="flex flex-col gap-2 mb-4">
@@ -499,7 +499,7 @@ const KeywordCarousel = ({
   const rtl = isRTL(currentLang);
 
   return (
-    <Card shadow="sm" className="border border-default-200 w-full max-w-full">
+    <Card shadow="none" className="border border-default-200 w-full max-w-full">
       <CardBody className="p-4 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div className="space-y-0.5">

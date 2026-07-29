@@ -12,7 +12,7 @@ const StoreCardSkeleton: FC = () => {
     <Card
       as="div"
       className="w-full h-full p-0 border border-gray-100 dark:border-default-100"
-      shadow="sm"
+      shadow="none"
     >
       {/* Roof Image Skeleton */}
       <CardHeader className="relative p-0">

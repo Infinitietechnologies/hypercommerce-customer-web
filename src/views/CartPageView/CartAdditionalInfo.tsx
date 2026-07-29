@@ -1,17 +1,11 @@
 import { FC, useState, useEffect, useMemo } from "react";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  useDisclosure,
-  Textarea,
-  Divider,
-} from "@/components/ui";
-import { Icon } from "@iconify/react";
+import { Textarea, useDisclosure } from "@/components/ui";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
 import AddressModal from "../../components/Modals/AddressModal";
 import AddressSection from "@/components/Cart/AddressSection";
+import CartItems from "./CartItems";
 import { setOrderNote } from "@/lib/redux/slices/checkoutSlice";
-import { useDispatch } from "react-redux";
 import { debounce } from "lodash";
 import PromoCodeSection from "@/components/Cart/PromoCodeSection";
 import { useTranslation } from "react-i18next";
@@ -24,6 +18,8 @@ interface CartAdditionalInfoProps {
 const CartAdditionalInfo: FC<CartAdditionalInfoProps> = () => {
   const { t } = useTranslation();
   const [deliveryInstructions, setDeliveryInstructions] = useState<string>("");
+  const { cartData } = useSelector((state: RootState) => state.cart);
+  const items = cartData?.items ?? [];
 
   const {
     isOpen: isAddressModalOpen,
@@ -47,43 +43,34 @@ const CartAdditionalInfo: FC<CartAdditionalInfoProps> = () => {
     <div className="space-y-4">
       <AddressSection onAddAddressModalOpen={onAddressModalOpen} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Delivery Instructions */}
-        <Card className="w-full border border-divider" radius="lg" shadow="sm">
-          <CardHeader className="flex gap-3 relative flex-col items-start pb-0">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary-50 rounded-xl">
-                <Icon
-                  icon="solar:pen-2-linear"
-                  className="text-xl text-primary-600"
-                />
-              </div>
-              <div className="flex flex-col">
-                <p className="text-xs md:text-small font-semibold">
-                  {t("cart.deliveryInstructions.title")}
-                </p>
-                <p className="text-xxs md:text-xs text-foreground/50">
-                  {t("cart.deliveryInstructions.description")}
-                </p>
-              </div>
-            </div>
-            <Divider orientation="horizontal" />
-          </CardHeader>
-          <CardBody>
-            <Textarea
-              placeholder={t("cart.deliveryInstructions.placeholder")}
-              value={deliveryInstructions}
-              onValueChange={setDeliveryInstructions}
-              minRows={3}
-              maxRows={3}
-              isClearable
-            />
-          </CardBody>
-        </Card>
+      {/* Cart items */}
+      {items.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-base font-bold text-foreground">
+            {t("cart.title", { defaultValue: "Cart" })} ({cartData?.total_quantity})
+          </h2>
+          <CartItems items={items} layout="cart" />
+        </div>
+      )}
 
-        {/* Promo Code Section */}
-        <PromoCodeSection />
+      {/* Delivery note — promo-style card */}
+      <div className="rounded-large border border-divider bg-content1 p-4">
+        <h3 className="text-sm font-bold text-foreground">
+          {t("cart.deliveryInstructions.title")}
+        </h3>
+        <Textarea
+          className="mt-3"
+          placeholder={t("cart.deliveryInstructions.placeholder")}
+          value={deliveryInstructions}
+          onValueChange={setDeliveryInstructions}
+          minRows={3}
+          maxRows={3}
+          isClearable
+        />
       </div>
+
+      {/* Promo Code */}
+      <PromoCodeSection />
 
       <AddressModal
         isOpen={isAddressModalOpen}

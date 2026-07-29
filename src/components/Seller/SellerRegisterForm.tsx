@@ -569,7 +569,7 @@ export default function SellerRegisterForm() {
 
   return (
     <Card
-      className="border border-gray-200  dark:border-default-100 shadow-sm w-full"
+      className="border border-gray-200  dark:border-default-100  w-full"
       id="seller-register"
     >
       <CardBody className="p-6 md:p-8">

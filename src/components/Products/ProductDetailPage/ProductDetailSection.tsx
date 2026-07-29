@@ -2,7 +2,6 @@ import { Button, Card, Chip, Divider, Link, toast } from "@/components/ui";
 import { Icon } from "@iconify/react";
 import { FC, useEffect, useState } from "react";
 import QtyInput from "./QtyInput";
-import AdditionalSection from "./AdditionalSection";
 import { Product, ProductVariant } from "@/types/ApiResponse";
 import {
   handleAddToCart,
@@ -17,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import ProductIndicator from "@/components/Functional/ProductIndicator";
+import RatingStars from "@/components/RatingStars";
 
 interface ProductDetailSectionProps {
   initialProduct: Product;
@@ -68,9 +68,11 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
     minimum_order_quantity = 1,
     featured = "0",
     indicator,
+    estimated_delivery_time,
+    returnable_days,
   } = initialProduct;
 
-  const { formatPrice } = useSettings();
+  const { formatPrice, systemSettings } = useSettings();
   const isOutOfStock = selectedVariant
     ? !selectedVariant.availability || selectedVariant.stock <= 0
     : false;
@@ -79,6 +81,17 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const special = Number(selectedVariant?.special_price) || 0;
   const hasDiscount = special > 0 && special < price;
   const offPct = hasDiscount ? Math.round(((price - special) / price) * 100) : 0;
+
+  // Stock is surfaced ONLY when it drops to/below the system low-stock limit
+  // (Settings → lowStockLimit), shown as an urgency warning rather than the
+  // raw count at all times.
+  const lowStockLimit = Number(systemSettings?.lowStockLimit) || 0;
+  const currentStock = selectedVariant?.stock ?? 0;
+  const isLowStock =
+    !!selectedVariant &&
+    !isOutOfStock &&
+    lowStockLimit > 0 &&
+    currentStock <= lowStockLimit;
 
   // Initialize selected attributes and variant when product changes
   useEffect(() => {
@@ -227,15 +240,24 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
 
   return (
     <div className="flex w-full flex-col gap-3 md:ps-4">
-      {/* Brand eyebrow + featured */}
+      {/* Category eyebrow + featured (design shows the category, e.g. "Electronics") */}
       <div className="flex flex-wrap items-center gap-2">
-        {brand_name && (
+        {category_name ? (
           <Link
-            href={`/brands/${brand}`}
-            className="text-xs font-bold uppercase tracking-wide text-primary-600"
+            href={`/categories/${category}`}
+            className="text-xs font-semibold capitalize text-foreground/60"
           >
-            {brand_name}
+            {category_name}
           </Link>
+        ) : (
+          brand_name && (
+            <Link
+              href={`/brands/${brand}`}
+              className="text-xs font-semibold uppercase tracking-wide text-foreground/60"
+            >
+              {brand_name}
+            </Link>
+          )
         )}
         {featured == "1" && (
           <Chip
@@ -255,7 +277,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       </div>
 
       {/* Title */}
-      <h1 className="text-xl font-bold leading-snug text-foreground md:text-2xl">
+      <h1 className="text-2xl font-bold leading-snug text-foreground md:text-3xl">
         {title}
       </h1>
 
@@ -263,34 +285,23 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         <p className="text-sm text-foreground/60">{short_description}</p>
       )}
 
-      {/* Rating pill + count + category */}
-      <div className="flex flex-wrap items-center gap-3">
-        {rating_count > 0 && (
-          <>
-            <span className="inline-flex items-center gap-1 rounded-lg bg-primary-50 px-2 py-1 text-xs font-bold text-primary-600">
-              {ratings}
-              <Icon icon="solar:star-bold" className="text-[13px]" />
-            </span>
-            <Link
-              onPress={() => makeTabClick("reviews")}
-              className="cursor-pointer text-xs text-foreground/50 underline md:text-sm"
-            >
-              {`${rating_count} ${t("reviews")}`}
-            </Link>
-          </>
-        )}
-        {category_name && (
-          <>
-            <span className="text-foreground/30">|</span>
-            <Link
-              href={`/categories/${category}`}
-              className="text-xs capitalize text-foreground/50 md:text-sm"
-            >
-              {category_name}
-            </Link>
-          </>
-        )}
-      </div>
+      {/* Rating stars + count */}
+      {rating_count > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-0.5">
+            <RatingStars rating={ratings} size={16} />
+          </span>
+          <span className="text-sm font-bold text-foreground">
+            {ratings} {t("ratings", "Ratings")}
+          </span>
+          <Link
+            onPress={() => makeTabClick("reviews")}
+            className="cursor-pointer text-xs text-foreground/50 md:text-sm"
+          >
+            {`( ${rating_count} ${t("reviews")} )`}
+          </Link>
+        </div>
+      )}
 
       {cartCount > 0 && (
         <Chip
@@ -317,8 +328,8 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
             <span className="text-sm text-foreground/50 line-through md:text-base">
               {formatPrice(price)}
             </span>
-            <span className="text-sm font-bold text-primary-600 md:text-base">
-              {offPct}% {t("off")}
+            <span className="text-sm font-bold text-success md:text-base">
+              {offPct}%
             </span>
           </>
         )}
@@ -337,9 +348,14 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
           </h3>
           <div className="flex items-center justify-between text-xxs sm:text-xs">
             <div className="flex flex-col">
-              <span className="text-foreground/50">
-                {t("stockAvailable", { stock: selectedVariant?.stock })}
-              </span>
+              {isLowStock && (
+                <span className="text-xs font-semibold text-danger">
+                  {t("lowStockWarning", {
+                    count: currentStock,
+                    defaultValue: "Only {{count}} left in stock",
+                  })}
+                </span>
+              )}
               {quantity_step_size > 1 ? (
                 <span className="text-xs font-medium text-foreground/50">
                   {t("quantityStepSize") || "Step Size"}: {quantity_step_size}
@@ -373,9 +389,14 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       {variants && variants.length === 1 && selectedVariant && (
         <div className="mb-1 flex items-center justify-between text-xxs sm:text-xs">
           <div className="flex flex-col">
-            <span className="text-foreground/50">
-              {t("stockAvailable", { stock: selectedVariant.stock })}
-            </span>
+            {isLowStock && (
+              <span className="text-xs font-semibold text-danger">
+                {t("lowStockWarning", {
+                  count: currentStock,
+                  defaultValue: "Only {{count}} left in stock",
+                })}
+              </span>
+            )}
             {quantity_step_size > 1 ? (
               <span className="text-xs font-medium text-foreground/50">
                 {t("quantityStepSize") || "Step Size"}: {quantity_step_size}
@@ -417,6 +438,18 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         </div>
       )}
 
+      {/* Delivery estimate pill (black) — sits directly above the CTAs, matching
+          the design. Only shown when the product carries a real estimated
+          delivery time (minutes); no calendar date exists in the data, so we
+          surface the minutes estimate rather than a fabricated "by <date>". */}
+      {!!estimated_delivery_time && (
+        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background">
+          <Icon icon="solar:delivery-bold" className="text-sm" />
+          {t("deliveredIn", "Delivered in")} {estimated_delivery_time}{" "}
+          {t("mins")}
+        </span>
+      )}
+
       {/* Actions */}
       {isOutOfStock ? (
         <Card
@@ -440,9 +473,9 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         </Card>
       ) : (
         <div className="flex items-center gap-2.5">
+          {/* Add To Cart — black (design), Buy Now — amber */}
           <Button
-            color="primary"
-            className="flex-1"
+            className="flex-1 bg-foreground font-semibold text-background"
             startContent={
               !loading.add && (
                 <Icon icon="solar:bag-4-linear" className="text-lg" />
@@ -455,13 +488,8 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
             {t("addToBucket")}
           </Button>
           <Button
-            color="secondary"
-            className="flex-1"
-            endContent={
-              !loading.buyNow && (
-                <Icon icon="solar:arrow-right-linear" className="text-lg" />
-              )
-            }
+            color="primary"
+            className="flex-1 font-semibold"
             isLoading={loading.buyNow}
             isDisabled={loading.add}
             onPress={() => AddToCart(true)}
@@ -491,24 +519,41 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         </div>
       )}
 
-      {/* Product Tags */}
-      {initialProduct?.tags && initialProduct.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {initialProduct.tags.map((tag: string, index: number) => (
-            <Chip
-              title={`# ${tag}`}
-              color="primary"
-              variant="flat"
-              key={index}
-              radius="sm"
-            >
-              {`# ${tag}`}
-            </Chip>
-          ))}
+      {/* Trust row — Returns · Cash on Delivery · Safe & Secure (design) */}
+      {!isOutOfStock && (
+        <div className="mt-1 grid grid-cols-3 divide-x divide-divider">
+          <div className="flex flex-col items-center gap-1 px-1 text-center">
+            <Icon
+              icon="solar:refresh-square-linear"
+              className="text-xl text-primary-600"
+            />
+            <span className="text-xxs font-medium text-foreground/70 sm:text-xs">
+              {returnable_days
+                ? t("daysReturn", { count: returnable_days })
+                : t("easyReturns", "Easy Returns")}
+            </span>
+          </div>
+          <div className="flex flex-col items-center gap-1 px-1 text-center">
+            <Icon
+              icon="solar:wallet-money-linear"
+              className="text-xl text-primary-600"
+            />
+            <span className="text-xxs font-medium text-foreground/70 sm:text-xs">
+              {t("cashOnDelivery", "Cash On Delivery")}
+            </span>
+          </div>
+          <div className="flex flex-col items-center gap-1 px-1 text-center">
+            <Icon
+              icon="solar:shield-check-linear"
+              className="text-xl text-primary-600"
+            />
+            <span className="text-xxs font-medium text-foreground/70 sm:text-xs">
+              {t("safeSecure", "Safe & Secure")}
+            </span>
+          </div>
         </div>
       )}
 
-      <AdditionalSection product={initialProduct} />
     </div>
   );
 };

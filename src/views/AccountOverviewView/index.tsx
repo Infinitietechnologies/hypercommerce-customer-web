@@ -51,7 +51,7 @@ const AccountOverviewView: FC<AccountOverviewViewProps> = ({ user }) => {
   return (
     <div className="w-full flex flex-col gap-5">
       {/* User card */}
-      <div className="flex items-center gap-4 rounded-large border border-divider bg-content1 p-5 shadow-sm">
+      <div className="flex items-center gap-4 rounded-large border border-divider bg-content1 p-5">
         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-primary-50 flex items-center justify-center">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element

@@ -23,7 +23,7 @@ const BrandCard: FC<BrandCardProps> = ({ brand, showName = true }) => {
       <Card
         className={`w-full rounded-large overflow-hidden flex items-center justify-center transition-all duration-200 hover:border-primary hover:shadow-md ${
           showName
-            ? "border border-divider bg-content1 shadow-sm"
+            ? "border border-divider bg-content1 "
             : "border border-primary-100 bg-primary-50/40"
         }`}
         shadow="none"

@@ -25,7 +25,7 @@ const CategoryCard: FC<CategoryCardProps> = ({ category }) => {
     <div className="flex flex-col items-center w-full min-w-0 px-1 py-1 sm:py-2">
       <div
         className="w-full max-w-full overflow-hidden rounded-large border border-divider bg-content1
-          shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
+           transition-all duration-200 hover:border-primary hover:shadow-md"
       >
         <Card
           className="relative w-full aspect-[4/4.8] sm:aspect-[4/5] border-none bg-transparent"

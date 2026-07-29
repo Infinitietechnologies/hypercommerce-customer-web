@@ -225,7 +225,7 @@ const AttachmentUploader: FC<AttachmentUploaderProps> = ({
       {attachment && attachment.length > 0 && (
         <div className="grid gap-2">
           {attachment.map((fileItem, index) => (
-            <Card key={`${fileItem.file.name}-${index}`} shadow="sm">
+            <Card key={`${fileItem.file.name}-${index}`} shadow="none">
               <CardBody className="p-2">
                 <div className="flex gap-2">
                   <div className="w-20 shrink-0">{renderPreview(fileItem)}</div>

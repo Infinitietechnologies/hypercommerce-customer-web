@@ -42,7 +42,7 @@ const OrderCard: FC<OrderCardProps> = ({ item }) => {
   return (
     <Link
       href={`/my-account/orders/${orderSlug}?item=${item.id}`}
-      className="flex items-center gap-3.5 rounded-medium border border-divider bg-content1 p-3.5 shadow-sm transition-all hover:border-primary hover:shadow-md"
+      className="flex items-center gap-3.5 rounded-medium border border-divider bg-content1 p-3.5  transition-all hover:border-primary hover:shadow-md"
     >
       {/* Thumbnail */}
       <div className="h-14 w-14 shrink-0 overflow-hidden rounded-medium bg-primary-50 flex items-center justify-center">

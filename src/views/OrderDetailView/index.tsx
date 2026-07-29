@@ -235,7 +235,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
         {/* MAIN — selected item */}
         <div className="flex flex-col gap-4 min-w-0">
           {/* Hero */}
-          <Card shadow="sm" radius="lg" className="border border-divider">
+          <Card shadow="none" radius="lg" className="border border-divider">
             <div className="flex gap-4 p-4">
               {selected.product?.slug ? (
                 <Link href={`/products/${selected.product.slug}`} className="shrink-0">
@@ -303,7 +303,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
 
           {/* Main-status timeline (short) + view full */}
           {mainSteps.length > 0 && (
-            <Card shadow="sm" radius="lg" className="border border-divider p-4">
+            <Card shadow="none" radius="lg" className="border border-divider p-4">
               {currentStatus && (
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <div className="min-w-0">
@@ -332,7 +332,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
 
           {/* Refund / return */}
           {activeReturn && (
-            <Card shadow="sm" radius="lg" className="border border-divider overflow-hidden">
+            <Card shadow="none" radius="lg" className="border border-divider overflow-hidden">
               <div className="flex items-center gap-2 bg-success-50 px-4 py-3">
                 <Icon icon="solar:box-bold" className="text-success" width={18} height={18} />
                 <div>
@@ -422,7 +422,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           </div>
 
           {/* Price breakup */}
-          <Card shadow="sm" radius="lg" className="border border-divider">
+          <Card shadow="none" radius="lg" className="border border-divider">
             <button
               type="button"
               onClick={() => setBreakupOpen((v) => !v)}
@@ -493,7 +493,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           </Card>
 
           {/* Payment + sold by */}
-          <Card shadow="sm" radius="lg" className="border border-divider p-4 space-y-1">
+          <Card shadow="none" radius="lg" className="border border-divider p-4 space-y-1">
             <LabelValue
               label={t("paymentMethod")}
               value={(order.payment_method || "-").toUpperCase()}
@@ -540,7 +540,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
         {/* SIDE — item switcher + address + meta (below on mobile) */}
         <div className="flex flex-col gap-4 min-w-0">
           {items.length > 1 && (
-            <Card shadow="sm" radius="lg" className="border border-divider p-4">
+            <Card shadow="none" radius="lg" className="border border-divider p-4">
               <div className="mb-3 text-sm font-semibold">
                 {t("pages.order.otherItems", "Other items in this order")}
               </div>
@@ -580,7 +580,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
 
           <ShippingInfo order={order} />
 
-          <Card shadow="sm" radius="lg" className="border border-divider p-4 space-y-1">
+          <Card shadow="none" radius="lg" className="border border-divider p-4 space-y-1">
             <div className="mb-1 text-sm font-semibold">
               {t("pages.order.orderDetails", "Order details")}
             </div>
@@ -598,7 +598,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           </Card>
 
           {order.order_note && (
-            <Card shadow="sm" radius="lg" className="border border-divider p-4">
+            <Card shadow="none" radius="lg" className="border border-divider p-4">
               <div className="mb-1 flex items-center gap-2 text-sm font-semibold">
                 <Icon icon="solar:notes-linear" width={16} height={16} className="text-primary-600" />
                 {t("orderNote", "Order note")}

@@ -36,7 +36,7 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
       as="div"
       disableRipple
       radius="lg"
-      className="w-full border border-divider bg-linear-to-br from-primary-100 to-content1 shadow-sm"
+      className="w-full border border-divider bg-linear-to-br from-primary-100 to-content1 "
     >
       <CardBody className="p-5 sm:p-6 flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">

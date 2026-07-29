@@ -1,11 +1,4 @@
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  useDisclosure,
-  Chip,
-} from "@heroui/react";
+import { Button, useDisclosure } from "@heroui/react";
 import { MapPin, Plus, ChevronDown } from "lucide-react";
 import { FC, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,8 +23,9 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
 
   const dispatch = useDispatch();
   const selectedAddress = useSelector(
-    (state: RootState) => state.checkout.selectedAddress
+    (state: RootState) => state.checkout.selectedAddress,
   );
+  const userName = useSelector((state: RootState) => state.auth.user?.name);
 
   const [tempSelectedId, setTempSelectedId] = useState<string>("");
   const [allAddresses, setAllAddresses] = useState<Address[]>([]);
@@ -40,20 +34,15 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const isInitialMount = useRef(true);
 
-  // Create SWR keys that include resetTrigger to force refetch on reset
   const initialDataKey = useMemo(
     () => ["/cart-addresses/initial", zone_id] as const,
-    [zone_id]
+    [zone_id],
   );
 
-  // Fetch initial data to get total count
   const { data: initialData, isLoading: initialLoading } = useSWR(
     initialDataKey,
     async () => {
-      const response = await getAddresses({
-        page: 1,
-        per_page: 1,
-      });
+      const response = await getAddresses({ page: 1, per_page: 1 });
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch addresses");
       }
@@ -61,19 +50,15 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
         addresses: response.data.data || [],
         total: response.data.total || 0,
       };
-    }
+    },
   );
 
-  // Derive total from initialData
   const total = initialData?.total || 0;
   const initialFetchDone = !!initialData;
 
   const fetchAddressesData = useCallback(
     async (page: number, perPage: number = 10) => {
-      const response = await getAddresses({
-        page,
-        per_page: perPage,
-      });
+      const response = await getAddresses({ page, per_page: perPage });
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch addresses");
       }
@@ -94,10 +79,9 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
 
       return addressesArray;
     },
-    []
+    [],
   );
 
-  // Clear redux selected address on initial mount
   useEffect(() => {
     if (isInitialMount.current) {
       dispatch(setSelectedAddress(null));
@@ -105,25 +89,21 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
     }
   }, [dispatch]);
 
-  // Reset function
   const handleReset = useCallback(async () => {
-    // Reset local state and trigger refetch
     setAllAddresses([]);
     setCurrentPage(1);
     setTempSelectedId("");
 
-    // Clear SWR cache for address-related keys
     await mutate(
       (key) =>
         Array.isArray(key) &&
         typeof key[0] === "string" &&
         key[0].includes("/cart-addresses"),
       undefined,
-      { revalidate: true }
+      { revalidate: true },
     );
   }, []);
 
-  // Handle modal opening
   const handleSelectAddressClick = useCallback(async () => {
     setTempSelectedId(selectedAddress?.id?.toString() || "");
     onOpen();
@@ -156,13 +136,7 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [
-    isLoadingMore,
-    allAddresses.length,
-    total,
-    currentPage,
-    fetchAddressesData,
-  ]);
+  }, [isLoadingMore, allAddresses.length, total, currentPage, fetchAddressesData]);
 
   const handleModalSelection = useCallback((addressId: string) => {
     setTempSelectedId(addressId);
@@ -171,11 +145,10 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
   const handleConfirmSelection = useCallback(() => {
     if (tempSelectedId) {
       const selectedAddr = allAddresses.find(
-        (addr) => addr.id.toString() === tempSelectedId
+        (addr) => addr.id.toString() === tempSelectedId,
       );
       if (selectedAddr) {
         updateCartData(false, false, selectedAddr?.id?.toString() || "");
-
         dispatch(setSelectedAddress(selectedAddr));
         onOpenChange();
       }
@@ -210,54 +183,93 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
 
   const isLoading = initialLoading || isAddressesLoading;
 
+  const fullAddress = selectedAddress
+    ? [
+        selectedAddress.address_line1,
+        selectedAddress.address_line2,
+        selectedAddress.landmark,
+        selectedAddress.city,
+        selectedAddress.state,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
+
   return (
     <>
-      {/* Main Address Display Card */}
-      <Card className="w-full" shadow="sm">
-        <CardHeader className="flex justify-between flex-col sm:flex-row items-start pb-2 gap-2 w-full">
-          <div className="flex items-center gap-3">
-            <Button isIconOnly variant="flat" color="primary">
-              <MapPin className="w-5 h-5 text-primary-600" />
-            </Button>
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                {t("address.deliveryAddress")}
-              </h3>
-              <p className="text-xxs md:text-xs text-default-500">
-                {t("address.chooseLocation")}
-              </p>
+      <div className="w-full rounded-large border border-divider bg-content1 p-4">
+        {selectedAddress ? (
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">
+                  {t("address.deliverTo", { defaultValue: "Deliver To" })} :{" "}
+                  {userName ? `${userName}, ` : ""}
+                  {selectedAddress.zipcode}
+                </span>
+                <span className="rounded bg-foreground px-1.5 py-0.5 text-[10px] font-semibold uppercase text-background">
+                  {selectedAddress.address_type}
+                </span>
+              </div>
+              <p className="text-xs text-foreground/60">{fullAddress}</p>
+              {selectedAddress.mobile && (
+                <p className="text-xs text-foreground/60">
+                  {selectedAddress.mobile}
+                </p>
+              )}
             </div>
-          </div>
-          <div className="flex gap-2 sm:justify-end justify-between items-center w-full sm:w-fit">
-            {/* Reset Button */}
-            <button
-              id="reset-cart-addresses"
-              className="text-xs hidden"
-              onClick={handleReset}
-              disabled={isLoading}
-            >
-              {t("reset")}
-            </button>
             <Button
               size="sm"
+              variant="light"
               color="primary"
-              variant="flat"
-              startContent={<Plus className="w-4 h-4" />}
-              className="text-xs"
-              onPress={onAddAddressModalOpen}
+              className="shrink-0 font-semibold text-[12px]"
+              onPress={handleSelectAddressClick}
+              isLoading={isLoading}
             >
-              {t("address.addNew")}
+              {t("change", { defaultValue: "Change" })}
             </Button>
-            <div className="space-y-3">
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-50">
+                <MapPin className="h-5 w-5 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  {t("address.deliveryAddress")}
+                </h3>
+                <p className="text-xs text-foreground/50">
+                  {t("address.chooseLocation")}
+                </p>
+              </div>
+            </div>
+
+            {initialFetchDone && total === 0 ? (
+              <p className="text-sm text-foreground/60">
+                {t("pages.addresses.noAddresses")}
+              </p>
+            ) : null}
+
+            <div className="flex flex-wrap gap-2">
               <Button
+                size="sm"
+                color="primary"
+                variant="flat"
+                startContent={<Plus className="h-4 w-4" />}
+                className="text-xs"
+                onPress={onAddAddressModalOpen}
+              >
+                {t("address.addNew")}
+              </Button>
+              <Button
+                size="sm"
                 variant="bordered"
                 color="primary"
                 className="text-xs"
-                size="sm"
-                fullWidth
                 onPress={handleSelectAddressClick}
-                startContent={<MapPin className="w-4 h-4" />}
-                endContent={<ChevronDown className="w-4 h-4" />}
+                startContent={<MapPin className="h-4 w-4" />}
+                endContent={<ChevronDown className="h-4 w-4" />}
                 isDisabled={!initialFetchDone || total === 0}
                 isLoading={isLoading}
               >
@@ -269,82 +281,19 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
               </Button>
             </div>
           </div>
-        </CardHeader>
+        )}
 
-        <CardBody className="pt-0">
-          {initialFetchDone && total === 0 && (
-            <div className="w-full text-center rounded-lg">
-              <div className="max-w-md mx-auto">
-                <div className="w-10 h-10 mx-auto mb-2 bg-gray-200 rounded-full flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-gray-400" />
-                </div>
-                <h3 className="text-sm font-medium mb-2">
-                  {t("pages.addresses.noAddresses")}
-                </h3>
-              </div>
-            </div>
-          )}
-          {selectedAddress ? (
-            // Show selected address with option to change
-            <Button
-              variant="bordered"
-              className="w-full h-auto p-4 justify-start hover:bg-default-50 transition-colors"
-              onPress={handleSelectAddressClick}
-              endContent={<ChevronDown className="w-4 h-4 text-default-400" />}
-            >
-              <div className="flex items-start gap-3 w-full">
-                <div className="text-lg">
-                  {getAddressTypeIcon(selectedAddress.address_type)}
-                </div>
-                <div className="flex flex-col items-start gap-1 flex-1">
-                  <div className="flex items-center gap-2">
-                    <Chip
-                      size="sm"
-                      color={getAddressTypeColor(selectedAddress.address_type)}
-                      variant="flat"
-                      className="text-xs capitalize"
-                    >
-                      {selectedAddress.address_type}
-                    </Chip>
-                  </div>
-                  <p className="text-xs sm:text-sm text-left text-foreground line-clamp-1 max-w-[50vw] text-ellipsis">
-                    {selectedAddress.address_line1}
-                    {selectedAddress.address_line2 &&
-                      `, ${selectedAddress.address_line2}`}
-                  </p>
-                  <p className="text-xs text-default-500 text-left">
-                    {selectedAddress.city}, {selectedAddress.state}{" "}
-                    {selectedAddress.zipcode}
-                  </p>
-                </div>
-              </div>
-            </Button>
-          ) : (
-            // Show placeholder when no address is selected and we have addresses available
-            initialFetchDone &&
-            total > 0 && (
-              <div className="p-4 border-2 border-dashed border-default-200 rounded-lg text-center">
-                <p className="text-sm text-default-500 mb-2">
-                  {t("address.noSelected")}
-                </p>
+        {/* Hidden reset trigger — clicked by AddressModal onSave. */}
+        <button
+          id="reset-cart-addresses"
+          className="hidden"
+          onClick={handleReset}
+          disabled={isLoading}
+        >
+          {t("reset")}
+        </button>
+      </div>
 
-                <Button
-                  variant="flat"
-                  color="primary"
-                  size="sm"
-                  className="text-xs"
-                  onPress={handleSelectAddressClick}
-                  startContent={<MapPin className="w-4 h-4" />}
-                >
-                  {t("address.chooseAddress")}
-                </Button>
-              </div>
-            )
-          )}
-        </CardBody>
-      </Card>
-
-      {/* Address Selection Modal */}
       <AddressSelectionModal
         isOpen={isOpen}
         onOpenChange={onOpenChange}

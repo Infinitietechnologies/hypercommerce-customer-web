@@ -14,7 +14,7 @@ const OrderNote: FC<OrderItemsProps> = ({ order }) => {
   return (
     <>
       {order.order_note ? (
-        <Card shadow="sm" radius="lg" className="border border-divider">
+        <Card shadow="none" radius="lg" className="border border-divider">
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <Icon icon="solar:notes-linear" className="w-4 h-4 text-default-500" />

@@ -2,6 +2,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { formatDate } from "@/helpers/validator";
 import { PromoCode } from "@/types/ApiResponse";
 import { Button, Card, CardBody, Chip, Divider, Progress } from "@heroui/react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface PromoCardProps {
@@ -18,6 +19,23 @@ const PromoCard: React.FC<PromoCardProps> = ({
   const { formatPrice } = useSettings();
   const { t } = useTranslation();
 
+  const [expanded, setExpanded] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
+
+  // Show the More/Less toggle only when the (collapsed) HTML actually overflows.
+  useEffect(() => {
+    const measure = () => {
+      const el = descRef.current;
+      if (!el) return;
+      if (expanded) return; // only measure in the clamped state
+      setIsClamped(el.scrollHeight > el.clientHeight + 1);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [promo.description, expanded]);
+
   const getDiscountDisplay = () => {
     if (promo.discount_type === "percent") {
       return `${promo.discount_amount}%`;
@@ -27,10 +45,9 @@ const PromoCard: React.FC<PromoCardProps> = ({
   };
 
   const isExpired = new Date(promo.end_date) < new Date();
-  const usagePercentage = (promo.usage_count / promo.max_total_usage) * 100;
 
   return (
-    <Card shadow="sm">
+    <Card shadow="none">
       <CardBody className="h-full px-3 sm:px-4">
         <div className="grid grid-cols-12 gap-4 h-full">
           {/* Left section - Promo Details */}
@@ -54,9 +71,28 @@ const PromoCard: React.FC<PromoCardProps> = ({
                 )}
               </div>
 
-              <p className="text-xxs sm:text-xs text-foreground/50 mb-2">
-                {promo.description}
-              </p>
+              {promo.description && (
+                <div className="mb-2">
+                  <div
+                    ref={descRef}
+                    className={`html-content text-xxs sm:text-xs text-foreground/50 ${
+                      expanded ? "" : "line-clamp-2"
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: promo.description }}
+                  />
+                  {(isClamped || expanded) && (
+                    <button
+                      type="button"
+                      onClick={() => setExpanded((v) => !v)}
+                      className="mt-0.5 text-xxs font-semibold text-primary-600 hover:opacity-80 sm:text-xs"
+                    >
+                      {expanded
+                        ? t("showLess", { defaultValue: "Show less" })
+                        : t("showMore", { defaultValue: "Show more" })}
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center space-x-2 text-xxs sm:text-xs text-foreground/50">
                 <span>
@@ -77,23 +113,6 @@ const PromoCard: React.FC<PromoCardProps> = ({
               </div>
             </div>
 
-            {/* Usage Progress */}
-            <div className="mt-3">
-              <div className="flex justify-between items-center text-xxs sm:text-xs text-foreground/50 mb-1">
-                <span>
-                  {t("usage")}: {promo.usage_count}/{promo.max_total_usage}
-                </span>
-                <span>{Math.round(usagePercentage)}%</span>
-              </div>
-              <Progress
-                value={Math.min(usagePercentage, 100)}
-                color="primary"
-                size="sm"
-                className="h-1.5"
-                radius="full"
-                aria-label="Progressbar for Promo usage"
-              />
-            </div>
           </div>
 
           {/* Divider - Centered */}

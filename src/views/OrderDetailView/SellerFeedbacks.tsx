@@ -63,7 +63,7 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
   if (validSellers.length === 0) return null;
 
   return (
-    <Card shadow="sm" radius="lg" className="border border-divider">
+    <Card shadow="none" radius="lg" className="border border-divider">
       <CardHeader>
         <div className="flex items-center gap-2">
           <Icon icon="solar:shop-linear" className="w-5 h-5 text-default-500" />

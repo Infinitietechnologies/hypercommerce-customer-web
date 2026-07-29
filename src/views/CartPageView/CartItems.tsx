@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from "react";
+import { FC, useState, useMemo, ReactNode } from "react";
 import { CartItem, Product, ProductVariant } from "@/types/ApiResponse";
 import {
   toast,
@@ -36,9 +36,18 @@ interface CartItemsProps {
   items: CartItem[];
   /** Cap height and scroll internally (checkout summary). Off = flows with page (cart page). */
   scrollable?: boolean;
+  /**
+   * "cart" renders the full-width cart-page item cards (redesign); "default" is
+   * the compact list reused by the checkout summary. Cart page only.
+   */
+  layout?: "default" | "cart";
 }
 
-const CartItems: FC<CartItemsProps> = ({ items = [], scrollable = false }) => {
+const CartItems: FC<CartItemsProps> = ({
+  items = [],
+  scrollable = false,
+  layout = "default",
+}) => {
   const { t } = useTranslation();
   const { formatPrice, systemSettings, isSingleVendor } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
@@ -208,6 +217,272 @@ const CartItems: FC<CartItemsProps> = ({ items = [], scrollable = false }) => {
     }
   };
 
+  const openLightbox = (src: string) => {
+    setLightboxImages([{ src }]);
+    setLightboxOpen(true);
+  };
+
+  // Shared sub-blocks so the two layouts stay in sync -----------------------
+
+  const renderVariantMeta = (item: CartItem, isLowStock: boolean): ReactNode => (
+    <>
+      {item.variant?.title && (
+        <div className="text-xs text-foreground/50 flex flex-wrap gap-2 items-center">
+          <span className="max-w-24 sm:max-w-32 truncate block">
+            {item.variant.title}
+          </span>
+          {isLowStock && (
+            <span className="text-warning-600 font-semibold text-xxs bg-warning-50 px-1.5 py-0.5 rounded whitespace-nowrap">
+              {t("product_modal.low_stock_alert", { stock: item.variant.stock })}
+            </span>
+          )}
+        </div>
+      )}
+
+      {item.addons && item.addons.length > 0 && (
+        <div className="text-[10px] text-foreground/40 leading-tight break-words flex flex-wrap gap-x-1">
+          {item.addons.map((addon: any, i: number) => {
+            const addonPrice = Number(addon.price || addon.item?.price || 0);
+            return (
+              <span key={i} className="flex items-center">
+                {addon.group?.title || addon.addon_group_name
+                  ? `${addon.group?.title || addon.addon_group_name}: `
+                  : ""}
+                {addon.title || addon.item?.title}
+                {addonPrice > 0 && (
+                  <span className="ml-0.5 opacity-80 font-medium">
+                    ({formatPrice(addonPrice)})
+                  </span>
+                )}
+                {i < item.addons!.length - 1 && ","}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {item.variant.is_addons && (
+        <button
+          onClick={() => handleCustomize(item)}
+          disabled={isCustomizing}
+          className="text-[10px] md:text-xs font-semibold flex items-center gap-0.5 text-primary-600 hover:opacity-80 transition-opacity w-fit"
+        >
+          <span className="cursor-pointer">
+            {isCustomizing && customizingProduct?.slug === item.product.slug
+              ? t("loading")
+              : t("cartItems.customize")}
+          </span>
+          <Icon icon="solar:alt-arrow-right-linear" className="mt-0.5 text-sm" />
+        </button>
+      )}
+    </>
+  );
+
+  const renderAttachment = (item: CartItem): ReactNode =>
+    item.product.is_attachment_required ? (
+      <div className="w-full mt-3 space-y-3 rounded-xl border border-divider p-3 bg-content2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <p className="text-xxs font-semibold text-foreground">
+            {item.product.attachment_mode === "required"
+              ? t("cart.attachments.requiredLabel", {
+                  defaultValue: "Attachment required",
+                })
+              : t("cart.attachments.optionalLabel", {
+                  defaultValue: "Attachment optional",
+                })}
+          </p>
+          <p className="text-xxs text-foreground/60">
+            {t("cart.attachments.helperModeText", {
+              defaultValue:
+                item.product.attachment_mode === "required"
+                  ? "Upload at least one file."
+                  : "Upload files if you want.",
+            })}
+          </p>
+        </div>
+        <AttachmentUploader
+          attachment={attachments[item.product.id] || []}
+          onAttachmentChange={(attachmentFiles) =>
+            handleAttachmentChange(item.product.id, attachmentFiles)
+          }
+        />
+      </div>
+    ) : null;
+
+  const modals = (
+    <>
+      <ConfirmationModal
+        isOpen={!!selectedItemId}
+        onClose={() => setSelectedItemId(null)}
+        onConfirm={handleRemoveItem}
+        title={t("cartItems.removeItemModal.title")}
+        icon={<Icon icon="solar:trash-bin-trash-linear" className="text-base" />}
+        description={t("cartItems.removeItemModal.description")}
+        confirmText={t("cartItems.removeItemModal.confirmText")}
+        cancelText={t("cartItems.removeItemModal.cancelText")}
+        variant="danger"
+        alertTitle={t("cartItems.removeItemModal.alertTitle")}
+        alertDescription={t("cartItems.removeItemModal.alertDescription")}
+      />
+      <Lightbox
+        open={lightboxOpen}
+        close={() => setLightboxOpen(false)}
+        slides={lightboxImages}
+        render={{ buttonPrev: () => null, buttonNext: () => null }}
+      />
+      {isModalOpen && customizingProduct && (
+        <ProductModal
+          isOpen={isModalOpen}
+          onClose={onModalClose}
+          product={customizingProduct}
+          selectedVariant={customizingVariant}
+          initialSelectedAddons={initialAddons}
+          initialStep="addons"
+          editingCartItemId={editingCartItemId}
+          editingQuantity={editingQuantity}
+        />
+      )}
+    </>
+  );
+
+  // ---- Cart-page layout: full-width item cards ----------------------------
+  if (layout === "cart") {
+    return (
+      <div className="flex w-full flex-col gap-4">
+        {items.map((item) => {
+          const isLowStock =
+            lowStockLimit !== null &&
+            item.variant.stock > 0 &&
+            item.variant.stock <= lowStockLimit;
+
+          const unitPrice =
+            Number(item.total_item_price ?? item.variant.price) || 0;
+          const unitSpecial = Number(item.total_item_special_price ?? 0) || 0;
+          const hasDiscount = unitSpecial > 0 && unitSpecial < unitPrice;
+          const shownPrice = hasDiscount ? unitSpecial : unitPrice;
+          const unitSaving = hasDiscount ? unitPrice - unitSpecial : 0;
+          const discountPct = hasDiscount
+            ? Math.round((unitSaving / unitPrice) * 100)
+            : 0;
+
+          return (
+            <div
+              key={item.id}
+              className="rounded-large border border-divider bg-content1 p-3 sm:p-4"
+            >
+              <div className="flex gap-3 sm:gap-4">
+                {/* Image + quantity */}
+                <div className="flex shrink-0 flex-col items-center gap-2">
+                  <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-medium bg-content2 sm:h-28 sm:w-28">
+                    <Image
+                      loading="eager"
+                      src={item.product.image}
+                      alt={item.variant.title || item.product.name || ""}
+                      removeWrapper
+                      radius="none"
+                      className="h-full w-full cursor-pointer object-contain"
+                      onClick={() => openLightbox(item.product.image)}
+                    />
+                  </div>
+                  <CartQuantityControl
+                    item={item}
+                    maxQuantity={item.product.total_allowed_quantity}
+                    minQuantity={item.product.minimum_order_quantity}
+                    quantityStep={item.product.quantity_step_size}
+                    stock={item.variant.stock}
+                  />
+                </div>
+
+                {/* Details */}
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  {!isSingleVendor && item.store?.name && (
+                    <Link
+                      href={`/stores/${item.store.slug}`}
+                      title={item.store.name}
+                      className="flex w-fit items-center gap-1 text-[11px] font-medium text-foreground/50 transition-colors hover:text-foreground"
+                    >
+                      <Icon icon="solar:shop-2-linear" className="text-xs" />
+                      {t("cartItems.soldBy", { defaultValue: "Sold by" })}{" "}
+                      {item.store.name}
+                    </Link>
+                  )}
+
+                  <Link
+                    title={item.product.name || ""}
+                    href={`/products/${item.product.slug}`}
+                    className="line-clamp-2 text-sm font-semibold leading-snug text-foreground"
+                  >
+                    {item.product.name}
+                  </Link>
+
+                  {renderVariantMeta(item, isLowStock)}
+
+                      {/* Price */}
+                      <div className="mt-0.5 flex flex-wrap items-baseline gap-2">
+                        <span className="text-lg font-bold text-foreground">
+                          {formatPrice(shownPrice)}
+                        </span>
+                        {hasDiscount && (
+                          <span className="text-[13px] text-default-400 line-through">
+                            {formatPrice(unitPrice)}
+                          </span>
+                        )}
+                        {discountPct > 0 && (
+                          <span className="text-[13px] font-semibold text-success">
+                            {t("discount", { percent: discountPct })}
+                          </span>
+                        )}
+                      </div>
+
+                      {unitSaving > 0 && (
+                        <span className="text-xs font-medium text-success">
+                          {t("cart.youSaved", {
+                            amount: formatPrice(unitSaving),
+                            defaultValue: `You saved ${formatPrice(unitSaving)}`,
+                          })}
+                        </span>
+                      )}
+
+                      {/* Actions */}
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() =>
+                            handleSaveForLater(item.id, item.quantity)
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-100 disabled:opacity-60"
+                        >
+                          <Icon icon="solar:bookmark-linear" className="text-sm" />
+                          {t("saveForLater.title")}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => setSelectedItemId(item.id)}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:opacity-60"
+                        >
+                          <Icon
+                            icon="solar:trash-bin-trash-linear"
+                            className="text-sm"
+                          />
+                          {t("remove_item")}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {renderAttachment(item)}
+                </div>
+              );
+            })}
+
+        {modals}
+      </div>
+    );
+  }
+
+  // ---- Default layout: compact list (checkout summary) --------------------
   return (
     <ScrollShadow
       className={`w-full py-1 flex flex-col gap-4 ${scrollable ? "max-h-[50vh]" : ""}`}
@@ -438,38 +713,7 @@ const CartItems: FC<CartItemsProps> = ({ items = [], scrollable = false }) => {
           </div>
         ))}
 
-      <ConfirmationModal
-        isOpen={!!selectedItemId}
-        onClose={() => setSelectedItemId(null)}
-        onConfirm={handleRemoveItem}
-        title={t("cartItems.removeItemModal.title")}
-        icon={<Icon icon="solar:trash-bin-trash-linear" className="text-base" />}
-        description={t("cartItems.removeItemModal.description")}
-        confirmText={t("cartItems.removeItemModal.confirmText")}
-        cancelText={t("cartItems.removeItemModal.cancelText")}
-        variant="danger"
-        alertTitle={t("cartItems.removeItemModal.alertTitle")}
-        alertDescription={t("cartItems.removeItemModal.alertDescription")}
-      />
-      <Lightbox
-        open={lightboxOpen}
-        close={() => setLightboxOpen(false)}
-        slides={lightboxImages}
-        render={{ buttonPrev: () => null, buttonNext: () => null }}
-      />
-
-      {isModalOpen && customizingProduct && (
-        <ProductModal
-          isOpen={isModalOpen}
-          onClose={onModalClose}
-          product={customizingProduct}
-          selectedVariant={customizingVariant}
-          initialSelectedAddons={initialAddons}
-          initialStep="addons"
-          editingCartItemId={editingCartItemId}
-          editingQuantity={editingQuantity}
-        />
-      )}
+      {modals}
     </ScrollShadow>
   );
 };

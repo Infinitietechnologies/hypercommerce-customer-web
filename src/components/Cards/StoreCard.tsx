@@ -20,7 +20,7 @@ const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
     <Link href={`/stores/${store.slug}`} title={store.name}>
       <Card
         className="w-full cursor-pointer"
-        shadow="sm"
+        shadow="none"
         isHoverable
         as={"div"}
         disableRipple

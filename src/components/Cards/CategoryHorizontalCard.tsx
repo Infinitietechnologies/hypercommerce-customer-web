@@ -35,7 +35,7 @@ const CategoryHorizontalCard: FC<CategoryHorizontalCardProps> = ({ category }) =
       title={category.title}
       onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
       className={`group relative block aspect-[16/10] overflow-hidden rounded-large
-        shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
+         transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
         ${tint.bg}`}
     >
       <div className="relative z-10 max-w-[55%] p-3 sm:p-4">

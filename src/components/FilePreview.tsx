@@ -110,7 +110,7 @@ const FilePreview: FC<FilePreviewProps> = ({ attachments }) => {
             return (
               <Card
                 key={index}
-                shadow="sm"
+                shadow="none"
                 radius="sm"
                 isPressable
                 onClick={() => handlePreviewClick(url, fileType, fileName)}

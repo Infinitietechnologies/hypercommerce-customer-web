@@ -136,7 +136,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
               </div>
 
               {/* Card skeleton */}
-              <div className="rounded-large border border-divider bg-content1 shadow-sm p-6">
+              <div className="rounded-large border border-divider bg-content1  p-6">
                 <div className="flex flex-col gap-6 lg:flex-row">
                   {/* Referral code box skeleton */}
                   <div className="lg:w-[60%] space-y-3">
@@ -166,7 +166,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
           ) : (
             <div className="space-y-6">
               {/* Referral code — centered card */}
-              <div className="rounded-large border border-divider bg-content1 p-6 text-center shadow-sm sm:p-8">
+              <div className="rounded-large border border-divider bg-content1 p-6 text-center  sm:p-8">
                 <div className="text-sm text-default-500">
                   {t("pages.referAndEarnPage.referralCode.label", "Your referral code")}
                 </div>
@@ -199,7 +199,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
               </div>
 
               {/* How it works */}
-              <div className="rounded-large border border-divider bg-content1 p-6 shadow-sm">
+              <div className="rounded-large border border-divider bg-content1 p-6 ">
                 <h3 className="text-base font-semibold">
                   {t("pages.referAndEarnPage.howItWorks.title")}
                 </h3>

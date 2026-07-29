@@ -246,7 +246,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      {error && <span className="text-tiny text-danger">{error}</span>}
+      {error && <span className="y text-danger">{error}</span>}
       <div className="flex w-full gap-2">
         <Input
           name="mobile"

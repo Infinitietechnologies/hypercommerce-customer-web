@@ -51,7 +51,7 @@ const SubcategorySidebar: React.FC<Props> = ({
       className={`hidden md:block w-72 sticky top-24 h-[75vh] overflow-hidden ${className}`}
       aria-label={t("subcategories")}
     >
-      <div className="rounded-lg shadow-sm border border-gray-100 dark:border-default-100 flex flex-col h-full">
+      <div className="rounded-lg border border-gray-100 dark:border-default-100 flex flex-col h-full">
         {/* Content */}
         <ScrollShadow className="flex-1 h-[95%] p-4">
           {/* All Products Option */}

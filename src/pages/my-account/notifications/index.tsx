@@ -399,7 +399,7 @@ const NotificationsPage: NextPageWithLayout = () => {
             }
           />
 
-          <Card shadow="sm" radius="lg" className="border border-divider">
+          <Card shadow="none" radius="lg" className="border border-divider">
             <CardBody className="p-4">
               {/* Toolbar */}
               <div className="flex items-center justify-between mb-4">

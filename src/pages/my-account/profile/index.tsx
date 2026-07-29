@@ -555,7 +555,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
             </Button>
           </div>
 
-          <Card shadow="sm" radius="lg" className="p-2 border border-divider">
+          <Card shadow="none" radius="lg" className="p-2 border border-divider">
             <Form onSubmit={onSubmit}>
               <CardHeader className="pb-0">
                 <div className="flex items-center gap-4">

@@ -23,7 +23,7 @@ const CategoryFullImageCard: FC<CategoryFullImageCardProps> = ({ category }) => 
       title={category.title}
       onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
       className="flex flex-col overflow-hidden rounded-large border border-divider bg-content1 text-foreground
-        shadow-sm transition-all duration-200 hover:border-primary hover:shadow-md"
+         transition-all duration-200 hover:border-primary hover:shadow-md"
     >
       <div className="aspect-square sm:aspect-[5/3] w-full overflow-hidden bg-content2">
         <Image

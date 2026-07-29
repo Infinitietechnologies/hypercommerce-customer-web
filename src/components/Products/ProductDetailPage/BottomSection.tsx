@@ -26,19 +26,21 @@ const BottomSection: FC<BottomSectionProps> = ({ initialProduct }) => {
   const { isSingleVendor } = useSettings();
   return (
     <div className="flex w-full flex-col">
+      {/* Outlined pill tabs (design): a single row of equal-width rounded
+          outlines; the active tab gets a dark border + subtle fill. No sliding
+          cursor. */}
       <Tabs
         aria-label={t("details")}
-        color="primary"
-        variant="solid"
-        radius="lg"
+        variant="light"
+        fullWidth
         classNames={{
           base: "w-full",
-          tabList:
-            "w-full gap-1 rounded-2xl border border-divider bg-content2 p-1.5 overflow-x-auto",
-          cursor: "rounded-xl shadow-sm",
-          tab: "px-4 h-10",
-          tabContent: "font-medium text-foreground/60 group-data-[selected=true]:text-primary-foreground",
-          panel: "pt-5",
+          tabList: "w-full flex-nowrap gap-2 bg-transparent p-0",
+          cursor: "hidden",
+          tab: "h-11 flex-1 rounded-xl border border-divider data-[hover=true]:border-foreground/40 data-[selected=true]:border-foreground data-[selected=true]:bg-content2",
+          tabContent:
+            "text-sm font-medium text-foreground/60 group-data-[selected=true]:font-semibold group-data-[selected=true]:text-foreground",
+          panel: "pt-6",
         }}
       >
         <Tab key="details" title={tabTitle("solar:document-text-linear", t("details"))}>

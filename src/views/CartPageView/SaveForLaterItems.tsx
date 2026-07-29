@@ -17,7 +17,7 @@ import { CartItem } from "@/types/ApiResponse";
 import Lightbox from "yet-another-react-lightbox";
 
 const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
-  moreProductsInline = false ,
+  moreProductsInline = false,
 }) => {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.resolvedLanguage || i18n.language;
@@ -122,8 +122,8 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
   }
 
   return (
-    <div className="w-full bg-content2 rounded-2xl p-4 border border-divider">
-      <h2 className="text-lg font-bold mb-3">
+    <div className="w-full">
+      <h2 className="mb-4 text-lg font-bold text-foreground">
         {t("saveForLater.title") || "Saved for Later"}
       </h2>
 
@@ -142,102 +142,112 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
         }}
         className="pb-4"
       >
-        {items.map((item) => (
-          <SwiperSlide key={item.id}>
-            <div className="flex flex-col bg-content1 border border-divider rounded-2xl shadow-sm hover:shadow-md hover:border-primary transition-all duration-200 p-3">
-              <div className="relative w-full flex justify-center">
-                <Image
-                  loading="lazy"
-                  src={item.product.image}
-                  alt={item.variant.title || ""}
-                  className="w-24 h-24 object-contain rounded-xl cursor-pointer bg-content2"
-                  onClick={() => {
-                    setLightboxImages([{ src: item.product.image }]);
-                    setLightboxOpen(true);
-                  }}
-                />
+        {items.map((item) => {
+          const hasDiscount =
+            !!item.total_item_special_price &&
+            item.total_item_special_price !== item.total_item_price;
 
-                <Button
-                  title={t("remove_item")}
-                  aria-label={t("remove_item")}
-                  className="absolute z-50 top-0 right-0 bg-content1/80 backdrop-blur-sm rounded-full text-danger"
-                  size="sm"
-                  isDisabled={isLoading}
-                  isIconOnly
-                  onPress={() => setSelectedItemId(item.id)}
-                >
-                  <Icon icon="solar:trash-bin-trash-linear" className="text-base" />
-                </Button>
-              </div>
+          return (
+            <SwiperSlide key={item.id} className="h-auto">
+              <div className="flex h-full flex-col rounded-large border border-divider bg-content1 p-2.5 transition-colors hover:border-default-300">
+                <div className="relative aspect-square w-full overflow-hidden rounded-medium bg-content2">
+                  <Image
+                    loading="lazy"
+                    src={item.product.image}
+                    alt={item.variant.title || ""}
+                    removeWrapper
+                    radius="none"
+                    className="absolute inset-0 h-full w-full cursor-pointer object-contain"
+                    onClick={() => {
+                      setLightboxImages([{ src: item.product.image }]);
+                      setLightboxOpen(true);
+                    }}
+                  />
 
-              <div className="mt-2 text-center">
-                <h3 className="text-xs font-medium line-clamp-1">
-                  <Link
-                    href={`/products/${item.product.slug}`}
-                    title={item.variant.title || ""}
+                  <Button
+                    title={t("remove_item")}
+                    aria-label={t("remove_item")}
+                    className="absolute right-2 top-2 z-20 h-8 w-8 min-w-0 rounded-full bg-content1 text-danger shadow-sm"
+                    size="sm"
+                    variant="light"
+                    radius="full"
+                    isDisabled={isLoading}
+                    isIconOnly
+                    onPress={() => setSelectedItemId(item.id)}
                   >
-                    {item.variant.title}
-                  </Link>
-                </h3>
+                    <Icon
+                      icon="solar:trash-bin-trash-linear"
+                      className="text-base"
+                    />
+                  </Button>
+                </div>
 
-                {item.addons && item.addons.length > 0 && (
-                  <div className="text-[10px] text-foreground/40 leading-tight mt-0.5 break-words line-clamp-1 flex flex-wrap gap-x-1 justify-center">
-                    {item.addons.map((addon: any, i: number) => {
-                      const addonPrice = Number(
-                        addon.price || addon.item?.price || 0,
-                      );
-                      return (
-                        <span key={i} className="flex items-center">
-                          {addon.title || addon.item?.title}
-                          {addonPrice > 0 && (
-                            <span className="ml-0.5 opacity-80 font-medium">
-                              ({formatPrice(addonPrice)})
-                            </span>
-                          )}
-                          {i < item.addons!.length - 1 && ","}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
+                <div className="mt-2 flex flex-1 flex-col">
+                  <h3 className="line-clamp-2 min-h-[2.4em] text-[13px] font-medium leading-snug text-foreground">
+                    <Link
+                      href={`/products/${item.product.slug}`}
+                      title={item.variant.title || ""}
+                    >
+                      {item.variant.title}
+                    </Link>
+                  </h3>
 
+                  {item.addons && item.addons.length > 0 && (
+                    <div className="mt-0.5 line-clamp-1 flex flex-wrap gap-x-1 break-words text-[10px] leading-tight text-foreground/40">
+                      {item.addons.map((addon: any, i: number) => {
+                        const addonPrice = Number(
+                          addon.price || addon.item?.price || 0,
+                        );
+                        return (
+                          <span key={i} className="flex items-center">
+                            {addon.title || addon.item?.title}
+                            {addonPrice > 0 && (
+                              <span className="ml-0.5 font-medium opacity-80">
+                                ({formatPrice(addonPrice)})
+                              </span>
+                            )}
+                            {i < item.addons!.length - 1 && ","}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                <p className="text-xs text-foreground/60 mt-1">
-                  {item.total_item_special_price &&
-                  item.total_item_special_price !== item.total_item_price ? (
-                    <>
-                      <span className="text-foreground font-medium">
-                        {formatPrice(item.total_item_special_price)}
-                      </span>
-                      <span className="text-foreground/40 line-through ml-2">
+                  <p className="mt-1 flex items-baseline gap-2">
+                    <span className="text-sm font-bold text-foreground">
+                      {formatPrice(
+                        hasDiscount
+                          ? item.total_item_special_price!
+                          : item.total_item_price || item.variant.price,
+                      )}
+                    </span>
+                    {hasDiscount && (
+                      <span className="text-xs text-default-400 line-through">
                         {formatPrice(item.total_item_price)}
                       </span>
-                    </>
-                  ) : (
-                    <span className="text-foreground font-medium">
-                      {formatPrice(item.total_item_price || item.variant.price)}
-                    </span>
-                  )}
-                </p>
+                    )}
+                  </p>
 
-                {/* 🛒 Move to Cart Button */}
-                <Button
-                  size="sm"
-                  isDisabled={moveLoading}
-                  variant="flat"
-                  color="primary"
-                  className="mt-2 w-full text-xs"
-                  startContent={
-                    <Icon icon="solar:cart-plus-linear" className="text-sm" />
-                  }
-                  onPress={() => handleMoveToCart(item)}
-                >
-                  {t("saveForLater.moveToCart")}
-                </Button>
+                  <Button
+                    size="sm"
+                    isDisabled={moveLoading}
+                    color="primary"
+                    className="mt-2 h-8 w-full min-w-0 gap-1 whitespace-nowrap px-2 text-xs font-medium"
+                    startContent={
+                      <Icon
+                        icon="solar:cart-plus-linear"
+                        className="shrink-0 text-sm"
+                      />
+                    }
+                    onPress={() => handleMoveToCart(item)}
+                  >
+                    <span className="truncate">{t("saveForLater.moveToCart")}</span>
+                  </Button>
+                </div>
               </div>
-            </div>
-          </SwiperSlide>
-        ))}
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
 
       <ConfirmationModal

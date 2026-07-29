@@ -1,15 +1,6 @@
 import { FC, useState } from "react";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Input,
-  Button,
-  addToast,
-  useDisclosure,
-  Divider,
-} from "@heroui/react";
-import { Ticket, X } from "lucide-react";
+import { Input, Button, toast, useDisclosure } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { validatePromoCode } from "@/routes/api";
@@ -27,15 +18,12 @@ const PromoCodeSection: FC = () => {
   const { t } = useTranslation();
 
   const { promoCode, selectedAddress } = useSelector(
-    (state: RootState) => state.checkout
+    (state: RootState) => state.checkout,
   );
 
   const handleApplyPromoCode = async () => {
     if (!code.trim()) {
-      addToast({
-        title: "Please enter a promo code",
-        color: "warning",
-      });
+      toast({ title: t("promoCode.enterCode", { defaultValue: "Please enter a promo code" }), color: "warning" });
       return;
     }
 
@@ -49,28 +37,20 @@ const PromoCodeSection: FC = () => {
 
       if (response.success) {
         dispatch(setPromoCode(code));
-        // The actual discount amount would come from the API response
-        // For now, we'll just set it to a placeholder value
-
-        addToast({
-          title: "Promo code applied successfully",
-          color: "success",
-        });
-
-        // Update cart data with the applied promo code
+        toast({ title: t("promoCode.appliedSuccess", { defaultValue: "Promo code applied successfully" }), color: "success" });
         updateCartData(true, false);
       } else {
-        addToast({
-          title: "Invalid promo code",
-          description: response.message || "This promo code cannot be applied",
+        toast({
+          title: t("promoCode.invalid", { defaultValue: "Invalid promo code" }),
+          description: response.message || t("promoCode.cannotApply", { defaultValue: "This promo code cannot be applied" }),
           color: "danger",
         });
       }
     } catch (error) {
       console.error("Error applying promo code:", error);
-      addToast({
-        title: "Error",
-        description: "Failed to apply promo code. Please try again.",
+      toast({
+        title: t("promoCode.error", { defaultValue: "Error" }),
+        description: t("promoCode.tryAgain", { defaultValue: "Failed to apply promo code. Please try again." }),
         color: "danger",
       });
     } finally {
@@ -82,114 +62,89 @@ const PromoCodeSection: FC = () => {
     dispatch(setPromoCode(""));
     setCode("");
     updateCartData(true, false);
-    addToast({
-      title: t("promoCode.removed"),
-      color: "success",
-    });
+    toast({ title: t("promoCode.removed"), color: "success" });
   };
 
   return (
-    <div className="w-full h-full">
-      <Card className="w-full h-full" radius="md" shadow="sm">
-        <CardHeader className="flex gap-3 relative flex-col items-start pb-0">
-          <div className="flex items-center gap-2">
+    <div className="flex w-full flex-col gap-3">
+      {/* Have Coupon */}
+      <div className="rounded-large border border-divider bg-content1 p-4">
+        <h3 className="text-sm font-bold text-foreground">
+          {t("promoCode.haveCoupon", { defaultValue: "Have Coupon ?" })}
+        </h3>
+
+        {promoCode ? (
+          <div className="mt-3 flex items-center justify-between rounded-md bg-green-50 p-2.5">
+            <div>
+              <p className="text-sm font-semibold text-foreground">{promoCode}</p>
+              <p
+                className={`text-xs ${
+                  selectedAddress == null
+                    ? "text-danger"
+                    : cartData?.payment_summary.promo_error !== null
+                      ? "text-danger"
+                      : "text-success"
+                }`}
+              >
+                {selectedAddress == null
+                  ? t("promoCode.selectAddress")
+                  : cartData?.payment_summary.promo_error === null
+                    ? t("promoCode.applied")
+                    : `${cartData?.payment_summary.promo_error || t("promoCode.invalidRemove", { defaultValue: "PromoCode is invalid, kindly remove it." })}`}
+              </p>
+            </div>
             <Button
               isIconOnly
-              color="primary"
-              variant="flat"
-              className="w-9 h-9 max-w-9"
+              size="sm"
+              variant="light"
+              color="danger"
+              onPress={handleRemovePromoCode}
+              isDisabled={isLoading}
             >
-              <Ticket className="w-5 h-5 text-primary" />
+              <Icon icon="solar:close-circle-linear" className="text-lg" />
             </Button>
-            <div className="flex flex-col">
-              <p className="text-xs md:text-small font-semibold">
-                {t("promoCode.sectionTitle")}
-              </p>
-              <p className="text-xxs md:text-xs text-default-500">
-                {t("promoCode.sectionDescription")}
-              </p>
-            </div>
           </div>
-          <Divider orientation="horizontal" />
-        </CardHeader>
-
-        <CardBody>
-          {promoCode ? (
-            <div className="flex items-center justify-between bg-primary-50 p-2 rounded-md">
-              <div>
-                <p className="text-sm font-medium">{promoCode}</p>
-                <p
-                  className={`text-xs ${
-                    selectedAddress == null
-                      ? "text-danger"
-                      : cartData?.payment_summary.promo_error !== null
-                        ? "text-danger"
-                        : "text-success"
-                  }`}
-                >
-                  {selectedAddress == null
-                    ? t("promoCode.selectAddress")
-                    : cartData?.payment_summary.promo_error === null
-                      ? t("promoCode.applied")
-                      : `${cartData?.payment_summary.promo_error || "PromoCode is Invalid kindly remove it."}`}
-                </p>
-              </div>
+        ) : (
+          <Input
+            className="mt-3"
+            placeholder={t("promoCode.placeholder", { defaultValue: "Coupon Code" })}
+            value={code}
+            onValueChange={setCode}
+            isDisabled={isLoading || isApplying}
+            endContent={
               <Button
-                isIconOnly
-                size="sm"
                 variant="light"
-                color="danger"
-                onPress={handleRemovePromoCode}
-                isDisabled={isLoading}
-              >
-                <X size={16} />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter promo code"
-                value={code}
-                onValueChange={setCode}
-                size="sm"
-                className="flex-1 pr-0"
-                classNames={{
-                  inputWrapper: "pr-0",
-                }}
-                isDisabled={isLoading || isApplying}
-                endContent={
-                  <Button
-                    color="primary"
-                    variant="light"
-                    size="sm"
-                    className="text-xs"
-                    onPress={onOpen}
-                    isDisabled={isApplying}
-                  >
-                    {t("view_all")}
-                  </Button>
-                }
-              />
-              <Button
                 color="primary"
                 size="sm"
-                className="text-xs"
+                className="font-semibold text-[12px]"
                 onPress={handleApplyPromoCode}
                 isLoading={isApplying}
                 isDisabled={isLoading || !code.trim()}
               >
                 {t("apply")}
               </Button>
-            </div>
-          )}
-        </CardBody>
-      </Card>
+            }
+          />
+        )}
+      </div>
+
+      {/* Available Offers */}
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-center justify-between rounded-large border border-divider bg-content1 p-4 text-left transition-colors hover:border-default-300"
+      >
+        <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <Icon icon="solar:ticket-sale-linear" className="text-lg text-primary-600" />
+          {t("promoCode.availableOffers", { defaultValue: "Available Offers" })}
+        </span>
+        <Icon icon="solar:alt-arrow-right-linear" className="text-lg text-foreground/40" />
+      </button>
 
       <PromoCodeModal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         onApplyPromo={(promoCode) => {
-          // Apply the promo code directly without setting the input field
           if (!promoCode.trim()) return;
 
           setIsApplying(true);
@@ -202,32 +157,24 @@ const PromoCodeSection: FC = () => {
               if (response.success) {
                 dispatch(setPromoCode(promoCode));
                 if (selectedAddress?.id) {
-                  addToast({
-                    title: t("promoCode.appliedSuccess"),
-                    color: "success",
-                  });
+                  toast({ title: t("promoCode.appliedSuccess"), color: "success" });
                 } else {
-                  addToast({
-                    title: t("promoCode.pleaseSelectAddress"),
-                    color: "danger",
-                  });
+                  toast({ title: t("promoCode.pleaseSelectAddress"), color: "danger" });
                 }
-
                 updateCartData(true, false);
               } else {
-                addToast({
+                toast({
                   title: t("promoCode.invalid"),
-                  description:
-                    response.message || "This promo code cannot be applied",
+                  description: response.message || t("promoCode.cannotApply", { defaultValue: "This promo code cannot be applied" }),
                   color: "danger",
                 });
               }
             })
             .catch((error) => {
               console.error("Error applying promo code:", error);
-              addToast({
+              toast({
                 title: t("promoCode.error"),
-                description: "Failed to apply promo code. Please try again.",
+                description: t("promoCode.tryAgain", { defaultValue: "Failed to apply promo code. Please try again." }),
                 color: "danger",
               });
             })
