@@ -157,12 +157,11 @@ const NotificationItem: React.FC<{
     <button
       type="button"
       onClick={handleClick}
-      disabled={!isClickable}
       className={`flex w-full items-start gap-3 rounded-medium border p-4 text-left transition-colors ${
         notification.is_read
           ? "border-divider bg-content1"
           : "border-primary-200 bg-primary-50/40"
-      } ${isClickable ? "cursor-pointer hover:border-primary" : "cursor-default"}`}
+      } ${isClickable ? "cursor-pointer hover:border-primary" : "cursor-pointer hover:border-default-300"}`}
     >
       {/* Type Icon */}
       <div className={`relative flex h-9 w-9 flex-none items-center justify-center rounded-medium ${getIconBg()}`}>

@@ -30,7 +30,7 @@ export const getCategories = async (
     const response = await api.get("/categories", { params });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackPaginateRes;
   }
 };
@@ -48,7 +48,7 @@ export const getSubCategories = async (
     const response = await api.get("/categories/sub-categories", { params });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackPaginateRes;
   }
 };
@@ -68,7 +68,7 @@ export const getBrands = async (
     const response = await api.get("/brands", { params });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackPaginateRes;
   }
 };
@@ -88,7 +88,7 @@ export const getStores = async (
     const response = await api.get("/stores", { params });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackPaginateRes;
   }
 };
@@ -103,7 +103,7 @@ export const getSpecificStore = async (
     });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackApiRes;
   }
 };
@@ -136,7 +136,7 @@ export const getProducts = async (
     });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return {
       ...fallbackPaginateRes,
       data: {
@@ -173,7 +173,7 @@ export const getSidebarFilters = async (params: {
     );
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackApiRes;
   }
 };
@@ -192,7 +192,7 @@ export const getProductBySlug = async (
     });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackApiRes;
   }
 };
@@ -210,7 +210,7 @@ export const getProductsByKeyword = async (
     });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackApiRes;
   }
 };
@@ -229,7 +229,7 @@ export const getProductFAQs = async (params: {
     });
     return response.data;
   } catch (error) {
-    console.error("API error:", error);
+    console.warn("API error:", error instanceof Error ? error.message : error);
     return fallbackPaginateRes;
   }
 };

@@ -12,6 +12,7 @@ export type * from "../catalog";
 export type * from "../common";
 export type * from "../content";
 export type * from "../delivery";
+export type * from "../geo";
 export type * from "../home";
 export type * from "../market";
 export type * from "../order";

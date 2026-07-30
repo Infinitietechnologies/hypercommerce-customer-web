@@ -1,6 +1,6 @@
 import React, { memo } from "react";
-import { Card, CardBody, Avatar, Image, Chip } from "@heroui/react";
-import { MapPin, Star, Award } from "lucide-react";
+import { Avatar, Image } from "@heroui/react";
+import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Store } from "@/types/ApiResponse";
@@ -12,115 +12,112 @@ interface StoreCardProps {
 const StoreCard: React.FC<StoreCardProps> = ({ store }) => {
   const { t } = useTranslation();
 
-  const rating = parseFloat(store.avg_store_rating).toFixed(1) || 0;
-  const lat = store.latitude;
-  const lng = store.longitude;
+  const ratingNum = parseFloat(store.avg_store_rating);
+  const rating = Number.isFinite(ratingNum) ? ratingNum.toFixed(1) : "0.0";
+  const hasRating = (store.total_store_feedback ?? 0) > 0 && ratingNum > 0;
+
+  const distanceNum = Number(store.distance);
+  const distanceLabel =
+    Number.isFinite(distanceNum) && distanceNum > 0
+      ? distanceNum < 1
+        ? `${(distanceNum * 1000).toFixed(0)} m`
+        : `${distanceNum.toFixed(1)} km`
+      : null;
 
   return (
-    <Link href={`/stores/${store.slug}`} title={store.name}>
-      <Card
-        className="w-full cursor-pointer"
-        shadow="none"
-        isHoverable
-        as={"div"}
-        disableRipple
-        isPressable={false}
-      >
-        <CardBody className="p-0">
-          {/* Banner Image */}
-          <div className="relative w-full h-24 sm:h-32">
-            <div className="relative w-full h-full overflow-hidden group rounded-t-lg">
-              <Image
-                src={store.banner || "/images/roof.png"}
-                alt={store.name}
-                className="w-full h-full object-top absolute inset-0 z-10 rounded-t-lg rounded-b-none"
-                removeWrapper
-                loading="eager"
-              />
-            </div>
+    <Link href={`/stores/${store.slug}`} title={store.name} className="group block h-full">
+      <div className="flex h-full flex-col overflow-hidden rounded-large border border-divider bg-content1 transition-all duration-200 hover:border-default-300 hover:shadow-md">
+        {/* Banner */}
+        <div className="relative aspect-[16/9] w-full bg-content2">
+          <Image
+            src={store.banner || "/images/roof.png"}
+            alt={store.name}
+            className="absolute inset-0 h-full w-full object-cover"
+            removeWrapper
+            radius="none"
+            loading="eager"
+          />
 
-            {/* Store Logo Avatar - Overlapping */}
-            <div className="relative">
-              <Avatar
-                isBordered
-                color="default"
-                src={store.logo}
-                alt={store.name}
-                className="absolute -bottom-6 left-4 w-14 h-14 sm:w-16 sm:h-16 z-20"
-              />
+          {store.is_recommended && (
+            <span className="absolute left-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm">
+              <Icon icon="solar:medal-ribbon-star-bold" className="text-xs" />
+              {t("recommended")}
+            </span>
+          )}
 
-              {store.is_recommended && (
-                <div className="absolute -bottom-7 right-4 z-30">
-                  <Chip
-                    className="bg-linear-to-r from-blue-400 to-blue-600 capitalize text-white font-semibold shadow-sm tracking-wide border-none"
-                    classNames={{
-                      base: "p-1 h-4 sm:h-5",
-                      content: "p-1 text-[8px] sm:text-[10px]",
-                    }}
-                    radius="sm"
-                    startContent={<Award size={10} className="fill-current" />}
-                  >
-                    {t("recommended")}
-                  </Chip>
-                </div>
+          {hasRating && (
+            <span className="absolute right-2.5 top-2.5 z-20 inline-flex items-center gap-1 rounded-md bg-content1 px-1.5 py-0.5 text-[11px] font-bold text-foreground shadow-sm">
+              <Icon icon="solar:star-bold" className="text-xs text-rating-star" />
+              {rating}
+              <span className="font-medium text-foreground/40">
+                ({store.total_store_feedback})
+              </span>
+            </span>
+          )}
+
+          {/* Logo avatar */}
+          <div className="absolute -bottom-5 left-3 z-20">
+            <Avatar
+              isBordered
+              src={store.logo}
+              alt={store.name}
+              radius="lg"
+              className="h-12 w-12 border-2 border-content1 bg-content1 sm:h-14 sm:w-14"
+            />
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex flex-1 flex-col gap-1.5 px-3 pb-3 pt-7">
+          <h3 className="line-clamp-1 text-sm font-semibold text-foreground">
+            {store.name}
+          </h3>
+
+          {(store.product_count != null || store.status?.is_open != null) && (
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              {store.product_count != null && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-content2 px-1.5 py-0.5 font-medium text-foreground/70">
+                  <Icon icon="solar:box-linear" className="text-[11px]" />
+                  {t("products_count", { count: store.product_count })}
+                </span>
+              )}
+              {store.status?.is_open != null && (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold ${
+                    store.status.is_open
+                      ? "bg-green-50 text-green-700"
+                      : "bg-red-50 text-red-600"
+                  }`}
+                >
+                  <span
+                    className={`h-1 w-1 rounded-full ${
+                      store.status.is_open ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  />
+                  {store.status.is_open
+                    ? t("store.open", { defaultValue: "Open" })
+                    : t("store.closed", { defaultValue: "Closed" })}
+                </span>
               )}
             </div>
-            {/* Rating Badge */}
-            <div className="absolute z-20 top-2 right-2 bg-white dark:bg-content1 rounded-md px-2 py-1 flex items-center gap-1 shadow-sm">
-              <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-              <div className="text-xs font-semibold">
-                {rating}/5{" "}
-                <span className="text-xxs">
-                  {`(${store.total_store_feedback})`}
-                </span>
-              </div>
-            </div>
-          </div>
+          )}
 
-          {/* Store Details */}
-          <div className="px-4 pb-4 pt-8">
-            {/* Store Name */}
-            <h3 className="text-sm sm:text-base font-semibold mb-2 line-clamp-1">
-              {store.name}
-            </h3>
-
-            {/* Location and Distance */}
+          {store.address && (
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-start gap-1.5 flex-1">
-                <MapPin className="w-3 h-3 text-foreground/50 mt-0.5 shrink-0" />
-                <div
-                  onClick={() =>
-                    window.open(
-                      `https://www.google.com/maps?q=${lat},${lng}`,
-                      "_blank",
-                    )
-                  }
-                  className="text-xxs text-foreground/60 dark:text-foreground/70 line-clamp-1 cursor-pointer"
-                  title={t("viewOnMap")}
-                >
-                  {store.address}
-                </div>
-              </div>
+              <span className="flex min-w-0 items-center gap-1 text-[11px] text-foreground/60">
+                <Icon icon="solar:map-point-linear" className="shrink-0 text-xs" />
+                <span className="truncate">{store.address}</span>
+              </span>
 
-              <Chip
-                className="text-xxs"
-                size="sm"
-                variant="flat"
-                color="success"
-                radius="sm"
-                classNames={{
-                  content: "p-0",
-                  base: "py-0 text-xxs text-foreground",
-                }}
-              >
-                {Number(store.distance) < 1
-                  ? `${(Number(store.distance) * 1000).toFixed(0)} m`
-                  : `${Number(store.distance).toFixed(1)} km`}
-              </Chip>
+              {distanceLabel && (
+                <span className="shrink-0 rounded-md bg-content2 px-1.5 py-0.5 text-[10px] font-medium text-foreground/70">
+                  {distanceLabel}
+                </span>
+              )}
             </div>
-          </div>
-        </CardBody>
-      </Card>
+          )}
+        </div>
+      </div>
     </Link>
   );
 };

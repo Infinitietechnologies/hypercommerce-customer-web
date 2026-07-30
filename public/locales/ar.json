@@ -26,7 +26,8 @@
       "location": "اختر الموقع",
       "mobile": "رقم الهاتف المحمول",
       "state": "الولاية",
-      "zipcode": "الرمز البريدي"
+      "zipcode": "الرمز البريدي",
+      "country": "الدولة"
     },
     "loading": "جارٍ التحميل...",
     "noAddresses": "لا توجد عناوين متاحة",
@@ -44,7 +45,31 @@
     },
     "unexpected_error_description": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى لاحقًا.",
     "unexpected_error_title": "خطأ غير متوقع",
-    "update": "تحديث العنوان"
+    "update": "تحديث العنوان",
+    "subtitle": "أخبرنا بمكان توصيل طلبك",
+    "sections": {
+      "location": "موقع التوصيل",
+      "details": "تفاصيل العنوان"
+    },
+    "placeholders": {
+      "selectCountry": "اختر الدولة",
+      "selectCity": "اختر المدينة",
+      "addressLine1": "المنزل / الشقة، الشارع",
+      "addressLine2": "المنطقة، الحي (اختياري)",
+      "landmark": "معلم قريب (اختياري)",
+      "mobile": "رقم جوال من 10 أرقام",
+      "searchCity": "ابحث عن مدينتك",
+      "searchZipcode": "أدخل الرمز البريدي",
+      "stateAuto": "يُملأ تلقائيًا من اختيارك"
+    },
+    "location": {
+      "useCurrent": "استخدام موقعي الحالي",
+      "detecting": "جارٍ تحديد موقعك…",
+      "denied": "تم رفض إذن الموقع. يرجى السماح بالوصول.",
+      "failed": "تعذّر جلب موقعك الحالي",
+      "unsupported": "المتصفح لا يدعم تحديد الموقع الجغرافي",
+      "countryUnavailable": "لا نقوم بالتوصيل إلى دولتك الحالية بعد"
+    }
   },
   "addressSelection": {
     "current": "الحالي",
@@ -1991,7 +2016,8 @@
     "locationRequired": "يرجى تحديد موقع على الخريطة",
     "mobileInvalid": "أدخل رقمًا صحيحًا مكونًا من 10 أرقام",
     "mobileRequired": "رقم الهاتف المحمول مطلوب",
-    "required": "مطلوب"
+    "required": "مطلوب",
+    "fillRequired": "يرجى تعبئة جميع الحقول المطلوبة بشكل صحيح."
   },
   "value": "القيمة",
   "very_bad": "سيئ جدًا",
@@ -2087,5 +2113,6 @@
   "wishlist_emptyItemsTitle": "لا توجد عناصر في قائمة الأمنيات هذه",
   "wishlist_emptyItemsDescription": "ابدأ بإضافة العناصر لتظهر هنا",
   "cart.calculatedAtCheckout": "Delivery, taxes & fees calculated at checkout",
-  "copied": "تم النسخ"
+  "copied": "تم النسخ",
+  "office": "المكتب"
 }

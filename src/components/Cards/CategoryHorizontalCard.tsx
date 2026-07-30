@@ -40,8 +40,7 @@ const CategoryHorizontalCard: FC<CategoryHorizontalCardProps> = ({ category }) =
     >
       <div className="relative z-10 max-w-[55%] p-3 sm:p-4">
         <div
-          style={{ color }}
-          className={`line-clamp-3 text-sm sm:text-lg font-bold leading-tight ${color ? "" : tint.text}`}
+          className={`line-clamp-3 text-sm sm:text-lg font-bold leading-tight ${tint.text}`}
         >
           {category.title}
         </div>

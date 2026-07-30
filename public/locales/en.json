@@ -26,7 +26,8 @@
       "location": "Select Location",
       "mobile": "Mobile Number",
       "state": "State",
-      "zipcode": "Zipcode"
+      "zipcode": "Zipcode",
+      "country": "Country"
     },
     "loading": "Loading...",
     "noAddresses": "No addresses available",
@@ -44,7 +45,31 @@
     },
     "unexpected_error_description": "An unexpected error occurred. Please try again later.",
     "unexpected_error_title": "Unexpected Error",
-    "update": "Update Address"
+    "update": "Update Address",
+    "subtitle": "Tell us where to deliver your order",
+    "sections": {
+      "location": "Delivery location",
+      "details": "Address details"
+    },
+    "placeholders": {
+      "selectCountry": "Select country",
+      "selectCity": "Select city",
+      "addressLine1": "House / flat, street",
+      "addressLine2": "Area, colony (optional)",
+      "landmark": "Nearby landmark (optional)",
+      "mobile": "10-digit mobile number",
+      "searchCity": "Search your city",
+      "searchZipcode": "Enter your pincode",
+      "stateAuto": "Auto-filled from your selection"
+    },
+    "location": {
+      "useCurrent": "Use my current location",
+      "detecting": "Detecting your location…",
+      "denied": "Location permission denied. Please allow access.",
+      "failed": "Unable to fetch your current location",
+      "unsupported": "Geolocation is not supported by your browser",
+      "countryUnavailable": "We don’t deliver to your current country yet"
+    }
   },
   "addressSelection": {
     "current": "Current",
@@ -1992,7 +2017,8 @@
     "locationRequired": "Please select a map location",
     "mobileInvalid": "Enter a valid 10-digit number",
     "mobileRequired": "Mobile is required",
-    "required": "Required"
+    "required": "Required",
+    "fillRequired": "Please fill all required fields correctly."
   },
   "value": "Value",
   "very_bad": "Very Bad",
@@ -2088,5 +2114,6 @@
   "wishlist_emptyItemsTitle": "No items in this wishlist",
   "wishlist_emptyItemsDescription": "Start adding items to see them here",
   "cart.calculatedAtCheckout": "Delivery, taxes & fees calculated at checkout",
-  "copied": "Copied"
+  "copied": "Copied",
+  "office": "Office"
 }

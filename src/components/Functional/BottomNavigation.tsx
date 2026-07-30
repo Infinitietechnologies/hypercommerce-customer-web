@@ -85,13 +85,6 @@ const BottomNavigation = () => {
       protected: true,
     },
     {
-      id: "stores",
-      label: t("pageTitle.stores"),
-      icon: Store,
-      path: "/stores",
-      protected: false,
-    },
-    {
       id: "profile",
       label: t("profile"),
       icon: User,

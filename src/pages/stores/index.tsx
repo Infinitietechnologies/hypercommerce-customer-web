@@ -138,7 +138,7 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
         isLoading={isLoadingMore}
         onLoadMore={loadMore}
       >
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3">
           {isLoading && stores.length === 0
             ? Array.from({ length: PER_PAGE }).map((_, i) => (
                 <StoreCardSkeleton key={i} />
@@ -147,7 +147,7 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
         </div>
 
         {isLoadingMore && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-6 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-6 mt-6">
             {Array.from({ length: PER_PAGE }).map((_, i) => (
               <StoreCardSkeleton key={`loading-${i}`} />
             ))}

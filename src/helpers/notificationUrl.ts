@@ -102,6 +102,8 @@ export const getNotificationRedirectUrl = (
         if (entityType.includes("category")) return `/categories/${entitySlug}`;
         if (entityType.includes("store")) return `/stores/${entitySlug}`;
       }
+      const orderSlug = firstStringValue(data, ["order_slug", "order_id", "orderId"]);
+      if (orderSlug) return `/my-account/orders/${orderSlug}`;
       return null;
     }
   }

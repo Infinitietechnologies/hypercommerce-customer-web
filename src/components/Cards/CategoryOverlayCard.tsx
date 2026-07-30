@@ -20,7 +20,7 @@ const CategoryOverlayCard: FC<CategoryOverlayCardProps> = ({ category }) => (
     title={category.title}
     onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
     className="group relative block aspect-square sm:aspect-[4/3] overflow-hidden rounded-large border border-divider
-      transition-all duration-200 hover:border-primary hover:shadow-md"
+      transition-all duration-200 hover:border-gray-300 hover:shadow-md"
   >
     <Image
       alt={category.title}

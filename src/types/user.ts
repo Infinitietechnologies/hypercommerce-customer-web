@@ -8,7 +8,7 @@ export type Address = {
   state: string;
   zipcode: string;
   mobile: string;
-  address_type: "home" | "work" | string; // Extend with more types if needed
+  address_type: "home" | "office" | string; // Extend with more types if needed
   country: string;
   country_code: string;
   latitude: number;

@@ -59,9 +59,9 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
                 key={item.key}
                 type="button"
                 onClick={() => go(item.href)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-medium text-[13.5px] font-semibold text-start transition-colors ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-medium text-[13.5px] font-bold text-start transition-colors ${
                   isActive
-                    ? "bg-primary-50 text-primary-600"
+                    ? "bg-gray-100"
                     : "text-default-500 hover:bg-content2 hover:text-foreground"
                 }`}
               >

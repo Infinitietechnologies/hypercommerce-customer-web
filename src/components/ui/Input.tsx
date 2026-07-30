@@ -19,7 +19,7 @@ const Input = forwardRef<HTMLInputElement, HeroInputProps>((props, ref) => (
       inputWrapper: `bg-content1 border-1 border-divider
         data-[hover=true]:border-default-300
         focus-within:border-primary
-        focus-within:ring-3 focus-within:ring-primary-100
+        focus-within:ring-primary-100
         shadow-none ${props.classNames?.inputWrapper ?? ""}`,
     }}
   />

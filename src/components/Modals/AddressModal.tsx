@@ -8,25 +8,32 @@ import {
   Select,
   SelectItem,
   Button,
-  Switch,
-  addToast,
-} from "@heroui/react";
-import { FC, useState, useRef } from "react";
-import GoogleMap from "@/components/Location/GoogleMap";
-import LocationAutoComplete from "@/components/Location/LocationAutoComplete";
+  Autocomplete,
+  AutocompleteItem,
+  Spinner,
+  toast as addToast,
+} from "@/components/ui";
+import { Icon } from "@iconify/react";
+import { FC, useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Address } from "@/types/ApiResponse";
-import type { LocationAutoCompleteRef } from "@/components/Location/types/LocationAutoComplete.types";
-import { addAddress, editAddress } from "@/routes/api";
+import { AddressParams } from "@/types/params";
+import { GeoCity, GeoCountry } from "@/types/geo";
+import {
+  addAddress,
+  editAddress,
+  getGeoCountries,
+  searchGeoCities,
+  resolvePincode,
+} from "@/routes/api";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation } from "react-i18next";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { staticLat, staticLng } from "@/config/constants";
 
 interface AddressModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSave?: (
-    addressData: Omit<Address, "id" | "user_id" | "created_at" | "updated_at">,
-  ) => void;
+  onSave?: (addressData: AddressParams) => void;
   initialData?: Partial<Address>;
 }
 
@@ -39,10 +46,78 @@ type AddressFormData = {
   state: string;
   zipcode: string;
   mobile: string;
-  address_type: "home" | "work" | "other";
+  address_type: "home" | "office" | "other";
   country: string;
   country_code: string;
 };
+
+// Wait for the global Google Maps loader (mounted in layouts/default.tsx).
+// Used only to reverse-geocode "use my current location" — no map is rendered.
+const waitForGoogleMaps = (timeout = 5000): Promise<boolean> =>
+  new Promise((resolve) => {
+    const start = Date.now();
+    const check = () => {
+      if (typeof window.google?.maps?.importLibrary === "function") {
+        resolve(true);
+      } else if (Date.now() - start > timeout) {
+        resolve(false);
+      } else {
+        setTimeout(check, 200);
+      }
+    };
+    check();
+  });
+
+type ReverseGeocode = {
+  formatted: string;
+  countryCode?: string;
+  postalCode?: string;
+  city?: string;
+};
+
+const reverseGeocode = async (latLng: {
+  lat: number;
+  lng: number;
+}): Promise<ReverseGeocode | null> => {
+  const loaded = await waitForGoogleMaps();
+  if (!loaded) return null;
+  try {
+    const { Geocoder } = (await window.google.maps.importLibrary(
+      "geocoding",
+    )) as google.maps.GeocodingLibrary;
+    const geocoder = new Geocoder();
+    const result = await geocoder.geocode({ location: latLng });
+    const place = result?.results?.[0];
+    if (!place) return null;
+    let countryCode: string | undefined;
+    let postalCode: string | undefined;
+    let city: string | undefined;
+    for (const c of place.address_components) {
+      const type = c.types[0];
+      if (type === "country") countryCode = c.short_name;
+      else if (type === "postal_code") postalCode = c.long_name;
+      else if (type === "locality") city = c.long_name;
+    }
+    return { formatted: place.formatted_address, countryCode, postalCode, city };
+  } catch (error) {
+    console.error("Reverse geocode error:", error);
+    return null;
+  }
+};
+
+const emptyForm = (initialData?: Partial<Address>): AddressFormData => ({
+  id: initialData?.id || "",
+  address_line1: initialData?.address_line1 || "",
+  address_line2: initialData?.address_line2 || "",
+  city: initialData?.city || "",
+  landmark: initialData?.landmark || "",
+  state: initialData?.state || "",
+  zipcode: initialData?.zipcode || "",
+  mobile: initialData?.mobile || "",
+  address_type: (initialData?.address_type as "home" | "office" | "other") || "home",
+  country: initialData?.country || "",
+  country_code: initialData?.country_code || "",
+});
 
 const AddressModal: FC<AddressModalProps> = ({
   isOpen,
@@ -50,150 +125,333 @@ const AddressModal: FC<AddressModalProps> = ({
   onSave,
   initialData,
 }) => {
-  const locationAutoCompleteRef = useRef<LocationAutoCompleteRef>(null);
   const { defaultLocation, demoMode } = useSettings();
   const { t } = useTranslation();
 
-  const [isDefault, setIsDefault] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<AddressFormData>(() =>
+    emptyForm(initialData),
+  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Coordinates are only sent when captured via "use my current location".
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     initialData?.latitude && initialData?.longitude
       ? { lat: initialData.latitude, lng: initialData.longitude }
-      : defaultLocation,
+      : null,
   );
 
-  const [formData, setFormData] = useState<AddressFormData>({
-    id: initialData?.id || "",
-    address_line1: initialData?.address_line1 || "",
-    address_line2: initialData?.address_line2 || "",
-    city: initialData?.city || "",
-    landmark: initialData?.landmark || "",
-    state: initialData?.state || "",
-    zipcode: initialData?.zipcode || "",
-    mobile: initialData?.mobile || "",
-    address_type:
-      (initialData?.address_type as "home" | "work" | "other") || "home",
-    country: initialData?.country || "India",
-    country_code: initialData?.country_code || "IN",
-  });
+  // Countries directory (drives which fields show: city vs zipcode search).
+  const [countries, setCountries] = useState<GeoCountry[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // City-type search state
+  const [citySearch, setCitySearch] = useState(initialData?.city || "");
+  const debouncedCity = useDebouncedValue(citySearch, 350);
+  const [cityResults, setCityResults] = useState<GeoCity[]>([]);
+  const [cityLoading, setCityLoading] = useState(false);
 
-  const initialLocation =
-    initialData?.latitude && initialData?.longitude
-      ? {
-          placeName: initialData.address_line1 || "Selected Location",
-          latLng: { lat: initialData.latitude, lng: initialData.longitude },
-          placeDescription: `${initialData.city || ""}, ${
-            initialData.state || ""
-          }`
-            .trim()
-            .replace(/^,|,$/, ""),
+  // Zipcode-type search state
+  const [zipInput, setZipInput] = useState(initialData?.zipcode || "");
+  const debouncedZip = useDebouncedValue(zipInput, 400);
+  const [pincodeCities, setPincodeCities] = useState<string[]>(
+    initialData?.city ? [initialData.city] : [],
+  );
+  const [zipLoading, setZipLoading] = useState(false);
+
+  const [locating, setLocating] = useState(false);
+
+  // Skip the reactive lookups on the very first run after a programmatic set
+  // (edit prefill / current-location autofill) so we don't clobber the values.
+  const skipCityLookup = useRef(!!initialData?.city);
+  const skipZipLookup = useRef(!!initialData?.zipcode);
+
+  const selectedCountry = useMemo(
+    () => countries.find((c) => c.iso2 === formData.country_code) || null,
+    [countries, formData.country_code],
+  );
+  const singleCountry = countries.length === 1;
+  const countryType = selectedCountry?.type;
+
+  const setField = useCallback(
+    (field: keyof AddressFormData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      setErrors((prev) => (prev[field] ? { ...prev, [field]: "" } : prev));
+    },
+    [],
+  );
+
+  // Re-sync the form from initialData each time the modal opens (edit reuses a
+  // mounted instance; add starts clean). Skip the first auto-lookup so prefilled
+  // city/zipcode values are not clobbered.
+  useEffect(() => {
+    if (!isOpen) return;
+    setFormData(emptyForm(initialData));
+    setCitySearch(initialData?.city || "");
+    setCityResults([]);
+    setZipInput(initialData?.zipcode || "");
+    setPincodeCities(initialData?.city ? [initialData.city] : []);
+    setLocation(
+      initialData?.latitude && initialData?.longitude
+        ? { lat: initialData.latitude, lng: initialData.longitude }
+        : null,
+    );
+    setErrors({});
+    skipCityLookup.current = !!initialData?.city;
+    skipZipLookup.current = !!initialData?.zipcode;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Load the countries directory whenever the modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    setCountriesLoading(true);
+    getGeoCountries()
+      .then((res) => {
+        if (!active) return;
+        const list = res.success && Array.isArray(res.data) ? res.data : [];
+        setCountries(list);
+        // Auto-select when there is exactly one country, or none is chosen yet.
+        setFormData((prev) => {
+          if (prev.country_code && list.some((c) => c.iso2 === prev.country_code)) {
+            return prev;
+          }
+          if (list.length === 1) {
+            return { ...prev, country: list[0].name, country_code: list[0].iso2 };
+          }
+          return prev;
+        });
+      })
+      .finally(() => active && setCountriesLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [isOpen]);
+
+  // City lookup (city-type countries).
+  useEffect(() => {
+    if (skipCityLookup.current) {
+      skipCityLookup.current = false;
+      return;
+    }
+    if (countryType !== "city" || !formData.country_code) return;
+    // An empty query returns the backend's default list (20 cities), so the
+    // dropdown is populated as soon as a city-type country is active.
+    const q = debouncedCity.trim();
+    let active = true;
+    setCityLoading(true);
+    searchGeoCities(formData.country_code, q)
+      .then((res) => {
+        if (!active) return;
+        setCityResults(res.success && Array.isArray(res.data) ? res.data : []);
+      })
+      .finally(() => active && setCityLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [debouncedCity, countryType, formData.country_code]);
+
+  const applyPincode = useCallback(
+    (
+      cities: string[],
+      geo: { country_name: string; country_iso2: string; state_name: string },
+    ) => {
+      const list = Array.isArray(cities) ? cities : [];
+      setPincodeCities(list);
+      setFormData((prev) => ({
+        ...prev,
+        state: geo.state_name || prev.state,
+        country: geo.country_name || prev.country,
+        country_code: geo.country_iso2 || prev.country_code,
+        city:
+          list.length === 1
+            ? list[0]
+            : list.includes(prev.city)
+              ? prev.city
+              : "",
+      }));
+      setErrors((prev) => ({ ...prev, state: "", city: "" }));
+    },
+    [],
+  );
+
+  // Pincode lookup (zipcode-type countries).
+  useEffect(() => {
+    if (skipZipLookup.current) {
+      skipZipLookup.current = false;
+      return;
+    }
+    if (countryType !== "zipcode" || !formData.country_code) return;
+    const code = debouncedZip.trim();
+    if (code.length < 3) return;
+    let active = true;
+    setZipLoading(true);
+    resolvePincode(formData.country_code, code)
+      .then((res) => {
+        if (!active) return;
+        if (res.success && res.data) {
+          applyPincode(res.data.cities, {
+            country_name: res.data.country_name,
+            country_iso2: res.data.country_iso2,
+            state_name: res.data.state_name,
+          });
         }
-      : null;
+      })
+      .finally(() => active && setZipLoading(false));
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedZip, countryType, formData.country_code]);
 
-  const handleMapLocationUpdate = async (latLng: {
-    lat: number;
-    lng: number;
-  }) => {
-    setLocation(latLng);
+  const handleCountryChange = (iso2: string) => {
+    const country = countries.find((c) => c.iso2 === iso2);
+    setCitySearch("");
+    setCityResults([]);
+    setZipInput("");
+    setPincodeCities([]);
+    setFormData((prev) => ({
+      ...prev,
+      country: country?.name || "",
+      country_code: iso2,
+      state: "",
+      city: "",
+      zipcode: "",
+    }));
+  };
 
-    try {
-      if (typeof window === "undefined" || !window.google?.maps?.Geocoder) {
-        return;
-      }
+  const handleCitySelect = (cityName: string) => {
+    const match = cityResults.find((c) => c.name === cityName);
+    if (!match) {
+      setField("city", cityName);
+      return;
+    }
+    skipCityLookup.current = true;
+    setCitySearch(match.name);
+    setFormData((prev) => ({
+      ...prev,
+      city: match.name,
+      state: match.state_name || match.state_code || prev.state,
+      country: match.country_name || prev.country,
+      country_code: match.country_iso2 || prev.country_code,
+    }));
+    setErrors((prev) => ({ ...prev, city: "", state: "" }));
+  };
 
-      const geocoder = new window.google.maps.Geocoder();
-      const result = await geocoder.geocode({ location: latLng });
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      addToast({
+        title: t("address.location.unsupported"),
+        color: "danger",
+      });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const latLng = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setLocation(latLng);
+        const geo = await reverseGeocode(latLng);
+        if (geo) {
+          setFormData((prev) => ({
+            ...prev,
+            address_line1: prev.address_line1 || geo.formatted,
+          }));
 
-      if (result.results && result.results.length > 0) {
-        const place = result.results[0];
-        let city = "";
-        let state = "";
-        let country = "";
-        let zipcode = "";
-        let countryCode = "";
+          const country = geo.countryCode
+            ? countries.find(
+                (c) => c.iso2.toUpperCase() === geo.countryCode!.toUpperCase(),
+              )
+            : undefined;
 
-        for (const component of place.address_components) {
-          const componentType = component.types[0];
+          if (country) {
+            setFormData((prev) => ({
+              ...prev,
+              country: country.name,
+              country_code: country.iso2,
+            }));
 
-          switch (componentType) {
-            case "locality":
-              city = component.long_name;
-              break;
-            case "administrative_area_level_1":
-              state = component.long_name;
-              break;
-            case "country":
-              country = component.long_name;
-              countryCode = component.short_name;
-              break;
-            case "postal_code":
-              zipcode = component.long_name;
-              break;
+            if (country.type === "zipcode" && geo.postalCode) {
+              skipZipLookup.current = true;
+              setZipInput(geo.postalCode);
+              setField("zipcode", geo.postalCode);
+              const res = await resolvePincode(country.iso2, geo.postalCode);
+              if (res.success && res.data) {
+                const list = res.data.cities || [];
+                const preferred =
+                  geo.city && list.includes(geo.city) ? geo.city : list[0] || "";
+                setPincodeCities(list);
+                setFormData((prev) => ({
+                  ...prev,
+                  state: res.data!.state_name || prev.state,
+                  country: res.data!.country_name || prev.country,
+                  country_code: res.data!.country_iso2 || prev.country_code,
+                  city: preferred,
+                }));
+              }
+            } else if (country.type === "city" && geo.city) {
+              skipCityLookup.current = true;
+              setCitySearch(geo.city);
+              const res = await searchGeoCities(country.iso2, geo.city);
+              const list = res.success && Array.isArray(res.data) ? res.data : [];
+              setCityResults(list);
+              const match =
+                list.find(
+                  (c) => c.name.toLowerCase() === geo.city!.toLowerCase(),
+                ) || list[0];
+              if (match) {
+                setFormData((prev) => ({
+                  ...prev,
+                  city: match.name,
+                  state: match.state_name || match.state_code || prev.state,
+                  country: match.country_name || prev.country,
+                  country_code: match.country_iso2 || prev.country_code,
+                }));
+              }
+            }
+          } else if (geo.countryCode) {
+            addToast({
+              title: t("address.location.countryUnavailable"),
+              color: "warning",
+            });
           }
         }
-
-        const addressLine1 = place.formatted_address;
-        const addressLine2 = "";
-
-        setFormData((prev) => ({
-          ...prev,
-          address_line1: addressLine1,
-          address_line2: addressLine2,
-          city: city || prev.city,
-          state: state || prev.state,
-          zipcode: zipcode || prev.zipcode,
-          country: country || prev.country,
-          country_code: countryCode || prev.country_code,
-          landmark: "",
-        }));
-
-        if (locationAutoCompleteRef.current) {
-          locationAutoCompleteRef.current.setInputValue(
-            place.formatted_address,
-          );
-        }
-      } else {
-        console.log("No geocoding results found.");
-      }
-    } catch (error) {
-      console.error("Geocoding error:", error);
-    }
-  };
-
-  const handleLocationSelect = async (locationData: {
-    placeName: string;
-    latLng: { lat: number; lng: number };
-    placeDescription: string;
-  }) => {
-    setLocation(locationData.latLng);
-    handleMapLocationUpdate(locationData.latLng);
-  };
-
-  const handleInputChange = (field: keyof AddressFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+        setLocating(false);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setLocating(false);
+        addToast({
+          title:
+            error.code === error.PERMISSION_DENIED
+              ? t("address.location.denied")
+              : t("address.location.failed"),
+          color: "danger",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
   };
 
   const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
+    const newErrors: Record<string, string> = {};
+    if (!formData.country_code.trim())
+      newErrors.country_code = t("validation.required");
     if (!formData.address_line1.trim())
       newErrors.address_line1 = t("validation.required");
     if (!formData.city.trim()) newErrors.city = t("validation.required");
     if (!formData.state.trim()) newErrors.state = t("validation.required");
-    if (!formData.zipcode.trim()) newErrors.zipcode = t("validation.required");
-    if (!formData.country_code.trim())
-      newErrors.country_code = "Country code is required";
+    if (countryType === "zipcode" && !formData.zipcode.trim())
+      newErrors.zipcode = t("validation.required");
     if (!formData.mobile.trim()) {
       newErrors.mobile = t("validation.mobileRequired");
     } else if (!/^\d+$/.test(formData.mobile.replace(/\s+/g, ""))) {
       newErrors.mobile = t("validation.mobileInvalid");
     }
-    if (!location) newErrors.location = t("validation.locationRequired");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -203,18 +461,25 @@ const AddressModal: FC<AddressModalProps> = ({
       setIsLoading(true);
       if (!validateForm()) {
         addToast({
-          title: "Validation Failed",
-          description: "Please fill all required fields correctly.",
+          title: t("address.toast.save_failed"),
+          description: t("validation.fillRequired"),
           color: "warning",
         });
         return;
       }
 
-      const addressData = {
-        ...formData,
-        latitude: demoMode ? defaultLocation?.lat || staticLat : location!.lat,
-        longitude: demoMode ? defaultLocation?.lng || staticLng : location!.lng,
-      };
+      // Coordinates: only sent when captured; omitted otherwise.
+      const coords =
+        location != null
+          ? demoMode
+            ? {
+                latitude: defaultLocation?.lat ?? staticLat,
+                longitude: defaultLocation?.lng ?? staticLng,
+              }
+            : { latitude: location.lat, longitude: location.lng }
+          : {};
+
+      const addressData = { ...formData, ...coords };
 
       const response = initialData
         ? await editAddress(addressData)
@@ -230,96 +495,40 @@ const AddressModal: FC<AddressModalProps> = ({
         onSave?.(addressData);
         onOpenChange(false);
       } else {
-        // Extract field-specific errors from response.data
-        let errorDescription = response?.message || "Something went wrong.";
-
+        let errorDescription = response?.message || t("address.toast.error");
         if (response?.data && typeof response.data === "object") {
-          const fieldErrors = Object.entries(response.data)
-            .map(([field, errors]) => {
-              console.log(field);
-              if (Array.isArray(errors)) {
-                return errors.join(", ");
-              }
-              return String(errors);
-            })
+          const fieldErrors = Object.values(response.data)
+            .map((e) => (Array.isArray(e) ? e.join(", ") : String(e)))
             .filter(Boolean)
             .join(". ");
-
-          if (fieldErrors) {
-            errorDescription = fieldErrors;
-          }
+          if (fieldErrors) errorDescription = fieldErrors;
         }
-
         addToast({
           title: response?.message || t("address.toast.save_failed"),
           description:
-            errorDescription !== response?.message
-              ? errorDescription
-              : undefined,
+            errorDescription !== response?.message ? errorDescription : undefined,
           color: "danger",
         });
       }
     } catch (error: any) {
       console.error("Save error:", error);
-
-      // Check if error response has validation errors
-      const errorResponse = error?.response?.data || error?.data;
-      if (errorResponse && !errorResponse.success) {
-        let errorDescription =
-          errorResponse?.message || "Something went wrong.";
-
-        if (errorResponse?.data && typeof errorResponse.data === "object") {
-          const fieldErrors = Object.entries(errorResponse.data)
-            .map(([field, errors]) => {
-              console.log(field);
-              if (Array.isArray(errors)) {
-                return errors.join(", ");
-              }
-              return String(errors);
-            })
-            .filter(Boolean)
-            .join(". ");
-
-          if (fieldErrors) {
-            errorDescription = fieldErrors;
-          }
-        }
-
-        addToast({
-          title: errorResponse?.message || t("address.toast.save_failed"),
-          description:
-            errorDescription !== errorResponse?.message
-              ? errorDescription
-              : undefined,
-          color: "danger",
-        });
-      } else {
-        addToast({
-          title: t("address.toast.error"),
-          description: error?.message || "An unexpected error occurred.",
-          color: "danger",
-        });
-      }
+      addToast({
+        title: t("address.toast.error"),
+        description: error?.message || undefined,
+        color: "danger",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleClose = () => {
-    setFormData({
-      id: "",
-      address_line1: "",
-      address_line2: "",
-      city: "",
-      landmark: "",
-      state: "",
-      zipcode: "",
-      mobile: "",
-      address_type: "home",
-      country: "India",
-      country_code: "IN",
-    });
-    setLocation(defaultLocation);
+    setFormData(emptyForm());
+    setLocation(null);
+    setCitySearch("");
+    setCityResults([]);
+    setZipInput("");
+    setPincodeCities([]);
     setErrors({});
     onOpenChange(false);
   };
@@ -328,152 +537,268 @@ const AddressModal: FC<AddressModalProps> = ({
     <Modal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      className="max-w-5xl"
+      className="max-w-2xl"
       scrollBehavior="inside"
       isDismissable={!isLoading}
     >
       <ModalContent>
-        <ModalHeader>
-          {initialData ? t("address.update") : t("address.addNew")}
+        <ModalHeader className="flex flex-col gap-0.5">
+          <span className="text-lg font-bold">
+            {initialData ? t("address.update") : t("address.addNew")}
+          </span>
+          <span className="text-xs font-normal text-foreground/50">
+            {t("address.subtitle", "Tell us where to deliver your order")}
+          </span>
         </ModalHeader>
-        <ModalBody className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="">
-            <div className="mb-4">
-              <LocationAutoComplete
-                ref={locationAutoCompleteRef}
-                onLocationSelect={handleLocationSelect}
-                initialLocation={initialLocation}
-              />
+        <ModalBody className="flex flex-col gap-5 pb-2">
+          {/* Section: delivery location */}
+          <section className="flex flex-col gap-3 rounded-large border border-divider bg-content2/40 p-3.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-foreground/50">
+              <Icon icon="solar:map-point-bold" className="text-sm text-primary" />
+              {t("address.sections.location", "Delivery location")}
             </div>
-            <div className="h-[320px] md:h-[400px] rounded-lg overflow-hidden shadow-md">
-              <GoogleMap
-                latLng={location || { lat: 0, lng: 0 }}
-                onLocationUpdate={handleMapLocationUpdate}
-              />
-            </div>
-            {errors.location && (
-              <p className="text-red-500 text-sm mt-2">{errors.location}</p>
-            )}
-          </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Address Line 1"
-                value={formData.address_line1}
-                onChange={(e) =>
-                  handleInputChange("address_line1", e.target.value)
+            {/* Use my current location */}
+            <Button
+              variant="bordered"
+              color="primary"
+              className="h-11 w-full justify-center gap-2 border-dashed font-semibold"
+              onPress={handleUseCurrentLocation}
+              isLoading={locating}
+              isDisabled={countriesLoading || isLoading}
+              startContent={
+                !locating && (
+                  <Icon icon="solar:gps-bold" className="text-lg" />
+                )
+              }
+            >
+              {locating
+                ? t("address.location.detecting")
+                : t("address.location.useCurrent")}
+            </Button>
+
+            {/* Country — hidden and auto-selected when there is only one. */}
+            {!singleCountry && (
+              <Select
+                label={t("address.labels.country")}
+                labelPlacement="outside"
+                variant="bordered"
+                placeholder={t("address.placeholders.selectCountry", "Select country")}
+                selectedKeys={
+                  formData.country_code ? [formData.country_code] : []
                 }
-                isInvalid={!!errors.address_line1}
-                errorMessage={errors.address_line1}
+                onSelectionChange={(keys) =>
+                  handleCountryChange(Array.from(keys)[0] as string)
+                }
+                isLoading={countriesLoading}
+                isInvalid={!!errors.country_code}
+                errorMessage={errors.country_code}
                 isRequired
-                isReadOnly={isLoading}
-                classNames={{ errorMessage: "text-xs" }}
-              />
-              <Input
-                label="Address Line 2"
-                value={formData.address_line2}
-                onChange={(e) =>
-                  handleInputChange("address_line2", e.target.value)
+                isDisabled={isLoading}
+              >
+                {countries.map((c) => (
+                  <SelectItem key={c.iso2} textValue={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </Select>
+            )}
+
+            {/* City-type: search a city → auto-fills state + country. */}
+            {countryType === "city" && (
+              <Autocomplete
+                label={t("address.labels.city")}
+                labelPlacement="outside"
+                variant="bordered"
+                placeholder={t("address.placeholders.searchCity")}
+                inputValue={citySearch}
+                onInputChange={setCitySearch}
+                onSelectionChange={(key) =>
+                  key != null && handleCitySelect(String(key))
                 }
-                isReadOnly={isLoading}
-                classNames={{ errorMessage: "text-xs" }}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="City"
-                value={formData.city}
-                onChange={(e) => handleInputChange("city", e.target.value)}
+                items={cityResults}
+                isLoading={cityLoading}
                 isInvalid={!!errors.city}
                 errorMessage={errors.city}
                 isRequired
+                isDisabled={isLoading}
+                allowsCustomValue
+                allowsEmptyCollection
+                menuTrigger="focus"
+              >
+                {(city: GeoCity) => (
+                  <AutocompleteItem key={city.name} textValue={city.name}>
+                    <div className="flex flex-col">
+                      <span className="text-sm">{city.name}</span>
+                      <span className="text-xs text-foreground/50">
+                        {[city.state_name, city.country_name]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </span>
+                    </div>
+                  </AutocompleteItem>
+                )}
+              </Autocomplete>
+            )}
+
+            {/* Zipcode-type: enter a pincode → resolves country/state + cities. */}
+            {countryType === "zipcode" && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label={t("address.labels.zipcode")}
+                  labelPlacement="outside"
+                  variant="bordered"
+                  placeholder={t("address.placeholders.searchZipcode")}
+                  value={zipInput}
+                  onChange={(e) => {
+                    setZipInput(e.target.value);
+                    setField("zipcode", e.target.value);
+                  }}
+                  isInvalid={!!errors.zipcode}
+                  errorMessage={errors.zipcode}
+                  isRequired
+                  isReadOnly={isLoading || !formData.country_code}
+                  endContent={
+                    zipLoading ? (
+                      <Spinner size="sm" color="primary" />
+                    ) : undefined
+                  }
+                  classNames={{ errorMessage: "text-xs" }}
+                />
+                {pincodeCities.length > 0 && (
+                  <Select
+                    label={t("address.labels.city")}
+                    labelPlacement="outside"
+                    variant="bordered"
+                    placeholder={t("address.placeholders.selectCity", "Select city")}
+                    selectedKeys={formData.city ? [formData.city] : []}
+                    onSelectionChange={(keys) =>
+                      setField("city", Array.from(keys)[0] as string)
+                    }
+                    isInvalid={!!errors.city}
+                    errorMessage={errors.city}
+                    isRequired
+                    isDisabled={isLoading}
+                  >
+                    {pincodeCities.map((city) => (
+                      <SelectItem key={city} textValue={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                )}
+              </div>
+            )}
+
+            {/* State — always auto-filled, never typed manually. */}
+            <Input
+              label={t("address.labels.state")}
+              labelPlacement="outside"
+              variant="bordered"
+              value={formData.state}
+              isReadOnly
+              isInvalid={!!errors.state}
+              errorMessage={errors.state}
+              placeholder={t("address.placeholders.stateAuto")}
+              startContent={
+                <Icon
+                  icon="solar:map-linear"
+                  className="text-base text-foreground/40"
+                />
+              }
+              classNames={{ errorMessage: "text-xs" }}
+            />
+          </section>
+
+          {/* Section: address details */}
+          <section className="flex flex-col gap-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-foreground/50">
+              {t("address.sections.details", "Address details")}
+            </div>
+
+            <Input
+              label={t("address.labels.addressLine1")}
+              labelPlacement="outside"
+              variant="bordered"
+              placeholder={t("address.placeholders.addressLine1", "House / flat, street")}
+              value={formData.address_line1}
+              onChange={(e) => setField("address_line1", e.target.value)}
+              isInvalid={!!errors.address_line1}
+              errorMessage={errors.address_line1}
+              isRequired
+              isReadOnly={isLoading}
+              classNames={{ errorMessage: "text-xs" }}
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Input
+                label={t("address.labels.addressLine2")}
+                labelPlacement="outside"
+                variant="bordered"
+                placeholder={t("address.placeholders.addressLine2", "Area, colony (optional)")}
+                value={formData.address_line2}
+                onChange={(e) => setField("address_line2", e.target.value)}
                 isReadOnly={isLoading}
-                classNames={{ errorMessage: "text-xs" }}
               />
               <Input
-                label="State"
-                value={formData.state}
-                onChange={(e) => handleInputChange("state", e.target.value)}
-                isInvalid={!!errors.state}
-                errorMessage={errors.state}
-                isRequired
+                label={t("address.labels.landmark")}
+                labelPlacement="outside"
+                variant="bordered"
+                placeholder={t("address.placeholders.landmark", "Nearby landmark (optional)")}
+                value={formData.landmark}
+                onChange={(e) => setField("landmark", e.target.value)}
                 isReadOnly={isLoading}
-                classNames={{ errorMessage: "text-xs" }}
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Input
-                label="Zipcode"
-                value={formData.zipcode}
-                onChange={(e) => handleInputChange("zipcode", e.target.value)}
-                isInvalid={!!errors.zipcode}
-                errorMessage={errors.zipcode}
-                isRequired
-                isReadOnly={isLoading}
-                classNames={{ errorMessage: "text-xs" }}
-              />
-              <Input
-                label="Mobile Number"
+                label={t("address.labels.mobile")}
+                labelPlacement="outside"
+                variant="bordered"
+                placeholder={t("address.placeholders.mobile", "10-digit mobile number")}
                 value={formData.mobile}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (!isNaN(Number(value))) {
-                    handleInputChange("mobile", value);
-                  }
+                  if (!isNaN(Number(value))) setField("mobile", value);
                 }}
                 isInvalid={!!errors.mobile}
                 errorMessage={errors.mobile}
                 isRequired
                 isReadOnly={isLoading}
+                startContent={
+                  <Icon
+                    icon="solar:phone-linear"
+                    className="text-base text-foreground/40"
+                  />
+                }
                 classNames={{ errorMessage: "text-xs" }}
               />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Landmark"
-                value={formData.landmark}
-                onChange={(e) => handleInputChange("landmark", e.target.value)}
-                classNames={{ errorMessage: "text-xs" }}
-              />
-              <Input
-                label="Country"
-                value={formData.country}
-                onChange={(e) => handleInputChange("country", e.target.value)}
-                classNames={{ errorMessage: "text-xs" }}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select
-                label="Address Type"
+                label={t("address.labels.addressType")}
+                labelPlacement="outside"
+                variant="bordered"
                 selectedKeys={[formData.address_type]}
-                onSelectionChange={(keys) => {
-                  const selected = Array.from(keys)[0] as
-                    | "home"
-                    | "work"
-                    | "other";
-                  handleInputChange("address_type", selected);
-                }}
+                onSelectionChange={(keys) =>
+                  setField(
+                    "address_type",
+                    Array.from(keys)[0] as "home" | "office" | "other",
+                  )
+                }
+                isDisabled={isLoading}
               >
                 <SelectItem key="home" textValue={t("home_title")}>
                   {t("home_title")}
                 </SelectItem>
-                <SelectItem key="work" textValue={t("work")}>
-                  {t("work")}
+                <SelectItem key="office" textValue={t("office")}>
+                  {t("office")}
                 </SelectItem>
                 <SelectItem key="other" textValue={t("other")}>
                   {t("other")}
                 </SelectItem>
               </Select>
-              <Switch
-                isSelected={isDefault}
-                onValueChange={setIsDefault}
-                className="hidden"
-              >
-                Is Default
-              </Switch>
             </div>
-          </div>
+          </section>
         </ModalBody>
         <ModalFooter>
           <Button

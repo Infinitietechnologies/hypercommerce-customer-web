@@ -26,20 +26,20 @@ const BottomSection: FC<BottomSectionProps> = ({ initialProduct }) => {
   const { isSingleVendor } = useSettings();
   return (
     <div className="flex w-full flex-col">
-      {/* Outlined pill tabs (design): a single row of equal-width rounded
-          outlines; the active tab gets a dark border + subtle fill. No sliding
-          cursor. */}
+      {/* Underline tabs (new design): a left-aligned row of text tabs on a
+          hairline baseline; the active tab carries the amber underline and a
+          bold foreground label. Scrolls horizontally on small screens. */}
       <Tabs
         aria-label={t("details")}
-        variant="light"
-        fullWidth
+        variant="underlined"
         classNames={{
           base: "w-full",
-          tabList: "w-full flex-nowrap gap-2 bg-transparent p-0",
-          cursor: "hidden",
-          tab: "h-11 flex-1 rounded-xl border border-divider data-[hover=true]:border-foreground/40 data-[selected=true]:border-foreground data-[selected=true]:bg-content2",
+          tabList:
+            "w-full gap-6 rounded-none border-b border-divider p-0 overflow-x-auto no-scrollbar",
+          cursor: "w-full bg-primary",
+          tab: "max-w-fit h-11 px-0",
           tabContent:
-            "text-sm font-medium text-foreground/60 group-data-[selected=true]:font-semibold group-data-[selected=true]:text-foreground",
+            "text-sm font-medium text-foreground/50 group-data-[selected=true]:font-semibold group-data-[selected=true]:text-foreground",
           panel: "pt-6",
         }}
       >

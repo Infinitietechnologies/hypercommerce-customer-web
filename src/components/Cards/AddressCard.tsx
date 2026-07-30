@@ -29,7 +29,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
     switch (type) {
       case "home":
         return <Icon icon="solar:home-2-linear" className="w-4 h-4" />;
-      case "work":
+      case "office":
         return <Icon icon="solar:buildings-2-linear" className="w-4 h-4" />;
       default:
         return <Icon icon="solar:map-point-linear" className="w-4 h-4" />;
@@ -40,7 +40,7 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
     switch (type) {
       case "home":
         return "primary";
-      case "work":
+      case "office":
         return "success";
       default:
         return "default";

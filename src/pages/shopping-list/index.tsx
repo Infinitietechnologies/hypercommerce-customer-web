@@ -220,7 +220,7 @@ const ShoppingListPageComponent: NextPageWithLayout = () => {
     const toneClasses =
       tone === "danger"
         ? "border-danger-200 bg-danger-50/50 text-danger-600"
-        : "border-default-200 bg-default-50/50 text-default-600";
+        : "border-divider bg-content2 text-default-600";
     return (
       <Card className={`border border-dashed ${toneClasses}`} shadow="none">
         <CardBody className="flex flex-col items-center gap-2 text-center py-8">
@@ -303,7 +303,7 @@ const ShoppingListPageComponent: NextPageWithLayout = () => {
           subtitle={t("pages.shoppingList.headerSubtitle")}
         />
 
-        <Card shadow="none" className="border border-default-200">
+        <Card shadow="none" className="border border-divider">
           <CardBody className="space-y-3 p-4">
             <form onSubmit={handleKeywordSubmit} className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-2">
@@ -382,7 +382,7 @@ const ShoppingListPageComponent: NextPageWithLayout = () => {
             )}
 
             {keywords.length === 0 && (
-              <div className="rounded-lg border-2 border-dashed border-default-200 bg-default-50/50 p-6 text-center">
+              <div className="rounded-lg border-2 border-dashed border-divider bg-content2 p-6 text-center">
                 <ListChecks
                   className="mx-auto mb-2 text-default-400"
                   size={28}
@@ -446,7 +446,7 @@ const ShoppingListPageComponent: NextPageWithLayout = () => {
 
 const LoadingCarousel = () => {
   return (
-    <Card shadow="none" className="border border-default-200">
+    <Card shadow="none" className="border border-divider">
       <CardBody className="p-4">
         {/* Top title skeleton */}
         <div className="flex flex-col gap-2 mb-4">
@@ -499,11 +499,11 @@ const KeywordCarousel = ({
   const rtl = isRTL(currentLang);
 
   return (
-    <Card shadow="none" className="border border-default-200 w-full max-w-full">
+    <Card shadow="none" className="border border-divider w-full max-w-full">
       <CardBody className="p-4 overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div className="space-y-0.5">
-            <h3 className="text-base font-semibold text-default-900">
+            <h3 className="text-base font-semibold text-foreground">
               {title}
             </h3>
             <p className="text-xs text-default-500">{countLabel}</p>
@@ -522,7 +522,7 @@ const KeywordCarousel = ({
             isIconOnly
             ref={prevRef}
             size="sm"
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-20 bg-background border border-default-300 shadow-lg transition-all duration-200 hidden sm:flex ${
+            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-20 bg-background border border-divider shadow-sm transition-all duration-200 hidden sm:flex ${
               isBeginning
                 ? "opacity-0 pointer-events-none"
                 : "opacity-0 group-hover:opacity-100 hover:scale-110"
@@ -537,7 +537,7 @@ const KeywordCarousel = ({
             isIconOnly
             ref={nextRef}
             size="sm"
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-20 bg-background border border-default-300 shadow-lg transition-all duration-200 hidden sm:flex ${
+            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-20 bg-background border border-divider shadow-sm transition-all duration-200 hidden sm:flex ${
               isEnd
                 ? "opacity-0 pointer-events-none"
                 : "opacity-0 group-hover:opacity-100 hover:scale-110"

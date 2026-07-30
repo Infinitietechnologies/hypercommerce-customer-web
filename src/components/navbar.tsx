@@ -207,6 +207,7 @@ export const Navbar: FC = () => {
     <Badge
       color="primary"
       content={mounted ? bagCount || undefined : undefined}
+      isInvisible={!mounted || bagCount <= 0}
       variant="solid"
       classNames={{ badge: "text-xs font-extrabold text-primary-foreground" }}
     >

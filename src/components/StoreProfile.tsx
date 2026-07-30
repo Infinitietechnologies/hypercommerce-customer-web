@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Avatar, Chip, Image } from "@heroui/react";
-import { MapPin, Phone, Mail, Clock, Star, Package, Award } from "lucide-react";
+import { Avatar, Image } from "@heroui/react";
+import { Icon } from "@iconify/react";
 import { Store } from "@/types/ApiResponse";
 import { useTranslation } from "react-i18next";
 import Lightbox from "yet-another-react-lightbox";
@@ -9,274 +9,185 @@ interface StoreProfileProps {
   store: Store;
 }
 
-/* --------------------------------------------
-   Original Store Content (for Desktop)
---------------------------------------------- */
-const StoreContent = ({
-  store,
-  rating,
-  t,
-  textColor = "text-gray-900",
-  openLightbox,
-}: any) => {
-  return (
-    <div className="relative flex md:items-end items-start gap-4 px-4 md:px-6 w-full">
-      <div
-        className="absolute 
-             left-0 right-0 
-             -top-10 h-[calc(100%+5rem)]
-             z-0
-             bg-linear-to-t
-             to-transparent 
-             md:from-black/70 
-             md:via-black/60 
-             md:to-transparent"
-      />
+const InfoRow = ({
+  icon,
+  children,
+  href,
+}: {
+  icon: string;
+  children: React.ReactNode;
+  href?: string;
+}) => {
+  const inner = (
+    <>
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-content1 text-foreground/60">
+        <Icon icon={icon} className="text-base" />
+      </span>
+      <span className="min-w-0 truncate">{children}</span>
+    </>
+  );
 
-      <div className="md:-translate-y-1/3">
-        <Avatar
-          isBordered
-          src={store.logo}
-          alt={store.name}
-          className="w-32 h-32 sm:w-44 sm:h-44 cursor-pointer border-4 border-white"
-          radius="full"
-          onClick={() => openLightbox("avatar")}
-        />
-      </div>
-      {/* Content */}
-      <div className="relative z-10 p-4 sm:p-6">
-        <h1 className={`text-2xl sm:text-3xl font-bold ${textColor}`}>
-          {store.name}
-        </h1>
+  const className =
+    "flex items-center gap-2.5 rounded-xl bg-content2 px-3 py-2.5 text-sm text-foreground/70";
 
-        {/* Status + Products + Rating */}
-        <div className="flex flex-wrap items-center gap-2.5 mt-2">
-          {store.is_recommended && (
-            <Chip
-              size="sm"
-              className="bg-linear-to-r from-blue-400 to-blue-600 capitalize text-white font-semibold shadow-sm tracking-wide border-none"
-              classNames={{
-                base: "h-6",
-                content: "px-1.5 text-xs",
-              }}
-              radius="sm"
-              startContent={<Award size={12} className="fill-current" />}
-            >
-              {t("recommended")}
-            </Chip>
-          )}
-          <Chip
-            size="sm"
-            variant="bordered"
-            startContent={<Package className="w-4 h-4" />}
-            className="font-semibold text-xs md:text-white border-white/50"
-          >
-            {t("products_count", { count: store.product_count })}
-          </Chip>
-
-          {rating > 0 && (
-            <Chip
-              size="sm"
-              variant="bordered"
-              startContent={
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 border-none" />
-              }
-              className="font-bold text-xs md:text-white border-white/50"
-            >
-              {rating}/5 {`(${store.total_store_feedback})`}
-            </Chip>
-          )}
-        </div>
-
-        {/* Description */}
-        {store.description && (
-          <div className="mt-3 max-w-3xl">
-            <div
-              className={`text-sm text-foreground/50 md:text-gray-300 leading-relaxed`}
-              dangerouslySetInnerHTML={{ __html: store.description }}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+  return href ? (
+    <a
+      href={href}
+      target={href.startsWith("http") ? "_blank" : undefined}
+      rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+      className={`${className} transition-colors hover:text-foreground`}
+    >
+      {inner}
+    </a>
+  ) : (
+    <div className={className}>{inner}</div>
   );
 };
 
-/* --------------------------------------------
-   Main Component
---------------------------------------------- */
 const StoreProfile: React.FC<StoreProfileProps> = ({ store }) => {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [slides, setSlides] = useState<any[]>([]);
+  const [slides, setSlides] = useState<{ src: string }[]>([]);
 
-  const rating = parseFloat(store.avg_store_rating).toFixed(1) || "0.0";
+  const ratingNum = parseFloat(store.avg_store_rating);
+  const rating = Number.isFinite(ratingNum) ? ratingNum.toFixed(1) : "0.0";
+  const hasRating = (store.total_store_feedback ?? 0) > 0 && ratingNum > 0;
   const lat = store.latitude;
   const lng = store.longitude;
+  const isOpen = store.status?.is_open;
 
-  /* Lightbox handler */
   const openLightbox = (clicked: "banner" | "avatar") => {
     const banner = store.banner || "/images/roof.png";
     const avatar = store.logo || "/images/roof.png";
-
     setSlides(
       clicked === "avatar"
         ? [{ src: avatar }, { src: banner }]
-        : [{ src: banner }, { src: avatar }]
+        : [{ src: banner }, { src: avatar }],
     );
     setOpen(true);
   };
 
   return (
-    <div className="w-full mx-auto rounded-3xl overflow-hidden bg-white dark:bg-content1 shadow-md">
+    <div className="w-full overflow-hidden rounded-large border border-divider bg-content1">
       <Lightbox open={open} close={() => setOpen(false)} slides={slides} />
 
-      {/* ================= Banner Section ================= */}
-      <div className="relative h-64 sm:h-72 md:h-80 lg:h-[400px] w-full overflow-hidden">
-        <div
-          className="absolute inset-0 cursor-pointer"
-          onClick={() => openLightbox("banner")}
-        >
-          <Image
-            src={store.banner || "/images/roof.png"}
-            alt={`${store.name} banner`}
-            className="w-full h-full object-cover"
-            removeWrapper
-          />
-        </div>
-
-        {/* -------- Desktop Overlay (Original Style as per img-3) -------- */}
-        <div className="absolute inset-0 hidden lg:flex flex-col justify-end">
-          <div className="relative z-10 text-white">
-            <StoreContent
-              store={store}
-              rating={rating}
-              t={t}
-              textColor="text-white"
-              openLightbox={openLightbox}
-            />
-          </div>
-        </div>
+      {/* Banner */}
+      <div
+        className="relative aspect-[3/1] max-h-[300px] w-full cursor-pointer bg-content2"
+        onClick={() => openLightbox("banner")}
+      >
+        <Image
+          src={store.banner || "/images/roof.png"}
+          alt={`${store.name} banner`}
+          className="absolute inset-0 h-full w-full object-cover"
+          removeWrapper
+          radius="none"
+        />
       </div>
 
-      {/* ================= Mobile UI Update (New Design - from img-2) ================= */}
-      <div className="lg:hidden relative px-6 pb-10 bg-white dark:bg-content1">
-        {/* Avatar - Positioned to overlap banner from below */}
-        <div className="absolute -top-16 sm:-top-20 left-6 sm:left-10 z-20">
+      {/* Body */}
+      <div className="relative px-4 pb-6 sm:px-6">
+        <div className="relative z-20 -mt-10 sm:-mt-12">
           <Avatar
             isBordered
             src={store.logo}
             alt={store.name}
-            className="w-32 h-32 sm:w-44 sm:h-44 cursor-pointer border-4 border-white dark:border-content1 bg-white dark:bg-content1"
-            radius="full"
+            radius="lg"
+            className="h-20 w-20 cursor-pointer border-4 border-content1 bg-content1 sm:h-24 sm:w-24"
             onClick={() => openLightbox("avatar")}
           />
         </div>
 
-        {/* Mobile Header Content */}
-        <div className="pt-20 sm:pt-28 flex flex-col gap-6">
-          <div className="flex justify-between items-start gap-4">
-            <div className="space-y-2 flex-1">
-              <h1 className="text-2xl font-black tracking-tight text-default-900 leading-tight">
+        <div className="mt-3 flex flex-col gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">
                 {store.name}
               </h1>
-              {store.is_recommended && (
-                <Chip size="sm" color="primary" variant="shadow" className="font-bold text-[10px] h-6">
-                  {t("recommended")}
-                </Chip>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {store.is_recommended && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground">
+                    <Icon icon="solar:medal-ribbon-star-bold" className="text-sm" />
+                    {t("recommended")}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1 rounded-full bg-content2 px-2.5 py-1 text-[11px] font-medium text-foreground/70">
+                  <Icon icon="solar:box-linear" className="text-sm" />
+                  {t("products_count", { count: store.product_count })}
+                </span>
+                {isOpen != null && (
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      isOpen
+                        ? "bg-green-50 text-green-700"
+                        : "bg-red-50 text-red-600"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        isOpen ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    />
+                    {isOpen
+                      ? t("store.open", { defaultValue: "Open" })
+                      : t("store.closed", { defaultValue: "Closed" })}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {hasRating && (
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-sm font-bold text-foreground">
+                <Icon icon="solar:star-bold" className="text-base text-rating-star" />
+                {rating}
+                <span className="text-xs font-medium text-foreground/50">
+                  ({store.total_store_feedback})
+                </span>
+              </span>
+            )}
+          </div>
+
+          {store.description && (
+            <div
+              className="html-content max-w-3xl text-sm leading-relaxed text-foreground/60"
+              dangerouslySetInnerHTML={{ __html: store.description }}
+            />
+          )}
+
+          {/* Info */}
+          {(store.timing ||
+            store.address ||
+            store.contact_number ||
+            store.contact_email) && (
+            <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {store.timing && (
+                <InfoRow icon="solar:clock-circle-linear">{store.timing}</InfoRow>
               )}
-            </div>
-
-            {/* Simple Rating Badge */}
-            {parseFloat(rating) > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1 border border-divider rounded-full shrink-0">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-bold text-default-700">
-                  {rating}/5 ({store.total_store_feedback})
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            {store.address && (
-              <div className="flex items-start gap-3 text-default-500">
-                <MapPin size={20} className="mt-0.5 shrink-0" />
-                <span className="text-base font-medium leading-snug">{store.address}</span>
-              </div>
-            )}
-            {store.timing && (
-              <div className="flex items-center gap-3 text-default-500">
-                <Clock size={20} className="shrink-0 text-default-400" />
-                <span className="text-base text-default-400 font-medium">
-                  {store.timing}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Contact Links */}
-        <div className="mt-8 flex flex-col gap-4 pt-8 border-t border-divider">
-          {store.contact_number && (
-            <a href={`tel:${store.contact_number}`} className="flex items-center gap-4 text-default-600">
-              <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-default-100">
-                <Phone size={18} />
-              </div>
-              <span>{store.contact_number}</span>
-            </a>
-          )}
-          {store.contact_email && (
-            <a href={`mailto:${store.contact_email}`} className="flex items-center gap-4 text-default-600">
-              <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-default-100">
-                <Mail size={18} />
-              </div>
-              <span className="truncate flex-1">{store.contact_email}</span>
-            </a>
-          )}
-        </div>
-      </div>
-
-      {/* ================= Desktop Contact Bar (as per img-3) ================= */}
-      <div className="hidden lg:flex items-center justify-between px-10 py-6 bg-white dark:bg-content1 border-t border-divider text-default-600">
-        <div className="flex items-center gap-10 w-full overflow-x-auto no-scrollbar">
-          {store.timing && (
-            <div className="flex items-center gap-2.5 shrink-0">
-              <Clock size={20} className="text-default-400" />
-              <span className="text-sm font-semibold">{store.timing}</span>
-            </div>
-          )}
-
-          {store.address && (
-            <div className="flex items-center gap-2.5 shrink-0 max-w-xs xl:max-w-md">
-              <MapPin size={20} className="text-default-400" />
-              <a
-                href={`https://www.google.com/maps?q=${lat},${lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-semibold hover:underline truncate"
-              >
-                {store.address}
-              </a>
-            </div>
-          )}
-
-          {store.contact_number && (
-            <div className="flex items-center gap-2.5 shrink-0 ml-auto">
-              <Phone size={20} className="text-default-400" />
-              <a href={`tel:${store.contact_number}`} className="text-sm font-semibold hover:underline">
-                {store.contact_number}
-              </a>
-            </div>
-          )}
-
-          {store.contact_email && (
-            <div className="flex items-center gap-2.5 shrink-0">
-              <Mail size={20} className="text-default-400" />
-              <a href={`mailto:${store.contact_email}`} className="text-sm font-semibold hover:underline">
-                {store.contact_email}
-              </a>
+              {store.address && (
+                <InfoRow
+                  icon="solar:map-point-linear"
+                  href={`https://www.google.com/maps?q=${lat},${lng}`}
+                >
+                  {store.address}
+                </InfoRow>
+              )}
+              {store.contact_number && (
+                <InfoRow
+                  icon="solar:phone-linear"
+                  href={`tel:${store.contact_number}`}
+                >
+                  {store.contact_number}
+                </InfoRow>
+              )}
+              {store.contact_email && (
+                <InfoRow
+                  icon="solar:letter-linear"
+                  href={`mailto:${store.contact_email}`}
+                >
+                  {store.contact_email}
+                </InfoRow>
+              )}
             </div>
           )}
         </div>

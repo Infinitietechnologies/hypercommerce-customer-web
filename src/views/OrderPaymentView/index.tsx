@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 import { Button, Spinner, toast } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import { setIdempotencyKey } from "@/lib/redux/slices/checkoutSlice";
 import { useSettings } from "@/contexts/SettingsContext";
 import RazorPay from "@/components/PaymentGateway/RazorPay";
@@ -110,7 +111,7 @@ const OrderPaymentView: FC = () => {
     });
     const timer = setTimeout(
       () => router.push(`/my-account/orders/${slug}`),
-      1200,
+      1400,
     );
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,37 +119,99 @@ const OrderPaymentView: FC = () => {
 
   const cancel = () => router.push("/cart/checkout");
 
+  // ---------- Loading ----------
   if (phase === "loading" || !order) {
     return (
-      <div className="max-w-md mx-auto flex justify-center py-16">
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
         <Spinner size="lg" color="primary" />
+        <p className="text-sm text-foreground/60">
+          {t("checkout.loadingOrder", { defaultValue: "Loading your order…" })}
+        </p>
       </div>
     );
   }
 
+  // ---------- Waiting screen ----------
   if (phase === "waiting") {
     return (
-      <div className="max-w-md mx-auto flex flex-col items-center gap-6 py-16">
-        <Spinner size="lg" color="primary" />
-        <p className="text-sm text-default-500 text-center">
-          {t("checkout.confirmingPayment", {
-            defaultValue: "Confirming payment…",
-          })}
-        </p>
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center px-4">
+        <div className="w-full rounded-large border border-divider bg-content1 p-8 text-center">
+          <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center">
+            <span className="absolute inset-0 animate-ping rounded-full bg-primary-100 opacity-60" />
+            <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-primary-50">
+              <Spinner size="lg" color="primary" />
+            </span>
+          </div>
+
+          <h1 className="text-lg font-bold text-foreground">
+            {t("checkout.confirmingPaymentTitle", {
+              defaultValue: "Confirming your payment",
+            })}
+          </h1>
+
+          <div className="mt-2 flex items-center justify-center gap-1">
+            <span className="text-sm text-foreground/60">
+              {t("checkout.confirmingPayment", {
+                defaultValue: "This usually takes a few seconds",
+              })}
+            </span>
+            <span className="flex gap-0.5">
+              <span className="h-1 w-1 animate-bounce rounded-full bg-foreground/40" />
+              <span className="h-1 w-1 animate-bounce rounded-full bg-foreground/40 [animation-delay:150ms]" />
+              <span className="h-1 w-1 animate-bounce rounded-full bg-foreground/40 [animation-delay:300ms]" />
+            </span>
+          </div>
+
+          <div className="mt-5 inline-flex items-center gap-2 rounded-xl bg-content2 px-4 py-2 text-sm">
+            <span className="text-foreground/60">
+              {t("checkout.amountToPay", { defaultValue: "Amount" })}
+            </span>
+            <span className="font-semibold text-foreground">
+              {formatPrice(order.total_payable)}
+            </span>
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-1.5 rounded-xl bg-warning-50 px-3 py-2 text-xs text-warning-700">
+            <Icon icon="solar:info-circle-linear" className="shrink-0 text-sm" />
+            {t("checkout.doNotClose", {
+              defaultValue: "Please don't close or refresh this page.",
+            })}
+          </div>
+        </div>
       </div>
     );
   }
 
+  // ---------- Success ----------
   if (phase === "success") {
     return (
-      <div className="max-w-md mx-auto flex flex-col items-center gap-4 py-16">
-        <p className="text-lg font-medium text-success">
-          {t("checkout.paymentConfirmed", { defaultValue: "Payment confirmed" })}
-        </p>
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center px-4">
+        <div className="w-full rounded-large border border-divider bg-content1 p-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+            <Icon icon="solar:check-circle-bold" className="text-4xl text-success" />
+          </div>
+          <h1 className="text-lg font-bold text-foreground">
+            {t("checkout.paymentSuccessTitle", {
+              defaultValue: "Payment successful!",
+            })}
+          </h1>
+          <p className="mt-2 text-sm text-foreground/60">
+            {t("checkout.redirectingOrder", {
+              defaultValue: "Redirecting you to your order…",
+            })}
+          </p>
+          <div className="mt-5 inline-flex items-center gap-2">
+            <Spinner size="sm" color="primary" />
+            <span className="text-xs text-foreground/50">
+              {t("please_wait", { defaultValue: "Please wait" })}
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // ---------- Pay (also the failed retry surface) ----------
   const gatewayProps = {
     onSuccess,
     onError,
@@ -182,29 +245,83 @@ const OrderPaymentView: FC = () => {
   })();
 
   return (
-    <div className="max-w-md mx-auto flex flex-col gap-4 py-6">
-      <h1 className="text-lg font-medium">
-        {t("pageTitle.payment", { defaultValue: "Payment" })}
-      </h1>
+    <div className="mx-auto w-full max-w-md px-4 py-8">
+      <div className="rounded-large border border-divider bg-content1 p-5 sm:p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50">
+            <Icon
+              icon="solar:lock-keyhole-minimalistic-bold"
+              className="text-2xl text-primary-600"
+            />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-foreground">
+              {t("checkout.completePayment", {
+                defaultValue: "Complete your payment",
+              })}
+            </h1>
+            <p className="text-xs text-foreground/50">
+              {t("checkout.secureCheckout", { defaultValue: "Secure checkout" })}
+            </p>
+          </div>
+        </div>
 
-      <div className="flex items-center justify-between rounded-large border border-default-200 p-4">
-        <span className="text-sm text-default-500">
-          {t("cart.total", { defaultValue: "Total payable" })}
-        </span>
-        <span className="font-medium">{formatPrice(order.total_payable)}</span>
+        {/* Amount */}
+        <div className="mt-5 rounded-xl bg-content2 p-4 text-center">
+          <p className="text-xs text-foreground/50">
+            {t("checkout.amountToPay", { defaultValue: "Amount to pay" })}
+          </p>
+          <p className="mt-1 text-3xl font-extrabold text-foreground">
+            {formatPrice(order.total_payable)}
+          </p>
+        </div>
+
+        {/* Failed banner */}
+        {phase === "failed" && (
+          <div className="mt-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+            <Icon
+              icon="solar:danger-triangle-bold"
+              className="mt-0.5 shrink-0 text-base"
+            />
+            <div>
+              <p className="font-semibold">
+                {t("checkout.paymentFailed", { defaultValue: "Payment failed" })}
+              </p>
+              <p className="text-xs text-red-600">
+                {t("checkout.paymentFailedHelp", {
+                  defaultValue:
+                    "Your payment didn't go through. You can try again below.",
+                })}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Gateway pay button */}
+        <div className="mt-5 w-full">{gateway}</div>
+
+        {/* Trust note */}
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-foreground/40">
+          <Icon icon="solar:shield-check-linear" className="text-sm" />
+          {t("checkout.securePaymentNote", {
+            defaultValue: "Payments are encrypted & secure",
+          })}
+        </div>
       </div>
 
-      {phase === "failed" && (
-        <p className="text-sm text-danger">
-          {t("checkout.paymentFailed", { defaultValue: "Payment failed" })}
-        </p>
-      )}
-
-      <div className="w-full">{gateway}</div>
-
-      <Button variant="light" onPress={cancel}>
-        {t("cancel", { defaultValue: "Cancel" })}
-      </Button>
+      <div className="mt-4 text-center">
+        <Button
+          variant="light"
+          onPress={cancel}
+          className="text-foreground/60"
+          startContent={
+            <Icon icon="solar:alt-arrow-left-linear" className="text-base" />
+          }
+        >
+          {t("checkout.backToCheckout", { defaultValue: "Back to checkout" })}
+        </Button>
+      </div>
     </div>
   );
 };

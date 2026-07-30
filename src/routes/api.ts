@@ -17,6 +17,7 @@ export * from "@/services/auth";
 export * from "@/services/cart";
 export * from "@/services/catalog";
 export * from "@/services/content";
+export * from "@/services/geo";
 export * from "@/services/home";
 export * from "@/services/market";
 export * from "@/services/notifications";

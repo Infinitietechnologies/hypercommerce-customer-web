@@ -26,7 +26,8 @@
       "location": "स्थान चुनें",
       "mobile": "मोबाइल नंबर",
       "state": "राज्य",
-      "zipcode": "पिन कोड"
+      "zipcode": "पिन कोड",
+      "country": "देश"
     },
     "loading": "लोड हो रहा है...",
     "noAddresses": "कोई पता उपलब्ध नहीं है",
@@ -44,7 +45,31 @@
     },
     "unexpected_error_description": "एक अप्रत्याशित त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
     "unexpected_error_title": "अप्रत्याशित त्रुटि",
-    "update": "पता अपडेट करें"
+    "update": "पता अपडेट करें",
+    "subtitle": "हमें बताएं कि आपका ऑर्डर कहाँ पहुँचाना है",
+    "sections": {
+      "location": "डिलीवरी लोकेशन",
+      "details": "पते का विवरण"
+    },
+    "placeholders": {
+      "selectCountry": "देश चुनें",
+      "selectCity": "शहर चुनें",
+      "addressLine1": "मकान / फ्लैट, गली",
+      "addressLine2": "क्षेत्र, कॉलोनी (वैकल्पिक)",
+      "landmark": "नज़दीकी लैंडमार्क (वैकल्पिक)",
+      "mobile": "10 अंकों का मोबाइल नंबर",
+      "searchCity": "अपना शहर खोजें",
+      "searchZipcode": "अपना पिनकोड दर्ज करें",
+      "stateAuto": "आपके चयन से स्वतः भरा गया"
+    },
+    "location": {
+      "useCurrent": "मेरी वर्तमान लोकेशन उपयोग करें",
+      "detecting": "आपकी लोकेशन का पता लगाया जा रहा है…",
+      "denied": "लोकेशन अनुमति अस्वीकृत। कृपया पहुँच की अनुमति दें।",
+      "failed": "आपकी वर्तमान लोकेशन प्राप्त नहीं हो सकी",
+      "unsupported": "आपका ब्राउज़र जियोलोकेशन का समर्थन नहीं करता",
+      "countryUnavailable": "हम अभी आपके वर्तमान देश में डिलीवरी नहीं करते"
+    }
   },
   "addressSelection": {
     "current": "वर्तमान",
@@ -1993,7 +2018,8 @@
     "locationRequired": "कृपया नक्शे का स्थान चुनें",
     "mobileInvalid": "एक मान्य 10-अंकीय नंबर दर्ज करें",
     "mobileRequired": "मोबाइल आवश्यक है",
-    "required": "आवश्यक"
+    "required": "आवश्यक",
+    "fillRequired": "कृपया सभी आवश्यक फ़ील्ड सही से भरें।"
   },
   "value": "मान",
   "very_bad": "बहुत खराब",
@@ -2089,5 +2115,6 @@
   "wishlist_emptyItemsTitle": "इस विशलिस्ट में कोई आइटम नहीं",
   "wishlist_emptyItemsDescription": "यहाँ देखने के लिए आइटम जोड़ना शुरू करें",
   "cart.calculatedAtCheckout": "Delivery, taxes & fees calculated at checkout",
-  "copied": "कॉपी किया गया"
+  "copied": "कॉपी किया गया",
+  "office": "ऑफिस"
 }

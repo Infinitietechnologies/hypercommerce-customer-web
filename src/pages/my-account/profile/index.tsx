@@ -3,20 +3,20 @@ import {
   Card,
   CardBody,
   CardHeader,
+  CardFooter,
   Avatar,
   Button,
   Input,
-  CardFooter,
-  Form,
-  useDisclosure,
-  addToast,
   Chip,
+  Form,
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
   ModalFooter,
-} from "@heroui/react";
+  useDisclosure,
+  toast as addToast,
+} from "@/components/ui";
 import { FormEvent, useRef, useState, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import CountryList from "country-list-with-dial-code-and-flag";
@@ -555,7 +555,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
             </Button>
           </div>
 
-          <Card shadow="none" radius="lg" className="p-2 border border-divider">
+          <Card className="p-2">
             <Form onSubmit={onSubmit}>
               <CardHeader className="pb-0">
                 <div className="flex items-center gap-4">
@@ -631,7 +631,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                       onChange={(e) =>
                         handleInputChange("name", e.target.value)
                       }
-                      variant="flat"
                       startContent={
                         <Icon icon="solar:user-linear" width={20} height={20} className="text-default-400" />
                       }
@@ -641,7 +640,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                       isReadOnly
                       label={t("pages.myAccount.labels.memberSince")}
                       labelPlacement="outside"
-                      variant="flat"
                       value={
                         user?.created_at
                           ? new Date(user.created_at).toLocaleString("en-US", {
@@ -678,7 +676,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                       onChange={(e) =>
                         handleInputChange("email", e.target.value)
                       }
-                      variant="flat"
                       startContent={
                         <Icon icon="solar:letter-linear" width={20} height={20} className="text-default-400" />
                       }
@@ -700,7 +697,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                             <Chip
                               startContent={<Icon icon="solar:check-circle-bold" width={16} height={16} />}
                               color="success"
-                              variant="flat"
                               size="md"
                               className="border-none h-8 px-2 sm:px-3 text-xs font-bold"
                             >
@@ -771,7 +767,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                         }));
                         handlePhoneValidation(phoneNumber);
                       }}
-                      variant="flat"
                       endContent={
                         <div className="flex items-center gap-2 mr-1">
                           {(formData.mobile !== user?.mobile ||
@@ -793,7 +788,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                             <Chip
                               startContent={<Icon icon="solar:check-circle-bold" width={16} height={16} />}
                               color="success"
-                              variant="flat"
                               size="md"
                               className="border-none h-8 px-2 sm:px-3 text-xs font-bold"
                             >

@@ -7,7 +7,7 @@ export interface AddressParams {
   state: string; // Required, max length 100 characters
   zipcode: string; // Required, max length 10 characters
   mobile: string; // Required, max length 15 characters
-  address_type: "home" | "work" | "other"; // Required, allowed values: "home", "work", "other"
+  address_type: "home" | "office" | "other"; // Required, allowed values: "home", "office", "other"
   country: string; // Required, max length 100 characters
   country_code: string; // Required, max length 5 characters
   latitude?: number | null; // Optional

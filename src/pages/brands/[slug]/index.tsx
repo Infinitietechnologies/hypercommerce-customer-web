@@ -432,7 +432,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const settings = await getSettings({ market });
 
         // Fetch brand details for SEO
-        const brandsRes = await getBrands({ market });
+        const brandsRes = await getBrands({ market, per_page: 1000 });
         const initialBrand = brandsRes?.data?.data?.find(b => b.slug === slug) || null;
 
         // An unknown brand slug is not rejected by the products endpoint — it

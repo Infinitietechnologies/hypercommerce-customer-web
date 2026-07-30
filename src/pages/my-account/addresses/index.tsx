@@ -77,6 +77,14 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
   const addresses = paginatedData?.data || [];
   const totalPages = paginatedData?.last_page || 1;
   const totalAddresses = paginatedData?.total || 0;
+  // The addresses endpoint returns `total` but not always `from`/`to`, which
+  // left the range reading "0 to 0". Derive it from the current page and the
+  // rows actually returned, preferring the API's values when present.
+  const rangeFrom =
+    paginatedData?.from ||
+    (addresses.length ? (currentPage - 1) * per_page + 1 : 0);
+  const rangeTo =
+    paginatedData?.to || (currentPage - 1) * per_page + addresses.length;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -206,8 +214,8 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
 
               <div className="text-center text-sm text-default-500">
                 {t("pages.addresses.showingRange", {
-                  from: paginatedData?.from || 0,
-                  to: paginatedData?.to || 0,
+                  from: rangeFrom,
+                  to: rangeTo,
                   total: totalAddresses,
                 })}
               </div>
