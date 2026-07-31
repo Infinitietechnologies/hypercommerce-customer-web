@@ -12,17 +12,30 @@
  * monotonic light→dark ramp. Primary fills use a near-black label (`onBrand`)
  * since amber needs a dark, not white, foreground for contrast.
  */
+// export const brand = {
+//   50: "#F3F4F6",
+//   100: "#F3F4F6",
+//   200: "#ffe196",
+//   300: "#ffd268",
+//   400: "#ffc63f",
+//   500: "#ffb616",
+//   600: "#101828",
+//   700: "#b37e00",
+//   800: "#8a6100",
+//   900: "#5e4200",
+// } as const;
+
 export const brand = {
-  50: "#fff8e6",
-  100: "#ffeec0",
-  200: "#ffe196",
-  300: "#ffd268",
-  400: "#ffc63f",
-  500: "#ffb616",
-  600: "#e09e00",
-  700: "#b37e00",
-  800: "#8a6100",
-  900: "#5e4200",
+  50: "#F3F4F6", // Gray background
+  100: "#E5E7EB", // Light gray
+  200: "#FDF2C7", // Very light yellow
+  300: "#FCE588", // Soft yellow
+  400: "#F9D44A", // Warm yellow
+  500: "#FFB616", // Primary brand
+  600: "#E09E00", // Darker brand
+  700: "#B37E00", // Deep mustard
+  800: "#8A6100", // Brownish yellow
+  900: "#101828", // Dark gray instead of brown
 } as const;
 
 /** Label colour on brand (amber) fills — near-black for contrast. */

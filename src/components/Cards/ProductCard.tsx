@@ -203,9 +203,9 @@ const ProductCard: FC<ProductCardProps> = ({
           grid-stretched card, opening a gap under the image (above the brand)
           on shorter cards. Pin it to the media height so every card aligns. */}
       <CardBody className="grow-0 p-0 overflow-hidden">
-        <div className="relative aspect-square w-full bg-content2 overflow-hidden">
+        <div className="relative aspect-square w-full bg-primary-50 overflow-hidden">
           {images.length === 0 ? (
-            <div className="absolute inset-0 bg-content2" />
+            <div className="absolute inset-0 bg-primary-50" />
           ) : hasCarousel ? (
             <Swiper
               slidesPerView={1}

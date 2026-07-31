@@ -86,11 +86,10 @@ interface OrderDetailPageViewProps {
 /* Small building blocks                                                       */
 /* -------------------------------------------------------------------------- */
 
-function Thumb({ item, size = 64, className }: { item: OrderItem; size?: number; className?: string }) {
-  const img = item.product?.image || item.variant?.image || null;
+function Thumb({ item, size = 64 }: { item: OrderItem; size?: number }) {  const img = item.product?.image || item.variant?.image || null;
   return (
     <div
-      className={`shrink-0 overflow-hidden rounded-medium flex items-center justify-center ${className}`}
+      className="shrink-0 overflow-hidden rounded-medium bg-primary-50 flex items-center justify-center"
       style={{ width: size, height: size }}
     >
       {img ? (
@@ -239,10 +238,10 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             <div className="flex gap-4 p-4">
               {selected.product?.slug ? (
                 <Link href={`/products/${selected.product.slug}`} className="shrink-0">
-                  <Thumb item={selected} size={72} className="bg-content2" />
+                  <Thumb item={selected} size={72} />
                 </Link>
               ) : (
-                <Thumb item={selected} size={72} className="bg-content2" />
+                <Thumb item={selected} size={72} />
               )}
               <div className="min-w-0 flex-1">
                 {selected.product?.brand && (
@@ -554,7 +553,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                       onClick={() => selectItem(it.id)}
                       className={`flex items-center gap-3 rounded-medium border p-2 text-left transition-colors ${
                         active
-                          ? "border-primary"
+                          ? "border-primary bg-primary-50"
                           : "border-divider hover:border-primary"
                       }`}
                     >
