@@ -1,13 +1,13 @@
 {
-  "name": "hyper-local",
-  "version": "2.0.0",
+  "name": "hypercommerce",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "npm run lint && node scripts/update-manifest.mjs && node scripts/update-robots.mjs && node scripts/generate-sitemap.mjs && next build",
     "deploy": "npm install && npm run build && node create-htaccess.js && node ftp.js",
-    "start": "next start",
+    "start": "next start -p 3002",
     "lint": "eslint --fix",
     "scan:i18n": "i18next-scanner --config i18next-scanner.config.cjs"
   },
