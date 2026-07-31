@@ -21,6 +21,8 @@ jobs:
         run: |
           npm install
           npm run build
+          git reset --hard HEAD
+          git clean -fd 
         env:
           # Add any build-time env vars here
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
@@ -28,5 +30,4 @@ jobs:
       - name: Trigger aaPanel Webhook
         uses: tunnaduong/aapanel-deploy-action@main
         with:
-          panel_url: https://hypercommerce-web.infinitietech.in
           webhook_key: ${{ secrets.AAPANEL_WEBHOOK_KEY }}
