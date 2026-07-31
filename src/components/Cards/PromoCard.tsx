@@ -1,7 +1,7 @@
 import { useSettings } from "@/contexts/SettingsContext";
 import { formatDate } from "@/helpers/validator";
 import { PromoCode } from "@/types/ApiResponse";
-import { Button, Card, CardBody, Chip, Divider, Progress } from "@heroui/react";
+import { Button, Card, CardBody, Chip, Divider } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 

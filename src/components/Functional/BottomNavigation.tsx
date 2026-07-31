@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Home, ShoppingCart, User, Package, Store } from "lucide-react";
+import { Home, ShoppingCart, User, Package } from "lucide-react";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
