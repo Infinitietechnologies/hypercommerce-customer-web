@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a217eeab-f472-424b-925e-09c79dcec260" name="Changes" comment="working with new design">
+      <change beforePath="$PROJECT_DIR$/public/locales/ar.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/locales/ar.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/locales/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/locales/en.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/locales/hi.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/locales/hi.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Cards/OrderCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Cards/OrderCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Functional/SubcategoryTabs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Functional/SubcategoryTabs.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Modals/CancelOrderItemModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Modals/CancelOrderItemModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Modals/ReturnOrderItemModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Modals/ReturnOrderItemModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/AdditionalSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/AdditionalSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/AverageRatingSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/AverageRatingSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/BottomSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/BottomSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductDetailSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductDetailSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductFaqSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductFaqSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductImgSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductImgSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductReviewsSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/ProductReviewsSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/QtyInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/QtyInput.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/SoldBySection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductDetailPage/SoldBySection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductFilter/AttributeSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductFilter/AttributeSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductFilter/BrandSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductFilter/BrandSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductFilter/CategorySection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductFilter/CategorySection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Products/ProductFilter/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Products/ProductFilter/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Skeletons/OrderCardSkeleton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Skeletons/OrderCardSkeleton.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/constants.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/constants.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/layouts/UserLayout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/layouts/UserLayout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/layouts/default.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/layouts/default.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/cookies.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/cookies.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/_app.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/_app.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/brands/[slug]/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/brands/[slug]/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/categories/[slug]/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/categories/[slug]/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/home/sections/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/home/sections/[id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/addresses/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/addresses/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/profile/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/notifications/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/notifications/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/orders/[slug]/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/orders/[slug]/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/orders/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/orders/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/refer-and-earn/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/refer-and-earn/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/transactions/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/transactions/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/wallet/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/wallet/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/my-account/wishlists/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/my-account/wishlists/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/products/search/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/products/search/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/home.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/home.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/orders.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/orders.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/order.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/order.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/settings.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/settings.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/OrderDetailView/OrderItems.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/OrderDetailView/OrderItems.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/OrderDetailView/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/OrderDetailView/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/Products/ProductDetailPageView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/Products/ProductDetailPageView.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/homePage/HomeSectionDetailView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/homePage/HomeSectionDetailView.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Infinitie04&quot;
+  }
+}</component>
+  <component name="GitToolBoxStore">
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="dev" />
+                    <option name="lastUsedInstant" value="1784703243" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Infinitietechnologies/hypercommerce-customer-web.git&quot;,
+    &quot;accountId&quot;: &quot;d662d511-8368-462a-b1bd-0faf90b746e2&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="php" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3GoSSpujHvedU1MCDCUY1hCaCGx" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;js.debugger.nextJs.config.created.client&quot;: &quot;true&quot;,
+    &quot;js.debugger.nextJs.config.created.server&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/meet21/Desktop/hypercommerce-codebase/hypercommerce-customer-web&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/meet21/Desktop/hypercommerce-codebase/hypercommerce-customer-web/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager" selected="npm.Next.js: server-side">
+    <configuration name="Next.js: debug client-side" type="JavascriptDebugType" uri="http://localhost:3000/">
+      <method v="2" />
+    </configuration>
+    <configuration name="Next.js: server-side" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PS-261.23567.149" />
+        <option value="bundled-php-predefined-a98d8de5180a-022fa7b8ab75-com.jetbrains.php.sharedIndexes-PS-261.23567.149" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a217eeab-f472-424b-925e-09c79dcec260" name="Changes" comment="" />
+      <created>1784636430931</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1784636430931</updated>
+      <workItem from="1784636431951" duration="651000" />
+      <workItem from="1784691005518" duration="8188000" />
+      <workItem from="1784714683571" duration="1821000" />
+      <workItem from="1784718436740" duration="2584000" />
+      <workItem from="1784775162256" duration="1643000" />
+      <workItem from="1784787524951" duration="2020000" />
+      <workItem from="1784896070122" duration="930000" />
+      <workItem from="1785120964747" duration="10829000" />
+      <workItem from="1785137972422" duration="8016000" />
+      <workItem from="1785155408287" duration="39000" />
+      <workItem from="1785212615798" duration="15000" />
+      <workItem from="1785212802980" duration="1593000" />
+      <workItem from="1785214514101" duration="62000" />
+      <workItem from="1785215131909" duration="4354000" />
+      <workItem from="1785224077888" duration="303000" />
+      <workItem from="1785231456869" duration="18000" />
+      <workItem from="1785236273612" duration="1701000" />
+    </task>
+    <task id="LOCAL-00001" summary="new design components are ready">
+      <option name="closed" value="true" />
+      <created>1784896977119</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1784896977119</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="new design components are ready" />
+    <MESSAGE value="working with new design" />
+    <option name="LAST_COMMIT_MESSAGE" value="working with new design" />
+  </component>
+</project>
