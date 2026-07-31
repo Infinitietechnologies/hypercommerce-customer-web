@@ -30,4 +30,5 @@ jobs:
       - name: Trigger aaPanel Webhook
         uses: tunnaduong/aapanel-deploy-action@main
         with:
+          panel_url: ${{ secrets.AAPANEL_URL }}
           webhook_key: ${{ secrets.AAPANEL_WEBHOOK_KEY }}
