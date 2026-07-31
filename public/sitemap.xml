@@ -3,7 +3,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -13,7 +17,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/about-us/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/about-us/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/about-us/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -23,7 +31,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/brands/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/brands/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/brands/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -33,7 +45,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/categories/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/categories/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/categories/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -43,7 +59,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/delivery-zones/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/delivery-zones/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/delivery-zones/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -53,7 +73,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/faqs/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/faqs/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/faqs/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -63,7 +87,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/privacy-policy/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/privacy-policy/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/privacy-policy/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -73,7 +101,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/products/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/products/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/products/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -83,7 +115,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/return-refund-policy/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/return-refund-policy/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/return-refund-policy/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -93,7 +129,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/seller-register/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/seller-register/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/seller-register/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -103,7 +143,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/shipping-policy/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/shipping-policy/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/shipping-policy/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -113,7 +157,11 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/stores/</loc>
+=======
+    <loc>https://hypercommerce-web.infinitietech.in/stores/</loc>
+>>>>>>> 7ee3577 (commit)
 =======
     <loc>https://hypercommerce-web.infinitietech.in/stores/</loc>
 >>>>>>> 7ee3577 (commit)
@@ -123,11 +171,14 @@
 
   <url>
 <<<<<<< HEAD
+<<<<<<< HEAD
     <loc>undefined/terms-and-conditions/</loc>
     <lastmod>2026-07-31</lastmod>
     <priority>0.4</priority>
   </url>
 =======
+=======
+>>>>>>> 7ee3577 (commit)
     <loc>https://hypercommerce-web.infinitietech.in/terms-and-conditions/</loc>
     <lastmod>2026-07-31</lastmod>
     <priority>0.4</priority>
@@ -258,5 +309,8 @@
     <lastmod>2026-07-31</lastmod>
     <priority>0.7</priority>
   </url>
+<<<<<<< HEAD
+>>>>>>> 7ee3577 (commit)
+=======
 >>>>>>> 7ee3577 (commit)
 </urlset>
