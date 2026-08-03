@@ -388,7 +388,8 @@
     "attachmentsRequired": {
       "title": "Attachments Required",
       "description": "Please upload required attachments for: {{products}}"
-    }
+    },
+    "taxIncluded": "Tax (included)"
   },
   "choices": "{{count}} Choices",
   "choose_active_offers": "Choose from {{count}} active offers to save more!",

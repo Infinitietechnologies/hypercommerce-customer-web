@@ -388,7 +388,8 @@
     "attachmentsRequired": {
       "title": "अटैचमेंट आवश्यक हैं",
       "description": "कृपया इन उत्पादों के लिए आवश्यक अटैचमेंट अपलोड करें: {{products}}"
-    }
+    },
+    "taxIncluded": "कर (शामिल)"
   },
   "choices": "{{count}} विकल्प",
   "choose_active_offers": "{{count}} सक्रिय ऑफ़र में से चुनें और अधिक बचत करें!",

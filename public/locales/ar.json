@@ -388,7 +388,8 @@
     "attachmentsRequired": {
       "title": "المرفقات مطلوبة",
       "description": "يرجى تحميل المرفقات المطلوبة لـ: {{products}}"
-    }
+    },
+    "taxIncluded": "الضريبة (مشمولة)"
   },
   "choices": "{{count}} خيارات",
   "choose_active_offers": "اختر من بين {{count}} عروض نشطة لتوفير المزيد!",

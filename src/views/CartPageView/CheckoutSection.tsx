@@ -342,16 +342,18 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
 
           {payment_summary.tax_total > 0 && (
             <>
-              <div className="flex justify-between">
-                <span className="text-foreground/60">
-                  {t("checkout.tax", { defaultValue: "Tax" })}
+              <div className="flex justify-between text-foreground/50">
+                <span>
+                  {t("checkout.taxIncluded", {
+                    defaultValue: "Tax (included)",
+                  })}
                 </span>
                 <span>{formatPrice(payment_summary.tax_total)}</span>
               </div>
               {payment_summary.tax_breakdown?.map((tax) => (
                 <div
                   key={tax.tax_rate_id}
-                  className="flex justify-between pl-2 text-xs text-foreground/50"
+                  className="flex justify-between pl-2 text-xs text-foreground/40"
                 >
                   <span>
                     {tax.title} ({tax.rate}%)
@@ -377,19 +379,6 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                 {t("checkout.codFee", { defaultValue: "COD fee" })}
               </span>
               <span>{formatPrice(payment_summary.cod_fee)}</span>
-            </div>
-          )}
-
-          {payment_summary.additional_charges_total > 0 && (
-            <div className="flex justify-between">
-              <span className="text-foreground/60">
-                {t("checkout.additionalCharges", {
-                  defaultValue: "Additional charges",
-                })}
-              </span>
-              <span>
-                {formatPrice(payment_summary.additional_charges_total)}
-              </span>
             </div>
           )}
 
