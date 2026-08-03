@@ -1,4 +1,5 @@
 import { payOrder } from "@/services/orders";
+import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
 import { addToast, Button } from "@heroui/react";
 import React, { FC, useEffect, useState } from "react";
 
@@ -98,6 +99,10 @@ const PayStack: FC<{
         const pr = res?.data?.payment_response;
 
         if (!res?.success || !pr?.access_code || !orderSlug) {
+          if (redirectToCheckoutOnRetryLimit(res)) {
+            setIsLoading(false);
+            return;
+          }
           addToast({
             title: res?.message || "Failed to start payment",
             color: "danger",

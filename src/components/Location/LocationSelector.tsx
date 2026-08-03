@@ -272,14 +272,9 @@ const LocationSelector = () => {
   };
 
   const handleCloseModal = () => {
-    if (selectedLocation) {
-      onClose();
-    } else {
-      addToast({
-        color: "danger",
-        title: "Please select a location to continue !",
-      });
-    }
+    // A market is always active by default, so closing without an explicit
+    // location pick is fine — never block the user with a validation error.
+    onClose();
   };
 
   const openLogin = () => {
@@ -356,7 +351,7 @@ const LocationSelector = () => {
       <Sheet
         isOpen={isOpen}
         onClose={handleCloseModal}
-        isDismissable={selectedLocation ? true : false}
+        isDismissable
         classNames={{
           base: "w-full overflow-hidden",
           body: "px-2 md:px-4 pb-6 flex flex-col gap-4",

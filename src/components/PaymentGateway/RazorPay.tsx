@@ -1,6 +1,7 @@
 import { useSettings } from "@/contexts/SettingsContext";
 import { getUserDataFromRedux } from "@/helpers/getters";
 import { payOrder } from "@/services/orders";
+import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
 import { RazorpayOrderData } from "@/types/ApiResponse";
 import { addToast, Button } from "@heroui/react";
 import React, { FC, useCallback, useEffect, useState } from "react";
@@ -182,6 +183,10 @@ const RazorPay: FC<{
         const pr = res?.data?.payment_response;
 
         if (!res?.success || !pr?.razorpay_order_id || !orderSlug) {
+          if (redirectToCheckoutOnRetryLimit(res)) {
+            setIsLoading(false);
+            return;
+          }
           addToast({
             title: res?.message || "Failed to start payment",
             color: "danger",

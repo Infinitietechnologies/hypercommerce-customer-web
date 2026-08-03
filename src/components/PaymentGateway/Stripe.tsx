@@ -18,6 +18,7 @@ import { brand } from "@/theme/tokens";
 import { useSettings } from "@/contexts/SettingsContext";
 import { getUserDataFromRedux } from "@/helpers/getters";
 import { payOrder } from "@/services/orders";
+import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
 
 const CheckoutForm: React.FC<{
   onSuccess: (slug?: string) => void;
@@ -245,7 +246,7 @@ const Stripe: React.FC<StripeProps> = ({
 
         if (res?.success && secret) {
           setClientSecret(secret);
-        } else {
+        } else if (!redirectToCheckoutOnRetryLimit(res)) {
           setError(res?.message || "Failed to initialize payment");
         }
       } catch (err) {

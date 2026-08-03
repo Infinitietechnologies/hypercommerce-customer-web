@@ -218,16 +218,28 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
                 </p>
               )}
             </div>
-            <Button
-              size="sm"
-              variant="light"
-              color="primary"
-              className="shrink-0 font-semibold text-[12px]"
-              onPress={handleSelectAddressClick}
-              isLoading={isLoading}
-            >
-              {t("change", { defaultValue: "Change" })}
-            </Button>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <Button
+                size="sm"
+                variant="light"
+                color="primary"
+                className="font-semibold text-[12px]"
+                onPress={handleSelectAddressClick}
+                isLoading={isLoading}
+              >
+                {t("change", { defaultValue: "Change" })}
+              </Button>
+              <Button
+                size="sm"
+                variant="light"
+                color="primary"
+                className="font-semibold text-[12px]"
+                startContent={<Plus className="h-3.5 w-3.5" />}
+                onPress={onAddAddressModalOpen}
+              >
+                {t("address.addNew")}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-3">

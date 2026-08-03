@@ -1,4 +1,5 @@
 import { payOrder } from "@/services/orders";
+import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
 import { addToast, Button } from "@heroui/react";
 import { FC } from "react";
 
@@ -16,6 +17,9 @@ const FlutterwavePayment: FC<{
       const link = res?.data?.payment_response?.link;
       if (res?.success && link) {
         window.location.href = link;
+        return;
+      }
+      if (redirectToCheckoutOnRetryLimit(res)) {
         return;
       }
       addToast({

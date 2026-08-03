@@ -123,6 +123,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           toastProps={{
             classNames: {
               base: "max-w-[calc(100vw-40px)] sm:max-w-md pr-6",
+              title: "whitespace-normal line-clamp-none overflow-visible",
               description: "whitespace-normal line-clamp-none overflow-visible text-ellipsis-none",
             },
 
