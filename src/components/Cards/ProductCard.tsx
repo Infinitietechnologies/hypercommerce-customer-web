@@ -22,7 +22,7 @@ import { useAdTracking } from "@/hooks/useAdTracking";
 
 interface ProductCardProps {
   product: Product;
-  /** Renders the amber "Add to Cart" button in the footer (used on the wishlist). */
+  /** Renders the "Add to Cart" button in the footer. Defaults to on; pass false to hide it. */
   showAddToCart?: boolean;
   /**
    * When provided, the heart becomes a "remove from wishlist" action that calls
@@ -45,7 +45,7 @@ interface ProductCardProps {
  */
 const ProductCard: FC<ProductCardProps> = ({
   product,
-  showAddToCart = false,
+  showAddToCart = true,
   onWishlistRemove,
   isWishlistRemoving = false,
 }) => {
