@@ -57,18 +57,12 @@ export const onLocationChange = () => {
 
   buttonIds.forEach((id) => document.getElementById(id)?.click?.());
 
-  // Self-fetching lists (subcategory sidebar/tabs, and any useInfiniteData list)
-  // aren't tied to a page refetch button. They carry market-scoped data
-  // (prices, product counts), so revalidate every `/infinite-data-*` SWR key
-  // on market change. SWR dedupes this against the button-driven refetches above.
-  mutate(
-    (key) =>
-      Array.isArray(key) &&
-      typeof key[0] === "string" &&
-      key[0].startsWith("/infinite-data"),
-    undefined,
-    { revalidate: true },
-  );
+  // A location/market change affects prices, availability, delivery ETAs and
+  // more across the whole app, so revalidate EVERY mounted SWR key — not just
+  // the pages that registered a refetch button above, or the /infinite-data
+  // lists. Manual-fetch views (e.g. HomeBuilder) are still covered by the button
+  // clicks above; SWR dedupes any overlap.
+  mutate(() => true, undefined, { revalidate: true });
 
   updateCartData(false, false, 0, false);
 };
