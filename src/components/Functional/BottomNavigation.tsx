@@ -112,7 +112,7 @@ const BottomNavigation = () => {
 
   return (
     <div
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${
+      className={`min-[1024px]:hidden fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${
         isVisible ? "translate-y-0" : "translate-y-full"
       }`}
     >

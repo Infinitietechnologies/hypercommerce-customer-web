@@ -7,6 +7,8 @@ import { userData } from "@/types/ApiResponse";
 import DepositModal from "../Modals/DepositModal";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation } from "react-i18next";
+import useSWR from "swr";
+import { getWallet } from "@/routes/api";
 
 type WalletCardPageProps = {
   loading: boolean;
@@ -23,6 +25,11 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
 
   const { formatPrice } = useSettings();
   const { t } = useTranslation();
+
+  const { data: wallet } = useSWR("user-wallet", async () => {
+    const res = await getWallet();
+    return res.success ? res.data : null;
+  });
 
   const formattedId =
     userData?.id
@@ -50,7 +57,7 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
               </div>
               {!loading && (
                 <div className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
-                  {formatPrice(userData?.wallet_balance)}
+                  {wallet?.formatted_balance ?? formatPrice(userData?.wallet_balance)}
                 </div>
               )}
             </div>

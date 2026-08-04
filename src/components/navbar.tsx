@@ -279,7 +279,6 @@ export const Navbar: FC = () => {
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                {AccountAction}
                 {CartAction}
               </div>
             </div>

@@ -3,6 +3,7 @@ import {
   ApiResponse,
   PaginatedResponse,
   Transaction,
+  Wallet,
   WalletTransaction,
 } from "@/types/ApiResponse";
 import {
@@ -80,5 +81,22 @@ export const getWalletTransactions = async (
   } catch (error) {
     console.error("API error:", error);
     return fallbackPaginateRes;
+  }
+};
+
+export const getWallet = async (
+  params: { access_token?: string | null } = {},
+): Promise<ApiResponse<Wallet>> => {
+  try {
+    const { access_token } = params;
+    const response = await api.get<ApiResponse<Wallet>>("/user/wallet", {
+      headers: access_token
+        ? { Authorization: `Bearer ${access_token}` }
+        : undefined,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
   }
 };

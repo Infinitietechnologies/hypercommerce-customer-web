@@ -161,7 +161,6 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
         <CardSlider
           autoplay
           loop
-          pagination
           slidesPerView={1}
           spaceBetween={14}
           breakpoints={style === "peek" ? { 640: { slidesPerView: 2 } } : undefined}

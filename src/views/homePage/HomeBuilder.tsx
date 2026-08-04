@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
@@ -32,7 +32,6 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   const [page, setPage] = useState<number>(initialLayout?.current_page ?? 1);
   const [lastPage, setLastPage] = useState<number>(initialLayout?.last_page ?? 1);
   const [loading, setLoading] = useState<boolean>(!initialLayout);
-  const didInitialFetch = useRef(false);
 
   const fetchPage = useCallback(async (nextPage: number) => {
     const category_slug = getActiveCategory();
@@ -58,10 +57,13 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   // Static-export builds have no SSR `initialLayout`, so the home sections are
   // never fetched until a category/location change fires the refetch button.
   // Fetch the first page on mount in that case so the home is populated by
-  // default (matching the active "All"/category tab).
+  // default (matching the active "All"/category tab). No ref guard here: under
+  // React Strict Mode the effect runs twice, and a ref guard would let the
+  // cancelled first run skip setLoading(false) while the second run bails —
+  // leaving the page stuck on the skeleton. The per-run `cancelled` closure
+  // already keeps this correct (the surviving run resolves loading).
   useEffect(() => {
-    if (didInitialFetch.current || initialLayout) return;
-    didInitialFetch.current = true;
+    if (initialLayout) return;
     let cancelled = false;
     // `loading` already starts true here (no initialLayout), so fetch directly
     // and only flip loading off once the request resolves — avoids a synchronous

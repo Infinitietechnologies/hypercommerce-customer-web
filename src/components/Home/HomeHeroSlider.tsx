@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
+import { Autoplay } from "swiper/modules";
 
 import { Image, Link } from "@/components/ui";
 import { HomeSectionItem } from "@/types/ApiResponse";
@@ -21,8 +21,7 @@ const HomeHeroSlider: FC<HomeHeroSliderProps> = ({ items }) => {
     <Swiper
       autoplay={{ delay: 4000, disableOnInteraction: false, pauseOnMouseEnter: true }}
       loop={items.length > 1}
-      modules={[Autoplay, Pagination]}
-      pagination={{ clickable: true }}
+      modules={[Autoplay]}
       slidesPerView={1}
       spaceBetween={12}
     >

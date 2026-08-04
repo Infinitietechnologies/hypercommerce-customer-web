@@ -9,6 +9,19 @@ export type TransactionQueryArgs = {
   search?: string;
 };
 
+export interface Wallet {
+  id: number;
+  user_id: number;
+  type: string;
+  balance: string | number;
+  blocked_balance: string | number;
+  /** Balance pre-formatted in the user's wallet currency (e.g. "₹1,250.00"). */
+  formatted_balance: string;
+  currency_code: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type WalletTransaction = {
   formatted_amount: string;
   id: number;
