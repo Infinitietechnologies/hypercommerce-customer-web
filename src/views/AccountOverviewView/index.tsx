@@ -38,7 +38,7 @@ const AccountOverviewView: FC<AccountOverviewViewProps> = ({ user }) => {
     { key: "addresses", href: "/my-account/addresses", icon: "solar:map-point-linear", label: t("userLayout.addresses") },
     { key: "wallet", href: "/my-account/wallet", icon: "solar:wallet-linear", label: t("userLayout.wallet") },
     { key: "wishlists", href: "/my-account/wishlists", icon: "solar:heart-linear", label: t("userLayout.myWishlists") },
-    { key: "shoppingList", href: "/shopping-list", icon: "solar:checklist-linear", label: t("shoppingList") },
+    { key: "shoppingList", href: "/shopping-list", icon: "solar:checklist-linear", label: t("userLayout.shoppingList") },
     {
       key: "refer",
       href: "/my-account/refer-and-earn",

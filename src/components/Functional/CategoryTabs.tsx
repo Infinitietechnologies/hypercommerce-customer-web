@@ -59,6 +59,10 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   const [isHydrated, setIsHydrated] = useState(false);
   const [showLeftShadow, setShowLeftShadow] = useState(false);
   const [showRightShadow, setShowRightShadow] = useState(false);
+  // When the tabs don't overflow, stretch them to fill the container width
+  // instead of leaving empty space on the right. Defaults to true (normal
+  // scroll) so a wide, overflowing strip never briefly stretches.
+  const [isOverflowing, setIsOverflowing] = useState(true);
   const swiperRef = useRef<SwiperType | null>(null);
 
   const { homeGeneralSettings } = useSettings();
@@ -105,6 +109,8 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
     const hasOverflow =
       swiper.width <
       swiper.slides.reduce((sum, slide) => sum + slide.offsetWidth, 0);
+
+    setIsOverflowing(hasOverflow);
 
     if (!hasOverflow) {
       // No overflow → no shadows at all
@@ -266,6 +272,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
           />
 
           <Swiper
+            className={isOverflowing ? "" : "ct-fill"}
             grabCursor
             slidesPerView="auto"
             slidesOffsetAfter={8}

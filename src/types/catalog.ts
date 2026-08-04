@@ -153,6 +153,12 @@ export interface Product {
   indicator: "veg" | "non_veg" | null;
   favorite: FavoriteItem[] | null;
   estimated_delivery_time: number | null;
+  /** Zone/country-based delivery window (backend resolveProductEta via country_iso2). */
+  delivery_eta?: {
+    min: number | null;
+    max: number | null;
+    unit: string;
+  } | null;
   ratings: number;
   rating_count: number;
   main_image: string;

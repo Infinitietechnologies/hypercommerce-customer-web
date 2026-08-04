@@ -433,11 +433,27 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
 
         // Fetch brand details for SEO
         const brandsRes = await getBrands({ market, per_page: 1000 });
-        const initialBrand = brandsRes?.data?.data?.find(b => b.slug === slug) || null;
+        let initialBrand =
+          brandsRes?.data?.data?.find((b) => b.slug === slug) || null;
 
-        // An unknown brand slug is not rejected by the products endpoint — it
-        // simply returns the unfiltered catalogue — so the page would otherwise
-        // render every product as if it belonged to that brand.
+        // The market-scoped brands list can miss a brand that genuinely has
+        // products (the home rail scopes brands by category, this page by
+        // market), which would wrongly 404 a real brand. Fall back to the brand
+        // carried on the returned products — but only when it matches the
+        // requested slug, so an unknown slug (for which the products endpoint
+        // returns the unfiltered catalogue) still 404s.
+        if (!initialBrand) {
+          const match = products?.data?.data?.find((p) => p.brand === slug);
+          if (match) {
+            initialBrand = {
+              id: match.brand_id ?? 0,
+              title: match.brand_name ?? formatString(slug),
+              slug,
+              logo: "",
+            } as Brand;
+          }
+        }
+
         if (!initialBrand) {
           return { notFound: true };
         }

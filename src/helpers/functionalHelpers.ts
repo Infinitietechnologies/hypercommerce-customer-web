@@ -608,3 +608,21 @@ export const getMarketFromContext = (
     return undefined;
   }
 };
+
+// Read the selected location's ISO2 country from the `userLocation` cookie
+// (JSON, set by LocationSelector). Used to pass `country_iso2` into the
+// product-detail fetch so the backend can resolve a delivery ETA window.
+export const getCountryIso2FromContext = (
+  context: GetServerSidePropsContext,
+): string | undefined => {
+  try {
+    const cookies = parse(context.req.headers.cookie || "");
+    const raw = cookies.userLocation;
+    if (!raw) return undefined;
+    const loc = JSON.parse(raw);
+    const iso = loc?.countryCode;
+    return iso ? String(iso).trim().toUpperCase() || undefined : undefined;
+  } catch {
+    return undefined;
+  }
+};

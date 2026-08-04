@@ -37,11 +37,13 @@ const PromoCard: React.FC<PromoCardProps> = ({
   }, [promo.description, expanded]);
 
   const getDiscountDisplay = () => {
+    if (promo.formatted_discount) {
+      return promo.formatted_discount;
+    }
     if (promo.discount_type === "percent") {
       return `${promo.discount_amount}%`;
-    } else {
-      return formatPrice(promo.discount_amount);
     }
+    return formatPrice(promo.discount_amount);
   };
 
   const isExpired = new Date(promo.end_date) < new Date();

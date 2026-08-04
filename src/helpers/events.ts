@@ -2,7 +2,6 @@ import { store } from "@/lib/redux/store";
 import { updateCartData } from "./updators";
 import { getCookie, setCookie } from "@/lib/cookies";
 import { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
-import { addToast } from "@heroui/react";
 import { clearRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { mutate } from "swr";
 
@@ -105,13 +104,9 @@ export const onAppLoad = () => {
     }
   }
 
-  const userLocation = getCookie("userLocation") as UserLocation;
-
-  if (!userLocation) {
-    // Open location modal if no location is set (removed the share link exclusion)
-    document.getElementById("location-modal-btn")?.click();
-    addToast({ color: "default", title: "Please Select Location First !" });
-  }
+  // Location bootstrap (default-market fallback, or the client's location when
+  // already permitted) is handled silently by LocationSelector on mount, so we
+  // no longer nag the shopper with a "select location" toast/modal here.
 };
 
 export const onHomeCategoryChange = () => {

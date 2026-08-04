@@ -11,7 +11,7 @@ import {
   Chip,
   Spinner,
 } from "@heroui/react";
-import { MapPin, Plus, Check } from "lucide-react";
+import { MapPin, Plus, Check, Phone } from "lucide-react";
 import { Address } from "@/types/ApiResponse";
 import { useTranslation } from "react-i18next";
 
@@ -169,9 +169,22 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
                                   `, ${address.address_line2}`}
                               </p>
                               <p className="text-xs text-default-500">
-                                {address.city}, {address.state}{" "}
-                                {address.zipcode}
+                                {[
+                                  address.landmark,
+                                  address.city,
+                                  address.state,
+                                  address.zipcode,
+                                  address.country,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")}
                               </p>
+                              {address.mobile && (
+                                <p className="mt-1 flex items-center gap-1 text-xs text-default-500">
+                                  <Phone className="h-3 w-3 shrink-0" />
+                                  {address.mobile}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>

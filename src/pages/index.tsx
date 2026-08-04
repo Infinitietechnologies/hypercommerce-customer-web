@@ -1,4 +1,8 @@
-import { getCookieFromContext, isSSR } from "@/helpers/getters";
+import {
+  getCookieFromContext,
+  getDefaultMarketCode,
+  isSSR,
+} from "@/helpers/getters";
 import { GetServerSideProps } from "next";
 import { getHomeLayout, getSettings } from "@/routes/api";
 
@@ -73,7 +77,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
         try {
           await loadTranslations(context);
 
-          const market = getMarketFromContext(context);
+          const cookieMarket = getMarketFromContext(context);
           const access_token = (await getAccessTokenFromContext(context)) || "";
 
           // Category from query if present, else the saved home-category cookie.
@@ -84,6 +88,14 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
           const category_slug =
             homeCategory && homeCategory !== "all" ? homeCategory : undefined;
 
+          // Fetch settings first so that, when the shopper has not picked a
+          // location yet (no `market` cookie), we can fall back to the store's
+          // default market instead of rendering an empty home behind a
+          // "select location" prompt.
+          const settings = await getSettings({ market: cookieMarket });
+          const market =
+            cookieMarket || getDefaultMarketCode(settings.data) || undefined;
+
           const layoutRes = await getHomeLayout({
             category_slug,
             page: 1,
@@ -91,7 +103,6 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
             market,
             access_token,
           });
-          const settings = await getSettings({ market });
 
           return {
             props: {

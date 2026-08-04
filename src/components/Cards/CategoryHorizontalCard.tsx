@@ -11,7 +11,7 @@ interface CategoryHorizontalCardProps {
 
 /** Paired pastel tint + matching darker title colour, cycled per category. */
 const TINTS = [
-  { bg: "bg-primary-50", text: "text-primary-700" },
+  { bg: "bg-warning-100", text: "text-primary-700" },
   { bg: "bg-secondary-100", text: "text-secondary-700" },
   { bg: "bg-success-100", text: "text-success-700" },
   { bg: "bg-warning-100", text: "text-warning-700" },

@@ -224,9 +224,12 @@ export const Navbar: FC = () => {
     <>
       <div className="w-full flex flex-col items-start">
         {demoMode && showDemoWarning && (
-          <div className="w-full bg-primary-100 text-primary-700 text-xs sm:text-sm px-3 py-1.5 flex items-center justify-center gap-2 relative">
-            ℹ️
-            <span className="font-semibold flex items-center gap-2">
+          <div className="relative flex w-full items-center justify-center gap-2 border-b border-amber-200/70 bg-amber-50 px-10 py-2 text-amber-800">
+            <Icon
+              icon="solar:info-circle-bold"
+              className="shrink-0 text-base text-amber-500"
+            />
+            <span className="text-center text-xs font-medium leading-snug sm:text-[13px]">
               {systemSettings?.customerDemoModeMessage
                 ? systemSettings.customerDemoModeMessage
                 : "Currently running in Demo Mode"}
@@ -237,9 +240,8 @@ export const Navbar: FC = () => {
               isIconOnly
               size="sm"
               radius="full"
-              color="primary"
-              variant="flat"
-              className="min-w-1 w-6 h-6"
+              variant="light"
+              className="absolute right-2 top-1/2 h-6 w-6 min-w-6 -translate-y-1/2 text-amber-700"
             >
               <Icon icon="solar:close-circle-linear" className="text-base" />
             </Button>

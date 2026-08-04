@@ -29,6 +29,7 @@ import { orderStatusColorMap } from "@/config/constants";
 import CancelOrderItemModal from "@/components/Modals/CancelOrderItemModal";
 import RatingModal from "@/components/Modals/RatingModal";
 import ShippingInfo from "./ShippingInfo";
+import DeliveryInfo from "./DeliveryInfo";
 import ReturnSheet from "./ReturnSheet";
 import { flattenTimeline } from "./timeline";
 
@@ -363,6 +364,16 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                     value={activeReturn.reason}
                   />
                 )}
+
+                {activeReturn.return_timeline &&
+                  activeReturn.return_timeline.length > 0 && (
+                    <div className="pt-3">
+                      <div className="mb-2 text-xs font-semibold text-foreground">
+                        {t("pages.order.refundProgress", "Refund progress")}
+                      </div>
+                      <StepTimeline steps={activeReturn.return_timeline} />
+                    </div>
+                  )}
               </div>
             </Card>
           )}
@@ -579,6 +590,8 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
 
           <ShippingInfo order={order} />
 
+          <DeliveryInfo order={order} />
+
           <Card shadow="none" radius="lg" className="border border-divider p-4 space-y-1">
             <div className="mb-1 text-sm font-semibold">
               {t("pages.order.orderDetails", "Order details")}
@@ -588,12 +601,6 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               value={getFormattedDate(order.created_at)}
             />
             <LabelValue label={t("order_id")} value={`#${order.id}`} />
-            {order.shipping_phone && (
-              <LabelValue
-                label={t("pages.order.updatesSentTo", "Updates sent to")}
-                value={order.shipping_phone}
-              />
-            )}
           </Card>
 
           {order.order_note && (

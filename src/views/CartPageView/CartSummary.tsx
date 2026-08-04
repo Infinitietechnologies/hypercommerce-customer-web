@@ -129,7 +129,7 @@ const CartSummary: FC<CartSummaryProps> = ({ cart }) => {
             <Icon icon="solar:info-circle-linear" className="shrink-0 text-sm" />
             <span>
               {t("cart.calculatedAtCheckout", {
-                defaultValue: "Delivery, taxes & fees calculated at checkout",
+                defaultValue: "Delivery & fees calculated at checkout",
               })}
             </span>
           </div>

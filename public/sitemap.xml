@@ -2,315 +2,200 @@
 <?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>1.0</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/about-us/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/about-us/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/about-us/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/about-us/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/brands/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/brands/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/brands/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/brands/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.8</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/categories/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/categories/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/categories/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.9</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/delivery-zones/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/delivery-zones/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/delivery-zones/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/delivery-zones/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/faqs/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/faqs/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/faqs/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/faqs/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/privacy-policy/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/privacy-policy/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/privacy-policy/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/privacy-policy/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.4</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/products/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/products/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/products/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/products/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.9</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/return-refund-policy/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/return-refund-policy/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/return-refund-policy/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/return-refund-policy/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.4</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/seller-register/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/seller-register/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/seller-register/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/seller-register/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/shipping-policy/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/shipping-policy/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/shipping-policy/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/shipping-policy/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.4</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/stores/</loc>
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/stores/</loc>
->>>>>>> 7ee3577 (commit)
-=======
-    <loc>https://hypercommerce-web.infinitietech.in/stores/</loc>
->>>>>>> 7ee3577 (commit)
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/stores/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.8</priority>
   </url>
 
   <url>
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <loc>undefined/terms-and-conditions/</loc>
-    <lastmod>2026-07-31</lastmod>
-    <priority>0.4</priority>
-  </url>
-=======
-=======
->>>>>>> 7ee3577 (commit)
-    <loc>https://hypercommerce-web.infinitietech.in/terms-and-conditions/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/terms-and-conditions/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.4</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/accessories-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/accessories-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/breakfast-cereals/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/breakfast-cereals/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/clothing-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/clothing-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/cosmetics/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/cosmetics/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/drugstore-health-products-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/drugstore-health-products-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/electronics/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/electronics/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/food-beverages/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/food-beverages/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/furniture/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/furniture/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/shoes/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/shoes/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/categories/skin-hair-care-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/categories/skin-hair-care-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/brands/adidas-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/brands/adidas-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/brands/generic-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/brands/generic-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/brands/nike/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/brands/nike/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/brands/samsung-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/brands/samsung-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/brands/sony-1/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/brands/sony-1/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/stores/cena-enterprise/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/stores/electronics-pro-store/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/stores/electronics-pro-store/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/stores/fashion-hub-store/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/stores/fashion-hub-store/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/stores/health-beauty-store/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/stores/health-beauty-store/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/stores/home-living-store/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://hypercommerce-web.infinitietech.in/stores/home-living-store/</loc>
-    <lastmod>2026-07-31</lastmod>
+    <loc>https://hypercommerce-web.eshopweb.store/stores/john-enterprise/</loc>
+    <lastmod>2026-08-03</lastmod>
     <priority>0.7</priority>
   </url>
-
-  <url>
-    <loc>https://hypercommerce-web.infinitietech.in/stores/john-enterprise-1/</loc>
-    <lastmod>2026-07-31</lastmod>
-    <priority>0.7</priority>
-  </url>
-<<<<<<< HEAD
->>>>>>> 7ee3577 (commit)
-=======
->>>>>>> 7ee3577 (commit)
 </urlset>

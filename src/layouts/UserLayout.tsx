@@ -1,9 +1,16 @@
 import React, { FC, ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { Icon } from "@iconify/react";
-import { Tabs, Tab } from "@/components/ui";
+import { Tabs, Tab, useDisclosure } from "@/components/ui";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
 import { useSettings } from "@/contexts/SettingsContext";
+
+const LogoutModal = dynamic(() => import("@/components/Modals/LogoutModal"), {
+  ssr: false,
+});
 
 interface UserLayoutProps {
   children: ReactNode;
@@ -20,6 +27,12 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
   const { t } = useTranslation();
   const router = useRouter();
   const { systemSettings } = useSettings();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const {
+    isOpen: isLogoutOpen,
+    onOpen: openLogout,
+    onClose: closeLogout,
+  } = useDisclosure();
 
   const menuItems = [
     { label: t("userLayout.myAccount"), icon: "solar:user-circle-linear", href: "/my-account", key: "my-account" },
@@ -70,46 +83,77 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
               </button>
             );
           })}
+
+          {/* Sign out — lives at the foot of the rail, danger-tinted so it
+              reads as a destructive action distinct from the nav rows. */}
+          <div className="my-1 h-px bg-divider" />
+          <button
+            type="button"
+            onClick={openLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-medium text-[13.5px] font-semibold text-start text-danger transition-colors hover:bg-danger-50"
+          >
+            <Icon icon="solar:logout-2-linear" width={18} height={18} className="shrink-0" />
+            <span className="truncate">{t("profileBtn.logout", "Log Out")}</span>
+          </button>
         </nav>
       </aside>
 
-      {/* Mobile navigation tabs */}
+      {/* Mobile navigation tabs — logout sits inline at the end of the strip */}
       <div className="md:hidden">
-        <Tabs
-          selectedKey={activeTab}
-          onSelectionChange={handleTabChange}
-          variant="underlined"
-          classNames={{
-            base: "w-full",
-            tabList:
-              "gap-2 w-full relative rounded-none p-0 border-b border-divider overflow-x-auto",
-            cursor: "w-full bg-primary",
-            tab: "max-w-16 px-2 h-14 min-w-0 shrink-0",
-            tabContent:
-              "group-data-[selected=true]:text-primary-600 text-xs font-medium",
-          }}
-        >
-          {menuItems.map((item) => (
-            <Tab
-              key={item.key}
-              textValue={item.label}
-              title={
-                <div className="flex flex-col items-center gap-1">
-                  <Icon icon={item.icon} width={18} height={18} />
-                  <span className="text-[10px] leading-tight whitespace-nowrap">
-                    {item.label}
-                  </span>
-                </div>
-              }
-            />
-          ))}
-        </Tabs>
+        <div className="flex items-center gap-2 border-b border-divider">
+          <Tabs
+            selectedKey={activeTab}
+            onSelectionChange={handleTabChange}
+            variant="underlined"
+            classNames={{
+              base: "flex-1 min-w-0",
+              tabList:
+                "gap-2 w-full relative rounded-none p-0 overflow-x-auto",
+              cursor: "w-full bg-primary",
+              tab: "max-w-16 px-2 h-14 min-w-0 shrink-0",
+              tabContent:
+                "group-data-[selected=true]:text-primary-600 text-xs font-medium",
+            }}
+          >
+            {menuItems.map((item) => (
+              <Tab
+                key={item.key}
+                textValue={item.label}
+                title={
+                  <div className="flex flex-col items-center gap-1">
+                    <Icon icon={item.icon} width={18} height={18} />
+                    <span className="text-[10px] leading-tight whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  </div>
+                }
+              />
+            ))}
+          </Tabs>
+
+          <button
+            type="button"
+            onClick={openLogout}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-medium border border-danger-200 bg-danger-50 px-2.5 py-1.5 text-[13px] font-semibold text-danger transition-colors hover:bg-danger-100"
+          >
+            <Icon icon="solar:logout-2-linear" width={16} height={16} />
+            <span className="hidden sm:inline">{t("profileBtn.logout", "Log Out")}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main content — cascade the pane's sections in on each load */}
       <div key={router.pathname} className="rd-stagger flex-1 w-full min-w-0">
         {children}
       </div>
+
+      <LogoutModal
+        isOpen={isLogoutOpen}
+        onClose={closeLogout}
+        userName={user?.name}
+        userEmail={user?.email}
+        profileImg={user?.profile_image}
+      />
     </div>
   );
 };

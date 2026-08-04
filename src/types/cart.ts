@@ -91,6 +91,8 @@ export interface CartItem {
     total_allowed_quantity: number;
     is_attachment_required?: boolean;
     attachment_mode?: string;
+    /** Distance-based quick ETA in minutes (may be null when no location). */
+    estimated_delivery_time?: number | null;
   };
   variant: {
     id: number;
@@ -102,6 +104,8 @@ export interface CartItem {
     stock: number;
     sku: string;
     is_addons?: boolean;
+    /** Structured option map for variant products, e.g. { finish: "Walnut" }. */
+    attributes?: Record<string, string> | null;
   };
   store: {
     id: number;
@@ -113,6 +117,12 @@ export interface CartItem {
       status: string;
     };
   };
+  /** Zone/country-based delivery window computed by the backend (CartService). */
+  delivery_eta?: {
+    min: number | null;
+    max: number | null;
+    unit: string;
+  } | null;
   addons?: CartItemAddon[];
   total_item_price?: number;
   total_item_special_price?: number;
@@ -197,6 +207,8 @@ export interface PromoCode {
   max_usage_per_user: number;
   min_order_total: string;
   max_discount_value: string;
+  /** Market-converted, pre-formatted discount from the backend (e.g. "₹1,660.00" or "20.00%"). */
+  formatted_discount?: string;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;

@@ -277,6 +277,44 @@ const OrderItems: FC<OrderItemsProps> = ({
                           </Chip>
                         </div>
 
+                        {/* Active shipment details */}
+                        {item.shipment && (
+                          <div className="mt-2 rounded-lg border border-divider bg-content2 p-2.5 space-y-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex min-w-0 items-center gap-1.5">
+                                <Icon icon="solar:delivery-linear" className="w-3.5 h-3.5 shrink-0 text-foreground/50" />
+                                <span className="truncate text-xs font-medium text-foreground">
+                                  {item.shipment.carrier_name || t("na", { defaultValue: "N/A" })}
+                                </span>
+                              </div>
+                              {item.shipment.customer_status_label && (
+                                <Chip size="sm" variant="flat" radius="sm" color="primary" classNames={{ content: "text-[11px]" }}>
+                                  {item.shipment.customer_status_label}
+                                </Chip>
+                              )}
+                            </div>
+                            {item.shipment.tracking_number && (
+                              <p className="text-[11px] text-foreground/50">
+                                {t("trackingNumber", { defaultValue: "Tracking #" })}:{" "}
+                                <span className="font-medium text-foreground/70">
+                                  {item.shipment.tracking_number}
+                                </span>
+                              </p>
+                            )}
+                            {item.shipment.tracking_url && (
+                              <a
+                                href={item.shipment.tracking_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              >
+                                {t("track", { defaultValue: "Track" })}
+                                <Icon icon="solar:arrow-right-up-linear" className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        )}
+
                         {/* Review Section */}
                         {item.status === "delivered" && (
                           <div className="pt-1">

@@ -183,6 +183,8 @@ export const getProductBySlug = async (
     slug?: string;
     access_token?: string | undefined;
     market?: string;
+    /** ISO2 country of the delivery location; enables backend delivery_eta. */
+    country_iso2?: string;
   } = {},
 ): Promise<ApiResponse<Product>> => {
   try {

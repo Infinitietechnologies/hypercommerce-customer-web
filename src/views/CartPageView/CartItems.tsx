@@ -23,6 +23,7 @@ const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
 });
 import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import { updateCartData } from "@/helpers/updators";
+import { formatDeliveryByDate } from "@/helpers/delivery";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { useTranslation } from "react-i18next";
@@ -84,6 +85,27 @@ const CartItems: FC<CartItemsProps> = ({
   }
 
   const lowStockLimit = Number(systemSettings?.lowStockLimit || 0) || null;
+
+  // Human-readable delivery ETA for a cart item. Prefers the backend's
+  // zone/country-based window (delivery_eta); falls back to the distance-based
+  // quick ETA (minutes) on the product.
+  const deliveryEtaLabel = (item: CartItem): string | null => {
+    const byDate = formatDeliveryByDate(item.delivery_eta);
+    if (byDate) {
+      return t("cart.deliveryBy", {
+        date: byDate,
+        defaultValue: `Delivery by ${byDate}`,
+      });
+    }
+    const mins = item.product?.estimated_delivery_time;
+    if (mins) {
+      return t("cart.deliveredInMins", {
+        count: mins,
+        defaultValue: `Delivered in ${mins} mins`,
+      });
+    }
+    return null;
+  };
 
   // Group items by store
   const groupedItems = useMemo(() => {
@@ -224,12 +246,41 @@ const CartItems: FC<CartItemsProps> = ({
 
   // Shared sub-blocks so the two layouts stay in sync -----------------------
 
-  const renderVariantMeta = (item: CartItem, isLowStock: boolean): ReactNode => (
+  // "finish" -> "Finish", "screen_size" -> "Screen Size"
+  const prettifyKey = (k: string) =>
+    k.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // Human-readable variant detail for a line. Prefers the backend's structured
+  // attribute map (e.g. "Finish: Walnut"); otherwise falls back to the variant
+  // title with the redundant "{product name} - " prefix stripped, since the API
+  // returns titles like "Extendable Dining Table - Walnut". Returns "" for
+  // simple/default products so no extra line renders.
+  const getVariantLabel = (item: CartItem): string => {
+    const attrs = (
+      item.variant as { attributes?: Record<string, string> | null }
+    )?.attributes;
+    if (attrs && typeof attrs === "object") {
+      const parts = Object.entries(attrs)
+        .filter(([, v]) => v != null && String(v).trim() !== "")
+        .map(([k, v]) => `${prettifyKey(k)}: ${String(v).trim()}`);
+      if (parts.length) return parts.join(" · ");
+    }
+    const title = (item.variant?.title || "").trim();
+    const name = (item.product?.name || "").trim();
+    if (title && name && title.toLowerCase().startsWith(name.toLowerCase())) {
+      return title.slice(name.length).replace(/^[\s|,/·\-–—:]+/, "").trim();
+    }
+    return title;
+  };
+
+  const renderVariantMeta = (item: CartItem, isLowStock: boolean): ReactNode => {
+    const variantLabel = getVariantLabel(item);
+    return (
     <>
-      {item.variant?.title && (
+      {variantLabel && (
         <div className="text-xs text-foreground/50 flex flex-wrap gap-2 items-center">
-          <span className="max-w-24 sm:max-w-32 truncate block">
-            {item.variant.title}
+          <span className="line-clamp-2 block">
+            {variantLabel}
           </span>
           {isLowStock && (
             <span className="text-warning-600 font-semibold text-xxs bg-warning-50 px-1.5 py-0.5 rounded whitespace-nowrap">
@@ -276,7 +327,8 @@ const CartItems: FC<CartItemsProps> = ({
         </button>
       )}
     </>
-  );
+    );
+  };
 
   const renderAttachment = (item: CartItem): ReactNode =>
     item.product.is_attachment_required ? (
@@ -443,6 +495,13 @@ const CartItems: FC<CartItemsProps> = ({
                         </span>
                       )}
 
+                      {/* Estimated delivery */}
+                      {deliveryEtaLabel(item) && (
+                        <div className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-success">
+                          <Icon icon="solar:clock-circle-linear" className="text-sm" />
+                          <span>{deliveryEtaLabel(item)}</span>
+                        </div>
+                      )}
                       {/* Actions */}
                       <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         <button
@@ -549,10 +608,10 @@ const CartItems: FC<CartItemsProps> = ({
                           </Link>
 
                           {/* VARIANT NAME & LOW STOCK INDICATOR */}
-                          {item.variant?.title && (
+                          {getVariantLabel(item) && (
                             <div className="text-xs text-foreground/50 flex flex-wrap gap-2 items-center mt-1">
-                              <span className="max-w-24 sm:max-w-32 truncate block">
-                                {item.variant.title}
+                              <span className="line-clamp-2 block">
+                                {getVariantLabel(item)}
                               </span>
                               {isLowStock && (
                                 <span className="text-warning-600 font-semibold text-xxs bg-warning-50 px-1.5 py-0.5 rounded whitespace-nowrap">

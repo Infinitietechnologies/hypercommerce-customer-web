@@ -3,7 +3,7 @@ import { join } from 'path';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
-dotenv.config();
+dotenv.config({ path: ['.env.local', '.env'] });
 
 // Get the site URL from environment variable
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -21,6 +21,13 @@ try {
 
     // Replace the placeholder with actual site URL
     robotsContent = robotsContent.replaceAll('{{SITE_URL}}', siteUrl);
+
+    // The file is written in place, so a previous build already consumed the
+    // placeholder — rewrite the absolute Sitemap line too.
+    robotsContent = robotsContent.replace(
+        /^Sitemap: \S+$/m,
+        `Sitemap: ${siteUrl.replace(/\/$/, '')}/sitemap.xml`,
+    );
 
     // Write back to robots.txt
     writeFileSync(robotsPath, robotsContent, 'utf8');

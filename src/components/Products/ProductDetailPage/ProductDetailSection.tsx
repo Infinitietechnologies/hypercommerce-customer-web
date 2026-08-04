@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import ProductIndicator from "@/components/Functional/ProductIndicator";
 import RatingStars from "@/components/RatingStars";
+import { formatDeliveryByDate } from "@/helpers/delivery";
 
 interface ProductDetailSectionProps {
   initialProduct: Product;
@@ -69,6 +70,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
     featured = "0",
     indicator,
     estimated_delivery_time,
+    delivery_eta,
     returnable_days,
   } = initialProduct;
 
@@ -442,13 +444,30 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
           the design. Only shown when the product carries a real estimated
           delivery time (minutes); no calendar date exists in the data, so we
           surface the minutes estimate rather than a fabricated "by <date>". */}
-      {!!estimated_delivery_time && (
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background">
-          <Icon icon="solar:delivery-bold" className="text-sm" />
-          {t("deliveredIn", "Delivered in")} {estimated_delivery_time}{" "}
-          {t("mins")}
-        </span>
-      )}
+      {(() => {
+        // Prefer the backend's country/zone-based window, shown as a concrete
+        // "Delivery by <date>" (worst-case max day). Fall back to the
+        // distance-based minutes estimate.
+        const byDate = formatDeliveryByDate(delivery_eta);
+        if (byDate) {
+          return (
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background">
+              <Icon icon="solar:delivery-bold" className="text-sm" />
+              {t("deliveryBy", "Delivery by")} {byDate}
+            </span>
+          );
+        }
+        if (estimated_delivery_time) {
+          return (
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background">
+              <Icon icon="solar:delivery-bold" className="text-sm" />
+              {t("deliveredIn", "Delivered in")} {estimated_delivery_time}{" "}
+              {t("mins")}
+            </span>
+          );
+        }
+        return null;
+      })()}
 
       {/* Actions */}
       {isOutOfStock ? (
@@ -529,7 +548,10 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
             />
             <span className="text-xxs font-medium text-foreground/70 sm:text-xs">
               {returnable_days
-                ? t("daysReturn", { count: returnable_days })
+                ? t("daysReturn", {
+                    count: returnable_days,
+                    defaultValue: "{{count}} Days Return",
+                  })
                 : t("easyReturns", "Easy Returns")}
             </span>
           </div>

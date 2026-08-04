@@ -235,10 +235,21 @@ const AddressModal: FC<AddressModalProps> = ({
       skipCityLookup.current = false;
       return;
     }
-    if (countryType !== "city" || !formData.country_code) return;
     // An empty query returns the backend's default list (20 cities), so the
     // dropdown is populated as soon as a city-type country is active.
     const q = debouncedCity.trim();
+    // Bail out — and clear any spinner left over from a previous country's
+    // in-flight lookup — when this is no longer a city country, or the debounced
+    // value has not yet caught up to the live input (e.g. right after a country
+    // reset clears the field).
+    if (
+      countryType !== "city" ||
+      !formData.country_code ||
+      debouncedCity !== citySearch
+    ) {
+      setCityLoading(false);
+      return;
+    }
     let active = true;
     setCityLoading(true);
     searchGeoCities(formData.country_code, q)
@@ -250,6 +261,7 @@ const AddressModal: FC<AddressModalProps> = ({
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedCity, countryType, formData.country_code]);
 
   const applyPincode = useCallback(
@@ -282,9 +294,20 @@ const AddressModal: FC<AddressModalProps> = ({
       skipZipLookup.current = false;
       return;
     }
-    if (countryType !== "zipcode" || !formData.country_code) return;
     const code = debouncedZip.trim();
-    if (code.length < 3) return;
+    // Bail out — and clear any spinner left over from a previous country's
+    // in-flight lookup — when this is no longer a zipcode country, the field is
+    // empty/too short, or the debounced value has not yet caught up to the live
+    // input (e.g. right after switching country resets the field to "").
+    if (
+      countryType !== "zipcode" ||
+      !formData.country_code ||
+      code.length < 3 ||
+      debouncedZip !== zipInput
+    ) {
+      setZipLoading(false);
+      return;
+    }
     let active = true;
     setZipLoading(true);
     resolvePincode(formData.country_code, code)
@@ -309,8 +332,10 @@ const AddressModal: FC<AddressModalProps> = ({
     const country = countries.find((c) => c.iso2 === iso2);
     setCitySearch("");
     setCityResults([]);
+    setCityLoading(false);
     setZipInput("");
     setPincodeCities([]);
+    setZipLoading(false);
     setFormData((prev) => ({
       ...prev,
       country: country?.name || "",

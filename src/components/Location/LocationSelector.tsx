@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Button,
   Divider,
   Sheet,
   useDisclosure,
   toast as addToast,
-  Alert,
   Spinner,
 } from "@/components/ui";
 import { Icon } from "@iconify/react";
@@ -18,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 import { staticLat, staticLng } from "@/config/constants";
 import { useSelector } from "react-redux";
+import { useRouter } from "next/router";
 import { RootState } from "@/lib/redux/store";
 import { Address } from "@/types/ApiResponse";
 
@@ -28,9 +28,17 @@ type SelectedLocation = {
 };
 
 const LocationSelector = () => {
-  const { defaultLocation, demoMode, systemSettings } = useSettings();
+  const { defaultLocation, demoMode } = useSettings();
   const { t } = useTranslation();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
+  const router = useRouter();
+  // On checkout the delivery address drives the market, so the header selector
+  // is shown locked (read-only) reflecting the selected address's location.
+  const checkoutSelectedAddress = useSelector(
+    (state: RootState) => state.checkout.selectedAddress,
+  );
+  const isCheckoutLocked =
+    router.pathname === "/cart/checkout" && !!checkoutSelectedAddress;
 
   const [selectedLatLng, setSelectedLatLng] = useState<{
     lat: number;
@@ -72,6 +80,83 @@ const LocationSelector = () => {
 
     initializeLocation();
   }, []);
+
+  // Auto-resolve a location + market on first load so the storefront never
+  // renders empty behind a "Select location" prompt. Priority:
+  //   • demo mode          → always the configured default-market location
+  //                          (never the client's GPS)
+  //   • client GPS granted → the precise device location + its market
+  //   • otherwise          → fall back to the default-market location
+  // Runs once, and only when there is no saved `userLocation` cookie yet.
+  const bootstrappedRef = useRef(false);
+  useEffect(() => {
+    if (!isInitialized || bootstrappedRef.current) return;
+
+    const existing = getCookie("userLocation") as UserLocation | null;
+    if (existing && existing.lat && existing.lng) return; // already chosen
+    bootstrappedRef.current = true;
+
+    const applyDefaultMarket = () =>
+      commitLocation(
+        {
+          lat: defaultLocation?.lat || staticLat,
+          lng: defaultLocation?.lng || staticLng,
+        },
+        demoMode ? "Bhuj ,Gujrat ,India" : t("locationSelector.defaultArea", "Default location"),
+        undefined,
+        "",
+        { silent: true },
+      );
+
+    // Demo mode always uses the default market location — never the client GPS.
+    if (demoMode) {
+      applyDefaultMarket();
+      return;
+    }
+
+    const resolveClientLocation = () => {
+      if (!navigator.geolocation) {
+        applyDefaultMarket();
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const latLng = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          const { placeName, countryCode } = await geocodeLatLng(latLng);
+          await commitLocation(
+            latLng,
+            placeName ||
+              t("locationSelector.currentLocation", "Current Location"),
+            countryCode,
+            "",
+            { silent: true },
+          );
+        },
+        () => applyDefaultMarket(),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      );
+    };
+
+    // Only read the device location when permission is ALREADY granted — never
+    // force a permission prompt on load. Users can still pick "Use my current
+    // location" from the sheet to grant it explicitly.
+    if (navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: "geolocation" as PermissionName })
+        .then((status) =>
+          status.state === "granted"
+            ? resolveClientLocation()
+            : applyDefaultMarket(),
+        )
+        .catch(() => applyDefaultMarket());
+    } else {
+      applyDefaultMarket();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, demoMode]);
 
   // Fetch saved addresses when the modal opens (logged-in users only)
   const fetchAddresses = useCallback(async () => {
@@ -161,6 +246,7 @@ const LocationSelector = () => {
     placeName: string,
     countryCode?: string,
     placeDescription = "",
+    options: { silent?: boolean } = {},
   ) => {
     // In demo mode the location is always forced to the default.
     const finalLatLng = demoMode
@@ -186,14 +272,20 @@ const LocationSelector = () => {
       lng: finalLatLng.lng,
       placeName: finalLocation.placeName,
       placeDescription: finalLocation.placeDescription,
+      // ISO2 (e.g. "IN") — powers country-based product delivery ETA.
+      countryCode: countryCode ? countryCode.toUpperCase() : undefined,
     };
     setCookie<UserLocation>("userLocation", userLocation);
 
     await resolveMarket(countryCode);
     onLocationChange();
 
-    onClose();
-    addToast({ title: "Location confirmed successfully", color: "success" });
+    // Silent auto-bootstrap (first load, no saved location) must not pop a
+    // toast or touch the — already closed — sheet.
+    if (!options.silent) {
+      onClose();
+      addToast({ title: "Location confirmed successfully", color: "success" });
+    }
   };
 
   // "Use my current location" — browser geolocation.
@@ -307,6 +399,14 @@ const LocationSelector = () => {
 
   // Header button label
   const getButtonText = () => {
+    if (isCheckoutLocked && checkoutSelectedAddress) {
+      const parts = [checkoutSelectedAddress.city, checkoutSelectedAddress.state]
+        .filter(Boolean)
+        .join(", ");
+      const text =
+        parts || checkoutSelectedAddress.address_line1 || "";
+      return text.length > 30 ? `${text.substring(0, 30)}...` : text;
+    }
     if (!isInitialized) return t("locationSelector.getting");
     if (selectedLocation) {
       const displayText = selectedLocation.placeDescription
@@ -325,8 +425,8 @@ const LocationSelector = () => {
     <div>
       <button
         type="button"
-        onClick={onOpen}
-        disabled={!isInitialized}
+        onClick={isCheckoutLocked ? undefined : onOpen}
+        disabled={!isInitialized || isCheckoutLocked}
         className="flex max-w-full items-center gap-2 min-[1024px]:w-auto shrink-0 text-left transition-colors disabled:opacity-60
           rounded-medium border border-shell-divider bg-transparent text-shell-foreground px-3.5 h-11 hover:border-primary"
       >
@@ -371,24 +471,6 @@ const LocationSelector = () => {
         }
       >
         <>
-            {demoMode && (
-              <Alert
-                color="warning"
-                title={
-                  systemSettings?.customerLocationDemoModeMessage
-                    ? systemSettings?.customerLocationDemoModeMessage
-                    : "Demo mode is enabled. Location will default automatically."
-                }
-                variant="faded"
-                classNames={{
-                  title: "text-xs",
-                  base: "py-2",
-                  alertIcon: "w-5",
-                  iconWrapper: "w-5 h-5",
-                }}
-              />
-            )}
-
             {/* Use my current location */}
             <Button
               onPress={handleUseCurrentLocation}

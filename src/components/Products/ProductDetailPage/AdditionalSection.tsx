@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { FC } from "react";
 import type { Product } from "@/types/ApiResponse";
 import { useTranslation } from "react-i18next";
+import { formatDeliveryByDate } from "@/helpers/delivery";
 
 interface AdditionalSectionProps {
   product: Product;
@@ -23,7 +24,13 @@ const AdditionalSection: FC<AdditionalSectionProps> = ({ product }) => {
     is_cancelable,
     cancelable_till,
     estimated_delivery_time,
+    delivery_eta,
   } = product;
+
+  // Country/zone-based delivery date (backend resolveProductEta), shown as a
+  // concrete "by <date>" from the worst-case max day; preferred over the
+  // distance-based minutes estimate.
+  const etaByDate = formatDeliveryByDate(delivery_eta);
 
   const getReturnLabel = () => {
     if (returnable_days)
@@ -41,10 +48,12 @@ const AdditionalSection: FC<AdditionalSectionProps> = ({ product }) => {
     {
       icon: "solar:delivery-linear",
       label: t("delivery"),
-      value: estimated_delivery_time
-        ? `${estimated_delivery_time} ${t("mins")}`
-        : null,
-      available: !!estimated_delivery_time,
+      value: etaByDate
+        ? t("deliveryByShort", { date: etaByDate, defaultValue: `By ${etaByDate}` })
+        : estimated_delivery_time
+          ? `${estimated_delivery_time} ${t("mins")}`
+          : null,
+      available: !!(etaByDate || estimated_delivery_time),
     },
     {
       icon: "solar:refresh-linear",

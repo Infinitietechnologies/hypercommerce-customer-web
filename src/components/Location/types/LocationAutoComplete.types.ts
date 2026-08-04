@@ -50,4 +50,6 @@ export interface UserLocation {
   lng: number;
   placeName: string;
   placeDescription: string;
+  /** ISO2 country code (e.g. "IN") of the selected location; used for product ETA. */
+  countryCode?: string;
 }

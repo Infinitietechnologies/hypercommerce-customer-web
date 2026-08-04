@@ -225,6 +225,18 @@ export interface OrderItem {
     to: string;
     unit: string;
   } | null;
+  /** Active (non-cancelled) shipment for this item; null when not yet shipped. */
+  shipment?: {
+    id: number;
+    status: string;
+    customer_status: string | null;
+    customer_status_label: string | null;
+    carrier_name: string | null;
+    tracking_number: string | null;
+    tracking_url: string | null;
+    picked_up_at: string | null;
+    delivered_at: string | null;
+  } | null;
   otp: string | null;
   otp_verified: number;
 

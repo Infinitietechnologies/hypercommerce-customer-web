@@ -56,7 +56,14 @@ export const getFormattedDate = (
 
     // Attempt to parse the date input
     if (typeof date === "string" || typeof date === "number") {
-      parsedDate = new Date(date);
+      // Backend timestamps like delivered_at/picked_up_at come as a bare
+      // "YYYY-MM-DD HH:MM:SS" (no "T", no offset). Chrome tolerates that but
+      // Safari/iOS returns Invalid Date, so normalise the space to "T".
+      const normalized =
+        typeof date === "string"
+          ? date.trim().replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/, "$1T$2")
+          : date;
+      parsedDate = new Date(normalized);
     } else if (date instanceof Date) {
       parsedDate = date;
     } else {
@@ -164,6 +171,27 @@ export function getSpecificSettings(
   }
 
   return setting.value;
+}
+
+/**
+ * Read the storefront's default market code from the `/settings` payload.
+ * The markets block (`{ current, default, available }`) is present at runtime
+ * but not in the static `Settings` tuple type, so we access it defensively.
+ * Falls back to the current market's code, then undefined. Used to seed a
+ * sensible market when the shopper has not picked a location yet, so the
+ * store never renders empty behind a "select location" prompt.
+ */
+export function getDefaultMarketCode(
+  settings: Settings | undefined | null,
+): string | undefined {
+  if (!Array.isArray(settings)) return undefined;
+  const marketsEntry = (
+    settings as unknown as { variable: string; value: unknown }[]
+  ).find((item) => item && typeof item === "object" && item.variable === "markets");
+  const markets = marketsEntry?.value as
+    | { current?: { code?: string } | null; default?: { code?: string } | null }
+    | undefined;
+  return markets?.default?.code || markets?.current?.code || undefined;
 }
 
 export const getCookieFromContext = <T>(

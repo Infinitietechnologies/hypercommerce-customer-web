@@ -4,7 +4,7 @@ import { config } from 'dotenv';
 import axios from 'axios';
 
 // Load environment variables
-config();
+config({ path: ['.env.local', '.env'] });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 const API_URL = process.env.NEXT_PUBLIC_ADMIN_PANEL_URL;

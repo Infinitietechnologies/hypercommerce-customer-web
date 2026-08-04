@@ -9,6 +9,8 @@ export interface ProductDetailPageParams {
   access_token: string;
   PER_PAGE?: number | string;
   market?: string;
+  /** ISO2 country of the delivery location; enables backend delivery_eta. */
+  country_iso2?: string;
 }
 
 /**
@@ -45,7 +47,7 @@ export interface ProductDetailPageData {
 export async function fetchProductDetailPageData(
   params: ProductDetailPageParams
 ): Promise<ProductDetailPageData> {
-  const { slug, access_token, PER_PAGE = 20, market } = params;
+  const { slug, access_token, PER_PAGE = 20, market, country_iso2 } = params;
 
   console.log("========== PRODUCT DETAIL FETCH ==========");
   console.log("Slug:", slug);
@@ -57,6 +59,7 @@ export async function fetchProductDetailPageData(
         slug,
         access_token,
         market,
+        country_iso2,
       }),
       getProducts({
         exclude_product: slug,

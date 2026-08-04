@@ -1,7 +1,10 @@
 import { GetServerSideProps } from "next";
 import { getSlugFromContext, isSSR } from "@/helpers/getters";
 import { getAccessTokenFromContext } from "@/helpers/auth";
-import { getMarketFromContext } from "@/helpers/functionalHelpers";
+import {
+  getMarketFromContext,
+  getCountryIso2FromContext,
+} from "@/helpers/functionalHelpers";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import ProductDetailPageView from "@/views/Products/ProductDetailPageView";
 import { ArrowRight, Package, ShoppingCart } from "lucide-react";
@@ -24,6 +27,8 @@ import { useEffect } from "react";
 import { addRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { useDispatch } from "react-redux";
 import { loadTranslations } from "../../../../i18n";
+import { getCookie } from "@/lib/cookies";
+import type { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
 
 export interface ProductPageProps {
   initialProduct?: Product;
@@ -37,8 +42,10 @@ const PER_PAGE = 20;
 
 // SWR fetcher for client
 const fetcher = async (slug: string) => {
+  const userLocation = getCookie<UserLocation>("userLocation");
   const res = await getProductBySlug({
     slug,
+    country_iso2: userLocation?.countryCode,
   });
   if (!res.success || !res.data) {
     console.error(res.message || "Failed to fetch product");
@@ -284,6 +291,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         const access_token =
           (await getAccessTokenFromContext(context)) || "";
         const market = getMarketFromContext(context);
+        const country_iso2 = getCountryIso2FromContext(context);
 
         await loadTranslations(context);
 
@@ -296,6 +304,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           slug,
           access_token,
           market,
+          country_iso2,
         });
 
         console.log(

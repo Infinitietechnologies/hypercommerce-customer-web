@@ -10,6 +10,7 @@ import { getAddresses } from "@/routes/api";
 import { updateCartData } from "@/helpers/updators";
 import { useTranslation } from "react-i18next";
 import { Address } from "@/types/ApiResponse";
+import { resolveMarketForCountry } from "@/helpers/market";
 
 type AddressSectionProps = {
   onAddAddressModalOpen: () => void;
@@ -142,17 +143,18 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
     setTempSelectedId(addressId);
   }, []);
 
-  const handleConfirmSelection = useCallback(() => {
-    if (tempSelectedId) {
-      const selectedAddr = allAddresses.find(
-        (addr) => addr.id.toString() === tempSelectedId,
-      );
-      if (selectedAddr) {
-        updateCartData(false, false, selectedAddr?.id?.toString() || "");
-        dispatch(setSelectedAddress(selectedAddr));
-        onOpenChange();
-      }
-    }
+  const handleConfirmSelection = useCallback(async () => {
+    if (!tempSelectedId) return;
+    const selectedAddr = allAddresses.find(
+      (addr) => addr.id.toString() === tempSelectedId,
+    );
+    if (!selectedAddr) return;
+    dispatch(setSelectedAddress(selectedAddr));
+    onOpenChange();
+    // The delivery address is authoritative for the market on checkout: switch
+    // currency to the address's country, then recompute the cart in that market.
+    await resolveMarketForCountry(selectedAddr.country_code);
+    await updateCartData(false, false, selectedAddr.id?.toString() || "");
   }, [tempSelectedId, allAddresses, dispatch, onOpenChange]);
 
   const getAddressTypeColor = (type: string) => {
