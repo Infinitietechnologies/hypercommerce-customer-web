@@ -1032,3 +1032,100 @@ Whole-codebase sweeps rather than a feature area.
   the Stripe/Paystack/Flutterwave amount handling (only Razorpay was traced end to end).
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 18:52 (24-hour format)
+**Feature / Module:** Session 11 — Critical data stored locally (requested theme)
+**Documentation File:** CLAUDE.md · CODE_REVIEW_INSTRUCTIONS.md
+**Reviewer:** Claude
+
+## Scope
+Theme-based sweep across every client-side storage medium, rather than a feature area.
+- Storage media examined: `localStorage`, `sessionStorage`, cookies, `redux-persist`,
+  `CacheStorage` (PWA service worker), and in-memory `window` globals
+- Files reviewed
+  - `next.config.ts` (PWA options, `headers()` cache directives)
+  - `src/lib/cookies.ts`, `src/helpers/auth.ts` (`handleLogout` cleanup)
+  - `src/components/PaymentGateway/` (all 5 components — persistence check)
+  - `src/services/adTrackingService.ts`, `src/lib/analytics.ts`
+  - `src/components/Location/LocationSelector.tsx`, `src/helpers/events.ts`
+  - `src/types/cart.ts` (`CartResponse` / `PaymentSummary` — what the persisted cart holds)
+  - `src/layouts/default.tsx` (only `sessionStorage` use in the codebase)
+- Repo-wide scans: card-field names; all `setCookie` vs `deleteCookie` call sites;
+  `caches.*` / service-worker unregister; `sessionStorage`
+
+## Findings Summary
+- Critical: 0
+- High: 1
+- Medium: 1
+- Low: 0
+- Total Issues: 2
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 48 — Service-worker cache never purged; no cache directives on private routes (High)
+- Issue No.: 49 — Three cookies including precise location survive logout (Medium)
+
+## Existing Issues Confirmed
+- Issue No.: 41 — Incomplete logout cleanup for `localStorage`. Issue 49 is the same failure for
+  cookies and 48 for `CacheStorage`; all three are filed separately because the storage medium
+  and the remediation differ, and 41's row explicitly enumerated `localStorage` only. Together
+  they show one root cause: logout cleans up by hand and the hand-written list is incomplete.
+- Issue No.: 15 — `cart` persisted. Re-confirmed with its contents: `CartResponse` carries
+  `user_id` and a `PaymentSummary` including `wallet_balance` and `wallet_amount_used`, so the
+  persisted copy is financial rather than just a list of items. Exposure is bounded because
+  `handleLogout` does dispatch `clearCart()`.
+- Issue No.: 3 — Token and user object in JS-readable cookies. Unchanged.
+
+## Safe Areas Verified
+- **No payment data is stored anywhere, which was the headline question of this session.** A
+  repo-wide search for `card_number`, `cvv`, `cvc`, `expiry`, `exp_month`, `exp_year`, and
+  `card_holder` returns nothing. None of the five gateway components writes to `localStorage`,
+  `sessionStorage`, or a cookie. All four gateways hand off to their own SDK or a redirect, so
+  card data never enters the storefront's control. This is the correct architecture and it holds.
+- **`sessionStorage` is used exactly once** in the entire codebase — `layouts/default.tsx:67`/`:72`
+  for a soft-update dismissal flag. No personal data.
+- **Analytics carries no PII.** `lib/analytics.ts` sends product, store, and category names plus
+  the numeric user id and `login_method` / `user_type` properties. No email, mobile, or address is
+  passed to any analytics call.
+- **Ad-tracking storage holds no personal data** — `adTrackingService.ts:38-52` persists only
+  impression and click queues of ad identifiers.
+- **`checkoutSlice` is not persisted**, so the selected delivery address never reaches
+  `localStorage`. Re-verified from the storage side this session.
+- **`__cartAttachments`** holds uploaded files in a `window` global only — never serialised to any
+  persistent store, and cleared by `resetCheckOutState`. The control-flow objection to it stays
+  with issue 22; there is no storage defect.
+- **`handleLogout` does clear the Redux slices** — `logout()`, `clearCart()`, and
+  `clearRecentlyViewed()` — so the persisted auth, cart, and recently-viewed data is emptied at
+  sign-out even though `persistor.purge()` is never called.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 (n/a to this theme) · 4.7 ·
+  4.8 · 4.9 (n/a) · 4.10 (n/a) · 4.11 (n/a) · 4.12 · 4.13.
+- **The predicted clean result on payment data held.** Session 11 was proposed with the
+  expectation that no card handling would be found because every gateway delegates to its own
+  SDK, and that is exactly what the scan showed. It is recorded as a verified-safe result rather
+  than converted into a speculative finding.
+- **Issue 48 states its own evidentiary limit inside the row.** The generated `sw.js` is
+  gitignored and `node_modules` is not installed in this checkout, so the library's default
+  `runtimeCaching` rules could not be inspected and it is *not* claimed that a specific
+  authenticated response is definitely on disk. What is verified and sufficient on its own:
+  aggressive front-end nav caching is explicitly enabled, no `runtimeCaching`/`exclude` narrows
+  it, no private route carries `no-store`, and nothing in the codebase ever purges `CacheStorage`.
+  The missing purge is a defect regardless of which entries the defaults write.
+- **The cookie audit is the cleaner half of this session**: 5 cookies written, 2 deleted at
+  logout. `userLocation` carries precise `lat`/`lng` plus a human-readable place description at a
+  365-day expiry, which is the most personally identifying value found in any client store during
+  the whole review — more so than the ad-tracking or recently-viewed data.
+- A pattern worth naming across 41, 48, and 49: logout is implemented as a hand-maintained list of
+  things to clear. Every new client-side store added since has been missed. The durable fix is to
+  invert it — enumerate what may survive a session and clear everything else.
+- Not covered and carried to the remaining requested sessions: stale-state-after-write behaviour
+  (session 12) and redundant request patterns (session 13).
+
+---
