@@ -41,6 +41,15 @@ shape unilaterally — other production clients consume it.
 15. **Quantify systemic issues.** "17 of 34 pages lack an error state — list attached" beats
     "error states are inconsistent".
 16. **Rank findings** Critical → High → Medium → Low in the report.
+17. **Check conformance to standard Next.js practice, and treat a missing standard as a
+    finding.** A review covers not just whether the existing code is wrong, but whether the
+    conventions a production Next.js site is expected to have are actually in place — error
+    boundaries, custom error pages, per-locale `lang`/`dir`, CSP, `next/link` / `next/image` /
+    `next/font` / `next/script` / `next/dynamic` used instead of hand-rolled equivalents,
+    correct data-fetching and hydration patterns. If the codebase hand-rolls something the
+    framework already provides, or simply omits a baseline practice, report it — cite the
+    convention being bypassed and the concrete cost. The grounded checklist is §4.12.11;
+    the same rule applies to any standard not yet listed there.
 
 ---
 
@@ -341,7 +350,45 @@ and that offline fallbacks do not serve stale prices or stock. `compiler.removeC
 strips `console.*` except `error`/`warn` in production — do not rely on a stripped log for
 diagnostics, and never log tokens/PII to `console.error`, which survives.
 
-#### 4.12.11 Pages Router discipline
+#### 4.12.11 Standard practices baseline — **a missing standard is a finding**
+Do not only review the code that exists; check that the conventions a production Next.js site
+is expected to have are actually **present**. If a standard practice is absent, that absence
+is a reportable issue in its own right (Bug Type `Code Smell`, or the category it protects —
+a missing error boundary is `Functional`, a missing CSP is `Security`).
+
+Re-verify each of these against the current tree before filing — they are true as of this
+writing, and some may since have been fixed:
+
+- **No React error boundary exists anywhere in `src/`.** A render-time throw in any component
+  blanks the whole page with no recovery. Standard practice is an error boundary in
+  `_app.tsx` plus one around independently-failing regions (home sections, PDP blocks).
+- **No custom `500` / `_error.tsx` page.** Server and client runtime errors fall back to the
+  default Next.js error screen, unstyled and untranslated.
+- **Custom 404 lives at `pages/404/index.tsx`, not the conventional `pages/404.tsx`.**
+  Verify it actually serves unknown routes rather than merely being a reachable `/404` URL —
+  and check it under `trailingSlash: true`.
+- **`_document.tsx` hard-codes `<Html lang="en">`** while the app ships `en`/`hi`/`ar` and
+  Arabic forces RTL. `lang` and `dir` must follow the active locale — as written, every
+  Arabic page is served as LTR English to screen readers and translation tooling.
+- **No `Content-Security-Policy`** among the `next.config.ts` security headers (see 4.12.10).
+- **No test runner or `test` script** in `package.json` — nothing to regress against (4.13).
+- **`@typescript-eslint/no-floating-promises` is switched off** in `eslint.config.mjs`, so an
+  un-awaited async call that swallows a rejection will not be caught by lint. Weigh this
+  whenever you review async code.
+
+ESLint does extend `eslint-config-next/core-web-vitals` (which carries the `jsx-a11y` and
+Core Web Vitals rules) and `tsconfig.json` has `strict: true` — both are correct and should be
+reported as verified-safe, not re-flagged.
+
+Beyond this list, apply the general standard: **if the framework or ecosystem has an
+established convention for something the code does by hand, say so.** Notably `next/script`
+for third-party scripts with an explicit `strategy` (3 usages today — check the strategy is
+right and that no raw `<script>` tag was hand-injected), `next/font` for every font face,
+`next/link` for every internal href, `next/image` for every raster asset, and `next/dynamic`
+for every client-only heavy module. Cite the convention being bypassed and the cost of
+bypassing it.
+
+#### 4.12.12 Pages Router discipline
 No `app/` directory, no App Router files, no `"use client"` / `"use server"` directives
 (meaningless here — `/src/app/` is gitignored and must stay unused); no React Server
 Components or `async` page components; no `next/navigation` imports (`useRouter` comes from
