@@ -62,14 +62,21 @@ shape unilaterally — other production clients consume it.
 | File | Role | Write mode |
 |---|---|---|
 | `QA/code_review.csv` | **Master defect register.** Every code review issue ever found, permanently. | **Append only.** Never edit or delete an existing row except to update its Status / Dev. Notes / Tester columns. |
-| `QA/code_review_append.csv` | **Latest session only** — for direct import into Google Sheets. | **Overwrite** each session (header + this session's rows). |
+| `QA/code_review_append.csv` | **Latest session only** — for direct import into Google Sheets. | **Overwrite** each session with this session's rows. **No header row** — see below. |
 | `QA/code_review_testing_history.md` | **Permanent chronological audit trail** of every session. | **Append only.** Never rewrite or delete a past entry. |
 
-Both CSVs use this header, **exactly**, as line 1:
+Both CSVs use the same 19 columns, in this order:
 
 ```
 Date,NO,Module/Feature,Documentation File,Bug Title,Bug Description,Bug Type,Severity,Priority,Preconditions,Steps to Reproduce,Expected Result,Actual Result,Impact,Suggested Fix,Status,Dev. Notes,Tester Status,Tester Notes
 ```
+
+**Where the header row goes:**
+
+- `QA/code_review.csv` — **keeps** the header as line 1, permanently. It is the master register.
+- `QA/code_review_append.csv` — **no header row at all.** The file contains only this session's
+  issue rows, starting at line 1, so it pastes straight under the existing rows in Google Sheets
+  without a header line landing in the middle of the data.
 
 ---
 
@@ -104,7 +111,8 @@ Date,NO,Module/Feature,Documentation File,Bug Title,Bug Description,Bug Type,Sev
 ### 3.3 After the review
 
 11. Append every new confirmed issue to `QA/code_review.csv`.
-12. Replace the contents of `QA/code_review_append.csv` with the header + only this session's issues.
+12. Replace the contents of `QA/code_review_append.csv` with **only this session's issue rows —
+    no header row** (§6). Fill `Date` on the first row only.
 13. Append a new entry to `QA/code_review_testing_history.md` using the template in §7 — with the
     real current date and time, scope, categories completed, issue counts, safe areas, and notes.
 14. Never delete or alter previous history entries.
@@ -553,7 +561,25 @@ Flag both when a review touches build or tooling.
   BAD:  Cart total is wrong, tax is applied twice, and the discount is ignored
   GOOD: Cart total is wrong - tax is applied twice; the discount is ignored
   ```
-- `Date` is `YYYY-MM-DD`. `NO` is a bare integer, sequential, never reused.
+- **`Date` is written only once per day — on the first issue of that day. Leave it empty on
+  every following row until the date changes.** Do not repeat the same date down the column.
+  - Format is `YYYY-MM-DD`, and it must be the **real current date**, never a guessed one.
+  - The column is still present on every row — an empty `Date` is a leading comma, so the row
+    still carries 19 columns and 18 commas.
+  - This applies to **both** CSVs, and is judged per file: in `code_review.csv` compare against
+    the last row already in the file, so a session on a day that already has rows starts with
+    an empty `Date` too. In `code_review_append.csv` the first row of the session carries the
+    date and the rest are empty.
+  - A session spanning midnight writes the new date on the first row belonging to the new day.
+
+  ```
+  2026-08-05,1,Cart,...
+  ,2,Cart,...
+  ,3,Checkout,...
+  2026-08-07,4,PDP,...
+  ```
+
+- `NO` is a bare integer, sequential, never reused.
 - `Module/Feature` names the storefront area (e.g. `Cart`, `Checkout - Payment`, `PDP`,
   `My Account - Orders`, `Search & Filters`, `Theme/Design System`).
 - `Documentation File` is the doc the review was performed against
