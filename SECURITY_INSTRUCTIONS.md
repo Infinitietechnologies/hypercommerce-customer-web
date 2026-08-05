@@ -91,33 +91,98 @@ localStorage)** — one successful injection yields session theft rather than de
 
 ## 4. Review areas — every one, every session
 
-1. **Credential handling** — where the token lives, how it is read, whether it reaches a URL, a
-   log, an analytics payload, a third-party SDK, or a `Referer` header; expiry and revocation
-   behaviour; what survives logout across cookies, `localStorage`, `sessionStorage`, IndexedDB and
-   `CacheStorage`.
-2. **Injection sinks** — `dangerouslySetInnerHTML`, `innerHTML`, dynamic `<script>`, `eval`,
-   template injection into `next/script`; every sink's data provenance (admin vs **seller** vs
-   customer) since this is a multi-seller marketplace.
-3. **Redirects and deep links** — `?next=`, `?returnUrl=`, share links, gateway callbacks;
-   `javascript:` and absolute-URL handling; open-redirect and reverse-tabnabbing.
-4. **Client-side authorization** — every protected route present in `PROTECTED_ROUTES` **and**
-   guarded in `getServerSideProps`; IDOR-shaped behaviour where an id from the URL is rendered
-   without server scoping.
-5. **Payment flows** — amount and currency provenance (must be server-authoritative), gateway
-   callback trust, idempotency, and what is handed to gateway SDKs.
-6. **Headers and platform config** — CSP, HSTS, frame options, `nosniff`, `Referrer-Policy`,
-   `Permissions-Policy`, `images.remotePatterns` breadth, `dangerouslyAllowSVG`, and whether they
-   survive the static-export build mode.
-7. **Secrets exposure** — anything under `NEXT_PUBLIC_*` is in the browser bundle; source maps;
-   hard-coded keys; verbose error text reaching the UI.
-8. **Market and tenancy scoping** — losing the `X-Market` header, or any path that could render
-   another market's or another customer's data.
-9. **Dependency and supply chain** — `npm audit`; note which flagged packages actually ship in the
-   browser bundle; unpinned or abandoned packages; the `@iconify`/font/CDN fetches.
-10. **Rate limiting and abuse** — client behaviour that enables unlimited OTP sends, password
-    attempts, or mail relay through an authenticated endpoint.
-11. **PWA and offline** — what the service worker persists, and whether authenticated responses
-    are written to a shared on-disk cache.
+Work every area. An area with nothing to report is still reported as examined. Sub-items are
+written from what has already been found in this codebase, so they point at the live surface.
+
+### 4.1 Credential storage & lifecycle
+Where the bearer token is written (cookie flags `httpOnly`/`secure`/`sameSite`, `localStorage`,
+`redux-persist`, IndexedDB, `CacheStorage`) · whether the full user record accompanies it · token
+in a URL, a `Referer`, a log line, an analytics payload, an error report, or a third-party SDK
+call · token lifetime and whether anything expires it client-side · **what survives logout in
+every store** — enumerate what is written versus what is cleared, per medium · behaviour on a
+shared device after sign-out · multi-tab and multi-account switching.
+
+### 4.2 Authentication flows
+OTP send/verify rate limiting as exercisable from the client · whether an OTP or reset token is
+ever logged, put in a URL, or left in state after use · the password-reset chain end to end
+(identifier → OTP → reset token → password) for a step that can be skipped or replayed · whether
+a password change invalidates existing sessions · account-enumeration signal differences between
+"user exists" and "user not found" on login, register, and the availability checks · social login
+token handling (Firebase `idToken` provenance and where it is sent).
+
+### 4.3 Authorization as the client enforces it
+Every protected route present in `PROTECTED_ROUTES` **and** guarded in `getServerSideProps` — the
+client HOC alone is not protection · a route whose guard is inert because the pathname never
+matches · IDOR-shaped behaviour: an order, address, wallet transaction, or wishlist id taken from
+the URL and rendered without the server scoping it · any client-side role/permission check that
+gates UI over data the API would still return · guard behaviour under the static-export build mode
+where `getServerSideProps` does not run.
+
+### 4.4 Injection sinks
+Every `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `document.write`, `eval`,
+`new Function`, and dynamic `<script>` · for each sink, establish **data provenance**: admin
+(trusted-ish), **seller** (semi-trusted — this is a multi-seller marketplace), or customer
+(untrusted) · whether any sanitisation exists at all · markdown/HTML rendered in product
+descriptions, store descriptions, promos, CMS pages, reviews and notifications · SVG upload and
+rendering paths · `next/script` bodies composed from settings.
+
+### 4.5 Redirects, deep links & window handling
+`?next=` and any `returnUrl`-style parameter — absolute URLs, protocol-relative `//evil.tld`,
+`javascript:` and `data:` schemes · gateway return and callback URLs · the share and deep-link
+landing routes · `window.open` and `target="_blank"` without `rel="noopener noreferrer"`
+(reverse tabnabbing) · `postMessage` senders and receivers with no origin check · anything reading
+`document.referrer` or `window.name`.
+
+### 4.6 Payments
+Amount and currency provenance — must be server-authoritative, never computed or adjusted
+client-side · what is passed into each gateway SDK · whether a client-side gateway callback is
+treated as proof of payment without server confirmation · idempotency of order placement and
+whether a retry can create a duplicate order or charge · a cancelled or failed session that can be
+resurrected to paid · order id / slug guessability on the payment route.
+
+### 4.7 Headers & platform configuration
+**CSP** (present at all, and whether it is meaningful) · HSTS · `X-Frame-Options` /
+`frame-ancestors` · `X-Content-Type-Options` · `Referrer-Policy` · `Permissions-Policy` ·
+`Cross-Origin-*` policies · `images.remotePatterns` breadth and `dangerouslyAllowSVG` ·
+`poweredByHeader` · whether any of these survive the **static-export build mode**, where
+`headers()` is inert · `Cache-Control` on authenticated routes.
+
+### 4.8 Secrets & information exposure
+Everything under `NEXT_PUBLIC_*` is inlined into the browser bundle — audit each one · Firebase,
+gateway, and map keys and whether their provenance is settings-driven or build-time · source maps
+in production · hard-coded credentials, internal hostnames, or debug endpoints · verbose error
+text, stack traces, or raw SDK messages reaching the UI · debug logging left on hot paths · what
+`compiler.removeConsole` does and does not strip (`error` and `warn` survive).
+
+### 4.9 Tenancy & market scoping
+Any request that bypasses the shared axios instance and therefore loses the `X-Market` header ·
+cached data that can be served across a market switch · any path that could render another
+market's catalogue or pricing · anything keyed only by product/order id without a market or user
+dimension · cross-user data in a shared cache.
+
+### 4.10 Client-side abuse surface
+Unlimited OTP sends, password attempts, or availability probes driven from the UI · an
+authenticated endpoint usable as a mail relay to an attacker-chosen address · unbounded file
+upload (size, type, count) on reviews, returns and cart attachments · anything that lets a client
+enumerate ids or users through timing or response differences.
+
+### 4.11 Dependencies & supply chain
+`npm audit` — and for each flagged package, whether it actually ships in the **browser bundle** ·
+unpinned, abandoned, or single-maintainer packages in the runtime dependency tree · any script
+loaded from a third-party origin at runtime (fonts, icons, analytics, gateway SDKs) and what it
+could do if compromised · integrity attributes where applicable · `postinstall` scripts.
+
+### 4.12 PWA, offline & local persistence
+What the service worker caches, and whether authenticated or market-scoped responses reach a
+shared on-disk cache · whether the cache is purged on logout · what an installed PWA retains
+between accounts on a shared device · offline fallbacks serving stale prices, stock, or personal
+data · service-worker update and invalidation on a new deploy.
+
+### 4.13 Privacy
+Precise location, contact details, and order history in client-side stores and their retention ·
+PII in analytics, ad-tracking, or error-reporting payloads · PII in URLs (which reach server logs
+and `Referer`) · cookie consent behaviour and whether it actually gates anything · data left
+behind for the next user of a shared device.
 
 ---
 

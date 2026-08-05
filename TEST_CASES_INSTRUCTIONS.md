@@ -95,24 +95,104 @@ follow that: it makes a case that documents present behaviour as well as intende
 
 ## 4. Coverage model — what a complete area looks like
 
-For each area, a complete set covers:
+Every area gets cases across all nine dimensions below. An area is not "covered" until each
+dimension has been considered and either specified or explicitly recorded as not applicable.
 
-1. **Happy path** — the intended flow end to end.
-2. **Negative** — invalid input, refused states, wrong ownership.
+1. **Happy path** — the intended flow end to end, one case per meaningful variation.
+2. **Negative** — invalid input, refused states, wrong ownership, missing preconditions.
 3. **Boundary** — min/max/step/stock, empty and single-item lists, first and last page, longest
-   permitted string, zero and maximum amounts.
+   permitted string, zero, negative and maximum amounts, decimal and precision limits.
 4. **The four screen states** — loading, empty, error, loaded (`CLAUDE.md` §6.3), one case each.
 5. **Responsive** — mobile 375, tablet 769, desktop 1280, and both sides of the 1024 cutover.
-6. **i18n/RTL** — `en`, `hi`, and `ar` with RTL mirroring.
-7. **Accessibility** — keyboard reachability, focus trap and restore, accessible names.
-8. **Regression** — one case per confirmed defect and security finding in the area.
+6. **i18n/RTL** — `en`, `hi`, and `ar` with mirroring, plus locale number/currency/date formatting.
+7. **Accessibility** — keyboard reachability and operation, focus trap and restore, `Esc`,
+   accessible names, announced errors.
+8. **Regression** — one case per confirmed defect, security finding, and code-review issue in the
+   area, with `Linked Bug ID` set.
 9. **Market scoping** — behaviour after a market switch, per `CLAUDE.md` §7.4.
 
-### Areas
-Auth · Catalog (home, categories, brands, stores, search, PDP) · Cart & offline cart ·
-Checkout & payments (four gateways) · Orders & returns · Account (profile, addresses,
-notifications, wishlists) · Wallet & transactions · Markets · Content & SEO · Cross-cutting
-(states, RTL, a11y, performance).
+---
+
+## 4A. Per-area case checklists
+
+### Auth & session
+Each login method (phone OTP, Google, Apple, email+password) · OTP resend, wrong code, expired
+code, attempt limit · registration with an email or mobile already in use · social sign-in that
+requires completing a profile · the three-step password reset on both the email and Firebase-SMS
+gateways · logout · session expiry and the 401 path · protected route while logged out and the
+`?next=` return · **each of the four screen states on the auth sheet** · demo-mode restrictions.
+
+### Catalog & search
+Category, brand and store listings including empty · search with zero, one and many results ·
+special characters and a very long query · filters singly, combined, and cleared · filter state
+surviving refresh and a shared URL · sort orders · pagination first/last page and no duplicates
+across pages · infinite scroll and back-navigation position · PDP variant selection changing
+price and stock · out-of-stock variant · gallery and lightbox · reviews and FAQ sections ·
+delivery estimate present and absent · invalid or deleted slug returning 404 · share link to a
+removed product.
+
+### Cart & offline cart
+Add from card, PDP and buy-now · quantity at **minimum, maximum, step and stock boundaries**,
+including a minimum that is not a multiple of the step · remove · save for later and restore ·
+multi-store cart · **offline cart merged on login**, including the case where the server rejects
+one item — nothing may be silently lost · promo apply, remove, invalid, expired, and invalidated
+by a cart change · attachments · a price or stock change while the item sits in the cart · totals
+reconciling to line items.
+
+### Checkout & payments
+Address selection, add-during-checkout, and editing or deleting the selected address · wallet
+full and partial · COD · **each of the four gateways** through success, user-cancel, decline and
+timeout · closing the gateway sheet mid-payment · browser back after payment starts · refresh on
+the payment page · **double-submit** and **retry after a lost response — a duplicate order must
+not appear** · switching gateway after a failure · the amount shown matching the amount charged.
+
+### Orders, returns & account
+Order list empty, single page, many pages, filtered by status and date · order detail per status ·
+cancel order and cancel single item · return with and without the reason codes that require
+images · cancel a return · addresses: add, edit, delete, set default, and **delete the address
+currently selected at checkout** · profile save, email change and verification, mobile change and
+OTP, avatar upload including an oversized and a non-image file · **profile page when its fetch
+fails** · notifications list, read state and deep links · wishlists add, remove, move, empty.
+
+### Wallet & transactions
+Balance display including when the payload is missing · recharge per enabled gateway · **a decimal
+amount** · minimum, maximum and zero · failed and cancelled recharge · balance freshness
+immediately after success · transaction list paging, filtering and empty · wallet at checkout for
+partial and full payment.
+
+### Markets & currency
+Switching market from the header selector **and** by choosing a delivery address in another
+country · after each switch: currency symbol, number format, catalogue, categories, brands,
+stores, home layout and search all follow · nothing from the previous market survives without a
+reload · formatting for large, zero and negative amounts · a market whose format rules differ in
+separator, decimal places or symbol position · a market format field that is absent or null.
+
+### Content & SEO
+CMS pages render their HTML · sandbox and design-system routes are not indexable · canonical URLs
+agree with the trailing-slash convention · sitemap entries all resolve · title, description and
+JSON-LD present on the pages that need them.
+
+### Cross-cutting
+One case per screen for each of the four states · responsive at all four widths · all three
+locales including RTL mirroring · keyboard-only traversal of each flow · toast on success **and**
+failure for every async action · optimistic updates rolling back · retry actually retrying ·
+browser back/forward and refresh mid-flow · offline and maintenance responses · behaviour on a
+shared device after logout · PWA installed and after a new deploy.
+
+---
+
+## 4B. Priority order for a new register
+
+With no automated coverage today, write cases in this order so the register is useful early:
+
+1. **Regression cases for every Critical and High** already recorded in `QA/code_review.csv`,
+   `QA/defects.csv` and `QA/security.csv` — these are known-real and pin behaviour that has
+   already broken once.
+2. **Money paths** — cart totals, promo, wallet, checkout, the four gateways, currency formatting.
+3. **Auth and authorization** — the flows whose failure is a security event.
+4. **Pure-function boundaries** that a unit test can cover cheaply — quantity clamping, currency
+   formatting, input sanitising, pagination arithmetic.
+5. Everything else by traffic: PDP, listings, search, home.
 
 ---
 

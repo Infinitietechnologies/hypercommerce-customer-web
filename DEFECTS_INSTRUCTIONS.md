@@ -103,22 +103,116 @@ straight under the existing rows in Google Sheets.
 
 ---
 
-## 4. Coverage — every area, every session it is in scope
+## 4. Coverage — every area in scope, every session
 
-1. **Auth** — phone OTP, Google, Apple, email/password, register, forgot-password, logout, session
-   expiry, protected-route redirects and the `?next=` return.
-2. **Catalog** — home, categories, brands, stores, search, filters, sort, pagination and infinite
-   scroll, PDP (variants, gallery, reviews, FAQ, delivery estimate).
-3. **Cart** — add, update quantity (min/max/step/stock), remove, save for later, offline cart
-   before login and the merge on login, promo codes, attachments.
-4. **Checkout & payments** — address selection, wallet, COD, and all four gateways (Stripe,
-   Razorpay, Paystack, Flutterwave) including cancel, failure, and back-button paths.
-5. **Orders & account** — order list and detail, cancel, return, addresses, profile, wallet,
-   transactions, notifications, wishlists, refer-and-earn.
-6. **Markets** — switching market changes currency, catalogue, and pricing consistently; no stale
-   data survives the switch (`CLAUDE.md` §7.4).
-7. **Cross-cutting** — the four states, responsive behaviour, RTL, keyboard navigation, toasts on
-   success *and* failure, back/forward navigation, refresh mid-flow, offline and maintenance.
+Work every applicable item. An item with nothing to report is still reported as exercised. The
+sub-items are written from what the code review found, so they point at where defects are likely.
+
+### 4.1 Auth & session
+Phone OTP (send, resend, wrong code, expired code, too-many-attempts, invalid number) · Google
+sign-in · Apple sign-in · email + password login · registration including the email/mobile
+already-taken check · the complete-profile prompt for a new social account · forgot-password
+across all three steps (identifier → OTP → new password) on both the email and the Firebase-SMS
+gateway · logout from an account page and from elsewhere · session expiry mid-flow and the 401
+behaviour · a protected route requested while logged out, and whether `?next=` returns you to the
+intended page after signing in · signing in on one tab while another tab is open · the demo-mode
+account restrictions.
+
+### 4.2 Catalog & search
+Home layout sections and their ordering · categories (listing, nested, empty category) · brands ·
+stores (listing and detail) · search (no results, one result, many, special characters, very long
+query, rapid typing) · filters and sort (single, multiple, combined with search, cleared) ·
+whether filter state survives a page refresh and a shared URL · pagination and infinite scroll
+(first page, last page, duplicates across pages, back-navigation returning to position) · PDP
+(variant selection and price change, gallery and lightbox, out-of-stock variant, reviews, FAQ,
+delivery estimate, similar products) · a deleted or invalid product slug · a share link to a
+removed product.
+
+### 4.3 Cart & offline cart
+Add to cart from a card, from the PDP, and via buy-now · quantity increase/decrease against
+**minimum, maximum, step and stock** boundaries · remove · save for later and restore · cart with
+one item, many items, and items from multiple stores · **offline cart while logged out, then the
+merge on login** — check nothing is lost, duplicated, or silently dropped when the server rejects
+an item · promo code apply, remove, invalid, expired, and one that becomes invalid after a cart
+change · attachments upload and removal · a product that goes out of stock or changes price while
+sitting in the cart · cart totals against the line items.
+
+### 4.4 Checkout & payments
+Address selection, add-during-checkout, and editing the selected address · wallet full and
+partial payment · COD · **all four gateways — Stripe, Razorpay, Paystack, Flutterwave** — each
+through success, user-cancel, declined card, and gateway timeout · closing the gateway sheet
+mid-payment · the browser back button after payment starts · refreshing on the payment page ·
+double-submitting the place-order button · retrying after a failed or lost response (**check
+whether a duplicate order appears**) · switching gateway after a failure · order note and
+attachments carried through · the final amount shown matching the amount charged.
+
+### 4.5 Orders, returns & account
+Order list (empty, one page, many pages, filters by status and date) · order detail for every
+status · cancel an order and a single item · return request including the reason codes that
+require images · cancel a return · addresses (add, edit, delete, set default, delete the one
+selected at checkout) · profile (save, email change and verification, mobile change and OTP,
+avatar upload) · notifications (list, read state, deep links) · wishlists (add, remove, move
+between lists, empty state) · refer-and-earn.
+
+### 4.6 Wallet & transactions
+Balance display · recharge through each enabled gateway · **a decimal recharge amount** · minimum
+and maximum amounts · a failed or cancelled recharge · balance refresh timing after a successful
+recharge · transaction list paging, filtering, and empty state · using the wallet at checkout for
+partial and full payment.
+
+### 4.7 Markets & currency
+Switching market from the header location selector **and** by selecting a delivery address in a
+different country · after each switch confirm currency symbol, price format, catalogue contents,
+categories, brands, stores, home layout and search results all follow · confirm nothing from the
+previous market survives without a hard reload · currency formatting for large amounts, zero, and
+negative values · a market whose format rules differ (separator, decimal places, symbol position).
+
+### 4.8 The four screen states
+Per `CLAUDE.md` §6.3, every screen needs all four. For each screen: **loading** (skeleton mirrors
+the final layout, not a bare spinner) · **empty** (illustration, headline, body, primary action) ·
+**error** (human message *and* a working retry) · **loaded**. Force the error state by taking the
+backend offline — a failed request must never render as an empty result.
+
+### 4.9 Responsive & layout
+Test at **375 (mobile) · 769 (tablet) · 1280 (desktop)**, and on both sides of the **1024 header
+cutover**. Check: bottom nav on mobile and header nav on desktop · sheets on mobile vs modals on
+desktop · no horizontal page scroll at any width · long product titles, long store names, and
+long addresses · a 2-line vs 1-line price · sticky elements not covering content · the redesign
+counterpart at `/redesign/*` as the pixel target (`CLAUDE.md` §6.1).
+
+### 4.10 i18n & RTL
+Exercise the app in **`en`, `hi`, and `ar`**. Check every visible string is translated (untranslated
+English is a defect) · **Arabic mirrors correctly** — spacing, alignment, icon direction, carousels,
+chevrons, and the back arrow · numbers, currency and dates render per locale · text does not
+overflow or truncate in the longer language · switching language mid-flow keeps state.
+
+### 4.11 Accessibility as experienced
+Keyboard-only: reach and operate every control, including cards, steppers, sheets and gateway
+dialogs · focus visible at all times · modals and sheets trap focus and restore it on close, and
+`Esc` closes · screen reader announces icon-only buttons meaningfully · form errors are announced
+and linked to their field · heading order is sensible · `prefers-reduced-motion` respected.
+
+### 4.12 Feedback & recovery
+Every async action disables its trigger and shows inline loading · **success and failure both
+surface a toast** — silent success is a defect · destructive actions confirm first · optimistic
+updates roll back visibly on failure · retry actions actually retry rather than reloading the
+page · nothing leaves the user stuck with no route forward.
+
+### 4.13 Navigation & lifecycle
+Browser back and forward through each flow · refresh mid-flow (checkout, OTP, multi-step forms) ·
+deep-linking directly into a mid-flow URL · opening a link in a new tab · the share and deep-link
+landing routes · trailing-slash behaviour · a 404 for an unknown route.
+
+### 4.14 Network & platform
+Slow connection (throttled) · going offline mid-action and returning online · a backend 500 and a
+503 maintenance response · the PWA installed and launched from the home screen · behaviour after
+a new deploy while a tab is open · **on a shared device, what the previous account leaves behind
+after logout** · at minimum Chrome and Safari, including iOS Safari.
+
+### 4.15 Performance as felt
+Time to first meaningful content on home, PDP and listings · scroll smoothness in long lists ·
+layout shift as images load · input latency in search and the quantity stepper · repeated
+identical requests visible in the network panel during ordinary navigation.
 
 ---
 
