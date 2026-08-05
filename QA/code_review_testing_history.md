@@ -175,3 +175,101 @@ Any assumptions, limitations, or observations made during the review.
   configuration and persist allowlist.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 09:21 (24-hour format)
+**Feature / Module:** Session 2 — Auth & session
+**Documentation File:** CLAUDE.md · src/lib/redux/CLAUDE.md · src/pages/CLAUDE.md · src/features/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/services/auth.ts` (all 20 endpoint callers)
+  - `src/lib/redux/slices/authSlice.ts`
+  - `src/lib/redux/store.ts` (persist config + middleware)
+  - `src/lib/firebase.ts`
+  - `src/features/auth/useForgotPassword.ts`
+  - `src/features/auth/components/AuthSheetHost.tsx` (route-param entry)
+  - `src/stores/authSheetStore.ts`
+  - `src/pages/forgot-password/index.tsx`
+  - `src/components/Functional/FirebaseInitializer.tsx` (config source + fcm-token write)
+  - `src/helpers/auth.ts` (re-read for the login/register/OTP call paths)
+- Directories reviewed: `src/features/auth/`, `src/lib/redux/`, auth surface of `src/services/`
+- Total files inspected: 10
+
+## Findings Summary
+- Critical: 1
+- High: 1
+- Medium: 2
+- Low: 0
+- Total Issues: 4
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 13 — Credentials sent in the URL query string (Critical)
+- Issue No.: 14 — Token and user record persisted to localStorage by redux-persist (High)
+- Issue No.: 15 — `cart` persisted against the documented rule (Medium)
+- Issue No.: 16 — Firebase auth messages hard-coded English (Medium)
+
+## Existing Issues Confirmed
+- Issue No.: 11 — `any` usage. Additional location found: `services/auth.ts:302`,
+  `resendVerificationEmail` returns `ApiResponse<any>`. Recorded here rather than as a new row.
+- Issue No.: 3 — JS-readable token cookie. Issue 14 is the distinct localStorage vector, filed
+  separately because the fix is different; the two together mean the token exists in two
+  script-readable stores.
+- Issue No.: 9 — `serverSideAuthGuard` unused. Corroborated by `src/pages/CLAUDE.md`, which
+  already documents that nothing calls it and warns not to assume a route in `PROTECTED_ROUTES`
+  is protected. The documentation is ahead of the code here.
+
+## Safe Areas Verified
+- **SSR token param pattern** — `getUserData` (`services/auth.ts:259-269`) passes `access_token`
+  through `params`; the interceptor moves it into the Authorization header and deletes it from
+  params, so it never reaches the query string. Correct, and the deliberate counter-example to
+  issue 13.
+- **`phoneLogin`** (`services/auth.ts:119-138`) destructures `access_token` out of the body and
+  sends it as a header — the correct shape.
+- **Firebase configuration source** — `FirebaseInitializer.tsx:123` builds the config from the
+  settings API (`getFirebaseConfig` → `authSettings.fireBaseApiKey`), not from `NEXT_PUBLIC_*`
+  env vars, so no Firebase keys are inlined into the bundle at build time.
+- **`fcm-token`** is genuinely written at `FirebaseInitializer.tsx:107`, so the three reads in
+  `helpers/auth.ts` (`:588`, `:671`, `:744`) are not dead — FCM registration works.
+- **Password-reset flow** — `features/auth/useForgotPassword.ts` is well formed: four separate
+  in-flight flags, every user-facing string via `t()`, both branches of the Firebase/custom
+  gateway split handled, and the reset token held in React state only — never persisted, logged,
+  or put in a URL.
+- **Reset flow reachability** — `pages/forgot-password/index.tsx` is an intentional redirect stub
+  to `/?auth=forgot`, and `AuthSheetHost.tsx:36-43` handles that parameter. The flow is reachable.
+  (An initial `.tsx`-only search suggested the three reset services had no callers; widening the
+  search to `.ts` found the hook. Verified before filing, so no issue was raised.)
+- **`authSlice` reducers** — `login`, `logout`, and `setUserDataRedux` are correct; `logout`
+  clears all three fields, and the partial-merge branch guards the null case.
+- **`serializableCheck`** in `store.ts:31-35` correctly ignores the redux-persist action.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 (n/a — no market-scoped reads in the auth
+  surface) · 4.5 · 4.6 (n/a — the auth sheet UI itself is a later session; the hook's states were
+  checked) · 4.7 · 4.8 · 4.9 · 4.10 (no date handling in scope) · 4.11 (n/a to this layer) ·
+  4.12 · 4.13.
+- **Issue 13 is the most serious finding of both sessions so far.** Fixing it requires the panel
+  to accept body parameters on those four routes, so it is not a storefront-only change — and
+  per CLAUDE.md the API is shared with other production clients, so the change must be
+  coordinated rather than made unilaterally.
+- Issues 13 and 14 compound issue 3: with all three open, the session credential is exposed in
+  the request URL, in a script-readable cookie, and in localStorage.
+- `console.log` noise exists in `lib/firebase.ts` (`:52`, `:63`, `:114`, `:161`, `:209`, `:212`).
+  Not filed as an issue — `compiler.removeConsole` strips `console.log` from production builds,
+  so the impact is limited to development, and filing it would pad the register.
+- `reset()` in `useForgotPassword.ts:195-199` does not clear `identifier` or `token` from state.
+  Reviewed and judged not a defect: `verify` always overwrites both before step 3 can be reached,
+  so there is no path that reuses a stale token. Recorded here so a later session does not
+  re-derive it.
+- Not reviewed and carried forward: the auth sheet components themselves (`LoginForm`,
+  `RegisterForm`, OTP inputs) and their four screen states, and `syncOfflineCartToServer`, which
+  belongs with the cart session.
+
+---
