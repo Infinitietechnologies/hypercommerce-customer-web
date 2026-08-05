@@ -3,61 +3,48 @@
 # Defect Testing Session
 
 **Date:** 2026-08-05
-**Time:** 06:03 (24-hour format)
-**Feature / Module:** F7 — Catalog & search (defects pass)
+**Time:** 07:22 (24-hour format)
+**Feature / Module:** F8 — Markets & currency (defects pass)
 **Documentation File:** DEFECTS_INSTRUCTIONS.md · CLAUDE.md
 **Tester:** Claude
 
 ## Scope
-- **The first pass that could genuinely exercise the product.** Catalogue routes are public, so
-  with the dev server running they render without a session. The backend was still unreachable,
-  which made this an effective test of failure behaviour.
-- Flows tested: categories listing, brands listing, stores listing, search results, and the
-  rendered visible text of each with a dead catalogue backend.
-- Breakpoints tested: none. Locales tested: English only.
-- Total screens exercised: 4 rendered and inspected as visible text.
+- Environment: dev server plus a mock backend on `127.0.0.1:9099` returning `{ success: true,
+  data: [] }` and logging request headers.
+- Flows tested: market header propagation on the server render path, with and without a market
+  cookie, across the brands and categories listings.
+- Breakpoints tested: none. Locales tested: none.
+- Total screens exercised: 2, plus header-level observation of every backend call they made.
 
 ## Findings Summary
-- Critical: 0 · High: 1 · Medium: 2 · Low: 1 · Total Defects: 4
+- Critical: 0 · High: 0 · Medium: 0 · Low: 0 · Total Defects: 0
 
 ## Files Modified
-- QA/defects.csv
-- QA/defects_append.csv
+- QA/defects_append.csv (emptied — no defects this pass)
 
 ## New Defects Added
-- ID: 4 — Search no-results message renders the literal `{{query}}` placeholder (Medium)
-- ID: 5 — Categories subtitle is a truncated sentence (Low)
-- ID: 6 — Brands listing renders no empty state and no error state (Medium)
-- ID: 7 — A failed catalogue fetch is presented as "no results" (High)
+- None.
 
 ## Existing Defects Confirmed
-- None from `defects.csv`. Defect 7 is the observed symptom of code review issue 34, which
-  described the mechanism; this pass shows what the customer actually sees.
+- None.
 
 ## Areas Verified Working
-- **Every catalogue route renders without a session** — categories, brands, stores and search all
-  returned 200, so the public/private split established in F1 holds.
-- **Categories and search both ship a real empty state** with a headline and an explanatory line.
-  The defect is which state they choose, not that they lack one — which is precisely what
-  distinguishes them from brands.
-- **The page shell, header, footer, filter and sort controls all render** under a total backend
-  failure, so the fallback constants keep the page usable rather than crashing it.
+- **Market propagation is consistent.** With a market cookie set, both backend calls from a single
+  page load carried the header; with no cookie, neither did. There is no partial-scoping defect.
+- **The mock backend returning empty data rendered the pages cleanly** — no crash, no error, the
+  listings simply showed their empty states, which is consistent with what F7 observed against a
+  dead backend.
 
 ## Notes
-- **This pass is the argument for fixing the environment.** Four defects in one feature, two of
-  them found purely by reading the rendered text — against zero from the four preceding
-  authenticated features. Nothing about catalogue code is worse; it is simply the only area that
-  could be looked at.
-- Defects 4 and 5 were both found by extracting the page's visible text rather than by reading
-  source, then traced back to the exact source line. That order matters: neither is visible in a
-  code review of the component, because both live in the locale bundle and the mismatch is between
-  two files.
-- Defect 4's cause is a variable-name mismatch — the template expects `{{query}}` and the call site
-  passes `{ safeQuery }`. It is a one-word fix and it affects every unsuccessful search.
-- Defect 6 was established by comparison: categories renders an empty state in the identical
-  failure condition, so brands rendering nothing is specific to that page rather than a global
-  behaviour.
-- Not tested and carried forward: breakpoints, Hindi and Arabic, keyboard traversal, PDP variant
-  behaviour, and infinite scroll — the last two need real catalogue data.
+- **Zero defects here is a genuine result rather than a blocked one**, which distinguishes this
+  pass from F3 to F6. The market plumbing was directly observable with a mock backend and it
+  behaved correctly. What could not be tested is the part that needs *two real markets with
+  different data* — currency symbols changing, catalogue contents differing, cached data surviving
+  a switch. A mock returning empty arrays cannot exercise any of that.
+- The currency-formatting defects for this feature (code review #30 and #31) were already measured
+  by direct execution in code review session 6, so they are covered by TC-MKT-009 and TC-MKT-010
+  rather than re-filed from the same evidence.
+- The mock-backend technique used here is worth reusing: it made a header-level property
+  observable without a real panel, and it is how TC-MKT-012 and TC-MKT-013 should be run.
 
 ---

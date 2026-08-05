@@ -3,20 +3,21 @@
 # Security Review Session
 
 **Date:** 2026-08-05
-**Time:** 06:03 (24-hour format)
-**Feature / Module:** F7 — Catalog & search (security pass)
+**Time:** 07:22 (24-hour format)
+**Feature / Module:** F8 — Markets & currency (security pass)
 **Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
 **Reviewer:** Claude
 
 ## Scope
-- Files reviewed: `next.config.ts` (image configuration), `src/components/StoreProfile.tsx`,
-  `src/components/Cards/PromoCard.tsx`, `src/hooks/useInfiniteData.ts`,
-  `src/pages/products/[slug]/index.tsx`, `src/pages/products/search/index.tsx`,
-  `src/services/catalog.ts`
-- Review areas covered: 4.3 authorization · 4.4 injection sinks · 4.7 platform configuration ·
-  4.9 tenancy and market scoping · 4.11 supply chain (remote image hosts) · 4.12 caching
-- Total files inspected: 7
-- **Live testing:** the dev server was run and the image optimizer endpoint probed directly.
+- Files reviewed: `src/routes/interceptor.ts`, `src/helpers/market.ts`,
+  `src/helpers/functionalHelpers.ts` (`getMarketFromContext`), `src/lib/cookies.ts`,
+  `src/services/market.ts`, `src/contexts/SettingsContext.tsx`, `src/helpers/currency.ts`,
+  `src/helpers/events.ts` (`onLocationChange`)
+- Review areas covered: 4.3 authorization · 4.7 configuration · 4.9 tenancy and market scoping ·
+  4.13 privacy
+- Total files inspected: 8
+- **Live testing:** a mock backend that logs request headers was run alongside the dev server to
+  observe what the storefront actually sends.
 
 ## Findings Summary
 - Critical: 0 · High: 0 · Medium: 1 · Low: 0 · Total Findings: 1
@@ -26,41 +27,48 @@
 - QA/security_append.csv
 
 ## New Findings Added
-- ID: CWEB-09 — Image optimizer accepts any https host (Medium)
+- ID: CWEB-10 — The active market is set by a client-writable cookie forwarded verbatim as the
+  highest-precedence backend input (Medium)
 
 ## Existing Findings Confirmed
-- Code review #38 — no sanitisation of API-supplied HTML. The two catalogue sinks were re-read
-  this session: `StoreProfile.tsx:154` renders `store.description` and `PromoCard.tsx:83` renders
-  `promo.description`, both **seller-authored** in a multi-seller marketplace. Already enumerated
-  in #38, so specified as TC-CAT-012 rather than re-filed.
-- Code review #35 and #36 — market-blind SWR keys and missing stale windows. Unchanged.
+- Code review #1 — market switch invalidating only `/settings`. Still accurate for the checkout
+  address path; the correction recorded in code review session 13 (the header selector *does*
+  globally revalidate) stands and is specified as TC-MKT-005 and TC-MKT-006.
+- Code review #35 — market-blind SWR keys. Unchanged and directly relevant: with CWEB-10 the
+  market can change without any key changing.
+- Code review #49 — cookies surviving logout. The `market` cookie is one of the three that
+  persist, which on a shared device silently scopes the next person's session; specified as
+  TC-MKT-017.
 
 ## Chains Identified
-- **CWEB-09 + #38 + #3** — a wildcard image host allowlist, no HTML sanitisation, and no CSP all
-  sit on the same public catalogue pages. `contentDispositionType: attachment` breaks the specific
-  SVG-execution path, which is why CWEB-09 is Medium rather than High.
+- **CWEB-10 + #35** — the client controls the market and the cache is blind to it, so a market
+  value can change while cached catalogue data does not. Each makes the other harder to reason
+  about.
 
 ## Areas Verified Secure
-- **The SVG execution path is mitigated.** `dangerouslyAllowSVG: true` is paired with
-  `contentDispositionType: "attachment"`, so an SVG served through the optimizer downloads rather
-  than rendering inline. The mitigation is deliberate and it holds — CWEB-09 is scoped to the
-  fetch-side risk, not to script execution.
-- **The optimizer rejects non-https targets** — an `http://127.0.0.1:9/…` probe returned Next's
-  400 "not allowed", so loopback and plain-http internal hosts are out of reach. This is what
-  bounds the SSRF to https-reachable hosts and was established by test, not assumption.
-- **PDP threads the market on SSR** and returns `notFound: true` for a missing product.
-- **All catalogue calls go through the shared axios instance**, so none loses the `X-Market` header.
-- **Search terms are rendered through React**, not `dangerouslySetInnerHTML`, so a reflected XSS
-  through the query string is not available.
+- **The header plumbing is correct and complete.** Running a mock backend that logs headers, a
+  single `/brands/` page load issued exactly two backend calls and **both** carried the market
+  header. No request bypassed the shared axios instance, so there is no mixed-market page where
+  part of the data is scoped and part is not — which was the specific risk worth testing.
+- **No market header is sent when no cookie is present** — the baseline request produced two calls
+  with no `X-Market`, so the panel is left to resolve the default rather than receiving an empty
+  or malformed value.
+- **`getMarketFromContext` strips wrapping quotes and trims** before use, and returns `undefined`
+  rather than an empty string when absent.
+- **`formatCurrency` never trusts a client price** — it formats only what it is given; all
+  monetary values originate from the panel.
 
 ## Notes
-- **CWEB-09 was proven by probe rather than inferred from config.** Requesting `/_next/image` with
-  an arbitrary external https URL returned 403 — this environment's egress proxy refusing the
-  outbound call — whereas a disallowed target returns Next's own 400, which is exactly what the
-  http probe produced. The difference between those two responses is the evidence that the host was
-  accepted and the fetch attempted.
-- The practical exposure is an SSRF primitive plus an open image proxy. It is bounded: https only,
-  and only a successfully decoded image is returned to the caller. The fix is a one-line change to
-  `remotePatterns` listing the real media hosts.
+- **CWEB-10 was proven by observation, not inferred from the config.** A hand-written cookie of
+  `market=ZZ-ARBITRARY` — not a real market code — was forwarded unchanged as `X-Market` on every
+  backend call from that page. That single test establishes both halves of the finding: the client
+  fully controls the value, and nothing on the storefront validates it.
+- The row is explicit that the impact is conditional. If the panel rejects unknown codes and checks
+  entitlement, the practical effect is a broken page. If it prices from the asserted market without
+  checking, it is cross-market arbitrage and a direct financial loss. The storefront cannot tell
+  which, and TC-MKT-001 to TC-MKT-003 are written to settle it against the API.
+- Severity was held at Medium rather than High for that reason — the exploitability depends
+  entirely on a control that is out of this repository's scope. The `P2` priority reflects that the
+  question should be answered quickly even though the finding itself is bounded.
 
 ---
