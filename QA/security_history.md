@@ -3,69 +3,64 @@
 # Security Review Session
 
 **Date:** 2026-08-05
-**Time:** 04:41 (24-hour format)
-**Feature / Module:** F6 — Account: profile, addresses, notifications, wishlists (security pass)
+**Time:** 06:03 (24-hour format)
+**Feature / Module:** F7 — Catalog & search (security pass)
 **Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
 **Reviewer:** Claude
 
 ## Scope
-- Files reviewed: `src/helpers/notificationUrl.ts`, `src/pages/my-account/notifications/index.tsx`,
-  `src/components/Functional/FirebaseInitializer.tsx`, `src/pages/my-account/profile/index.tsx`,
-  `src/pages/my-account/addresses/index.tsx`, `src/pages/my-account/wishlists/index.tsx`,
-  `src/services/auth.ts` (profile/email endpoints), `src/services/address.ts`,
-  `src/services/wishlist.ts`, `src/components/Cart/AttachmentUploader.tsx` (comparison)
-- Review areas covered: 4.3 authorization · 4.4 injection sinks · 4.5 redirects and window
-  handling · 4.10 client abuse surface · 4.13 privacy
-- Total files inspected: 10
+- Files reviewed: `next.config.ts` (image configuration), `src/components/StoreProfile.tsx`,
+  `src/components/Cards/PromoCard.tsx`, `src/hooks/useInfiniteData.ts`,
+  `src/pages/products/[slug]/index.tsx`, `src/pages/products/search/index.tsx`,
+  `src/services/catalog.ts`
+- Review areas covered: 4.3 authorization · 4.4 injection sinks · 4.7 platform configuration ·
+  4.9 tenancy and market scoping · 4.11 supply chain (remote image hosts) · 4.12 caching
+- Total files inspected: 7
+- **Live testing:** the dev server was run and the image optimizer endpoint probed directly.
 
 ## Findings Summary
-- Critical: 0 · High: 0 · Medium: 2 · Low: 0 · Total Findings: 2
+- Critical: 0 · High: 0 · Medium: 1 · Low: 0 · Total Findings: 1
 
 ## Files Modified
 - QA/security.csv
 - QA/security_append.csv
 
 ## New Findings Added
-- ID: CWEB-07 — Notification list navigates to an unvalidated URL from the payload (Medium)
-- ID: CWEB-08 — Profile avatar accepts any file of any size (Medium)
+- ID: CWEB-09 — Image optimizer accepts any https host (Medium)
 
 ## Existing Findings Confirmed
-- Code review #27 and #50 — the profile page's `initialData` handling. Both are reachable from the
-  security angle too (a blank form that can overwrite a stored record), but they are already filed
-  with the right severity and are specified here as TC-ACC-008 to TC-ACC-011 rather than re-filed.
-- CWEB-06 (F5) — return evidence upload. CWEB-08 is the same class and the row says so; together
-  they establish the systemic position recorded below.
+- Code review #38 — no sanitisation of API-supplied HTML. The two catalogue sinks were re-read
+  this session: `StoreProfile.tsx:154` renders `store.description` and `PromoCard.tsx:83` renders
+  `promo.description`, both **seller-authored** in a multi-seller marketplace. Already enumerated
+  in #38, so specified as TC-CAT-012 rather than re-filed.
+- Code review #35 and #36 — market-blind SWR keys and missing stale windows. Unchanged.
 
 ## Chains Identified
-- **CWEB-08 + CWEB-06 + #38 + #3** — two unvalidated upload paths feeding a platform that
-  sanitises no API-supplied HTML and sets no CSP. The upload rows carry the cross-reference so the
-  combined picture is visible from either end.
+- **CWEB-09 + #38 + #3** — a wildcard image host allowlist, no HTML sanitisation, and no CSP all
+  sit on the same public catalogue pages. `contentDispositionType: attachment` breaks the specific
+  SVG-execution path, which is why CWEB-09 is Medium rather than High.
 
 ## Areas Verified Secure
-- **Every typed branch of `getNotificationRedirectUrl` builds a relative path** — orders, wallet,
-  product, brand, category, store and the entity fallback all produce `/…` routes. Only the
-  `quickLink` shortcut is unvalidated, which is why CWEB-07 is scoped to that branch rather than
-  the whole helper.
-- **The push-notification consumer is correct** — `FirebaseInitializer.tsx:76-80` tests
-  `/^https?:\/\//i` and routes external URLs through `window.open(url, "_blank",
-  "noopener,noreferrer")`, so no reverse-tabnabbing and no in-place navigation. It is the in-repo
-  counter-example that makes the notifications-page behaviour a defect rather than a design choice.
-- **Wishlist removal is a correct optimistic update** with revalidation on both the unsuccessful
-  response and the thrown error — re-verified this session.
-- **Address CRUD refreshes its list** after every mutation.
-- **No account endpoint accepts an owner identifier from the client**; all are session-scoped.
+- **The SVG execution path is mitigated.** `dangerouslyAllowSVG: true` is paired with
+  `contentDispositionType: "attachment"`, so an SVG served through the optimizer downloads rather
+  than rendering inline. The mitigation is deliberate and it holds — CWEB-09 is scoped to the
+  fetch-side risk, not to script execution.
+- **The optimizer rejects non-https targets** — an `http://127.0.0.1:9/…` probe returned Next's
+  400 "not allowed", so loopback and plain-http internal hosts are out of reach. This is what
+  bounds the SSRF to https-reachable hosts and was established by test, not assumption.
+- **PDP threads the market on SSR** and returns `notFound: true` for a missing product.
+- **All catalogue calls go through the shared axios instance**, so none loses the `X-Market` header.
+- **Search terms are rendered through React**, not `dangerouslySetInnerHTML`, so a reflected XSS
+  through the query string is not available.
 
 ## Notes
-- **The upload picture is now systemic and worth stating once.** The storefront has three live
-  upload paths: cart attachments (`AttachmentUploader`) validates mime and size correctly; return
-  evidence (`ReturnSheet`) validates neither (CWEB-06); profile avatar validates neither (CWEB-08).
-  A fourth, `ReturnOrderItemModal`, validated correctly but is dead code. The right fix is one
-  shared validator that all paths route through, which is what both rows recommend.
-- `accept="image/*"` is treated consistently across both upload findings as a picker hint and not
-  as validation.
-- An observation not filed: `profile/index.tsx:566` and `:581` call `URL.createObjectURL` **during
-  render** without ever revoking, so a new object URL leaks on every render while an avatar preview
-  is showing. That is a performance and lifecycle defect rather than a security one, and it belongs
-  to a code-review pass on this file — recorded here so it is not lost.
+- **CWEB-09 was proven by probe rather than inferred from config.** Requesting `/_next/image` with
+  an arbitrary external https URL returned 403 — this environment's egress proxy refusing the
+  outbound call — whereas a disallowed target returns Next's own 400, which is exactly what the
+  http probe produced. The difference between those two responses is the evidence that the host was
+  accepted and the fetch attempted.
+- The practical exposure is an SSRF primitive plus an open image proxy. It is bounded: https only,
+  and only a successfully decoded image is returned to the caller. The fix is a one-line change to
+  `remotePatterns` listing the real media hosts.
 
 ---
