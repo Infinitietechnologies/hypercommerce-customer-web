@@ -26,12 +26,21 @@ rm -rf "$OUT"
 mkdir -p "$OUT"
 rsync -a "${RSYNC_ARGS[@]}" ./ "$OUT/"
 
+# Nothing in the build creates .env, and a missing one fails silently — the
+# storefront builds fine but every API call falls back to /api. Seed it.
+cp "$OUT/.env.example" "$OUT/.env"
+
 fail=0
 
 # Anything here means credentials would ship. Hard stop.
-leaked=$(find "$OUT" \( -name '.env' -o -name '.env.local' -o -name '*.keystore' \
+leaked=$(find "$OUT" \( -name '.env.local' -o -name '*.keystore' \
   -o -name '*.jks' -o -name 'key.properties' -o -name '*serviceAccount*.json' \) 2>/dev/null)
 if [ -n "$leaked" ]; then echo "FAIL — secrets in package:"; echo "$leaked"; fail=1; fi
+
+# The shipped .env must be the example verbatim — never a real one.
+if ! cmp -s "$OUT/.env" "$OUT/.env.example"; then
+  echo "FAIL — .env is not a copy of .env.example (real credentials?)"; fail=1
+fi
 
 for pat in "host:" "user:" "password:"; do
   val=$(grep -E "^\s*${pat}\s*\"[^\"]+\"" "$OUT/ftp.js" 2>/dev/null || true)
