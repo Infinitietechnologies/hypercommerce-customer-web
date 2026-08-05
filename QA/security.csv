@@ -1,0 +1,1 @@
+Date,ID,Module/Feature,Vulnerability Title,Description,OWASP Top 10 (2021),CWE,Attack Vector,Severity,Priority,Preconditions,Steps to Reproduce / PoC,Expected (Secure) Behavior,Actual Behavior,Impact,Remediation,Evidence (file:line),Status,Dev. Notes,Tester Status,Tetster Notes
