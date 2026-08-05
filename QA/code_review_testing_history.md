@@ -840,3 +840,96 @@ Any assumptions, limitations, or observations made during the review.
   `/share/` deep-link landing page.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 16:33 (24-hour format)
+**Feature / Module:** Session 9 — Remaining features (wishlist, reviews, share, shopping list, seller register)
+**Documentation File:** CLAUDE.md · src/pages/CLAUDE.md · src/lib/redux/CLAUDE.md · src/components/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/services/wishlist.ts` (all 9 callers), `src/services/reviews.ts` (all 6 callers)
+  - `src/components/Cards/ProductCard.tsx` (favourite / add-to-cart / share handlers)
+  - `src/pages/share/products/[slug].tsx`
+  - `src/pages/shopping-list/index.tsx`
+  - `src/pages/seller-register/index.tsx`
+  - `src/pages/my-account/wishlists/index.tsx`
+  - `src/lib/redux/slices/recentlyViewedSlice.ts`, `src/lib/redux/slices/searchSlice.ts`
+  - `src/hooks/useRecentSearches.ts`
+  - `src/services/adTrackingService.ts`
+  - `src/components/Modals/DeepLinkModal.tsx`, `src/components/Functional/CookieConsent.tsx`
+- Directories reviewed: remaining surface of `src/services/`, `src/lib/redux/slices/`, `src/hooks/`
+- Total files inspected: 14
+- Repo-wide scans: all direct `localStorage` write sites (6 files, 14 writes)
+
+## Findings Summary
+- Critical: 0
+- High: 0
+- Medium: 2
+- Low: 0
+- Total Issues: 2
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 41 — Direct `localStorage` writes with incomplete logout cleanup (Medium)
+- Issue No.: 42 — Share route duplicates PDP server logic and has drifted (Medium)
+
+## Existing Issues Confirmed
+- Issue No.: 22 — DOM-click control flow. Another instance at `ProductCard.tsx:108`
+  (`document.getElementById("login-btn")?.click()`), on the most-used component in the catalogue.
+  Same defect and fix as 22, so recorded here rather than duplicated.
+- Issue No.: 11 — `any` usage. Further location: `share/products/[slug].tsx:43`
+  (`undefined as any`). Folded into issue 42's row since the fix is the same edit.
+
+## Safe Areas Verified
+- **`ProductCard` action handlers are correct** — this was the main thing this session set out to
+  check and it passed. `handleToggleFavorite` (`:87-105`) and `handleAddToCart` (`:113-137`) both
+  disable their trigger while in flight, toast on an unsuccessful response *and* on a thrown
+  error, use `t()` for every string, and reset state in `finally`. No swallowed failures.
+- **`handleShare`'s empty catch is legitimate** — it carries a comment explaining that a dismissed
+  share sheet is the expected path, which is exactly when an empty catch is correct.
+- **Favourite toggling is not optimistic** — `setIsFavorited` waits for the server response
+  (`:96`), so §6.4's rollback requirement does not apply. `CLAUDE.md` §7.1 describes the wishlist
+  as client-owned and optimistic, so the implementation deviates from the documented intent, but
+  in the safer direction. Noted rather than filed.
+- **`recentlyViewedSlice` is properly bounded** — dedupes by id, `unshift`es, and truncates to
+  `MAX_PRODUCTS` (20) at `:22-30`, so the persisted slice cannot grow without limit.
+- **`searchSlice` and `useRecentSearches` are not duplicates.** The slice holds
+  `currentSearchLabels` for the active filter UI; the hook holds the typed-query history. They
+  address different concerns, so the apparent overlap with `CLAUDE.md` §7.1 is not a defect —
+  checked specifically because it looked like one.
+- **`seller-register`** is a correct thin page shell — `PageHead`, breadcrumbs, `PageHeader`, all
+  strings translated, presentation delegated to the form component.
+- **Wishlist and review services** send bodies rather than query params and return the correct
+  fallback shapes; `giveProductReview` builds `FormData` for its image uploads.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 · 4.8 · 4.9 · 4.10 ·
+  4.11 · 4.12 · 4.13.
+- **Only two issues this session, and that is the honest result.** The remaining feature surface
+  is in better shape than the foundational and checkout layers. Two candidate findings were
+  investigated and dropped after reading the code rather than filed to pad the count: the
+  `ProductCard` handlers (suspected swallowed catches from a grep — they toast correctly) and the
+  `searchSlice` / `useRecentSearches` overlap (suspected duplicate stores — different concerns).
+- **Issue 41's severity rests on the logout gap, not on the rule violation.** Direct
+  `localStorage` use alone would be a code smell; what makes it Medium and a `Security` type is
+  that `handleLogout` clears 2 of the 14 keys, so the previous account's search history stays
+  visible to the next user on a shared device.
+- **Issue 42 is written to claim only what is verified.** The soft-404 is certain — the canonical
+  route returns `notFound: true` and the share route does not. What the component *renders* with
+  an undefined product was not traced through all 362 lines, and since `initialProduct` is an
+  optional prop the render may degrade rather than crash. The row therefore describes the status
+  code and the missing delivery estimate, not a crash.
+- The cookie-consent key is the one legitimate long-lived `localStorage` value in issue 41's list;
+  the suggested fix explicitly keeps it rather than sweeping it into the purge.
+- Not reviewed and carried forward to session 10: `useAdTracking` hook behaviour (the service was
+  read for its storage writes, not its tracking logic), the PDP reviews and FAQ sections, and the
+  filter sidebar UI.
+
+---
