@@ -129,3 +129,57 @@ Assumptions, environment, unreproducible observations, limitations.
   touched by this session.
 
 ---
+
+# Defect Testing Session
+
+**Date:** 2026-08-05
+**Time:** 23:58 (24-hour format)
+**Feature / Module:** F2 — Cart & offline cart (defects pass)
+**Documentation File:** DEFECTS_INSTRUCTIONS.md · CLAUDE.md
+**Tester:** Claude
+
+## Scope
+- Method: the production offline-cart reducers were **compiled and executed directly** with
+  realistic product configurations. The cart UI could not be driven end to end because the
+  backend remains blocked by this environment's network policy.
+- Flows exercised: quantity clamping across min / max / step / stock; the addon-merge path;
+  subtotal recalculation.
+- Breakpoints tested: none. Locales tested: none. See Notes.
+- Total screens exercised: 0 — this session was reducer-level.
+
+## Findings Summary
+- Critical: 0 · High: 0 · Medium: 2 · Low: 0 · Total Defects: 2
+
+## Files Modified
+- QA/defects.csv
+- QA/defects_append.csv
+
+## New Defects Added
+- ID: 2 — Quantity stored below the product minimum (Medium)
+- ID: 3 — Line merge sums past available stock (Medium)
+
+## Existing Defects Confirmed
+- None from `defects.csv`. Both new rows confirm code review issues 18 and 21 with executed
+  evidence rather than static reasoning.
+
+## Areas Verified Working
+- **The min / max / stock ceiling works** — requesting 20 for a product with `maxQuantity 10` and
+  `stock 4` stores 4. Only the *step* interaction is defective.
+- **`addOfflineCartItem` re-clamps a repeat add** rather than duplicating the line, and takes the
+  incoming price so a stale price does not survive.
+- **`recalculateSummary` includes addon prices** in the line total and runs after every mutation —
+  the subtotal tracked the (wrong) quantity exactly in defect 3, so the summary itself is correct.
+
+## Notes
+- **Method disclosure matters here and is stated inside both rows.** Executing the reducer is not
+  the same as exercising the app, and the rows say so. The evidence is nonetheless stronger than
+  the original static findings: issue 18 predicted "returns 2" and that is now measured, and issue
+  21 now has a concrete number — two lines of 4 merging to 8 against stock of 5, with the subtotal
+  following to 800.
+- UI-level confirmation of both defects is still outstanding and is specified as TC-CART-001 to
+  TC-CART-004 so it can be run once a backend is available.
+- Responsive, locale, accessibility and market-switch behaviour for the cart were **not** exercised
+  and are not claimed. They are specified as TC-CART-020 to TC-CART-025.
+- The temporary compile directory used to run the reducers was removed; no source file was touched.
+
+---

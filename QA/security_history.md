@@ -144,3 +144,63 @@ What could not be verified from this repository and why; assumptions; limitation
   says so.
 
 ---
+
+# Security Review Session
+
+**Date:** 2026-08-05
+**Time:** 23:58 (24-hour format)
+**Feature / Module:** F2 — Cart & offline cart (security pass)
+**Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed: `src/lib/redux/slices/offlineCartSlice.ts`, `cartSlice.ts`, `store.ts`,
+  `src/helpers/updators.ts`, `src/helpers/auth.ts` (logout path), `src/services/cart.ts`,
+  `src/components/Cart/AttachmentUploader.tsx`, `src/components/Modals/FailedItemsModal.tsx`
+- Review areas covered: 4.1 credential storage (cart-scoped) · 4.3 authorization · 4.4 injection
+  sinks · 4.9 tenancy and market scoping · 4.10 client abuse surface · 4.12 local persistence
+- Total files inspected: 8
+
+## Findings Summary
+- Critical: 0 · High: 0 · Medium: 1 · Low: 0 · Total Findings: 1
+
+## Files Modified
+- QA/security.csv
+- QA/security_append.csv
+
+## New Findings Added
+- ID: CWEB-03 — Offline cart survives logout and merges into the next account (Medium)
+
+## Existing Findings Confirmed
+- Code review #15 — `cart` persisted. Re-confirmed from the security side: the persisted copy
+  carries `user_id` and a `PaymentSummary` with `wallet_balance`, so it is account-linked data at
+  rest. Bounded because `handleLogout` does dispatch `clearCart()` — which is precisely what makes
+  the *offline* cart's omission (CWEB-03) stand out.
+- Code review #17 — offline cart cleared despite rejections. CWEB-03 is the mirror image: #17 is
+  about clearing too eagerly on success, CWEB-03 about never clearing at logout.
+
+## Chains Identified
+- **CWEB-03 + #17** — a failed sync leaves items behind (no clear on the failure branch) and
+  logout does not clear them either, so the window where a leftover cart can cross accounts is
+  wider than either issue alone implies.
+
+## Areas Verified Secure
+- **No client price reaches the server.** `syncOfflineCartToServer` maps each item to
+  `store_id`, `product_variant_id`, `quantity` and `addons` only (`updators.ts:87-96`) — `price`
+  is deliberately absent, so tampering with the persisted price cannot alter what is charged.
+  This is the single most important negative result for a cart register.
+- **Attachment upload is properly constrained** — `AttachmentUploader.tsx:41-60` enforces a size
+  ceiling and a type allowlist via `getFileType`, with a matching `accept` attribute on the input.
+- **All 11 cart endpoints send request bodies**, never query params, and inherit the `X-Market`
+  header from the shared axios instance.
+- **`cartSlice` holds no credential** — `CartResponse` carries `user_id` but no token or contact
+  detail.
+
+## Notes
+- Review categories 4.5 (redirects) and 4.6 (payments) were not applicable to this feature; 4.6 is
+  covered in full by F3.
+- CWEB-03 is rated Medium rather than High because it needs local access to a shared device. The
+  reason it is not Low: the merge is **silent** — there is no prompt and no notice — and it writes
+  to the *server* cart of the incoming account rather than merely leaving data on disk.
+
+---

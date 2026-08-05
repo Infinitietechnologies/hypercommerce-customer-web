@@ -128,3 +128,53 @@ Assumptions, test-data requirements, environment needs.
   These 25 cases are a specification, not coverage, until that changes.
 
 ---
+
+# Test Case Authoring Session
+
+**Date:** 2026-08-05
+**Time:** 23:58 (24-hour format)
+**Feature / Module:** F2 — Cart & offline cart (test-case pass)
+**Documentation File:** TEST_CASES_INSTRUCTIONS.md · CLAUDE.md
+**Author:** Claude
+
+## Scope
+- Areas covered: quantity rules and boundaries, offline-cart lifecycle, offline sync, persistence,
+  empty state, i18n, notifications, pricing, attachments, screen states, feedback, market scoping,
+  responsive, accessibility, concurrency.
+- Source registers mined: `QA/defects.csv` (2, 3), `QA/security.csv` (CWEB-03),
+  `QA/code_review.csv` (#15, #17, #19, #20, #22).
+- Total cases written: 25 (TC-CART-001 … TC-CART-025)
+
+## Coverage Summary
+- Positive: 3 · Negative: 5 · Negative (security): 5 · Boundary: 4 · Regression: 14 carry a
+  `Linked Bug ID` · Accessibility / i18n / Responsive: 3 · Total Cases: 25
+
+## Files Modified
+- QA/test_cases.csv
+- QA/test_cases_append.csv
+
+## New Cases Added
+- Test Case ID range: TC-CART-001 … TC-CART-025
+
+## Findings Given Regression Coverage
+- DEF-2 (001, 002) · DEF-3 (003, 004) · SEC-CWEB-03 (005, 006, 007)
+- CR-17 (008, 009) · CR-15 (010) · CR-19 (011, 012) · CR-20 (013) · CR-22 (014)
+
+## Coverage Gaps Remaining
+- **Save for later** has no cases — the flow was not reviewed in depth in any pass yet.
+- **Promo code validation** is covered only indirectly through TC-CART-012; the full matrix
+  (invalid, expired, minimum-spend, market-scoped) belongs with F3 checkout.
+- **Multi-store cart behaviour** (items from several sellers, per-store delivery) is unspecified.
+- **Buy-now** as distinct from add-to-cart is unspecified.
+
+## Notes
+- TC-CART-018 is the case worth writing first: it pins the fact that **no client-supplied price is
+  sent on sync**, which the security pass verified as correct today. It is a guard against a
+  regression that would be a Critical rather than a defect.
+- Fourteen of twenty-five are regressions against currently-open findings, so their criteria use
+  the `FAIL while …` form and double as a fix-verification checklist.
+- TC-CART-015 to TC-CART-017 document behaviour that is currently **correct** — the stock ceiling,
+  the repeat-add merge, and addon pricing. Per §1 they are still missing coverage, because nothing
+  automated protects them.
+
+---
