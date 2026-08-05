@@ -1,0 +1,341 @@
+# CODE_REVIEW_INSTRUCTIONS.md — HyperCommerce Customer Web
+
+> **Read this file in full at the start of EVERY code review session, before reading any source file.**
+> It is the authoritative process document for code review in this repository.
+> Companion records live in `QA/` — see §2.
+
+This repo is the **Next.js customer storefront** (Pages Router, React 19, TypeScript strict,
+HeroUI, Redux Toolkit, SWR, axios). It consumes the Laravel panel API, which lives in a
+separate repository (`hypercommerce-panel`) and has its own QA folder and review history.
+**Findings recorded here are storefront findings.** If a defect's root cause is in the panel
+API, still record it here (the storefront is where it surfaces), state clearly in
+*Suggested Fix* that the fix belongs to the panel, and never propose changing an API response
+shape unilaterally — other production clients consume it.
+
+---
+
+## 1. Non-negotiable rules
+
+1. **Read `CODE_REVIEW_INSTRUCTIONS.md` before beginning any review.**
+2. **Follow every rule in this document.**
+3. **Never skip any review category** (§4). Every category is checked every session, even if
+   the outcome is "checked, nothing found".
+4. **Verify every finding from actual source code.** Read the file. Never report a defect
+   inferred from a filename, a memory of the framework, a grep hit alone, or another
+   agent's summary.
+5. **Provide exact file paths and line numbers** — `src/services/cart.ts:88` form.
+   A finding with no `file:line` is not a finding.
+6. **Deduplicate** against `QA/code_review.csv` before adding anything.
+7. **Assign Severity and Priority** to every finding (§6).
+8. **Generate the review report** (§8) in the session response.
+9. **Append every newly confirmed issue** to `QA/code_review.csv`.
+10. **Overwrite `QA/code_review_append.csv`** so it holds only the current session's issues.
+11. **Never modify or remove previous records** in the master CSV.
+12. **If no issues are found, say so explicitly** — list the review categories checked and
+    state that no verified issues were identified. Do not pad a review with speculative or
+    cosmetic findings to look productive.
+13. **Never report an unverified finding.** A plausible-but-unconfirmed suspicion either gets
+    verified or gets left out. Uncertainty goes in *Notes*, not in the defect register.
+14. **State what was reviewed and found safe** (§8) — a review is a coverage claim, not just
+    a defect list.
+15. **Quantify systemic issues.** "17 of 34 pages lack an error state — list attached" beats
+    "error states are inconsistent".
+16. **Rank findings** Critical → High → Medium → Low in the report.
+
+---
+
+## 2. The QA record files
+
+| File | Role | Write mode |
+|---|---|---|
+| `QA/code_review.csv` | **Master defect register.** Every code review issue ever found, permanently. | **Append only.** Never edit or delete an existing row except to update its Status / Dev. Notes / Tester columns. |
+| `QA/code_review_append.csv` | **Latest session only** — for direct import into Google Sheets. | **Overwrite** each session (header + this session's rows). |
+| `QA/code_review_testing_history.md` | **Permanent chronological audit trail** of every session. | **Append only.** Never rewrite or delete a past entry. |
+
+Both CSVs use this header, **exactly**, as line 1:
+
+```
+Date,NO,Module/Feature,Documentation File,Bug Title,Bug Description,Bug Type,Severity,Priority,Preconditions,Steps to Reproduce,Expected Result,Actual Result,Impact,Suggested Fix,Status,Dev. Notes,Tester Status,Tester Notes
+```
+
+---
+
+## 3. Session workflow (mandatory, in order)
+
+### 3.1 Before the review
+
+1. Read this file.
+2. Read `QA/code_review.csv` — know what has already been reported so you do not duplicate it,
+   and find the **last issue number**.
+3. Read `QA/code_review_testing_history.md` — know what previous sessions covered, what they
+   verified safe, and what they flagged as not-yet-reviewed.
+4. Read `CLAUDE.md` (root) and the nearest subfolder `CLAUDE.md` for the area under review.
+   A violation of a documented project rule is a legitimate finding (Bug Type `Code Smell`).
+5. Fix the scope: which module/feature, which files and directories. Write it down — it becomes
+   the *Scope* section of the history entry.
+
+### 3.2 During the review
+
+6. Work through **every** category in §4. Do not stop early because the count looks high.
+7. **Assign issue numbers sequentially** from the last `NO` in `code_review.csv`. Never reuse,
+   never renumber, never reorder existing IDs.
+8. If a defect you find is **already in the master CSV**, do not create a duplicate row — record
+   it under *Existing Issues Confirmed* in the history entry, referencing its issue number.
+9. For each new finding, confirm all four before writing a row:
+   - the exact `file:line` is read and correct,
+   - a **reproducible failure scenario** exists (concrete inputs/state → wrong result),
+   - the **impact** is real for a customer or the business,
+   - a **concrete fix** can be named.
+10. Track what you verified as **safe** as you go — you must report it (§8).
+
+### 3.3 After the review
+
+11. Append every new confirmed issue to `QA/code_review.csv`.
+12. Replace the contents of `QA/code_review_append.csv` with the header + only this session's issues.
+13. Append a new entry to `QA/code_review_testing_history.md` using the template in §7 — with the
+    real current date and time, scope, categories completed, issue counts, safe areas, and notes.
+14. Never delete or alter previous history entries.
+15. Produce the review report (§8) in the response.
+16. **Do not fix the code in a review session** unless the user asked for fixes. Review and repair
+    are separate commits and separate asks.
+
+---
+
+## 4. Review categories — every one, every time
+
+Adapted to this stack. A category with no findings is still reported as checked.
+
+### 4.1 Performance & optimization
+Unnecessary or duplicate API requests (the same endpoint fetched by both `getServerSideProps`
+and a client hook on first paint); waterfalled `await`s that could be `Promise.all`; requests
+fired inside a render or an unkeyed `useEffect`; missing/incorrect SWR `dedupingInterval` and
+`revalidateOnFocus` against the volatility table in `CLAUDE.md` §7.3; over-fetching (a list
+endpoint called for a single record); unbounded lists with no pagination or `useInfiniteData`;
+O(n²) work over product/order collections; `find`/`includes` inside a loop that should be a
+`Map`/`Set`; sorting or filtering a large array on every render without `useMemo`; unnecessary
+re-renders (unmemoized props/callbacks into memoized children, whole-list recompute on one
+item's change, context value rebuilt every render); bundle size (heavy libs — `leaflet`,
+`swiper`, lightbox, Stripe, firebase — imported eagerly into shared chunks instead of
+`dynamic(..., { ssr: false })`); dead imports, unused exports, dead files; memory leaks
+(uncleared `setInterval`/`setTimeout`, unremoved listeners/observers, un-aborted fetches, missing
+`useEffect` cleanup); images not using `next/image` or missing `sizes`/`priority` where it matters.
+
+### 4.2 Correctness & business logic
+Money and rounding (float arithmetic on prices/totals, inconsistent rounding, cart total
+recomputed client-side and disagreeing with the server); discount/coupon/tax display math;
+quantity and stock rules (min/max/step, out-of-stock still addable); variant selection and price
+resolution; cart merge on login (offline cart → server cart: duplicates, lost items, quantity
+overwrite instead of merge); order state and status mapping; date/relative-time formatting;
+pagination arithmetic (page vs offset, last-page off-by-one, duplicate items across pages);
+edge, boundary, and off-by-one conditions; `0`/`""`/`false` treated as absent by a `||` fallback
+where `??` was meant.
+
+### 4.3 State, data flow & races
+Double-submit (add-to-cart, place-order, apply-coupon) not disabled while in flight;
+optimistic updates (cart quantity, wishlist toggle) not rolled back on failure; stale-closure
+bugs in `useEffect`/callbacks; out-of-order async responses overwriting newer state (search,
+filters) with no request-sequence or abort guard; Redux slice ownership violations against
+`CLAUDE.md` §7.1 (server data cached in Redux, cart state duplicated); `redux-persist` allowlist
+drift; state derived into Redux that should be derived at render; URL query params and Redux
+filter state disagreeing about which is the source of truth.
+
+### 4.4 Market scoping (storefront-critical)
+Every catalog read must go through the shared axios instance so the `X-Market` header is sent —
+a direct `fetch`/`axios.create` silently returns default-market data. Check: market change
+invalidates **all** catalog SWR caches (products, categories, brands, stores, home layout,
+search); no hard-coded currency symbol or format (must come from `SettingsContext`); no
+market/store conflation; SSR fetches carry the market from the request, not from a client default.
+
+### 4.5 Error handling & null-safety
+Swallowed or empty `catch`; `catch` that logs and continues into code assuming success;
+`success: false` responses rendered as an empty/loaded state instead of an error state; missing
+fallbacks (`fallbackApiRes`/`fallbackPaginateRes`) on SSR-critical calls so a failed fetch crashes
+a page; array/object fields read without a shape guard (`data.items.map` when `items` can be
+absent); non-null assertions (`!`) and unchecked `[0]`/destructuring on possibly-empty results;
+`any`, `@ts-ignore`, or a cast used to silence a real shape mismatch; missing timeout on
+outbound requests; unhandled promise rejections.
+
+### 4.6 Frontend states (all four, every screen)
+Per `CLAUDE.md` §6.3, a screen is incomplete without **Loading / Empty / Error / Loaded**.
+Check: skeleton mirrors the final layout (not a bare spinner for a full page); empty state has
+illustration + headline + body + primary action; error state has a human message **and a retry**;
+a failed request never renders as an empty result; async triggers disable and show inline
+loading; success **and** failure both surface a toast; destructive actions confirm via `ui/Sheet`.
+
+### 4.7 Security
+XSS via `dangerouslySetInnerHTML` on API/user content (CMS pages, product descriptions, reviews)
+with no sanitization; unvalidated `href`/redirect targets (`javascript:` URLs, open redirect from
+a `?returnUrl=`); tokens, OTPs, passwords, or PII in logs, error messages, analytics payloads, or
+URL query strings; auth token storage and cookie flags (`httpOnly`/`secure`/`sameSite`) and any
+token written outside the documented cookie path; `localStorage` written directly (redux-persist
+owns it); protected routes missing from `PROTECTED_ROUTES` **or** missing
+`serverSideAuthGuard(context)` in `getServerSideProps` — the client-side `withAuth` HOC alone is
+not protection; IDOR-shaped client behaviour (an order/address/wallet id taken from the URL and
+rendered without the server scoping it to the user); secrets or private keys in
+`NEXT_PUBLIC_*` env vars; payment flows (amount/currency taken from client state rather than the
+server-confirmed order, redirect/callback params trusted without server verification); CSP,
+`next.config.ts` headers, and `images.remotePatterns` breadth; dependency CVEs (`npm audit`) —
+note which flagged packages actually ship in the browser bundle.
+
+### 4.8 Code smells & project-rule violations
+Duplicate business logic copy-pasted across views/components/services that should be one shared
+helper or hook — **name every location**; dead code and unreachable branches; unnecessary
+complexity; wrong altitude (page-level logic inside a leaf component, or a component reaching
+past its props); violations of `CLAUDE.md`: `@heroui/react` imported outside `src/components/ui/`
+in a new or edited file, `axios` imported outside `src/services/client.ts`, hard-coded hex colours
+outside `src/theme/`, inline `style={{}}`, arbitrary Tailwind values where a token exists,
+callers added to the `src/routes/api.ts` barrel, retired palette values (`#eba513`, `#FFB616`,
+Figtree as `sans`) or HeroUI default blue `#3b82f6` reintroduced, `"use client"` added, App Router
+files, a second component library, an undocumented new dependency.
+
+### 4.9 i18n / RTL
+Hard-coded user-facing English instead of `t('namespace.key')`; keys added to `en` but missing
+from `hi` and `ar`; interpolation and pluralization misuse; concatenated sentence fragments that
+cannot translate; physical direction classes (`ml-`/`mr-`/`pl-`/`pr-`/`left-`/`right-`/`text-left`)
+where logical properties (`ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`) are required;
+icons/chevrons/carousels that do not mirror in RTL; number, currency, and date formatting that
+ignores locale.
+
+### 4.10 Timezone & dates
+Server-provided UTC timestamps rendered with a local-time constructor or vice versa;
+`new Date(string)` on a non-ISO format; date-only values shifted by timezone conversion;
+countdowns/expiry (offers, OTP validity, delivery slots) computed against the wrong clock;
+SSR-vs-client date rendering producing a hydration mismatch.
+
+### 4.11 Accessibility (WCAG 2.1 AA)
+`<div onClick>` where a `<button>` belongs; icon-only controls without `aria-label`; images
+without `alt` (or decorative images missing `alt=""`); form fields without an associated
+`<label>`, errors not linked via `aria-describedby` or not announced; heading order; keyboard
+reachability and operability of every interactive element; modal/sheet focus trap, focus restore
+on close, and `Esc` to close; `outline-none` with no visible replacement focus ring; colour
+contrast against the theme tokens; `prefers-reduced-motion` respected by framer-motion;
+any `eslint-plugin-jsx-a11y` rule disabled inline.
+
+### 4.12 SSR / Next.js correctness
+`window`/`document`/`localStorage` touched during render or module scope instead of inside
+`useEffect` or a `dynamic(..., { ssr: false })` import; hydration mismatches (random values,
+dates, `typeof window` branches in render); `getServerSideProps` returning non-serializable
+values (`undefined`, `Date`, class instances); missing `notFound`/`redirect` handling for absent
+records; SEO regressions (missing or duplicated title/description/canonical, broken JSON-LD in
+`src/SEO/`); `getStaticProps` used for personalized or market-scoped data.
+
+### 4.13 Test coverage assessment
+State what automated coverage exists for the reviewed area and what a defect found here would
+have needed to be caught. This repo has no test runner configured — that gap is a standing
+observation for the *Notes* section, not a new issue row every session.
+
+---
+
+## 5. How to review (quality bar)
+
+- Read the actual code. Every claim traces to a line you opened.
+- Cite exact `file:line`.
+- Give a reproducible failure scenario: concrete inputs/state → wrong output.
+- Give a concrete fix, not "add validation".
+- Prefer one well-verified Critical over ten speculative Mediums.
+- Deduplicate before writing.
+- Report the safe areas alongside the defects.
+- For a large feature, fan out by domain (services / views / components / state / i18n / a11y)
+  before consolidating — then verify each finding yourself before it reaches the CSV.
+
+---
+
+## 6. Severity & priority
+
+| Severity | Meaning |
+|---|---|
+| **Critical** | Data loss/corruption, money wrong, auth bypass, PII/token exposure, wrong-market or wrong-customer data shown, checkout or payment broken, page crashes for all users. |
+| **High** | A core flow (browse, cart, checkout, orders, account) is broken or wrong for a common case; a security weakness needing preconditions; a state that leaves the user stuck with no recovery. |
+| **Medium** | Non-core flow broken; missing loading/empty/error state; noticeable performance or accessibility defect; systemic rule violation with a real user-facing effect. |
+| **Low** | Cosmetic, minor inconsistency, dead code, isolated code smell, low-impact polish. |
+
+| Priority | Meaning |
+|---|---|
+| **P1** | Fix now — blocks release. All Critical. |
+| **P2** | Fix this cycle. Most High. |
+| **P3** | Scheduled. Medium. |
+| **P4** | Backlog. Low. |
+
+**Bug Type** — one of: `Security`, `Functional`, `Performance`, `UI/UX`, `Accessibility`,
+`i18n/RTL`, `Data Integrity`, `Code Smell`, `Compatibility`, `SEO`.
+
+**Status** — new rows are `Open`. Later transitions: `In Progress`, `Fixed`, `Verified`,
+`Won't Fix`, `Duplicate`, `Cannot Reproduce`.
+
+### CSV formatting rules
+- One row per issue, on **one physical line**. Never embed a newline in a field.
+- Keep the column count at **19**, always. Trailing empty columns
+  (`Status`, `Dev. Notes`, `Tester Status`, `Tester Notes`) are left blank, not dropped —
+  `Status` is filled with `Open`.
+- **Avoid commas inside field text** — use `;` or ` - ` instead. If a comma is genuinely
+  unavoidable, wrap that field in double quotes (RFC 4180) and double any inner quote.
+- `Date` is `YYYY-MM-DD`. `NO` is a bare integer, sequential, never reused.
+- `Module/Feature` names the storefront area (e.g. `Cart`, `Checkout - Payment`, `PDP`,
+  `My Account - Orders`, `Search & Filters`, `Theme/Design System`).
+- `Documentation File` is the doc the review was performed against
+  (`CLAUDE.md`, `THEME_REDESIGN.md`, `REDESIGN_QUESTIONS.md`, `TEST_REPORT.md`) or `-` if none.
+- `Bug Description` carries the `file:line` evidence and the mechanism.
+
+---
+
+## 7. History entry template
+
+Append to `QA/code_review_testing_history.md`, newest at the end, each entry ending with `---`.
+
+```markdown
+# Code Review Session
+
+**Date:** YYYY-MM-DD
+**Time:** HH:MM (24-hour format)
+**Feature / Module:**
+**Documentation File:**
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+- Directories reviewed
+- Total files inspected
+
+## Findings Summary
+- Critical:
+- High:
+- Medium:
+- Low:
+- Total Issues:
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.:
+- Issue No.:
+- ...
+
+## Existing Issues Confirmed
+- Issue No.:
+- ...
+
+## Safe Areas Verified
+List the areas that were explicitly checked and verified as correct.
+
+## Notes
+Any assumptions, limitations, or observations made during the review.
+
+---
+```
+
+---
+
+## 8. Session report (in the response, before finalizing)
+
+Every review ends with a summary covering:
+
+1. **What was reviewed** — modules, directories, file count.
+2. **What was verified as safe** — explicitly checked and found correct.
+3. **What issues were found** — ranked Critical → High → Medium → Low, each with `file:line`.
+4. **Which review categories were completed** — all of §4, each marked checked, with
+   "no findings" stated where that is the outcome.
+
+If nothing was found: state that every category in §4 was checked and no verified issues were
+identified. That is a complete and acceptable review result.
