@@ -746,3 +746,97 @@ Any assumptions, limitations, or observations made during the review.
   remaining feature session.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 15:24 (24-hour format)
+**Feature / Module:** Session 8 — Home, content & SEO
+**Documentation File:** CLAUDE.md · src/components/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/components/Functional/HTMLRenderer.tsx` + all 5 consumers
+  - `src/components/Cards/PromoCard.tsx`, `src/components/StoreProfile.tsx` (inline HTML injection)
+  - `src/components/Location/GoogleMapsScriptLoader.tsx`
+  - `src/SEO/SEOHead.tsx`, `src/SEO/DynamicSEO.tsx`, `src/SEO/PageHead.tsx`
+  - `src/layouts/default.tsx` (SEO wiring)
+  - `scripts/generate-sitemap.mjs`, `scripts/update-robots.mjs`, `public/robots.txt`
+  - `src/pages/index.tsx`, `src/pages/home/sections/[id].tsx`
+  - `src/services/home.ts`, `src/services/content.ts`, `src/services/ads.ts`
+- Directories reviewed: `src/SEO/`, `scripts/`, content surface of `src/pages/` and `src/services/`
+- Total files inspected: 18
+- Repo-wide scans: all 8 `dangerouslySetInnerHTML` sites; sitemap static routes verified against
+  the filesystem; sanitisation-library search across `src/` and `package.json`
+
+## Findings Summary
+- Critical: 0
+- High: 1
+- Medium: 2
+- Low: 0
+- Total Issues: 3
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 38 — API-supplied HTML rendered with no sanitisation (High)
+- Issue No.: 39 — 22 redesign routes and `/design-system` are indexable (Medium)
+- Issue No.: 40 — Sitemap advertises two non-existent routes (Medium)
+
+## Existing Issues Confirmed
+- Issue No.: 3 — No CSP and a JS-readable token. This session establishes the delivery mechanism
+  that makes it exploitable: issue 38's unsanitised HTML on the highest-traffic pages. The three
+  compound — injection point (38), no CSP to contain it (3), and a readable session token in two
+  stores (3 and 14). Recorded as the reason 38 carries High rather than Medium.
+- Issue No.: 14 — Token in localStorage. Same compounding chain as above.
+
+## Safe Areas Verified
+- **`robots.txt` is regenerated at build.** `scripts/update-robots.mjs:23-33` substitutes
+  `{{SITE_URL}}` and rewrites the `Sitemap:` directive from `NEXT_PUBLIC_SITE_URL`, so the
+  `dev-hypercommerce.vercel.app` URL sitting in the committed `public/robots.txt` is a build
+  artefact, not a shipped defect. It was checked specifically because a hard-coded dev URL in
+  production robots.txt would have been a significant finding — it is not one.
+- **Private routes are correctly disallowed** — `/api/`, `/my-account/`, `/cart/`,
+  `/shopping-list/`, `/forgot-password/`, `/admin/` are all present in `robots.txt`, and
+  `/cart/checkout/` is covered by the `/cart/` prefix.
+- **Eleven of the thirteen sitemap static routes resolve** to a real page; each was checked
+  against the filesystem rather than assumed. Only the two in issue 40 are broken.
+- **`DynamicSEO` accepts a `robots` prop** (`:40`, `:79`) defaulting to `index, follow`, so pages
+  using it *can* opt out of indexing. The rigidity is confined to `SEOHead`.
+- **`GoogleMapsScriptLoader.tsx:62`** injects a script body the component composes itself from a
+  settings-supplied API key rather than rendering arbitrary API HTML — a different and acceptable
+  use of `dangerouslySetInnerHTML`.
+- **`SEOHead` header/footer script injection** (`:87`, `:95`) renders `webSettings.headerScript`
+  and `footerScript`. These are admin-configured analytics/tag slots — an intended feature of the
+  platform, equivalent to a tag manager, and judged as such rather than filed as injection.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 · 4.8 · 4.9 · 4.10 ·
+  4.11 · 4.12 (esp. 4.12.5 Head/SEO) · 4.13.
+- **Issue 38 is written to separate what is verified from what is not.** Verified here: no
+  sanitisation at any of the seven render sites, no sanitisation library in the project, and
+  seller-authored content among the inputs. *Not* verifiable from this repository: whether the
+  panel strips active content on write. The row states the storefront-side defect — a total
+  dependency on unverified upstream behaviour with no defence in depth — rather than asserting a
+  working stored-XSS chain that I have not demonstrated. The panel team should confirm what it
+  strips so both layers are documented instead of assumed.
+- **A mid-session correction worth recording.** An initial search for `SEOHead` across
+  `src/pages` and `src/views` returned zero usages, which would have made its hard-coded
+  `index, follow` dead code. Widening the search to all of `src/` found it at
+  `src/layouts/default.tsx:236` — the default layout, so it applies to every page that does not
+  override `getLayout`. The finding was rewritten accordingly; the narrow grep would have
+  produced a wrong conclusion in both directions.
+- Issue 39's severity was held at Medium rather than High because the sandbox pages carry mock
+  data and placeholder copy rather than customer data — the harm is SEO competition, duplicate
+  content, and premature exposure of unreleased design, not a data leak.
+- The `Disallow: /checkout/` entry in `robots.txt` matches no route (the real path is
+  `/cart/checkout/`, already covered by `/cart/`). Harmless and not filed, but noted so a later
+  reader does not mistake it for coverage of the checkout route.
+- Not reviewed and carried forward: the home layout section components and the ad-tracking hook
+  behaviour (`useAdTracking`), which belong with the remaining feature session, and the
+  `/share/` deep-link landing page.
+
+---
