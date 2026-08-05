@@ -1220,3 +1220,98 @@ investigated and disproved rather than filed:
   changed, which is a request-volume question rather than a staleness one.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 21:07 (24-hour format)
+**Feature / Module:** Session 13 — Unnecessary API calls (requested theme)
+**Documentation File:** CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+Theme-based sweep of redundant and avoidable request patterns.
+- Files reviewed
+  - `src/helpers/events.ts` (`onLocationChange`, `onAppLoad`)
+  - `src/components/Location/LocationSelector.tsx` (market-switch call order)
+  - `src/components/Cart/AddressSection.tsx` (the second market-switch path)
+  - `src/helpers/updators.ts` (`updateCartData`) and all 31 of its call sites
+  - `src/views/CartPageView/CheckoutSection.tsx` (place-order `finally`)
+  - `src/services/settings.ts`, `src/hooks/useInfiniteData.ts` (mount revalidation)
+- Repo-wide scans: every `getSettings` call site (56 across 28 page files); every
+  `updateCartData` call site; caching primitives in the settings service
+- Total files inspected: 9
+
+## Findings Summary
+- Critical: 0
+- High: 0
+- Medium: 2
+- Low: 1
+- Total Issues: 3
+
+## Files Modified
+- QA/code_review.csv (3 new rows + a Dev. Notes correction on issue 1)
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 52 — A location change fires three refresh mechanisms and revalidates every SWR key (Medium)
+- Issue No.: 53 — Settings fetched server-side on every navigation with no caching (Medium)
+- Issue No.: 54 — Cart refreshed in the checkout `finally` after a successful order (Low)
+
+## Existing Issues Confirmed — and one CORRECTED
+- **Issue No.: 1 — CORRECTED, scope narrower than filed.** This session found that the header
+  location selector calls `onLocationChange()` immediately after `resolveMarket`
+  (`LocationSelector.tsx:280-281`), and `onLocationChange` revalidates **every mounted SWR key**
+  via `mutate(() => true, undefined, { revalidate: true })` (`events.ts:65`). On that path — the
+  primary way a customer changes market — the catalogue *is* refreshed, so issue 1 does not bite
+  there. It applies to the **checkout address path only** (`AddressSection.tsx:156`), which calls
+  `resolveMarketForCountry` without `onLocationChange`. On this evidence the **Critical rating is
+  overstated**; High and a title narrowed to the checkout path would be accurate. The original row
+  text is left unchanged per the append-only rule and the correction is recorded in its
+  `Dev. Notes` column, which §2 permits. Re-rating is the user's call.
+- Issue No.: 35 — Market-blind SWR keys. Strengthened rather than weakened by the above: the
+  reason the header path works is a blunt global revalidation, which is exactly the workaround
+  that market-scoped keys would make unnecessary. It is also why issue 52 exists.
+- Issue No.: 36 — Missing `dedupingInterval`. Directly undermines the comment at `events.ts:64`
+  that justifies the triple refresh on the grounds that "SWR dedupes any overlap" — the window is
+  the 2-second default because no catalog fetch sets it.
+
+## Safe Areas Verified
+- **`useInfiniteData` does not double-fetch on SSR pages.** `revalidateOnMount` is
+  `forceFetchOnMount ? forceFetchOnMount : !isSSR()` (`:82`), so in the shipped SSR mode a listing
+  hydrated from `getServerSideProps` does *not* immediately refetch. The most common redundant
+  request in this architecture — SSR plus a client fetch on first paint — is correctly avoided.
+- **`onAppLoad` skips the cart fetch on cart routes** (`events.ts:96-99`) — it checks the path and
+  does not refresh the cart when the customer is already on `/cart`, where the page fetches it.
+  That is a deliberate de-duplication and it is correct.
+- **`updateCartData` returns early when logged out** so the offline cart never triggers an
+  authenticated request.
+- **Cart mutations refresh once**, not twice: `CartQuantityControl`, `ProductCard`, and
+  `ProductCardAddButton` each call `updateCartData` exactly once after their write, and no event
+  listener fires a second refresh for the same action.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 (n/a) · 4.7 (n/a) · 4.8 ·
+  4.9 (n/a) · 4.10 (n/a) · 4.11 (n/a) · 4.12 · 4.13.
+- **The correction to issue 1 is the most important output of this session.** It was found by
+  tracing a call order rather than by re-reading the original file, which is why nine earlier
+  sessions did not surface it: session 1 read `resolveMarketForCountry` and correctly observed it
+  only mutates `/settings`, but did not check what the *caller* does immediately afterwards.
+  Being wrong in the direction of over-severity on a Critical is worth correcting explicitly
+  rather than quietly.
+- Issue 53 is the largest request-volume finding by a wide margin — it scales with page views
+  rather than visitors, on the least volatile payload in the application, and sits on the critical
+  path of every server render.
+- Issue 54 is deliberately rated Low: one wasted request per order is real but small. It is filed
+  because it is the clearest of the 31 `updateCartData` call sites where the call cannot inform
+  anything the customer sees, not because the cost alone justifies a row.
+- The `updateCartData` call-site count (31) was reviewed for duplicate refreshes on a single
+  action and none were found beyond issue 54. The spread is wide but each site has a distinct
+  trigger, so no systemic redundancy row is warranted.
+
+## Register status after thirteen sessions
+- Total issues recorded: **54** — Critical 2 (one of which, issue 1, is flagged above as
+  overstated and pending re-rating), High 11, Medium 33, Low 8.
+- All ten planned sessions plus the three requested theme sessions are complete.
+
+---
