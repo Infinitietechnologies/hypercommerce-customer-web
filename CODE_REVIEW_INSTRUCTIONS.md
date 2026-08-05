@@ -114,6 +114,31 @@ Date,NO,Module/Feature,Documentation File,Bug Title,Bug Description,Bug Type,Sev
 
 Adapted to this stack. A category with no findings is still reported as checked.
 
+### Scope — this is static code review only
+
+**In scope:** anything establishable by *reading source code* in this repository. Every
+category below qualifies — including business-logic correctness, i18n, timezone, and
+accessibility, which are read off the code (a rounding call, a missing `t()` key, a `ml-`
+where `ms-` is required, a missing `aria-label`), not observed by using the app. These are
+also categories 2 and 8–10 of the panel repo's code review instructions; keeping them here
+means both repos review to one standard.
+
+**Out of scope** — do not do these in a code review session, and do not record them in
+`QA/code_review.csv`:
+
+- Running the app and exercising flows by hand; writing or executing manual test cases.
+- Functional QA defects found by *using* the product rather than reading its source.
+- Visual/design QA against the `/redesign` sandbox (that is the reskin verification pass in
+  `CLAUDE.md` §6.7, done with the app rendered).
+- Fixing the code. Review and repair are separate asks and separate commits (§3.3 rule 16).
+- Reviewing the Laravel panel's own source — it has its own QA folder and review history.
+  A storefront defect whose root cause is in the API is still recorded here, with the panel
+  named in *Suggested Fix*.
+
+The `Preconditions` and `Steps to Reproduce` CSV columns are still required: they describe the
+**code path** that produces the defect (inputs, state, call sequence) so a developer can
+confirm it — not manual tester instructions.
+
 ### 4.1 Performance & optimization
 Unnecessary or duplicate API requests (the same endpoint fetched by both `getServerSideProps`
 and a client hook on first paint); waterfalled `await`s that could be `Promise.all`; requests
