@@ -301,7 +301,7 @@ const ProductCard: FC<ProductCardProps> = ({
         </div>
       </CardBody>
 
-      <CardFooter className="flex-col items-stretch gap-2 px-2.5 pb-3 pt-3 sm:px-3 sm:pb-3.5">
+      <CardFooter className="grow flex-col items-stretch gap-2 px-2.5 pb-3 pt-3 sm:px-3 sm:pb-3.5">
         <div className="flex items-center justify-between gap-2 min-h-6">
           {product.brand_name ? (
             <span className="truncate rounded-md bg-blue-50 px-2 py-1 text-[10px] sm:text-[11px] font-medium text-blue-600">
@@ -321,7 +321,7 @@ const ProductCard: FC<ProductCardProps> = ({
 
         <Link
           href={productHref}
-          className="text-[13px] sm:text-sm font-semibold leading-snug line-clamp-2"
+          className="truncate text-[13px] sm:text-sm font-semibold leading-snug"
           title={product.title}
           onClick={handleAdClick}
         >
@@ -330,11 +330,13 @@ const ProductCard: FC<ProductCardProps> = ({
 
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-[15px] sm:text-lg font-bold leading-none">
-            {formatPrice(hasDiscount ? specialPrice : price)}
+            {hasDiscount
+              ? (defaultVariant.formatted_special_price ?? formatPrice(specialPrice))
+              : (defaultVariant.formatted ?? formatPrice(price))}
           </span>
           {hasDiscount && (
             <span className="text-[11px] sm:text-[13px] text-default-400 line-through">
-              {formatPrice(price)}
+              {defaultVariant.formatted ?? formatPrice(price)}
             </span>
           )}
           {discountPercentage > 0 && (
@@ -348,7 +350,7 @@ const ProductCard: FC<ProductCardProps> = ({
           <Button
             color="primary"
             radius="lg"
-            className="mt-1 w-full font-medium"
+            className="mt-auto w-full font-medium"
             isLoading={isAddingToCart}
             onPress={handleAddToCart}
             startContent={isAddingToCart ? undefined : <Icon icon="mdi:plus" className="text-lg" />}

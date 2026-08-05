@@ -72,6 +72,9 @@ export interface ProductVariant {
   is_default: boolean;
   price: number;
   special_price: number;
+  /** Backend market-formatted price strings (rounded, with symbol). */
+  formatted?: string | null;
+  formatted_special_price?: string | null;
   store_id: number;
   store_slug: string;
   store_name: string;
