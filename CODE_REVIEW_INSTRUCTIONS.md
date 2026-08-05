@@ -211,13 +211,143 @@ on close, and `Esc` to close; `outline-none` with no visible replacement focus r
 contrast against the theme tokens; `prefers-reduced-motion` respected by framer-motion;
 any `eslint-plugin-jsx-a11y` rule disabled inline.
 
-### 4.12 SSR / Next.js correctness
-`window`/`document`/`localStorage` touched during render or module scope instead of inside
-`useEffect` or a `dynamic(..., { ssr: false })` import; hydration mismatches (random values,
-dates, `typeof window` branches in render); `getServerSideProps` returning non-serializable
-values (`undefined`, `Date`, class instances); missing `notFound`/`redirect` handling for absent
-records; SEO regressions (missing or duplicated title/description/canonical, broken JSON-LD in
-`src/SEO/`); `getStaticProps` used for personalized or market-scoped data.
+### 4.12 Next.js correctness
+
+This is a **Next.js 16 Pages Router** app. Every sub-section below is checked on any page,
+view, or config touched by the review. Values quoted here are the ones actually in
+`next.config.ts` — re-read that file if a review touches build behaviour, because several
+checks depend on it.
+
+#### 4.12.1 Build mode — the dual-mode trap (check first)
+`next.config.ts` sets `output: isExport ? "export" : undefined`, where
+`isExport = process.env.NEXT_PUBLIC_SSR !== "true"`. **The app builds as a static export
+unless `NEXT_PUBLIC_SSR` is exactly the string `"true"`.** Meanwhile 33 pages export
+`getServerSideProps`, which a static export cannot run. So:
+- Any change that adds or removes `getServerSideProps` must be assessed **in both modes**.
+- Treat a missing, misspelled, or non-`"true"` `NEXT_PUBLIC_SSR` in any deploy target as a
+  release-blocking finding — the build silently switches contract (SSR pages, `notFound`,
+  `redirect`, auth guards, market detection from request headers, and `images` optimization
+  all change behaviour or stop working).
+- `output: "export"` also forces `images.unoptimized: true` and makes `headers()` inert
+  (a static host serves no Next.js headers) — so the security headers below only apply in
+  SSR mode. Do not assert a header is enforced without confirming the deploy mode.
+- Never add an API route or middleware without flagging it: neither exists today, and
+  neither survives a static export.
+
+#### 4.12.2 Data fetching (`getServerSideProps`)
+Non-serializable props (`undefined`, `Date`, `Map`, class instances, functions) — return
+`null` and ISO strings; missing `notFound: true` / `redirect` for absent or moved records
+(a deleted product must 404, not render an empty shell); `serverSideAuthGuard(context)`
+missing on a protected page, or the path missing from `PROTECTED_ROUTES` — **both are
+required**, and the client `withAuth` HOC is not a substitute; the incoming request's
+cookies/headers (auth token, market, locale) not forwarded to the API call, so SSR renders
+default-market or logged-out content that then flips on hydration; fetching this app's own
+origin from `getServerSideProps` instead of calling the service layer; unbounded work in
+`getServerSideProps` (N sequential awaits that should be `Promise.all`); no fallback
+(`fallbackApiRes` / `fallbackPaginateRes`) so an API failure throws a 500 instead of
+rendering an error state; `getStaticProps`/`getStaticPaths` used for personalized,
+auth-dependent, or market-scoped data (this repo currently has zero — adding one needs
+justification and a revalidation story).
+
+#### 4.12.3 Routing & navigation
+`<a href>` for internal navigation instead of `next/link` (full page reload, loses client
+state); `router.push` where a `Link` belongs (breaks middle-click/open-in-new-tab and
+keyboard affordances); **`trailingSlash: true` is set** — internal links, canonical URLs,
+sitemap entries, and redirect targets must agree with it or every hit costs a redirect hop;
+`router.query` read on first render without guarding `router.isReady` (undefined params on
+the initial client render of a dynamic route); dynamic-segment values used without decoding
+or validation; navigation state (filters, pagination, search) kept only in component state
+when the URL should own it — per `CLAUDE.md` §7.1 the URL is the source of truth for
+shareable filter state; `shallow` routing used where data actually must refetch.
+
+#### 4.12.4 Images & static assets
+Raw `<img>` where `next/image` belongs (3 raw `<img>` remain against 6 `next/image` files —
+new code should not add to that); missing `sizes` on a `fill` image (ships the largest
+candidate to every viewport); missing `priority` on the LCP image (hero/banner/PDP gallery)
+or `priority` sprayed onto below-the-fold images; missing `width`/`height` causing layout
+shift; **`dangerouslyAllowSVG: true` combined with `remotePatterns: [{ hostname: "**" }]`** —
+the optimizer will fetch and serve an SVG from *any* https host, so treat any new
+user-controlled or seller-controlled image URL flowing into `next/image` as a stored-XSS /
+SSRF surface and say so in the finding (`contentDispositionType: "attachment"` mitigates but
+does not eliminate it); unoptimized remote images in export mode assumed to be resized.
+
+#### 4.12.5 Head, SEO & metadata
+This is Pages Router — metadata comes from `next/head`, **not** the App Router `metadata`
+export. `next/head` is centralized in `src/SEO/` (`SEOHead`, `DynamicSEO`, `PageHead`) and
+pages consume those components, so a page should almost never import `next/head` directly —
+one that does is a finding. Coverage is 31 of 35 non-sandbox pages; the four without any SEO
+component are `design-system.tsx`, `forgot-password/index.tsx`, `home/sections/[id].tsx`, and
+`share/products/[slug].tsx` — verify that gap is still real and still intended before filing
+it. Also check: duplicated or conflicting
+`<title>`/`<meta name="description">` between `_app.tsx` and a page; canonical URL missing,
+hard-coded, or disagreeing with `trailingSlash: true`; `NEXT_PUBLIC_SITE_URL` missing so
+canonical/OG URLs render relative or `undefined`; OG/Twitter tags absent on shareable pages
+(PDP, category, store, share); JSON-LD in `src/SEO/` malformed, emitted twice, or describing
+fields the page does not show; `noindex` missing on thin/private routes — notably the
+`/redesign/*` sandbox and `/design-system`, which should not be indexed in production;
+sitemap/robots generated by `scripts/` drifting from the real route list.
+
+#### 4.12.6 Hydration & client-only code
+`window`, `document`, `localStorage`, `navigator`, or `matchMedia` touched during render or
+at module scope instead of inside `useEffect` or behind `dynamic(..., { ssr: false })`;
+`typeof window !== "undefined"` branching **inside render** (server and client HTML differ →
+hydration error); `Date.now()`/`new Date()`/`Math.random()` rendered directly; locale- or
+timezone-dependent formatting computed server-side and re-computed client-side to a different
+string; persisted Redux state (`redux-persist`) read during first render before rehydration
+completes; `useScreenType()` driving markup that differs from the server render without a
+mounted guard; **`reactStrictMode: true`** means effects double-invoke in dev — an effect that
+breaks on second invocation (duplicate fetch, double increment, non-idempotent setup) is a
+real bug, not a dev artifact.
+
+#### 4.12.7 Bundle & code splitting
+Heavy client-only libraries (`leaflet`/`react-leaflet`, `swiper`, `yet-another-react-lightbox`,
+Stripe, `firebase`, `react-confetti`) imported statically into a shared chunk instead of via
+`next/dynamic` (20 dynamic imports exist — follow that pattern); a barrel import pulling a
+whole library where a named import suffices (`optimizePackageImports` covers `@heroui/react`,
+`lucide-react`, `react-icons` — anything else is on you); `lodash` imported whole rather than
+per-method; a server-only or Node-only module (`fs`, `path`) reaching a client component;
+`transpilePackages` additions that are not justified; a polyfill or dev-only dependency
+shipped to production.
+
+#### 4.12.8 `_app.tsx` / `_document.tsx` discipline
+Data fetching or blocking work added to `_app.tsx` (deoptimizes every page); `getInitialProps`
+introduced anywhere (disables static optimization app-wide); `_document.tsx` containing
+event handlers, hooks, or client logic — it renders once on the server only; fonts loaded
+outside `next/font` (`src/config/fonts.ts` owns this, and `next/font/local` requires a static
+object literal per `CLAUDE.md` §2); provider order changes in `_app.tsx` that silently
+reorder theme/i18n/Redux/toast initialization; a global CSS import added outside `_app.tsx`
+(Pages Router forbids it elsewhere).
+
+#### 4.12.9 Environment variables & config
+**Anything named `NEXT_PUBLIC_*` is inlined into the browser bundle at build time** — a
+secret, API key, or private URL under that prefix is a Critical finding. The four legitimate
+ones are `NEXT_PUBLIC_ADMIN_PANEL_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_VERSION`,
+`NEXT_PUBLIC_SSR`; any new one must be justified and added to `.env.example` (`CLAUDE.md` §8).
+Also check: a server-only secret read in code that also runs client-side (it will be
+`undefined`, not secret — but the resulting silent failure is the bug); env var read at
+module scope and therefore frozen at build time when runtime behaviour was intended;
+hard-coded API base URL bypassing `constructApiBaseUrl()`.
+
+#### 4.12.10 Security headers, PWA & caching
+`next.config.ts` `headers()` sets HSTS, `X-Frame-Options: SAMEORIGIN`, `nosniff`,
+`Referrer-Policy`, and `Permissions-Policy` — verify a change does not weaken them, and note
+that **no `Content-Security-Policy` is set**, which is the standing gap to cite whenever a
+review touches `dangerouslySetInnerHTML` or third-party script injection. `headers()` does
+not apply in export mode (4.12.1). PWA (`@ducanh2912/next-pwa`) runs with
+`cacheOnFrontEndNav` and `aggressiveFrontEndNavCaching` — check that authenticated or
+market-scoped responses are not being cached into the service worker where another user or
+market could read them, that a released build actually invalidates the old service worker,
+and that offline fallbacks do not serve stale prices or stock. `compiler.removeConsole`
+strips `console.*` except `error`/`warn` in production — do not rely on a stripped log for
+diagnostics, and never log tokens/PII to `console.error`, which survives.
+
+#### 4.12.11 Pages Router discipline
+No `app/` directory, no App Router files, no `"use client"` / `"use server"` directives
+(meaningless here — `/src/app/` is gitignored and must stay unused); no React Server
+Components or `async` page components; no `next/navigation` imports (`useRouter` comes from
+`next/router` in Pages Router — mixing them is a runtime error); no `metadata` export;
+no Suspense-based streaming assumptions. Any of these appearing is a Critical structural
+finding under `CLAUDE.md` §9.6, not a style nit.
 
 ### 4.13 Test coverage assessment
 State what automated coverage exists for the reviewed area and what a defect found here would
