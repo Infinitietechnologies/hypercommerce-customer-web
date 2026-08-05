@@ -213,8 +213,15 @@ customer token`, `A seller able to store product content`, `Local access to a sh
 
 **`Priority`** — `P1` fix now / `P2` this cycle / `P3` scheduled / `P4` backlog.
 
-**`Status`** — `Open`, then `In Progress`, `Fixed`, `Verified`, `Won't Fix`, `Accepted Risk`,
-`Duplicate`, `Not Exploitable`.
+**`Status`** — **leave empty when writing a row.** This column belongs to the team working the
+register, not to the reviewer filing the finding. Do not pre-fill it with `Open` or anything else —
+a row existing in `security.csv` already means the finding is outstanding. The team fills it in the
+sheet as work progresses (`In Progress`, `Fixed`, `Verified`, `Won't Fix`, `Accepted Risk`,
+`Duplicate`, `Not Exploitable`), and §2 permits updating it on an existing row.
+
+The same applies to the last three columns — **`Dev. Notes`, `Tester Status` and `Tetster Notes`
+are always left empty on a new row.** So every row you write ends with four empty fields, i.e.
+four trailing commas.
 
 ### CSV formatting rules
 

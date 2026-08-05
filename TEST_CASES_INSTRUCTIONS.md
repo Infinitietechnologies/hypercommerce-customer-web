@@ -138,15 +138,18 @@ follow that: it makes a case that documents present behaviour as well as intende
 
 **`Endpoint/Evidence`** — the route, endpoint, or `file:line` the case exercises.
 
-**`Status`** — the implementation state of the case, and the field that makes this a backlog:
-- `Draft` — specified, not yet agreed.
-- `Ready` — specified and ready to be written as an automated test. **Still missing.**
-- `Automated` — implemented as a real test. Done; no longer outstanding.
-- `Deprecated` — the behaviour no longer exists; the case is retired rather than deleted.
+**`Status`** — **leave empty when writing a row.** This column belongs to the team working the
+register, not to the author of the case. Do not pre-fill it — **a row existing in
+`test_cases.csv` already means the case is missing and outstanding**, which is the whole scope of
+this register (§1). The team fills it in the sheet as the case is picked up, marking it
+`Automated` once a real test exists (and `Deprecated` if the behaviour is retired). Rows with an
+empty `Status` are the remaining backlog.
 
-**`Tester Status`** — left for the tester when the case is executed by hand: `Not Run`, `Pass`,
-`Fail`, `Blocked`. A case can be `Ready` here and `Pass` there — that means the behaviour works
-today but nothing automated protects it, which is still a gap.
+**`Dev. Notes`, `Tester Status` and `Tetster Notes` are also always left empty on a new row.** The
+tester fills `Tester Status` (`Not Run`, `Pass`, `Fail`, `Blocked`) when executing by hand — and a
+case that passes by hand is still outstanding here, because nothing automated protects it.
+
+So every row you write ends with four empty fields, i.e. four trailing commas.
 
 ---
 

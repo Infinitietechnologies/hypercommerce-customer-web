@@ -253,8 +253,15 @@ adopts one. Never reused, never renumbered.
 
 **`Priority`** — `P1` fix now / `P2` this cycle / `P3` scheduled / `P4` backlog.
 
-**`Status`** — new rows are `Open`; later `In Progress`, `Fixed`, `Verified`, `Won't Fix`,
-`Duplicate`, `Cannot Reproduce`.
+**`Status`** — **leave empty when writing a row.** This column belongs to the team working the
+register, not to the tester filing the defect. Do not pre-fill it with `Open` or anything else —
+a row existing in `defects.csv` already means the defect is outstanding. The team fills it in the
+sheet as work progresses (`In Progress`, `Fixed`, `Verified`, `Won't Fix`, `Duplicate`,
+`Cannot Reproduce`), and §2 permits updating it on an existing row.
+
+The same applies to the last three columns — **`Dev. Notes`, `Tester Status` and `Tetster Notes`
+are always left empty on a new row.** So every row you write ends with four empty fields, i.e.
+four trailing commas.
 
 **`Evidence (file:line)`** — the source location if known from code review, otherwise the URL,
 endpoint, or screenshot reference. Never leave it blank; use `-` if genuinely nothing applies.
