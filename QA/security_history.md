@@ -3,66 +3,69 @@
 # Security Review Session
 
 **Date:** 2026-08-05
-**Time:** 03:34 (24-hour format)
-**Feature / Module:** F5 — Orders & returns (security pass)
+**Time:** 04:41 (24-hour format)
+**Feature / Module:** F6 — Account: profile, addresses, notifications, wishlists (security pass)
 **Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
 **Reviewer:** Claude
 
 ## Scope
-- Files reviewed: `src/services/orders.ts` (all 9 callers),
-  `src/views/OrderDetailView/index.tsx`, `src/views/OrderDetailView/ReturnSheet.tsx`,
-  `src/components/Modals/ReturnOrderItemModal.tsx`,
-  `src/pages/my-account/orders/index.tsx`, `src/pages/my-account/orders/[slug]/index.tsx`
-- Review areas covered: 4.3 authorization · 4.4 injection sinks · 4.9 tenancy ·
-  4.10 client abuse surface (upload) · 4.13 privacy
-- Total files inspected: 6
+- Files reviewed: `src/helpers/notificationUrl.ts`, `src/pages/my-account/notifications/index.tsx`,
+  `src/components/Functional/FirebaseInitializer.tsx`, `src/pages/my-account/profile/index.tsx`,
+  `src/pages/my-account/addresses/index.tsx`, `src/pages/my-account/wishlists/index.tsx`,
+  `src/services/auth.ts` (profile/email endpoints), `src/services/address.ts`,
+  `src/services/wishlist.ts`, `src/components/Cart/AttachmentUploader.tsx` (comparison)
+- Review areas covered: 4.3 authorization · 4.4 injection sinks · 4.5 redirects and window
+  handling · 4.10 client abuse surface · 4.13 privacy
+- Total files inspected: 10
 
 ## Findings Summary
-- Critical: 0 · High: 0 · Medium: 1 · Low: 0 · Total Findings: 1
+- Critical: 0 · High: 0 · Medium: 2 · Low: 0 · Total Findings: 2
 
 ## Files Modified
 - QA/security.csv
 - QA/security_append.csv
 
 ## New Findings Added
-- ID: CWEB-06 — Return evidence upload accepts any file type and any size (Medium)
+- ID: CWEB-07 — Notification list navigates to an unvalidated URL from the payload (Medium)
+- ID: CWEB-08 — Profile avatar accepts any file of any size (Medium)
 
 ## Existing Findings Confirmed
-- Code review #38 — no sanitisation of API-supplied HTML, and #3 — no CSP. Both are named inside
-  CWEB-06 because they are what turns an unrestricted upload from a storage problem into a
-  potential injection one, if the panel serves the stored file inline.
-- Code review #28 and #29 — hard-coded English SSR errors and reload-as-retry on the orders
-  screens. Unchanged; specified as TC-ORD-011 to TC-ORD-013.
+- Code review #27 and #50 — the profile page's `initialData` handling. Both are reachable from the
+  security angle too (a blank form that can overwrite a stored record), but they are already filed
+  with the right severity and are specified here as TC-ACC-008 to TC-ACC-011 rather than re-filed.
+- CWEB-06 (F5) — return evidence upload. CWEB-08 is the same class and the row says so; together
+  they establish the systemic position recorded below.
 
 ## Chains Identified
-- **CWEB-06 + #38 + #3** — an unvalidated upload (no mime check) into a platform that sanitises no
-  API-supplied HTML and sets no CSP. Each is individually bounded; together they describe a
-  plausible stored-injection path. Whether it completes depends on how the panel stores and serves
-  return evidence, which is not verifiable here and is written into TC-ORD-004.
+- **CWEB-08 + CWEB-06 + #38 + #3** — two unvalidated upload paths feeding a platform that
+  sanitises no API-supplied HTML and sets no CSP. The upload rows carry the cross-reference so the
+  combined picture is visible from either end.
 
 ## Areas Verified Secure
-- **`returnOrderItem` builds a correct multipart request** and deliberately omits `orderItemId`
-  from the body because it belongs in the path — the comment at `services/orders.ts:70-80`
-  documents the panel's `CreateItemReturnRequest` contract, which is the right way to record a
-  contract dependency.
-- **No order endpoint accepts an owner identifier from the client.** Every call is scoped by the
-  session token; `getOrders` forwards the SSR bearer token as a header.
-- **All ten account routes remain server-side guarded** — re-confirmed by request in F1 and not
-  weakened by anything in this feature.
-- **Order data is rendered as text**, not through `dangerouslySetInnerHTML`, so the order screens
-  add no injection sink of their own.
-- **The evidence requirement is enforced before submit** — `ReturnSheet.tsx:81` blocks a reason
-  that needs a photo when none is attached.
+- **Every typed branch of `getNotificationRedirectUrl` builds a relative path** — orders, wallet,
+  product, brand, category, store and the entity fallback all produce `/…` routes. Only the
+  `quickLink` shortcut is unvalidated, which is why CWEB-07 is scoped to that branch rather than
+  the whole helper.
+- **The push-notification consumer is correct** — `FirebaseInitializer.tsx:76-80` tests
+  `/^https?:\/\//i` and routes external URLs through `window.open(url, "_blank",
+  "noopener,noreferrer")`, so no reverse-tabnabbing and no in-place navigation. It is the in-repo
+  counter-example that makes the notifications-page behaviour a defect rather than a design choice.
+- **Wishlist removal is a correct optimistic update** with revalidation on both the unsuccessful
+  response and the thrown error — re-verified this session.
+- **Address CRUD refreshes its list** after every mutation.
+- **No account endpoint accepts an owner identifier from the client**; all are session-scoped.
 
 ## Notes
-- **CWEB-06 is a regression, and that is what makes it worth filing rather than a standing gap.**
-  The component it replaced — `ReturnOrderItemModal` — enforces a five-image cap, an
-  `image/*` mime check and a 5MB size ceiling (`:42`, `:309`, `:320`, `:329`). That modal is no
-  longer rendered anywhere in `src`, so the validated path is dead code and the redesign's
-  `ReturnSheet` is what customers use. The redesign kept the count cap and dropped the other two.
-- `accept="image/*"` was explicitly not treated as validation. It is a file-picker hint: a user can
-  change the dialog filter, and a scripted submit ignores it entirely.
-- The strongest remediation is also the cheapest: the exact checks needed already exist in the dead
-  modal and can be lifted across, after which that file should be deleted.
+- **The upload picture is now systemic and worth stating once.** The storefront has three live
+  upload paths: cart attachments (`AttachmentUploader`) validates mime and size correctly; return
+  evidence (`ReturnSheet`) validates neither (CWEB-06); profile avatar validates neither (CWEB-08).
+  A fourth, `ReturnOrderItemModal`, validated correctly but is dead code. The right fix is one
+  shared validator that all paths route through, which is what both rows recommend.
+- `accept="image/*"` is treated consistently across both upload findings as a picker hint and not
+  as validation.
+- An observation not filed: `profile/index.tsx:566` and `:581` call `URL.createObjectURL` **during
+  render** without ever revoking, so a new object URL leaks on every render while an avatar preview
+  is showing. That is a performance and lifecycle defect rather than a security one, and it belongs
+  to a code-review pass on this file — recorded here so it is not lost.
 
 ---
