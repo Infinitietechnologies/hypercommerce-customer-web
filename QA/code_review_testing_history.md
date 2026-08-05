@@ -273,3 +273,88 @@ Any assumptions, limitations, or observations made during the review.
   belongs with the cart session.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 10:04 (24-hour format)
+**Feature / Module:** Session 3 — Cart & offline cart
+**Documentation File:** CLAUDE.md · src/lib/redux/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/lib/redux/slices/offlineCartSlice.ts` (all 7 reducers + `clampQuantity` + `recalculateSummary`)
+  - `src/lib/redux/slices/cartSlice.ts`
+  - `src/helpers/updators.ts` (`updateCartData`, `syncOfflineCartToServer`, `updateDataOnAuth`)
+  - `src/services/cart.ts` (all 11 endpoint callers)
+  - `src/components/Modals/FailedItemsModal.tsx` (window-global registration)
+  - `src/components/Modals/RemovedItemsModal.tsx` (hidden-button trigger)
+  - `src/types/cart.ts` (`failed_items` / `CartSyncData` shapes)
+- Directories reviewed: cart surface of `src/lib/redux/slices/`, `src/services/`, `src/helpers/`
+- Total files inspected: 7
+
+## Findings Summary
+- Critical: 0
+- High: 1
+- Medium: 4
+- Low: 1
+- Total Issues: 6
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 17 — Offline cart cleared even when the server rejected items (High)
+- Issue No.: 18 — `clampQuantity` can return below the product minimum; dead branch (Medium)
+- Issue No.: 19 — Empty-cart case decided by matching an English API message (Medium)
+- Issue No.: 20 — Hard-coded English cart toasts, one with a typo (Medium)
+- Issue No.: 21 — Offline line merge bypasses the quantity clamp (Medium)
+- Issue No.: 22 — Modals driven by a hidden DOM click and a `window` global (Low)
+
+## Existing Issues Confirmed
+- Issue No.: 15 — `cart` persisted against the documented rule. Re-confirmed from the cart side:
+  `cartSlice` holds the full `CartResponse` including prices, so the persisted copy is a stale
+  priced cart, not just item ids. No new row.
+- Issue No.: 11 — `any` usage. Two further locations: `updators.ts:117` and `:119`, both
+  `(window as any)`. Folded into issue 22 rather than filed separately.
+
+## Safe Areas Verified
+- **`src/services/cart.ts`** — all 11 callers send their payload as a **request body**
+  (`api.post(url, params)`), never as query params. This is the correct pattern and the direct
+  contrast with issue 13 in the auth service; no credential or cart mutation leaks into a URL.
+  Every caller also returns a fallback on error.
+- **`recalculateSummary`** (`offlineCartSlice.ts:38-53`) — correctly includes addon prices in the
+  line total and recomputes both `subtotal` and `totalQuantity` after every mutation; every
+  reducer that changes items calls it, so the summary cannot drift out of sync with the items.
+- **`addOfflineCartItem`** (`:114-138`) — merges by id, re-clamps the summed quantity, and takes
+  the incoming price so a stale price does not survive a re-add. Correct.
+- **`cartSlice` reducers** — minimal and correct; `clearCart` resets both `cartData` and `error`.
+- **Login sync ordering** — in `helpers/auth.ts` the sequence is `await syncOfflineCartToServer()`
+  then `updateCartData(...)`, so the server cart is fetched after the merge rather than racing it.
+- **`updateCartData` guard** — returns early when logged out (`updators.ts:30-32`), so the offline
+  path never issues an authenticated cart call.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 (n/a — the cart endpoints inherit market
+  scope from the shared axios instance, verified in session 1) · 4.5 · 4.6 (cart *screens* are
+  not in this session; the state layer feeding them was checked) · 4.7 · 4.8 · 4.9 · 4.10 (no
+  date handling in scope) · 4.11 (n/a to this layer) · 4.12 · 4.13.
+- **Issues 17, 18, and 21 chain together.** 18 and 21 both let an invalid quantity into the
+  offline cart; the server then rejects those lines at login sync; and 17 deletes them in
+  response. Fixing 17 alone stops the data loss, which is why it carries the highest severity of
+  the three.
+- **Float arithmetic on money** (`offlineCartSlice.ts:45`) was reviewed and deliberately not
+  filed. `subtotal` is display-only pre-login and the server recomputes authoritative totals on
+  sync, so the exposure is sub-cent drift on a provisional figure. Recorded here so a later
+  session does not re-derive it — if the offline subtotal ever becomes an input to a real total,
+  this should be revisited.
+- The `setTimeout` toasts in `syncOfflineCartToServer` (`:124` at 3s and `:138` at 2s) fire after
+  a delay with no cleanup, so they can surface after the user has navigated away. Judged minor
+  and not filed; noted for the cart-screen session, where the component lifecycle is in scope.
+- Not reviewed and carried forward: `CartPageView` and the cart/checkout screens with their four
+  states, the quantity stepper component, save-for-later, and promo-code validation — all of
+  which belong to the cart-screen and checkout sessions.
+
+---
