@@ -458,3 +458,101 @@ Any assumptions, limitations, or observations made during the review.
   order detail and returns screens, which belong to the orders session.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 12:05 (24-hour format)
+**Feature / Module:** Session 5 — Orders & account
+**Documentation File:** CLAUDE.md · src/pages/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/services/orders.ts` (all 9 callers, incl. `createOrder` / `payOrder` carried from session 4)
+  - `src/pages/my-account/orders/index.tsx`
+  - `src/pages/my-account/orders/[slug]/index.tsx`
+  - `src/pages/my-account/addresses/index.tsx`
+  - `src/pages/my-account/profile/index.tsx`
+  - `src/pages/my-account/transactions/index.tsx`
+  - `src/pages/my-account/wallet/index.tsx`
+  - `src/pages/my-account/notifications/index.tsx`
+  - `src/pages/my-account/wishlists/index.tsx`
+  - `src/pages/my-account/refer-and-earn/index.tsx`
+  - `src/components/Tables/TransactionTable.tsx`
+- Directories reviewed: `src/pages/my-account/` (all 10 pages), orders surface of `src/services/`
+- Total files inspected: 11
+
+## Findings Summary
+- Critical: 0
+- High: 1
+- Medium: 1
+- Low: 1
+- Total Issues: 3
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 27 — Profile renders an empty form on a failed fetch and saving submits blanks (High)
+- Issue No.: 28 — Hard-coded English server-side error messages in account pages (Medium)
+- Issue No.: 29 — Retry performs a full page reload instead of refetching (Low)
+
+## Existing Issues Confirmed
+- Issue No.: 23 — Idempotency key. Confirmed from the service side: `createOrder`
+  (`services/orders.ts:154-186`) returns `fallbackApiRes` on any thrown error, so a timeout after
+  the panel committed the order is indistinguishable from a genuine failure at the call site.
+  This is precisely the input condition issue 23 describes, and it is what makes the retry path
+  reachable rather than theoretical. No new row.
+
+## Safe Areas Verified
+- **Every account page is genuinely guarded server-side.** All 10 read
+  `getAccessTokenFromContext` and redirect through `loginRedirect` before fetching. Re-verified
+  page by page in this session rather than assumed from session 1.
+- **Orders list** (`orders/index.tsx`) is the strongest screen reviewed so far: `OrderCardSkeleton`
+  for loading, `ErrorState` with retry, translated headings, and pagination guarded by
+  `orders.total > orders.per_page` at `:140` so the `Math.ceil` at `:143` can never divide by the
+  zero `per_page` that `fallbackPaginateRes` carries.
+- **Error-vs-empty distinction is correct everywhere except profile.** `addresses` uses
+  `response.success ? response.data : null` (`:284`) and `orders/[slug]` passes an explicit error
+  (`:184`), so a failed fetch renders `ErrorState` rather than an empty list. This is the pattern
+  issue 27 says profile should adopt.
+- **`TransactionTable`** handles all three states properly — `Skeleton` rows while loading
+  (`:274-279`), a `no_transactions_found` empty message (`:280-282`), translated.
+- **`wallet`** loads its card through `dynamic` with a `WalletCardLoading` fallback (`:40`), so the
+  money figure never renders as a flash of zero.
+- **`returnOrderItem`** (`services/orders.ts:70-117`) builds `FormData` correctly, deliberately
+  omits `orderItemId` from the body (it is in the path), and the comment documents the panel's
+  `CreateItemReturnRequest` contract. Images are appended as `images[]`.
+- **`getOrders`** forwards the SSR bearer token as a header and returns `fallbackPaginateRes` with
+  `success: false` on error, which the page distinguishes from an empty page of results.
+- **SWR retry policy** is set explicitly per page (`errorRetryCount` 2-3, `errorRetryInterval`
+  1-2s) rather than left at defaults.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 · 4.8 · 4.9 · 4.10 ·
+  4.11 · 4.12 · 4.13.
+- **Issue 27's data-loss half is conditional and is written that way.** The blank form with no
+  error state is verified from the code. Whether pressing save actually wipes the stored profile
+  depends on the panel's validation rules for `POST /user/profile`, which cannot be checked from
+  this repository. The row states the certain part as the defect and the wipe as a risk, rather
+  than asserting a data-loss vulnerability I have not proven.
+- **Issue 28 is filed as the systemic version** of a pattern already recorded per-surface in
+  issues 16, 20, and 26. Rather than open a fourth surface-specific row, it quantifies the whole
+  pattern (21 files carry literal user-facing titles) and cross-references the earlier three. If
+  these are fixed together, one locale pass closes all four.
+- **Direct `@heroui/react` imports outside `src/components/ui/`: 103 files** (16 of them under
+  `pages/my-account` and `views`). Deliberately **not** filed. `CLAUDE.md` §4.1 states this is
+  migrated opportunistically and forbids a standalone migrate-imports commit, so it is tracked
+  debt with a stated policy, not a defect. Worth recording that the count is down from the 162
+  documented in `CLAUDE.md`, so the migration is progressing.
+- `dangerouslySetInnerHTML` appears in 8 places — `PromoCard.tsx:83`, `StoreProfile.tsx:154`,
+  `HTMLRenderer.tsx:14`, `GoogleMapsScriptLoader.tsx:62`, `SEOHead.tsx:87`/`:95`, and
+  `DynamicSEO.tsx:215`/`:226`. All are outside this session's scope (catalog, content, and SEO).
+  Listed here so session 8 starts with the sites already located; the settings-driven
+  header/footer script injections are an intended admin feature and should be judged as such.
+- Not reviewed and carried forward: the order return and cancel *screens* (the services were
+  reviewed here, the UI was not), `UserLayout`, and the notifications detail flow.
+
+---
