@@ -3,71 +3,66 @@
 # Security Review Session
 
 **Date:** 2026-08-05
-**Time:** 02:26 (24-hour format)
-**Feature / Module:** F4 — Wallet & transactions (security pass)
+**Time:** 03:34 (24-hour format)
+**Feature / Module:** F5 — Orders & returns (security pass)
 **Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
 **Reviewer:** Claude
 
 ## Scope
-- Files reviewed: `src/services/wallet.ts` (all 5 callers), `src/components/Modals/WithdrawModal.tsx`,
-  `src/components/Modals/DepositModal.tsx`, `src/components/Cart/WalletCard.tsx`,
-  `src/components/Tables/TransactionTable.tsx`, `src/helpers/currency.ts`,
-  `src/types/params.ts` (`DeductBalanceParams`, `AddBalanceParams`),
-  `src/components/PaymentGateway/RazorPay.tsx` (wallet branch)
-- Review areas covered: 4.3 authorization · 4.6 payments (wallet paths) · 4.9 tenancy ·
-  4.10 client abuse surface · 4.13 privacy
-- Total files inspected: 9
+- Files reviewed: `src/services/orders.ts` (all 9 callers),
+  `src/views/OrderDetailView/index.tsx`, `src/views/OrderDetailView/ReturnSheet.tsx`,
+  `src/components/Modals/ReturnOrderItemModal.tsx`,
+  `src/pages/my-account/orders/index.tsx`, `src/pages/my-account/orders/[slug]/index.tsx`
+- Review areas covered: 4.3 authorization · 4.4 injection sinks · 4.9 tenancy ·
+  4.10 client abuse surface (upload) · 4.13 privacy
+- Total files inspected: 6
 
 ## Findings Summary
-- Critical: 0 · High: 0 · Medium: 0 · Low: 1 · Total Findings: 1
+- Critical: 0 · High: 0 · Medium: 1 · Low: 0 · Total Findings: 1
 
 ## Files Modified
 - QA/security.csv
 - QA/security_append.csv
 
 ## New Findings Added
-- ID: CWEB-05 — Unmounted withdrawal component would post a balance-unchecked money-out amount (Low)
+- ID: CWEB-06 — Return evidence upload accepts any file type and any size (Medium)
 
 ## Existing Findings Confirmed
-- Code review #25 — wallet success asserted from the client callback. Same root as CWEB-04 filed
-  under F3; the wallet branch is the more exposed of the two because the balance the customer
-  checks afterwards comes from a separate fetch.
-- Code review #33 — hard-coded `1000000` ceiling. Found a **second occurrence** this session:
-  `WithdrawModal.tsx:63` carries the identical constant on the money-out path, so the same
-  market-blind limit governs both directions.
-- Code review #3 / #14 — a tampered wallet balance in the cookie or `localStorage` changes only
-  what is displayed; the panel remains the authority. No new vector.
+- Code review #38 — no sanitisation of API-supplied HTML, and #3 — no CSP. Both are named inside
+  CWEB-06 because they are what turns an unrestricted upload from a storage problem into a
+  potential injection one, if the panel serves the stored file inline.
+- Code review #28 and #29 — hard-coded English SSR errors and reload-as-retry on the orders
+  screens. Unchanged; specified as TC-ORD-011 to TC-ORD-013.
 
 ## Chains Identified
-- None new this session. CWEB-05 does not chain today because it is unreachable.
+- **CWEB-06 + #38 + #3** — an unvalidated upload (no mime check) into a platform that sanitises no
+  API-supplied HTML and sets no CSP. Each is individually bounded; together they describe a
+  plausible stored-injection path. Whether it completes depends on how the panel stores and serves
+  return evidence, which is not verifiable here and is written into TC-ORD-004.
 
 ## Areas Verified Secure
-- **Transaction amounts are server-formatted.** `TransactionTable.tsx:150` renders
-  `tx.formatted_amount` — no client arithmetic, no sign derivation — so ledger presentation cannot
-  drift from the ledger itself.
-- **`WalletCard` prefers the server figure** with `??` rather than `||`, so a legitimately empty
-  server value is not silently replaced by a client computation.
-- **Wallet services send bodies, not query params**, forward the SSR bearer token as a header, and
-  return the correct fallback shape per endpoint.
-- **No wallet endpoint accepts an owner identifier from the client** — `getWallet` and
-  `getWalletTransactions` carry no user parameter, so the wallet is resolved from the session.
-- **`prepareWalletRecharge` sending a client-chosen amount is correct by design** — the customer
-  chooses what to top up and then pays that amount through the gateway; the risk sits on the
-  credit side, which is panel-controlled.
+- **`returnOrderItem` builds a correct multipart request** and deliberately omits `orderItemId`
+  from the body because it belongs in the path — the comment at `services/orders.ts:70-80`
+  documents the panel's `CreateItemReturnRequest` contract, which is the right way to record a
+  contract dependency.
+- **No order endpoint accepts an owner identifier from the client.** Every call is scoped by the
+  session token; `getOrders` forwards the SSR bearer token as a header.
+- **All ten account routes remain server-side guarded** — re-confirmed by request in F1 and not
+  weakened by anything in this feature.
+- **Order data is rendered as text**, not through `dangerouslySetInnerHTML`, so the order screens
+  add no injection sink of their own.
+- **The evidence requirement is enforced before submit** — `ReturnSheet.tsx:81` blocks a reason
+  that needs a photo when none is attached.
 
 ## Notes
-- **CWEB-05 is deliberately rated Low and its title says why.** `WithdrawModal` has **no render
-  site anywhere in `src`** — it is dead code, so there is no customer-facing path to it today and
-  filing it as an exploitable vulnerability would overstate the evidence. It is recorded because
-  the flaw ships in the repository and goes live the moment anyone mounts the component: the file
-  never references the balance at all (`grep` for `balance` returns zero hits), so the only bounds
-  are `> 0` and the hard-coded million.
-- The `/user/wallet/deduct-balance` endpoint remains callable by any authenticated client
-  regardless of this component, so its real protection is panel-side. TC-WAL-001 to TC-WAL-003
-  specify exactly what to verify there, and those cases are runnable against the API without any
-  storefront change.
-- The wallet's client-side money surface is genuinely thin — display and input only. Everything
-  that moves money is a panel decision, which is the correct division and is why this pass
-  produced one Low rather than more.
+- **CWEB-06 is a regression, and that is what makes it worth filing rather than a standing gap.**
+  The component it replaced — `ReturnOrderItemModal` — enforces a five-image cap, an
+  `image/*` mime check and a 5MB size ceiling (`:42`, `:309`, `:320`, `:329`). That modal is no
+  longer rendered anywhere in `src`, so the validated path is dead code and the redesign's
+  `ReturnSheet` is what customers use. The redesign kept the count cap and dropped the other two.
+- `accept="image/*"` was explicitly not treated as validation. It is a file-picker hint: a user can
+  change the dialog filter, and a scripted submit ignores it entirely.
+- The strongest remediation is also the cheapest: the exact checks needed already exist in the dead
+  modal and can be lifted across, after which that file should be deleted.
 
 ---
