@@ -649,3 +649,100 @@ Any assumptions, limitations, or observations made during the review.
   three gateways share the round-trip pattern.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 14:11 (24-hour format)
+**Feature / Module:** Session 7 — Catalog (PDP, search, categories, brands, stores)
+**Documentation File:** CLAUDE.md · src/pages/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/hooks/useInfiniteData.ts` (the hook backing every catalog listing)
+  - `src/services/catalog.ts` (all 10 callers)
+  - `src/pages/products/[slug]/index.tsx` (PDP + its `getServerSideProps`)
+  - `src/pages/products/search/index.tsx`
+  - `src/pages/categories/index.tsx` and `categories/[slug]/index.tsx`
+  - `src/pages/brands/index.tsx` and `brands/[slug]/index.tsx`
+  - `src/pages/stores/` (listing + detail)
+  - `src/services/ProductDetailPageService.ts` (`fetchProductDetailPageData`)
+- Directories reviewed: `src/pages/products/`, `src/pages/categories/`, `src/pages/brands/`,
+  `src/pages/stores/`, catalog surface of `src/services/` and `src/hooks/`
+- Total files inspected: 12
+- Repo-wide scans: all 29 `useSWR` call sites (key composition + cache configuration)
+
+## Findings Summary
+- Critical: 0
+- High: 1
+- Medium: 2
+- Low: 1
+- Total Issues: 4
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 34 — Failed catalog fetch renders as an empty list (High)
+- Issue No.: 35 — Catalog SWR keys omit the market (Medium)
+- Issue No.: 36 — Documented per-volatility stale times unimplemented for catalog (Medium)
+- Issue No.: 37 — Debug logging left in the PDP server render path (Low)
+
+## Existing Issues Confirmed
+- Issue No.: 1 — Market switch invalidates only `/settings`. Issue 35 is the other half of the
+  same failure and is filed separately because the root cause and the fix differ: 1 is that the
+  switch handler does not invalidate, 35 is that the keys are not market-scoped so there is
+  nothing distinguishing the two markets' cache entries. Fixing 35 makes 1 largely moot; fixing 1
+  alone leaves the trap for the next switch site. Cross-referenced in both rows.
+- Issue No.: 11 — `any` usage. Two further locations: `useInfiniteData.ts:9` and `:16`, both
+  `[key: string]: any` on the fetcher and `extraParams` signatures, which is why `extraParams`
+  can silently omit the market dimension without a type error. Noted rather than re-filed.
+- Issue No.: 12 — SSR console noise. Issue 37 is the same class on the PDP path; filed separately
+  because it is debug scaffolding with a misleading label rather than a single status line, and
+  it sits on the highest-traffic server route.
+
+## Safe Areas Verified
+- **PDP threads the market correctly on SSR.** `[slug]/index.tsx:293` reads
+  `getMarketFromContext(context)` and passes it into `fetchProductDetailPageData` alongside
+  `country_iso2` (`:299-307`), so the server render is market-scoped. The SSR half of market
+  handling is sound — issue 35 is strictly about the client cache.
+- **PDP returns `notFound: true`** for a missing product (`:334`) rather than rendering an empty
+  shell, which is the correct Pages Router behaviour and the pattern issue 27 wanted from profile.
+- **`catalog.ts`** — all 10 callers go through the shared axios instance, so every catalog request
+  carries the `X-Market` header; each returns the correct fallback shape on failure.
+- **`loadMore`** (`useInfiniteData.ts:102-143`) is properly guarded: `isLoadingRef` blocks
+  re-entry, `currentPageRef` blocks a duplicate page fetch, and `setData` uses the functional
+  updater so concurrent appends cannot clobber each other.
+- **`revalidateOnFocus` is set in 25 of 29 SWR call sites**, so the focus-revalidation half of the
+  §7.3 policy is genuinely implemented. Issue 36 is narrowed to the stale windows only, rather
+  than claiming the whole caching policy is ignored.
+- **Search filters live in the URL** via `selectedFilters` feeding `extraParams`, matching the
+  §7.1 rule that the URL owns shareable filter state.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 · 4.8 · 4.9 · 4.10 ·
+  4.11 · 4.12 · 4.13.
+- **Issue 34 is the most consequential finding of this session** and was verified from both ends:
+  the hook converts a failure into `[]` rather than throwing (`:74-78`), *and* the search page
+  never destructures `error` (`:150-156`), so there are two independent reasons a failed catalog
+  request cannot surface. Either fix alone is insufficient.
+- **Issue 36 was deliberately narrowed after measuring.** The first reading suggested the whole
+  §7.3 policy was ignored; counting showed 25 of 29 files do set `revalidateOnFocus` and only
+  `dedupingInterval` is absent (3 of 29, all account screens). The row reflects the measured
+  position and credits the part that is done.
+- `dangerouslySetInnerHTML` at `PromoCard.tsx:83` and `StoreProfile.tsx:154` renders API-supplied
+  HTML (`promo.description`, `store.description`). These sit in the catalog surface but the
+  sanitisation question depends on whether the panel sanitises seller-supplied HTML on write,
+  which is not verifiable from this repository. Carried to session 8 with the CSP gap (issue 3)
+  as the mitigating context, rather than asserted as an XSS vulnerability here.
+- The `hasMore` computation at `useInfiniteData.ts:131` uses the closure `data.length` rather than
+  a functional updater, unlike the `setData` call immediately above it. Reviewed and judged not a
+  defect: `data.length` is in the callback's dependency array and `isLoadingRef` serialises calls,
+  so no interleaving reaches it. Recorded so a later session does not re-derive it.
+- Not reviewed and carried forward: product card and gallery components, the filter sidebar UI,
+  reviews and FAQ sections on the PDP, and the recently-viewed slice — all of which belong to the
+  remaining feature session.
+
+---
