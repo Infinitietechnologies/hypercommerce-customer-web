@@ -50,6 +50,10 @@ shape unilaterally — other production clients consume it.
     framework already provides, or simply omits a baseline practice, report it — cite the
     convention being bypassed and the concrete cost. The grounded checklist is §4.12.11;
     the same rule applies to any standard not yet listed there.
+18. **Never write a comma inside a CSV field — a comma separates columns, nothing else.**
+    These files are appended directly into Google Sheets, so one stray comma in a title or
+    description shifts every following column and corrupts the row. Use `;` or ` - ` instead,
+    and do not rely on quoting to escape it. Full rules and the 18-comma row check: §6.
 
 ---
 
@@ -531,8 +535,24 @@ Flag both when a review touches build or tooling.
 - Keep the column count at **19**, always. Trailing empty columns
   (`Status`, `Dev. Notes`, `Tester Status`, `Tester Notes`) are left blank, not dropped —
   `Status` is filled with `Open`.
-- **Avoid commas inside field text** — use `;` or ` - ` instead. If a comma is genuinely
-  unavoidable, wrap that field in double quotes (RFC 4180) and double any inner quote.
+- **NEVER put a comma inside a field value. A comma means "next column" and nothing else.**
+  These CSVs are appended straight into Google Sheets, where any comma inside a field pushes
+  the rest of the row one column to the right and corrupts every column after it — the row
+  silently misaligns and the register becomes unreadable.
+  - This applies to **every** field, most often `Bug Title`, `Bug Description`,
+    `Steps to Reproduce`, `Impact`, and `Suggested Fix`.
+  - Use `;` for a list, ` - ` for an aside, and `.` to end a clause. Rewrite the sentence
+    rather than reaching for a comma.
+  - **Do not solve this with quoting.** Quoted fields are not an accepted workaround here —
+    write the text without commas in the first place.
+  - The same goes for characters that break a row: no newlines, no tabs, no unescaped `"`.
+  - Before saving, check each row: the number of commas must be **exactly 18** (19 columns).
+    A row with any other count is malformed — fix it before committing.
+
+  ```
+  BAD:  Cart total is wrong, tax is applied twice, and the discount is ignored
+  GOOD: Cart total is wrong - tax is applied twice; the discount is ignored
+  ```
 - `Date` is `YYYY-MM-DD`. `NO` is a bare integer, sequential, never reused.
 - `Module/Feature` names the storefront area (e.g. `Cart`, `Checkout - Payment`, `PDP`,
   `My Account - Orders`, `Search & Filters`, `Theme/Design System`).
