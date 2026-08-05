@@ -1129,3 +1129,94 @@ Theme-based sweep across every client-side storage medium, rather than a feature
   (session 12) and redundant request patterns (session 13).
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 19:58 (24-hour format)
+**Feature / Module:** Session 12 — State not updating (requested theme)
+**Documentation File:** CLAUDE.md · src/pages/CLAUDE.md · src/lib/redux/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+Theme-based sweep of stale-state-after-write behaviour across every mutation surface.
+- Mutation sites traced end to end
+  - Address create / edit / delete (`pages/my-account/addresses/index.tsx`)
+  - Wishlist remove (`pages/my-account/wishlists/index.tsx`)
+  - Cart quantity change (`components/CartQuantityControl.tsx`)
+  - Profile save, email update, phone update (`pages/my-account/profile/index.tsx`)
+  - Delivery address selection (`components/Cart/AddressSection.tsx`)
+- Supporting files: `helpers/updators.ts` (`updateCartData`), `lib/redux/slices/cartSlice.ts`,
+  `checkoutSlice.ts`, `authSlice.ts`, `helpers/functionalHelpers.ts`
+- Repo-wide scans: every `setCartLoading` and `setSelectedAddress` dispatch site
+- Total files inspected: 10
+
+## Findings Summary
+- Critical: 0
+- High: 0
+- Medium: 2
+- Low: 0
+- Total Issues: 2
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 50 — Profile pinned to the SSR snapshot so its own refresh never surfaces (Medium)
+- Issue No.: 51 — Checkout keeps an unreconciled copy of the selected address (Medium)
+
+## Existing Issues Confirmed
+- Issue No.: 27 — Profile renders an empty form on a failed fetch. Issue 50 is the same
+  `user = isSSR() ? initialData : userData` line (`:76`) seen from the opposite direction: 27 is
+  about `initialData` being `{}` on failure, 50 is about it never updating on success. One line
+  causes both; fixing it as 50 suggests resolves 27's rendering half as well.
+- Issue No.: 15 — `cart` persisted. Unchanged by this session.
+
+## Safe Areas Verified
+This session's most useful output is what it *cleared*, since three plausible defects were
+investigated and disproved rather than filed:
+- **`CartQuantityControl` re-syncs correctly.** `localQuantity` is seeded from `item.quantity`
+  via `useState`, which would normally pin it — but an effect at `:143-145` re-syncs on every
+  `item.quantity` change, so a server-clamped quantity does reach the stepper. The suspected
+  prop-to-state desync does not exist.
+- **The cart loading flag is not stuck.** `CartQuantityControl:40` dispatches
+  `setCartLoading(true)` and never clears it itself, which looked like a leak that would
+  permanently disable the quantity buttons (`:160`, `:182` disable on it). `updateCartData`
+  clears it in a `finally` (`updators.ts:72-74`), and the early return for logged-out users sits
+  *inside* that `try`, so the `finally` still runs. Every path resets. Both other pairs
+  (`functionalHelpers.ts:99/149` and `:184/289`) balance too.
+- **Wishlist removal is a textbook optimistic update** — optimistic `mutate(fn, false)` at
+  `:39-49`, then `mutate()` to revalidate on *both* an unsuccessful response and a thrown error
+  (`:58`, `:62`), with a toast on each. This is exactly what §6.4 requires and is the reference
+  implementation the rest of the app should copy.
+- **Address CRUD refreshes its list** — `handleEditAddress`, `handleDeleteAddress`, and
+  `handleAddressAdded` each `await mutate()`. The list itself is never stale; issue 51 is about
+  the *checkout copy*, not the list.
+- **Debounced cart updates are cancelled on unmount** (`:147-149`), so a pending quantity write
+  cannot fire against an unmounted component.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 (n/a to this theme) ·
+  4.8 · 4.9 (n/a) · 4.10 (n/a) · 4.11 (n/a) · 4.12 · 4.13.
+- **Two issues from ten files, and three disproved hypotheses.** The mutation surfaces are in
+  better shape than expected: `mutate()` after a write is applied consistently, and the one
+  optimistic update in the codebase handles rollback correctly. The defects that remain are both
+  about a *copy of state that is never reconciled*, not about missing refreshes.
+- **Issue 50 is the sharper of the two** because the failing feature is one someone deliberately
+  built: the comment at `:136-137` states the visibility listener exists to reflect email
+  verification instantly, and the pinning at `:76` makes it inert in the shipped mode. The guard
+  and the dependency array both read a value that can never change.
+- **A note on what was deliberately not claimed in issue 50.** The listener is registered on
+  `window` rather than `document` (`:147`). `visibilitychange` is fired at the Document and
+  bubbles, so a `window` listener does receive it — this was considered and left out of the row
+  rather than asserted as a second bug on an untested assumption.
+- Issue 51's impact is bounded by the fact that `handleCheckout` submits only `address_id`, so
+  the *order* ships to the corrected address. The damage is to what the customer is shown and to
+  the market/currency resolved from the stale `country_code`. The row says so explicitly rather
+  than implying orders are mis-delivered.
+- Not covered and carried to session 13: redundant request patterns, including the
+  `updateCartData` call sites — several of which fire on paths where the cart cannot have
+  changed, which is a request-volume question rather than a staleness one.
+
+---
