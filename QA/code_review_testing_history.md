@@ -1315,3 +1315,90 @@ Theme-based sweep of redundant and avoidable request patterns.
 - All ten planned sessions plus the three requested theme sessions are complete.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 11:35 (24-hour format)
+**Feature / Module:** Session 14 — Areas never covered by any previous pass
+**Documentation File:** CODE_REVIEW_INSTRUCTIONS.md · CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+Deliberately scoped to the code the ten-feature sweep and the earlier thirteen code review
+sessions never opened.
+- Files reviewed
+  - `src/views/homePage/HomeBuilder.tsx` (server-driven home section builder)
+  - `src/components/Products/ProductDetailPage/ProductFaqSection.tsx`
+  - `src/components/Products/ProductDetailPage/ProductReviewsSection.tsx`
+  - `src/components/Products/ProductFilter/index.tsx` (filter sidebar, 458 lines)
+  - `src/hooks/useAdTracking.ts`
+  - `src/layouts/UserLayout.tsx`
+  - `src/features/auth/components/{LoginForm,RegisterForm,ForgotPasswordForm,AuthSheetHost,LoginTrigger}.tsx`
+  - `src/components/PaymentGateway/{Stripe,Paystack,FlutterwavePayment}.tsx` — amount handling
+    only, which F4 had explicitly carried forward
+  - `src/pages/products/search/index.tsx` (URL write path)
+- Total files inspected: 13
+
+## Findings Summary
+- Critical: 0 · High: 1 · Medium: 0 · Low: 0 · Total Issues: 1
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 55 — Three further fetchers swallow a failed response, two with unreachable error UI (High)
+
+## Existing Issues Confirmed
+- Issue No.: 34 — failed fetch rendered as an empty result. Issue 55 extends it from one fetcher to
+  four and is filed separately because the three new sites are hand-rolled fetchers with their own
+  fix, not consumers of the shared hook.
+- Issue No.: 22 — DOM-click control flow. Another instance: `HomeBuilder.tsx:101` renders a hidden
+  `home-sections-refetch` button that `helpers/events.ts` clicks. Same defect and fix; not re-filed.
+
+## Areas Verified Safe
+- **The three untraced gateways carry no amount arithmetic at all.** `Stripe.tsx`, `Paystack.tsx`
+  and `FlutterwavePayment.tsx` contain no multiplication, division or rounding of an amount — they
+  pass the panel's figure through untouched. This closes the item F4 carried forward and confirms
+  the paise round-trip in issue 24 is unique to the Razorpay **wallet** branch rather than a shared
+  pattern.
+- **Search filters do reach the URL.** `ProductFilter` makes zero router calls, which initially
+  looked like a violation of `CLAUDE.md` §7.1 — but the sidebar reports upward and the page owns
+  the write: `search/index.tsx:216-226` pushes `pathname` plus merged `filteredParams` shallowly,
+  with a separate branch that drops the filter keys when filters are cleared. The session 7
+  verified-safe claim was correct and stands.
+- **`ProductFaqSection` and `ProductReviewsSection` both implement search, debounce and pagination
+  properly** — `useMemo`-wrapped `debounce`, page reset on a new search, and page in the SWR key so
+  results cannot cross pages. The only defect is the fetcher's failure path.
+- **`HomeBuilder` handles React Strict Mode correctly** — the comment at `:57-64` explains why no
+  ref guard is used, and the per-run `cancelled` closure does keep the loading flag correct under a
+  double-invoked effect. This is the most carefully reasoned effect in the codebase.
+- **`useAdTracking` cleans up correctly** — the observer is disconnected and the timer cleared on
+  unmount and on every re-run, and a `trackingKey` guard resets the impression flag when the
+  product changes so one product cannot inherit another's impression state.
+- **Auth forms carry client-side validation and in-flight guards** — `LoginForm` and `RegisterForm`
+  both gate their submit controls and surface field errors.
+
+## Notes
+- **One finding from thirteen files is the honest result.** These areas were unreviewed rather than
+  neglected — most of them are competently written, and two (`HomeBuilder`'s Strict Mode handling
+  and the reviews/FAQ pagination) are better than average for this codebase.
+- **Issue 55's sharpest detail is the dead error UI.** In both PDP sections somebody wrote an error
+  branch and destructured `error` from SWR — the intent was clearly there. It cannot fire because
+  the fetcher resolves `undefined` instead of throwing, so SWR records a success. That makes the
+  defect invisible to a reader skimming the component, which is precisely why it survived this long.
+- **A candidate was investigated and dropped.** `ProductFilter` making no router calls looked like a
+  §7.1 violation until the write path was traced to the page. Filing it would have been a false
+  finding *and* a false correction of an earlier verified-safe claim, so the trace was done before
+  writing anything.
+- `useAdTracking`'s impression timer is cleared by the effect cleanup on every re-run, so a
+  re-render during the visibility window restarts the countdown. Reviewed and **not** filed:
+  `advertisementSettings` is a stable reference (`.find()` into the settings array) and `product`
+  identity is stable while SWR data is stable, so the effect does not thrash in practice. Recorded
+  here so a later session does not re-derive it — if issue 6's context memoisation is ever changed
+  in a way that breaks that stability, this becomes real.
+- Areas from the earlier gap list now closed: home layout builder, PDP reviews and FAQ, filter
+  sidebar, `useAdTracking`, `UserLayout`, auth sheet forms, and the three gateways' amount handling.
+
+---
