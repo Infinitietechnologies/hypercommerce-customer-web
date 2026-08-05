@@ -8,6 +8,8 @@ import { toastError, toastSuccess } from "@/components/ui";
 import { handleResendOtp, handleSignUp } from "@/helpers/auth";
 import { sendForgotOtp, verifyForgotOtp, resetPassword } from "@/services/auth";
 
+import { useResendCooldown } from "./useResendCooldown";
+
 export type ForgotStep = "identifier" | "otp" | "password";
 export type ForgotMethod = "email" | "phone";
 
@@ -31,6 +33,7 @@ export const useForgotPassword = ({ onSuccess }: { onSuccess: () => void }) => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const cooldown = useResendCooldown();
 
   const firebase = () => {
     const instance =
@@ -72,6 +75,7 @@ export const useForgotPassword = ({ onSuccess }: { onSuccess: () => void }) => {
           toastSuccess(t("auth.forgot.code_sent_title"), t("auth.forgot.code_sent_desc"));
         }
 
+        cooldown.start();
         setStep("otp");
       } catch (error) {
         console.error("Forgot send error:", error);
@@ -85,17 +89,20 @@ export const useForgotPassword = ({ onSuccess }: { onSuccess: () => void }) => {
   );
 
   const resend = useCallback(async () => {
+    if (cooldown.secondsLeft > 0) return;
+
     setIsResending(true);
     try {
       if (usesFirebase) {
         const instance = firebase();
         if (!instance) return;
-        await handleResendOtp(identifier, instance);
+        if (await handleResendOtp(identifier, instance)) cooldown.start();
         return;
       }
 
       const response = await sendForgotOtp({ identifier });
       if (response.success) {
+        cooldown.start();
         toastSuccess(
           t("resend_otp_toast.otp_resent_title"),
           t("resend_otp_toast.otp_resent_desc"),
@@ -110,7 +117,7 @@ export const useForgotPassword = ({ onSuccess }: { onSuccess: () => void }) => {
       setIsResending(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identifier, usesFirebase, t]);
+  }, [identifier, usesFirebase, cooldown.secondsLeft, t]);
 
   /** Step 2: verify the code and hold the reset token for step 3. */
   const verify = useCallback(
@@ -208,6 +215,7 @@ export const useForgotPassword = ({ onSuccess }: { onSuccess: () => void }) => {
     send,
     verify,
     resend,
+    resendIn: cooldown.secondsLeft,
     resetPwd,
     reset,
   };

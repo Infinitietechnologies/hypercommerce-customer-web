@@ -19,6 +19,8 @@ import { clearRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { syncOfflineCartToServer, updateCartData, updateDataOnAuth } from "@/helpers/updators";
 import { sendOtp, verifyOtp } from "@/services/auth";
 
+import { useResendCooldown } from "./useResendCooldown";
+
 export type OtpStep = "phone" | "verify";
 
 /**
@@ -37,6 +39,7 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const cooldown = useResendCooldown();
 
   const gateway =
     authSettings?.smsGateway ||
@@ -70,12 +73,16 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
       if (isFirebase) {
         const instance = firebase();
         if (!instance) return;
-        if (await handleSignUp(phone, instance)) setStep("verify");
+        if (await handleSignUp(phone, instance)) {
+          cooldown.start();
+          setStep("verify");
+        }
         return;
       }
 
       const response = await sendOtp({ mobile: phone, expires_in: 600 });
       if (response.success) {
+        cooldown.start();
         toastSuccess(t("signup_toast.otp_sent_title"), t("signup_toast.otp_sent_desc"));
         setStep("verify");
       } else {
@@ -91,17 +98,20 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
   }, [phone, isFirebase, t]);
 
   const resend = useCallback(async () => {
+    if (cooldown.secondsLeft > 0) return;
+
     setIsResending(true);
     try {
       if (isFirebase) {
         const instance = firebase();
         if (!instance) return;
-        await handleResendOtp(phone, instance);
+        if (await handleResendOtp(phone, instance)) cooldown.start();
         return;
       }
 
       const response = await sendOtp({ mobile: phone, expires_in: 600 });
       if (response.success) {
+        cooldown.start();
         toastSuccess(
           t("resend_otp_toast.otp_resent_title"),
           t("resend_otp_toast.otp_resent_desc"),
@@ -116,7 +126,7 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
       setIsResending(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phone, isFirebase, t]);
+  }, [phone, isFirebase, cooldown.secondsLeft, t]);
 
   const verify = useCallback(
     async (otp: string, friendsCode?: string) => {
@@ -216,6 +226,7 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
     send,
     verify,
     resend,
+    resendIn: cooldown.secondsLeft,
     reset,
   };
 };

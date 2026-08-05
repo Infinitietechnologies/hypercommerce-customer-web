@@ -26,6 +26,7 @@ import {
   handlePhoneLogin,
 } from "@/helpers/auth";
 import { ConfirmationResult } from "firebase/auth";
+import { useResendCooldown } from "@/features/auth/useResendCooldown";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -40,6 +41,7 @@ export const CompleteProfileModal: FC = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [friendsCode, setFriendsCode] = useState("");
   const [isResendingOtp, setIsResendingOtp] = useState(false);
+  const cooldown = useResendCooldown();
   const [fieldErrors, setFieldErrors] = useState({ phone: "" });
   const [isCheckingPhone, setIsCheckingPhone] = useState(false);
 
@@ -196,6 +198,8 @@ export const CompleteProfileModal: FC = () => {
   };
 
   const handleResend = async () => {
+    if (cooldown.secondsLeft > 0) return;
+
     setIsResendingOtp(true);
     try {
       if (isFirebaseGateway) {
@@ -207,6 +211,7 @@ export const CompleteProfileModal: FC = () => {
       } else {
         await sendOtp({ mobile: phoneNumber });
       }
+      cooldown.start();
       addToast({
         title: t("resend_otp_toast.otp_resent_title"),
         color: "success",
@@ -283,9 +288,12 @@ export const CompleteProfileModal: FC = () => {
                 variant="light"
                 size="sm"
                 onPress={handleResend}
+                isDisabled={cooldown.secondsLeft > 0}
                 isLoading={isResendingOtp}
               >
-                Resend Code
+                {cooldown.secondsLeft > 0
+                  ? t("auth.resend_in", { seconds: cooldown.secondsLeft })
+                  : t("auth.resend_code")}
               </Button>
             </div>
           )}

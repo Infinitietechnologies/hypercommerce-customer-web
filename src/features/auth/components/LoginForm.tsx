@@ -213,12 +213,15 @@ const LoginForm = ({
                 </Button>
                 <Button
                   className="h-auto min-w-0 px-2 py-1"
+                  isDisabled={otp.resendIn > 0}
                   isLoading={otp.isResending}
                   size="sm"
                   variant="light"
                   onPress={otp.resend}
                 >
-                  {t("auth.resend_code")}
+                  {otp.resendIn > 0
+                    ? t("auth.resend_in", { seconds: otp.resendIn })
+                    : t("auth.resend_code")}
                 </Button>
               </div>
             </form>

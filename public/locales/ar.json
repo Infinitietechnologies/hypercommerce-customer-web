@@ -143,6 +143,7 @@
     "verify_and_continue": "تحقق ومتابعة",
     "change_number": "تغيير الرقم",
     "resend_code": "إعادة إرسال الرمز",
+    "resend_in": "إعادة الإرسال خلال {{seconds}} ثانية",
     "use_password_instead": "تفضّل كلمة المرور؟",
     "email_verification": "تأكيد البريد الإلكتروني",
     "email_is_verified": "تم تأكيد بريدك الإلكتروني",

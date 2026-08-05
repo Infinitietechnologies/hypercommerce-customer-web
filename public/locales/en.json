@@ -143,6 +143,7 @@
     "verify_and_continue": "Verify & Continue",
     "change_number": "Change number",
     "resend_code": "Resend code",
+    "resend_in": "Resend in {{seconds}}s",
     "use_password_instead": "Prefer a password?",
     "email_verification": "Email Verification",
     "email_is_verified": "Your email is verified",

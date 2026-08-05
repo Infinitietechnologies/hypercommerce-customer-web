@@ -19,7 +19,7 @@ export const verifyUser = async (params: {
   value: string;
 }): Promise<ApiResponse<VerifyUserData>> => {
   try {
-    const response = await api.post("/verify-user", null, { params });
+    const response = await api.post("/verify-user", params);
     return response.data;
   } catch (error) {
     console.error("API error:", error);
@@ -29,7 +29,7 @@ export const verifyUser = async (params: {
 
 export const registerUser = async (params: RegisterUserParams) => {
   try {
-    const response = await api.post("/register", null, { params });
+    const response = await api.post("/register", params);
     return response.data;
   } catch (error) {
     console.error("API error:", error);
@@ -74,7 +74,7 @@ export const login = async (params: {
   device_type?: "web";
 }): Promise<ApiResponse<userData>> => {
   try {
-    const response = await api.post("/login", null, { params });
+    const response = await api.post("/login", params);
     return response.data;
   } catch (error) {
     console.error("API error:", error);
@@ -198,7 +198,7 @@ export const forgotPassword = async (params: {
   email: string;
 }): Promise<ApiResponse<null>> => {
   try {
-    const response = await api.post("/forget-password", null, { params });
+    const response = await api.post("/forget-password", params);
     return response.data;
   } catch (error) {
     console.error("API error:", error);

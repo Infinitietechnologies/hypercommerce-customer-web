@@ -45,7 +45,9 @@ const InfiniteSentinel: FC<InfiniteSentinelProps> = ({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [rootMargin]);
+    // `hasMore` is a dep because the sentinel node only exists while it is true —
+    // without SSR data the first render has none, so the observer must re-attach.
+  }, [rootMargin, hasMore]);
 
   if (!hasMore) return null;
 

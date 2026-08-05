@@ -37,4 +37,4 @@ User-agent: DotBot
 Disallow: /
 
 # Sitemap location
-Sitemap: https://dev-hypercommerce.vercel.app/sitemap.xml
+Sitemap: https://hypercommerce-web.eshopweb.store/sitemap.xml

@@ -148,12 +148,15 @@ const ForgotPasswordForm = ({ onSwitchToLogin, compact = false }: ForgotPassword
             </Button>
             <Button
               className="h-auto min-w-0 px-2 py-1 text-[10px]"
+              isDisabled={forgot.resendIn > 0}
               isLoading={forgot.isResending}
               size="sm"
               variant="light"
               onPress={forgot.resend}
             >
-              {t("auth.resend_code")}
+              {forgot.resendIn > 0
+                ? t("auth.resend_in", { seconds: forgot.resendIn })
+                : t("auth.resend_code")}
             </Button>
           </div>
         </form>

@@ -143,6 +143,7 @@
     "verify_and_continue": "सत्यापित करें और आगे बढ़ें",
     "change_number": "नंबर बदलें",
     "resend_code": "कोड दोबारा भेजें",
+    "resend_in": "{{seconds}} सेकंड में दोबारा भेजें",
     "use_password_instead": "पासवर्ड पसंद करते हैं?",
     "email_verification": "ईमेल सत्यापन",
     "email_is_verified": "आपका ईमेल सत्यापित है",
