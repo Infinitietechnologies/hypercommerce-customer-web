@@ -44,6 +44,10 @@ panel. **Never change an API contract unilaterally.**
 9. If nothing is found, say so explicitly and list what was examined. **Do not pad the register.**
 10. Report chains. Two findings that are individually Medium can be Critical together; say which
     rows combine and record the chain in both.
+11. **Never write a comma inside a CSV field — a comma separates columns, nothing else.** These
+    files are appended directly into Google Sheets, so one stray comma in a title, description,
+    PoC, or remediation shifts every following column and corrupts the row. Use `;` or ` - `
+    instead, and do not rely on quoting to escape it. Full rules and the 20-comma row check: §5.
 
 ---
 
@@ -213,13 +217,34 @@ customer token`, `A seller able to store product content`, `Local access to a sh
 `Duplicate`, `Not Exploitable`.
 
 ### CSV formatting rules
-- **NEVER put a comma inside a field value** — a comma means "next column" and nothing else. Use
-  `;` or ` - ` instead. **Do not use quoting to work around it.**
-- No newlines, tabs, or unescaped `"` inside a field. One row per finding on one physical line.
-- Every row must contain **exactly 20 commas** (21 columns). Check before committing.
+
+> ### ⚠ THE ONE RULE THAT BREAKS THE SHEET
+>
+> **NEVER write a comma inside a field value. A comma means "next column" and nothing else.**
+>
+> These CSVs are appended straight into Google Sheets. A comma inside a Vulnerability Title, a
+> Description, a PoC, an Impact, or a Remediation is read as a column break — it pushes the rest
+> of that row one column to the right and corrupts every column after it. The row silently
+> misaligns and the register becomes unreadable. Security rows are the longest in any register,
+> so this is the easiest one to get wrong.
+>
+> - Use `;` for a list, ` - ` for an aside, and `.` to end a clause. Rewrite the sentence rather
+>   than reaching for a comma.
+> - **Do not solve this with quoting.** Quoted fields are not an accepted workaround here.
+> - Watch the fields that invite commas: CWE and OWASP labels, attack-vector prose, and multi-step
+>   PoCs. Write `CWE-204 Observable Response Discrepancy`, never `CWE-204, Observable …`.
+> - No newlines, no tabs, no unescaped `"` either — each breaks the row the same way.
+> - **Every row must contain exactly 20 commas (21 columns). Verify before committing.**
+>
+> ```
+> BAD:  Token readable from JavaScript, no CSP, and stored in localStorage
+> GOOD: Token readable from JavaScript - no CSP; also stored in localStorage
+> ```
+
+- One row per finding on one physical line.
 - **`Date` once per day** — first row of the day only, empty on the rest; the column still exists
   on every row. Judged per file. Format `YYYY-MM-DD`, always the real current date.
-- **Never write an actual secret into a row.** Redact to a shape.
+- **Never write an actual secret into a row.** Redact to a shape (`Bearer <token>`).
 
 ---
 

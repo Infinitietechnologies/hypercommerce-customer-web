@@ -57,6 +57,26 @@ Date,ID,Module/Feature,Bug Title,Bug Description,Bug Type,Severity,Priority,Prec
 `QA/defects_append.csv` has **no header** — it holds only the current session's rows so it pastes
 straight under the existing rows in Google Sheets.
 
+> ### ⚠ THE ONE RULE THAT BREAKS THE SHEET
+>
+> **NEVER write a comma inside a field value. A comma means "next column" and nothing else.**
+>
+> These CSVs are appended straight into Google Sheets. A comma inside a Bug Title, a Bug
+> Description, Steps to Reproduce, or any other field is read as a column break — it pushes the
+> rest of that row one column to the right and corrupts every column after it. The row silently
+> misaligns and the register becomes unreadable.
+>
+> - Use `;` for a list, ` - ` for an aside, and `.` to end a clause. Rewrite the sentence rather
+>   than reaching for a comma.
+> - **Do not solve this with quoting.** Quoted fields are not an accepted workaround here.
+> - No newlines, no tabs, no unescaped `"` either — each breaks the row the same way.
+> - **Every row must contain exactly 18 commas (19 columns). Verify before committing.**
+>
+> ```
+> BAD:  Cart total is wrong, tax is applied twice, and the discount is ignored
+> GOOD: Cart total is wrong - tax is applied twice; the discount is ignored
+> ```
+
 > The final column is spelled `Tetster Notes`. That is a typo carried deliberately from the panel
 > repo's `QA/defects.csv` so both repositories share an identical header. Fix it in both or
 > neither.

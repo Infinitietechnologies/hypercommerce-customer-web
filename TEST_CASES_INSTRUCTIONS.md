@@ -52,6 +52,29 @@ Date,Test Case ID,Linked Bug ID,Module/Feature,Test Case Title,Test Type,Priorit
 
 `QA/test_cases_append.csv` has **no header**.
 
+> ### ⚠ THE ONE RULE THAT BREAKS THE SHEET
+>
+> **NEVER write a comma inside a field value. A comma means "next column" and nothing else.**
+>
+> These CSVs are appended straight into Google Sheets. A comma inside a Test Case Title, the
+> Preconditions, the Test Steps, or the Pass/Fail Criteria is read as a column break — it pushes
+> the rest of that row one column to the right and corrupts every column after it. The row
+> silently misaligns and the register becomes unreadable.
+>
+> - Use `;` for a list, ` - ` for an aside, and `.` to end a clause. Rewrite rather than reaching
+>   for a comma.
+> - **Do not solve this with quoting.** Quoted fields are not an accepted workaround here.
+> - **Numbered steps are the biggest trap in this register.** Write them as
+>   `1. Do the thing. 2. Do the next thing.` — never `1. Do the thing, 2. Do the next thing`.
+> - Lists of values in Preconditions use `and`, not commas: `minQuantity 3 and stepSize 2`.
+> - No newlines, no tabs, no unescaped `"` either — each breaks the row the same way.
+> - **Every row must contain exactly 15 commas (16 columns). Verify before committing.**
+>
+> ```
+> BAD:  1. Open the cart, 2. Set quantity to 3, 3. Read the total
+> GOOD: 1. Open the cart. 2. Set quantity to 3. 3. Read the total.
+> ```
+
 > `Tetster Notes` is a typo carried deliberately from the panel repo's `QA/test_cases.csv` so both
 > repositories share an identical header. Fix it in both or neither.
 
@@ -289,9 +312,8 @@ State plainly that no test runner is configured if that is still true — a regi
 can execute is a specification, not coverage, and the report should not imply otherwise.
 
 ### CSV formatting rules
-- **NEVER put a comma inside a field value** — a comma means "next column". Use `;` or ` - `.
-  **Do not use quoting to work around it.** Numbered steps run `1. … 2. …` with no commas.
-- No newlines, tabs, or unescaped `"`. One case per physical line.
-- Every row must contain **exactly 15 commas** (16 columns). Check before committing.
+- **NEVER put a comma inside a field value** — see the boxed rule in §2, which is the
+  authoritative statement. Numbered steps run `1. … 2. …` with no commas.
+- One case per physical line. Every row must contain **exactly 15 commas** (16 columns).
 - **`Date` once per day** — first row of the day only, empty on the rest; the column still exists
   on every row. Judged per file. Format `YYYY-MM-DD`, always the real current date.
