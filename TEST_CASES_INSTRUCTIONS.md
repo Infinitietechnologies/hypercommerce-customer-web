@@ -23,8 +23,35 @@ anyone has run it yet.
 | Trigger | Something failed | A behaviour exists and is unverified |
 | Register | `QA/defects.csv` | `QA/test_cases.csv` |
 
-**In scope:** specifying cases — happy path, negative, boundary, security-negative, regression
-cases pinned to a known defect, and state/permission matrices.
+### This register holds ONLY missing cases
+
+**Add a case only if it does not already exist and therefore needs to be implemented.** This is a
+backlog of work to do, not a catalogue of everything that could be tested.
+
+Before adding any case:
+
+1. **Check it is not already covered by an automated test.** Search the repo for a test exercising
+   that behaviour. If one exists, do not add the case — the coverage is already there.
+2. **Check it is not already in `QA/test_cases.csv`.** Extend or refine the existing row instead of
+   restating it.
+3. Only then add it, with `Status` = `Draft` or `Ready` — meaning *specified but not yet written
+   as code*.
+
+When a case is subsequently implemented as an automated test, set its `Status` to `Automated`.
+Rows at `Automated` are done; everything at `Draft` or `Ready` is the outstanding backlog. The
+register should always answer one question at a glance: **what test coverage is still missing?**
+
+> **Current state:** the repository has no test runner, no test files, no `test` script, and no
+> CI — so **every** case in this register is missing by definition and every row is outstanding.
+> Once a runner exists, rule 1 above starts doing real work and the register stops growing for
+> behaviour that is already covered.
+
+A case is still "missing" when the behaviour it describes currently **passes** in manual use —
+passing behaviour with no test protecting it is exactly the coverage gap this register exists to
+record. What must not be added is a case for behaviour an automated test *already* covers.
+
+**In scope:** specifying missing cases — happy path, negative, boundary, security-negative,
+regression cases pinned to a known defect, and state/permission matrices.
 
 **Out of scope:** filing defects (that is `DEFECTS_INSTRUCTIONS.md`), reviewing source for bugs
 (`CODE_REVIEW_INSTRUCTIONS.md`), and writing the automation code itself unless separately asked.
@@ -111,8 +138,15 @@ follow that: it makes a case that documents present behaviour as well as intende
 
 **`Endpoint/Evidence`** — the route, endpoint, or `file:line` the case exercises.
 
-**`Status`** — `Draft`, `Ready`, `Automated`, `Deprecated`.
-**`Tester Status`** — left for the tester: `Not Run`, `Pass`, `Fail`, `Blocked`.
+**`Status`** — the implementation state of the case, and the field that makes this a backlog:
+- `Draft` — specified, not yet agreed.
+- `Ready` — specified and ready to be written as an automated test. **Still missing.**
+- `Automated` — implemented as a real test. Done; no longer outstanding.
+- `Deprecated` — the behaviour no longer exists; the case is retired rather than deleted.
+
+**`Tester Status`** — left for the tester when the case is executed by hand: `Not Run`, `Pass`,
+`Fail`, `Blocked`. A case can be `Ready` here and `Pass` there — that means the behaviour works
+today but nothing automated protects it, which is still a gap.
 
 ---
 
