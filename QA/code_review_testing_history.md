@@ -358,3 +358,103 @@ Any assumptions, limitations, or observations made during the review.
   which belong to the cart-screen and checkout sessions.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 11:12 (24-hour format)
+**Feature / Module:** Session 4 — Checkout & payments
+**Documentation File:** CLAUDE.md · src/lib/redux/CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/helpers/functionalHelpers.ts` (`handleCheckout`, `resetCheckOutState`, `formatAmount`)
+  - `src/views/CartPageView/CheckoutSection.tsx` (place-order path)
+  - `src/components/Modals/PaymentModal.tsx` (submit path)
+  - `src/lib/redux/slices/checkoutSlice.ts`
+  - `src/components/PaymentGateway/RazorPay.tsx` (both wallet and order flows)
+  - `src/components/PaymentGateway/Stripe.tsx`
+  - `src/components/PaymentGateway/Paystack.tsx`
+  - `src/components/PaymentGateway/FlutterwavePayment.tsx`
+  - `src/components/PaymentGateway/BankTransfer.tsx`
+  - `src/views/OrderPaymentView/index.tsx`
+  - `src/views/CheckoutPageView/index.tsx`
+  - `src/services/payments.ts` (empty re-export stub)
+- Directories reviewed: `src/components/PaymentGateway/`, checkout surface of `src/views/`
+- Total files inspected: 12
+
+## Findings Summary
+- Critical: 0
+- High: 1
+- Medium: 3
+- Low: 0
+- Total Issues: 4
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 23 — Idempotency key minted per submit cannot dedupe a retry (High)
+- Issue No.: 24 — Razorpay wallet paise round-trip yields a non-integer amount (Medium)
+- Issue No.: 25 — Wallet recharge success declared from the client callback (Medium)
+- Issue No.: 26 — All five gateway components raise hard-coded English (Medium)
+
+## Existing Issues Confirmed
+- Issue No.: 22 — DOM-click and `window`-global control flow. Three further locations in the
+  checkout path: `CheckoutSection.tsx:113` (`bank_transfer_modal_btn`),
+  `functionalHelpers.ts:554` (`confetti-btn`), and `functionalHelpers.ts:480` / `:459`
+  (`(window as any).__cartAttachments`, which carries uploaded order attachments). The
+  attachments case is the most consequential instance of the pattern — a lost global means the
+  order is submitted without the customer's files — but the defect and fix are the same as 22,
+  so it is recorded here rather than duplicated.
+
+## Safe Areas Verified
+- **Order payment path is server-authoritative.** `RazorPay.tsx:180-204` calls `payOrder(orderSlug)`
+  and takes `razorpay_order_id`, `key_id`, and `amount` from the panel's `payment_response`. The
+  amount is never computed or adjusted client-side on this path, and no client value can raise or
+  lower what is charged.
+- **`handleCheckout` does not trust client totals** — it submits `promo_code`, `use_wallet`,
+  `address_id`, and the item set, and lets the panel compute the payable amount. No price,
+  subtotal, or discount figure is sent from the client.
+- **Double-tap is guarded** — `CheckoutSection.tsx:526` and `:581` bind `isLoading` to the submit
+  buttons and `PaymentModal` does the same, so a repeated click during flight is blocked. This is
+  what issue 23 does *not* dispute; 23 is strictly about the retry-after-timeout path.
+- **`checkoutSlice` is not persisted** — confirmed absent from the `store.ts` allowlist, so a
+  stale address, promo code, or wallet flag cannot survive a browser restart into a new order.
+  This is correct and matches `src/lib/redux/CLAUDE.md`.
+- **`resetCheckOutState`** (`functionalHelpers.ts:453-462`) clears promo, wallet, address, and the
+  idempotency key together, so a completed checkout does not leak state into the next one.
+- **Gateway prefill** passes only name, email, and mobile — no token, address, or order internals
+  are handed to the third-party SDKs.
+- **COD and wallet-covered orders** route to the order detail page and skip the payment page
+  entirely (`CheckoutSection.tsx:138-145`); the `walletCoversAll` branch at `:107-108` correctly
+  requires `payable_amount === 0` *and* wallet selected.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 · 4.8 · 4.9 · 4.10 (no
+  date handling in scope) · 4.11 · 4.12 · 4.13.
+- **Issue 23 is deliberate behaviour with an unhandled edge, not an oversight.** The comment at
+  `PaymentModal.tsx:43-45` explains the per-submit key: it lets a gateway switch create a fresh
+  order, and a double-tap is blocked by the disabled button. Both points are correct. The gap is
+  the third case — a lost response after the panel committed the order — where the re-enabled
+  button plus a new key produces a duplicate. The suggested fix preserves the gateway-switch
+  requirement rather than reverting their decision.
+- **Issue 24 was measured, not estimated.** An initial spot-check of five large values suggested
+  the round-trip only failed above ~1000000 paise, which was wrong. Enumerating every paise value
+  between 1.00 and 10000.00 gives 131248 failures out of 999901 — 13.1% — with everyday amounts
+  such as 1.10, 1.15, and 2.01 among them. The corrected figure is what is recorded in the row.
+- **Client-side signature forwarding was deliberately not filed.** The Razorpay handlers at `:149`
+  and `:205` discard `razorpay_payment_id` and the signature rather than posting them for
+  verification. Whether that is a defect depends on the panel verifying the webhook signature
+  server-side, which is out of scope for this repository and unverifiable from here. Flagged for
+  the panel's own review rather than asserted as a storefront vulnerability. Issue 25 covers only
+  the part that *is* verifiable here — the UI asserting success it has not confirmed.
+- `src/services/payments.ts` is an empty stub (`export {}`) with a comment explaining that gateway
+  intents are created order-first through `services/orders.ts`. Accurate and not dead code worth
+  filing.
+- Not reviewed and carried forward: `services/orders.ts` (`createOrder` / `payOrder`) and the
+  order detail and returns screens, which belong to the orders session.
+
+---
