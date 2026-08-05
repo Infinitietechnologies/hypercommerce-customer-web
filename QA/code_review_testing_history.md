@@ -556,3 +556,96 @@ Any assumptions, limitations, or observations made during the review.
   reviewed here, the UI was not), `UserLayout`, and the notifications detail flow.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 12:58 (24-hour format)
+**Feature / Module:** Session 6 — Wallet & transactions
+**Documentation File:** CLAUDE.md
+**Reviewer:** Claude
+
+## Scope
+- Files reviewed
+  - `src/helpers/currency.ts` (`formatCurrency` — executed against edge cases, not read only)
+  - `src/services/wallet.ts` (all 5 callers)
+  - `src/components/Modals/DepositModal.tsx` (recharge input + validation)
+  - `src/components/Cart/WalletCard.tsx`
+  - `src/components/Tables/TransactionTable.tsx` (amount rendering)
+  - `src/pages/my-account/wallet/index.tsx`
+  - `src/pages/my-account/transactions/index.tsx`
+  - `src/pages/my-account/refer-and-earn/index.tsx`
+  - `src/types/market.ts` (`MarketFormat` nullability)
+- Directories reviewed: wallet surface of `src/services/`, `src/components/Modals/`, `src/helpers/`
+- Total files inspected: 9
+
+## Findings Summary
+- Critical: 0
+- High: 0
+- Medium: 4
+- Low: 0
+- Total Issues: 4
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 30 — `decimal_separator` has no fallback and can print the literal `null` (Medium)
+- Issue No.: 31 — An unparseable amount renders as a genuine zero (Medium)
+- Issue No.: 32 — Recharge input strips the decimal point, multiplying by 100 (Medium)
+- Issue No.: 33 — Hard-coded 1000000 recharge ceiling ignores the market currency (Medium)
+
+## Existing Issues Confirmed
+- Issue No.: 24 — Razorpay wallet paise round-trip. Confirmed reachable from this session's side:
+  `DepositModal` is the only entry point to `prepareWalletRecharge`, and its output feeds the
+  Razorpay wallet branch where the lossy round-trip happens. No new row.
+- Issue No.: 25 — Wallet recharge success asserted client-side. Re-confirmed against
+  `WalletCard.tsx:60`, which reads `wallet?.formatted_balance` — so the balance the customer
+  checks immediately after that success toast comes from a separate fetch that may not yet
+  reflect the recharge.
+
+## Safe Areas Verified
+- **Transaction amounts are server-formatted.** `TransactionTable.tsx:150` renders
+  `tx.formatted_amount` directly — no client-side arithmetic, sign derivation, or currency
+  assembly on transaction rows, so credit/debit presentation cannot drift from the ledger.
+- **`WalletCard` prefers the server figure** — `wallet?.formatted_balance ?? formatPrice(...)`
+  (`:60`) uses `??` rather than `||`, so a legitimately empty-string server value is not silently
+  replaced. The client fallback is the only exposed path (issue 31).
+- **`formatCurrency` core logic is correct** for well-formed input: thousands grouping, decimal
+  places, symbol position and spacing, and the `negative_format` template all behave as
+  documented. Verified by execution across positive, negative, and large values — the two issues
+  filed are both about absent or malformed input, not the formatting maths.
+- **`refer-and-earn`** guards its money display properly — `bonusCap != null && bonusCap !== ""`
+  before formatting (`:51`), which is exactly the guard issue 31 says the wallet path is missing.
+- **Wallet services** send bodies rather than query params, forward the SSR bearer token as a
+  header, and return the correct fallback shape (`fallbackApiRes` / `fallbackPaginateRes`) per
+  endpoint.
+- **`DepositModal` validation** does reject zero, negative, and non-numeric amounts (`:73`) and
+  its error messages are translated — the input defects filed are about the sanitiser and the
+  ceiling, not about missing validation.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 · 4.8 · 4.9 · 4.10 ·
+  4.11 · 4.12 · 4.13.
+- **Issues 30 and 31 were verified by executing the real function**, not by reading it. A copy of
+  `formatCurrency` was run against null, undefined, omitted, already-grouped, and non-finite
+  inputs. That is what distinguishes 30 from a theoretical nullability concern: an omitted key
+  correctly yields `$1,234.50`, but a key *present* with `null` yields `$1,234null50`, because a
+  spread copies present-but-null keys over the defaults. The distinction matters for the fix.
+- **Issue 30 is the widest-blast-radius finding of this session** despite being Medium: it is one
+  misconfigured market field away from corrupting every price on the storefront simultaneously.
+  It is rated Medium rather than High because it requires that misconfiguration to occur — but if
+  it does, the impact is site-wide and immediate.
+- Issue 33 borders on a product decision rather than a defect. It is filed because the constant
+  is invisible to operators and behaves differently per market, which `CLAUDE.md` §7.4 explicitly
+  warns against — but if the panel has no recharge-limit setting, the right first step is to
+  request one rather than to invent a client-side scaling rule.
+- The absence of a *minimum* recharge amount was noted while reviewing issue 33 and folded into
+  that row rather than filed separately, since both stem from the same missing settings source.
+- Not reviewed and carried forward: the Stripe, Paystack, and Flutterwave wallet branches were
+  read for i18n in session 4 but their amount handling was not re-verified here — only the
+  Razorpay branch was traced end to end. If issue 24's fix is applied, check whether the other
+  three gateways share the round-trip pattern.
+
+---
