@@ -933,3 +933,102 @@ Any assumptions, limitations, or observations made during the review.
   filter sidebar UI.
 
 ---
+
+# Code Review Session
+
+**Date:** 2026-08-05
+**Time:** 17:46 (24-hour format)
+**Feature / Module:** Session 10 — Cross-cutting sweeps (i18n/RTL, accessibility, standards baseline, typography, test coverage)
+**Documentation File:** CLAUDE.md · CODE_REVIEW_INSTRUCTIONS.md
+**Reviewer:** Claude
+
+## Scope
+Whole-codebase sweeps rather than a feature area.
+- Files reviewed
+  - `public/locales/{en,hi,ar}.json` (all 1635 keys, parity and translation coverage)
+  - `src/pages/_document.tsx`, `src/pages/_app.tsx` (lang/dir, font loading)
+  - `src/config/fonts.ts`, `src/styles/globals.css`, `tailwind.config.ts` (typography chain)
+  - `eslint.config.mjs`, `package.json` (a11y tooling, RTL plugin, test tooling)
+- Repo-wide scans
+  - Direction-sensitive Tailwind classes: physical vs logical, all `.tsx`
+  - All 41 `isIconOnly` occurrences checked for an accessible name within ±8 lines
+  - `<div onClick>` and `<img>` without `alt`
+  - `ErrorBoundary` / `componentDidCatch` presence; `_error.tsx` / `500.tsx` presence
+  - Plus Jakarta Sans vs Figtree across `src/` and `tailwind.config.ts`
+- Total files inspected: 9 directly, plus 6 repo-wide scans over ~364 source files
+
+## Findings Summary
+- Critical: 0
+- High: 1
+- Medium: 3
+- Low: 1
+- Total Issues: 5
+
+## Files Modified
+- QA/code_review.csv
+- QA/code_review_append.csv
+
+## New Issues Added
+- Issue No.: 43 — Storefront ships Figtree; Plus Jakarta Sans is never loaded (High)
+- Issue No.: 44 — Physical direction classes break the Arabic layout (Medium)
+- Issue No.: 45 — 22 of 41 icon-only buttons have no accessible name (Medium)
+- Issue No.: 46 — No error boundary and no custom error page (Medium)
+- Issue No.: 47 — Server-rendered `lang` hard-coded to English (Low)
+
+## Existing Issues Confirmed
+- Issue No.: 3 — No CSP. Re-confirmed during the standards sweep; it remains covered by issue 3
+  rather than re-filed under §4.12.11.
+
+## Safe Areas Verified
+- **i18n coverage is excellent and was measured, not assumed.** 1635 keys in `en`; `hi` and `ar`
+  each differ by exactly one missing key (`sponsored`). Translation coverage is ~99%: only 13
+  values in `hi` and 9 in `ar` are still identical to their English source. This is a
+  well-maintained locale set and the strongest area found across all ten sessions.
+- **`dir` is handled correctly on the client** — `_app.tsx:58-61` sets it from the active
+  language, which is why issue 44 (unmirrored spacing) is visible at all, and why issue 47 is
+  scoped to the server response rather than claiming direction is unsupported.
+- **`<div onClick>` count is 2** across the entire codebase, and **zero `<img>` elements lack an
+  `alt` attribute**. Both are strong results against §6.5 and better than the icon-button figure
+  suggested.
+- **19 of 41 icon-only buttons are labelled correctly**, so the convention is understood and
+  applied inconsistently rather than absent — which is why issue 45's fix is mechanical.
+- **`eslint-config-next/core-web-vitals` carries the `jsx-a11y` ruleset** and no rule is disabled
+  inline anywhere, so the tooling to prevent issue 45 recurring is already installed.
+- **Figtree as `--font-mono`** is correct per `CLAUDE.md` §9.13 — only the *sans* mapping is wrong
+  (issue 43). The self-hosted `localFont` for mono is properly configured.
+
+## Notes
+- Review categories completed: 4.1 · 4.2 · 4.3 · 4.4 · 4.5 · 4.6 · 4.7 · 4.8 · 4.9 · 4.10 ·
+  4.11 · 4.12 (incl. 4.12.11 standards baseline) · 4.13.
+- **Issue 43 is the finding that justifies running a cross-cutting session at all.** Reviewing
+  screens one at a time cannot surface it: every screen is internally consistent, and each simply
+  inherits `font-sans`. Only tracing the chain — `tailwind.config.ts:20` → `globals.css:304` →
+  `_document.tsx:16-27` → `config/fonts.ts` — shows that the family named in three places in
+  `CLAUDE.md` is not loaded anywhere in the project. `CLAUDE.md` also names Figtree explicitly
+  among the stale values that must not be reintroduced, and §6.7 lists the typeface as a visual
+  regression check, so documentation and shipped code are in direct conflict.
+- **Two measurements were corrected mid-session.** An initial RTL scan returned zero for every
+  physical *and* logical class, which was a broken shell pattern rather than a clean result;
+  re-running it properly gave 57 physical margin/padding uses plus 23 `text-left`/`text-right`
+  against 13 logical uses. Similarly, a first pass suggested only 1 of 41 icon buttons had an
+  `aria-label`; widening the window to ±8 lines to account for multi-line JSX props gave the
+  accurate 19 labelled / 22 unlabelled split. Both corrected figures are what the rows carry.
+- **The single missing locale key and the ~22 untranslated values were deliberately not filed.**
+  At 1 key in 1635 and ~99% translation coverage, filing them would pad the register against
+  rule 12. They are recorded here so the next session has the exact figures.
+- **Test coverage (§4.13) remains the standing gap** and is deliberately not a row: no test
+  runner, no test files, no `test` or `typecheck` script, and no CI (`.github/` does not exist).
+  Of the 47 issues in the register, the ones a unit test would most directly have caught are
+  18, 21, 30, 31, and 32 — all pure-function defects in quantity clamping, currency formatting,
+  and input sanitising.
+- `npm run lint` remains `eslint --fix`, so it rewrites rather than failing; with no CI, nothing
+  gates a merge. Recorded in the instructions §4.12.11 baseline rather than as an issue row.
+
+## Register status after ten sessions
+- Total issues recorded: **47** — Critical 2, High 10, Medium 28, Low 7.
+- All ten planned sessions are complete. Areas never covered by any session and available for
+  future review: the auth sheet form components, the PDP reviews and FAQ sections, the filter
+  sidebar UI, `useAdTracking` behaviour, `UserLayout`, the home layout section components, and
+  the Stripe/Paystack/Flutterwave amount handling (only Razorpay was traced end to end).
+
+---
