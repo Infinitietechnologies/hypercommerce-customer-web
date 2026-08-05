@@ -107,6 +107,20 @@ Date,NO,Module/Feature,Documentation File,Bug Title,Bug Description,Bug Type,Sev
 15. Produce the review report (§8) in the response.
 16. **Do not fix the code in a review session** unless the user asked for fixes. Review and repair
     are separate commits and separate asks.
+17. **Commit and push the updated records to `dev`.** A review is not finished while its output
+    sits uncommitted — the next session reads these files to dedupe and to number issues, so an
+    unpushed review causes duplicate IDs. Stage exactly the three record files, commit, and push:
+
+    ```bash
+    git add QA/code_review.csv QA/code_review_append.csv QA/code_review_testing_history.md
+    git commit -m "docs(qa): code review <module> - <n> issues (<c> critical, <h> high)"
+    git push -u origin dev
+    ```
+
+    Rules: push to **`dev`** (per `CLAUDE.md` §8 — no per-review branches); commit **only** the
+    three record files, never source changes, in this commit; if the push is rejected as
+    non-fast-forward, `git fetch origin dev` and rebase — never force-push a shared branch;
+    if the review produced no issues, still commit the history entry recording that.
 
 ---
 
@@ -422,9 +436,57 @@ no Suspense-based streaming assumptions. Any of these appearing is a Critical st
 finding under `CLAUDE.md` §9.6, not a style nit.
 
 ### 4.13 Test coverage assessment
-State what automated coverage exists for the reviewed area and what a defect found here would
-have needed to be caught. This repo has no test runner configured — that gap is a standing
-observation for the *Notes* section, not a new issue row every session.
+
+Assess coverage **by reading the repo** — do not run or write tests during a review (§4 Scope).
+For the area under review, state what automated coverage exists, and for each confirmed finding
+state what kind of test would have caught it. That mapping is the most useful output of this
+category: it turns a defect list into a testing backlog.
+
+#### 4.13.1 Current baseline — verify before citing
+As of this writing the storefront has **no automated test coverage of any kind**:
+
+- No test runner or assertion library — no Jest, Vitest, Testing Library, Playwright, or Cypress
+  in `package.json`; no `jest.config`/`vitest.config`/`playwright.config`/`cypress.config`.
+- No `*.test.*` / `*.spec.*` / `__tests__` files anywhere in the repo.
+- No `test` script and no standalone `typecheck` script in `package.json`.
+- **No CI at all** — the `.github/` directory does not exist, so nothing gates a merge.
+- The only automated checks are `npm run lint` and the type-check that `next build` performs.
+  `scripts/audit-routes.mjs` (the `TEST_REPORT.md` harness) probes live endpoints — useful, but
+  it is a manual smoke script against a running backend, not a test suite.
+
+Report this as **one standing gap**, in the history entry's *Notes* and in the coverage mapping
+— not as a fresh issue row every session, and not as one row per untested file.
+
+#### 4.13.2 The layers a Next.js storefront should have covered
+Use this to say precisely what is missing for the reviewed area, rather than "no tests exist":
+
+| Layer | What it covers here | Typical tool |
+|---|---|---|
+| Unit | `src/helpers/validator.ts`, price/rounding and cart math, `src/services/*` request builders and response mapping, Redux reducers and selectors in `src/lib/redux/slices/` | Vitest or Jest |
+| Component | `src/components/**` props-in/JSX-out behaviour, the `ui/` wrapper layer, all four screen states (§4.6) | Testing Library |
+| Hook | `useInfiniteData`, `useDebouncedValue`, `useScreenType`, `useRecentSearches` | Testing Library `renderHook` |
+| Data-fetching | `getServerSideProps` exports called directly with a mocked context — asserting props shape, `notFound`/`redirect`, auth-guard behaviour, and market/header forwarding (§4.12.2) | Vitest/Jest + a mocked context |
+| API contract | Service-layer calls against recorded panel responses, so a backend shape change fails locally instead of in production | MSW |
+| Integration / E2E | The revenue paths: browse → PDP → add to cart → checkout → payment; login/OTP; market switch; search and filters | Playwright |
+| Accessibility | Automated axe pass per route, catching the §4.11 defects that are mechanical | `@axe-core/playwright` |
+| Visual regression | `/design-system` as the primitives target and the ported screens against their `/redesign` twins (`CLAUDE.md` §6.7) | Playwright snapshots |
+| i18n | Key parity across `en`/`hi`/`ar` and no untranslated literals — `npm run scan:i18n` exists but nothing enforces its result | scanner in CI |
+| Performance | Core Web Vitals and bundle-size budgets per route (§4.12.7) | Lighthouse CI |
+
+#### 4.13.3 Test-quality checks (once tests exist)
+When the reviewed area *does* have tests, review them as code: assertions that cannot fail
+(`expect(true)`, snapshot-only tests over meaningful logic); tests asserting implementation
+detail rather than behaviour; mocks so broad the unit under test is never exercised; the
+happy path covered while error, empty, and loading branches are not; shared mutable fixtures
+causing order-dependence; skipped or `.only` tests committed; async assertions without
+`await`/`findBy` producing false passes; and tests that would not have caught the defects
+found in this very review — say so explicitly when that is the case.
+
+#### 4.13.4 Gating
+Note whether anything actually enforces the checks: `npm run build` runs `lint` first, but
+**`npm run lint` is `eslint --fix`** — it rewrites files rather than failing on violations, so
+it is a formatter in CI terms, not a gate. There is no CI workflow to run it on a pull request.
+Flag both when a review touches build or tooling.
 
 ---
 
