@@ -3,15 +3,14 @@
 # Defect Testing Session
 
 **Date:** 2026-08-05
-**Time:** 01:12 (24-hour format)
-**Feature / Module:** F3 — Checkout & payments (defects pass)
+**Time:** 02:26 (24-hour format)
+**Feature / Module:** F4 — Wallet & transactions (defects pass)
 **Documentation File:** DEFECTS_INSTRUCTIONS.md · CLAUDE.md
 **Tester:** Claude
 
 ## Scope
-- Flows tested: none end to end. Checkout requires an authenticated session, a populated cart and
-  a live gateway; the backend remains blocked by this environment's network policy.
-- What was exercisable: `formatAmount` executed directly across its input range.
+- Flows tested: none end to end. Every wallet screen requires an authenticated session and a live
+  balance; the backend remains blocked by this environment's network policy.
 - Breakpoints tested: none. Locales tested: none.
 - Total screens exercised: 0.
 
@@ -25,26 +24,22 @@
 - None.
 
 ## Existing Defects Confirmed
-- Defect 1 (F1) already covers `/cart/checkout/` and `/payment/<slug>/` being served to a
-  logged-out visitor, which is the one checkout behaviour observable without a backend. Not
-  re-filed.
+- None.
 
 ## Areas Verified Working
-- Nothing new could be exercised beyond what F1 already established.
+- Nothing new could be exercised.
 
 ## Notes
-- **Zero defects this pass is an honest result, not an absence of effort.** Checkout is the
-  feature least testable without a backend: every meaningful path needs a session, a cart, and a
-  gateway sandbox. Rather than infer defects from source — which is code review's job and is
-  already done for this area — the pass records nothing.
-- One candidate was investigated and correctly dropped. `formatAmount`
-  (`functionalHelpers.ts:570-573`) returns the string `NaN` for any non-numeric input, including a
-  grouped value such as `1,234.50`. That would be a visible money defect — except the helper has
-  **zero call sites** in the codebase, so the behaviour is unreachable. Filing it would have been a
-  false finding. It is dead exported code and is worth deleting, but that is a code-review-grade
-  observation, not a defect.
-- Everything specified for this feature in TC-CHK-001 to TC-CHK-025 remains outstanding and needs a
-  working environment: a reachable panel, a test account, and gateway sandbox keys for all four
-  providers.
+- **Zero defects, and the reason is the same constraint as F3.** The wallet is entirely
+  behind authentication, so no screen could be reached.
+- The wallet's known defects are already recorded with executed evidence in the code review
+  register — issues 30, 31, 32 and 33 were all measured in code review session 6, including the
+  13.1% of paise values that fail the Razorpay round trip and the `decimal_separator` null case
+  that prints the literal text `null`. Re-filing them here from the same evidence would duplicate
+  the register rather than add anything, so they are referenced through the test cases instead.
+- What remains genuinely unverified for this feature is UI-level: whether the balance and the
+  transaction list behave correctly at the four states, whether the recharge form's decimal
+  handling is visible to the customer as it types, and whether a wallet-funded checkout debits
+  atomically. All are specified as TC-WAL-004 to TC-WAL-022.
 
 ---

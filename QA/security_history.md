@@ -3,76 +3,71 @@
 # Security Review Session
 
 **Date:** 2026-08-05
-**Time:** 01:12 (24-hour format)
-**Feature / Module:** F3 — Checkout & payments (security pass)
+**Time:** 02:26 (24-hour format)
+**Feature / Module:** F4 — Wallet & transactions (security pass)
 **Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
 **Reviewer:** Claude
 
 ## Scope
-- Files reviewed: all five `src/components/PaymentGateway/*` components,
-  `src/helpers/functionalHelpers.ts` (`handleCheckout`, `resetCheckOutState`),
-  `src/views/CartPageView/CheckoutSection.tsx`, `src/views/OrderPaymentView/index.tsx`,
-  `src/components/Modals/PaymentModal.tsx`, `src/services/orders.ts`,
-  `src/lib/redux/slices/checkoutSlice.ts`, `src/views/CartPageView/CartItems.tsx`
-- Review areas covered: 4.3 authorization · 4.5 redirects and return URLs · 4.6 payments ·
-  4.8 secrets exposure · 4.9 tenancy · 4.13 privacy
-- Total files inspected: 11
+- Files reviewed: `src/services/wallet.ts` (all 5 callers), `src/components/Modals/WithdrawModal.tsx`,
+  `src/components/Modals/DepositModal.tsx`, `src/components/Cart/WalletCard.tsx`,
+  `src/components/Tables/TransactionTable.tsx`, `src/helpers/currency.ts`,
+  `src/types/params.ts` (`DeductBalanceParams`, `AddBalanceParams`),
+  `src/components/PaymentGateway/RazorPay.tsx` (wallet branch)
+- Review areas covered: 4.3 authorization · 4.6 payments (wallet paths) · 4.9 tenancy ·
+  4.10 client abuse surface · 4.13 privacy
+- Total files inspected: 9
 
 ## Findings Summary
-- Critical: 0 · High: 0 · Medium: 1 · Low: 0 · Total Findings: 1
+- Critical: 0 · High: 0 · Medium: 0 · Low: 1 · Total Findings: 1
 
 ## Files Modified
 - QA/security.csv
 - QA/security_append.csv
 
 ## New Findings Added
-- ID: CWEB-04 — Razorpay and Paystack declare success from a bare callback and discard the
-  gateway payment reference (Medium)
+- ID: CWEB-05 — Unmounted withdrawal component would post a balance-unchecked money-out amount (Low)
 
 ## Existing Findings Confirmed
-- Code review #23 — idempotency key minted per submit. The financial consequence (duplicate
-  order and duplicate charge on retry) is a payment-security concern, but the row already exists
-  with the right severity and remediation, so it is referenced rather than re-filed.
-- Code review #22 — `window`-global control flow. New detail found this session:
-  `CartItems.tsx:82-85` writes `__cartAttachments` **during render** rather than in an effect,
-  so the global reflects the last render of a mounted component and is never cleared on unmount.
-- Code review #25 — wallet success asserted client-side. CWEB-04 is the order-path analogue and
-  is filed separately because the gateways differ and the remediation is to forward the reference.
+- Code review #25 — wallet success asserted from the client callback. Same root as CWEB-04 filed
+  under F3; the wallet branch is the more exposed of the two because the balance the customer
+  checks afterwards comes from a separate fetch.
+- Code review #33 — hard-coded `1000000` ceiling. Found a **second occurrence** this session:
+  `WithdrawModal.tsx:63` carries the identical constant on the money-out path, so the same
+  market-blind limit governs both directions.
+- Code review #3 / #14 — a tampered wallet balance in the cookie or `localStorage` changes only
+  what is displayed; the panel remains the authority. No new vector.
 
 ## Chains Identified
-- **CWEB-04 + #23** — if a retry creates a second order (#23) and payment state is settled only by
-  an unverified callback (CWEB-04), reconciling which order was actually paid becomes materially
-  harder because no gateway reference was ever captured on this side.
+- None new this session. CWEB-05 does not chain today because it is unreachable.
 
 ## Areas Verified Secure
-- **No price or total is ever sent from the client.** `handleCheckout`
-  (`functionalHelpers.ts:463-520`) submits `payment_type`, `promo_code`, `use_wallet`,
-  `address_id`, `order_note`, attachments and the idempotency key — no amount, no subtotal, no
-  discount. The panel computes what is charged. This is the single most important property of a
-  checkout integration and it holds.
-- **The gateway amount comes from the panel.** `RazorPay.tsx:200-204` takes `amount`, `key_id` and
-  `razorpay_order_id` from the `payOrder` response rather than computing them locally.
-- **Stripe is implemented correctly** — `confirmPayment` with `redirect: "if_required"` and both
-  the `error` and missing-`paymentIntent` branches handled before success (`Stripe.tsx:77-106`).
-  It is the in-repo counter-example that makes CWEB-04 a defect rather than a design constraint.
-- **Gateway prefill leaks nothing sensitive** — name, email and mobile only; no token, no address,
-  no order internals.
-- **`checkoutSlice` is not persisted**, so a stale address, promo or wallet flag cannot survive a
-  browser restart into a new order.
-- **`redirect_url`** is built from `window.location.origin`, which a third party cannot influence
-  for a victim's browser; no attacker-supplied return URL is accepted.
+- **Transaction amounts are server-formatted.** `TransactionTable.tsx:150` renders
+  `tx.formatted_amount` — no client arithmetic, no sign derivation — so ledger presentation cannot
+  drift from the ledger itself.
+- **`WalletCard` prefers the server figure** with `??` rather than `||`, so a legitimately empty
+  server value is not silently replaced by a client computation.
+- **Wallet services send bodies, not query params**, forward the SSR bearer token as a header, and
+  return the correct fallback shape per endpoint.
+- **No wallet endpoint accepts an owner identifier from the client** — `getWallet` and
+  `getWalletTransactions` carry no user parameter, so the wallet is resolved from the session.
+- **`prepareWalletRecharge` sending a client-chosen amount is correct by design** — the customer
+  chooses what to top up and then pays that amount through the gateway; the risk sits on the
+  credit side, which is panel-controlled.
 
 ## Notes
-- **CWEB-04 states its evidentiary boundary inside the row.** Verified: both callbacks discard the
-  reference and issue no verification request. Not verifiable here: whether the panel verifies
-  webhook signatures — the control that actually settles payment. The finding is the storefront's
-  total dependence on an unconfirmed control, plus the loss of the reference that would allow a
-  cross-check. The panel team's answer should be recorded in the row's notes so it stops being an
-  assumption.
-- A candidate finding around `__cartAttachments` surviving a gateway order was investigated and
-  **not filed as a vulnerability**. `resetCheckOutState` is deliberately skipped for the four SDK
-  gateways, so the global does retain files — but `CartItems` overwrites it from component state
-  whenever the cart is rendered again, so the exploit path self-heals. It is specified as
-  TC-CHK-022 instead, which is the right home for an unproven risk.
+- **CWEB-05 is deliberately rated Low and its title says why.** `WithdrawModal` has **no render
+  site anywhere in `src`** — it is dead code, so there is no customer-facing path to it today and
+  filing it as an exploitable vulnerability would overstate the evidence. It is recorded because
+  the flaw ships in the repository and goes live the moment anyone mounts the component: the file
+  never references the balance at all (`grep` for `balance` returns zero hits), so the only bounds
+  are `> 0` and the hard-coded million.
+- The `/user/wallet/deduct-balance` endpoint remains callable by any authenticated client
+  regardless of this component, so its real protection is panel-side. TC-WAL-001 to TC-WAL-003
+  specify exactly what to verify there, and those cases are runnable against the API without any
+  storefront change.
+- The wallet's client-side money surface is genuinely thin — display and input only. Everything
+  that moves money is a panel decision, which is the correct division and is why this pass
+  produced one Low rather than more.
 
 ---

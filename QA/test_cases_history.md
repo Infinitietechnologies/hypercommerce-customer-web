@@ -3,53 +3,53 @@
 # Test Case Authoring Session
 
 **Date:** 2026-08-05
-**Time:** 01:12 (24-hour format)
-**Feature / Module:** F3 — Checkout & payments (test-case pass)
+**Time:** 02:26 (24-hour format)
+**Feature / Module:** F4 — Wallet & transactions (test-case pass)
 **Documentation File:** TEST_CASES_INSTRUCTIONS.md · CLAUDE.md
 **Author:** Claude
 
 ## Scope
-- Areas covered: gateway callback verification, idempotency and double submit, address state and
-  market resolution, control flow, i18n, amount integrity, authorization, promo codes, wallet
-  split, recovery paths, attachments, screen states, accessibility, responsive.
-- Source registers mined: `QA/security.csv` (CWEB-04), `QA/code_review.csv` (#22, #23, #26, #51).
-- Total cases written: 25 (TC-CHK-001 … TC-CHK-025)
+- Areas covered: withdrawal authorization and bounds, recharge input and limits, Razorpay wallet
+  amount, recharge confirmation, balance display, currency formatting, transactions, checkout
+  integration, screen states, accessibility.
+- Source registers mined: `QA/security.csv` (CWEB-05), `QA/code_review.csv` (#24, #25, #30, #31,
+  #32, #33).
+- Total cases written: 22 (TC-WAL-001 … TC-WAL-022)
 
 ## Coverage Summary
-- Positive: 5 · Negative: 8 · Negative (security): 6 · Boundary: 0 · Regression: 12 carry a
-  `Linked Bug ID` · Accessibility / i18n / Responsive: 3 · Total Cases: 25
+- Positive: 5 · Negative: 4 · Negative (security): 3 · Boundary: 7 · Regression: 13 carry a
+  `Linked Bug ID` · Accessibility: 1 · Total Cases: 22
 
 ## Files Modified
 - QA/test_cases.csv
 - QA/test_cases_append.csv
 
 ## New Cases Added
-- Test Case ID range: TC-CHK-001 … TC-CHK-025
+- Test Case ID range: TC-WAL-001 … TC-WAL-022
 
 ## Findings Given Regression Coverage
-- SEC-CWEB-04 (001, 002, 003, 004) · CR-23 (005, 006, 007) · CR-51 (008, 009, 010) ·
-  CR-22 (011) · CR-26 (012)
+- SEC-CWEB-05 (001, 002, 003) · CR-32 (004, 005) · CR-33 (006, 007) · CR-24 (008, 009) ·
+  CR-25 (010, 011) · CR-31 (012) · CR-30 (013, 014)
 
 ## Coverage Gaps Remaining
-- **Flutterwave** has the thinnest coverage of the four gateways — its redirect-based flow was the
-  least examined in any pass and deserves its own cases once a sandbox exists.
-- **Bank transfer** end to end (proof upload, manual confirmation) is unspecified.
-- **Order note and multi-store delivery** at checkout are unspecified.
-- **The promo matrix** is now partly covered (TC-CHK-016, 017) but minimum-spend, market-scoped and
-  stacked-promo behaviour still needs cases — carried from F2.
+- **Refunds into the wallet** are unspecified — the flow was not examined in any pass.
+- **Wallet expiry or promotional credit** rules are unspecified; it is not established whether the
+  platform has them.
+- **Statement export or receipts** are unspecified.
+- **Concurrent debits** (wallet used on two devices at once) are unspecified and would need a
+  panel-side decision on locking before a case can assert anything.
 
 ## Notes
-- **TC-CHK-013 and TC-CHK-014 are the two to write first.** They pin the property the security
-  pass verified as correct today — that no client-supplied amount reaches the panel and the gateway
-  is charged the panel's figure. A regression there would be Critical, and nothing currently
-  protects it.
-- TC-CHK-003 is deliberately written to be runnable without a gateway sandbox: invoking the
-  registered success handler from the console and then re-reading the order from the panel tests
-  the one thing that matters most about CWEB-04 — whether the panel is the sole authority on
-  payment state.
-- TC-CHK-022 captures the `__cartAttachments` risk the security pass investigated and chose not to
-  file, so an unproven concern is recorded as something to verify rather than asserted as a defect.
-- Twelve of twenty-five are regressions against currently-open findings and use the `FAIL while …`
-  form, so they double as a fix-verification checklist.
+- **TC-WAL-001 to TC-WAL-003 are the highest value cases in this set and can be run today.** They
+  test the deduct-balance endpoint directly against the API, need no storefront change and no
+  gateway sandbox, and they answer the question CWEB-05 leaves open: whether the panel bounds a
+  withdrawal by the available balance. If it does not, that is a Critical finding on the panel's
+  register rather than this one.
+- TC-WAL-009 and TC-WAL-014 document behaviour that is currently **correct** — the order payment
+  path passing the panel amount through untouched, and an omitted format field falling back to the
+  default. Both are one small edit away from breaking, which is exactly what makes them worth
+  pinning.
+- Thirteen of twenty-two are regressions against currently-open findings and use the `FAIL while …`
+  form.
 
 ---
