@@ -1,4 +1,5 @@
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "@/components/ui";
@@ -60,29 +61,59 @@ const productPrice = (p: Product) => {
  * client-side over the loaded rows since the section endpoint takes only
  * page/per_page.
  */
-const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) => {
+const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) => {
   const { t } = useTranslation();
+  const { query, isReady } = useRouter();
 
-  const [items, setItems] = useState<Row[]>(data.items);
-  const [page, setPage] = useState(data.currentPage);
-  const [lastPage, setLastPage] = useState(data.lastPage);
-  const [loading, setLoading] = useState(false);
+  // A static export ships no SSR props, so fall back to the URL and fetch page 1 on mount.
+  const sectionId = data?.sectionId ?? Number(query.id);
+  const type = data?.type ?? ((query.type as HomeSectionType) || "products");
+  const style = data?.style ?? ((query.style as string) || "");
+  const title = data?.title ?? ((query.title as string) || "");
 
-  const isProducts = data.type === "products";
+  const [items, setItems] = useState<Row[]>(data?.items ?? []);
+  const [page, setPage] = useState(data?.currentPage ?? 1);
+  const [lastPage, setLastPage] = useState(data?.lastPage ?? 1);
+  const [loading, setLoading] = useState(!data);
+
+  const isProducts = type === "products";
 
   const [filters, setFilters] = useState<SelectedFilters>(EMPTY_FILTERS);
+
+  useEffect(() => {
+    if (data || !isReady) return;
+    let cancelled = false;
+
+    (async () => {
+      const res = Number.isFinite(sectionId)
+        ? await getHomeLayoutSection({ sectionId, page: 1, per_page: 20 })
+        : null;
+
+      if (cancelled) return;
+      if (res?.success && res.data) {
+        setItems((res.data.data as unknown as Row[]) ?? []);
+        setPage(res.data.current_page ?? 1);
+        setLastPage(res.data.last_page ?? 1);
+      }
+      setLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data, isReady, sectionId]);
 
   const loadMore = useCallback(async () => {
     if (loading || page >= lastPage) return;
     setLoading(true);
-    const res = await getHomeLayoutSection({ sectionId: data.sectionId, page: page + 1, per_page: 20 });
+    const res = await getHomeLayoutSection({ sectionId, page: page + 1, per_page: 20 });
     if (res.success && res.data) {
       setItems((prev) => [...prev, ...((res.data?.data as unknown as Row[]) ?? [])]);
       setPage(res.data.current_page);
       setLastPage(res.data.last_page ?? lastPage);
     }
     setLoading(false);
-  }, [loading, page, lastPage, data.sectionId]);
+  }, [loading, page, lastPage, sectionId]);
 
   // Client-side apply — the section endpoint can't filter, so filter/sort the
   // loaded rows by category / brand / search / sort from the shared filter.
@@ -142,18 +173,18 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
         </div>
       );
     }
-    if (data.type === "brands") {
+    if (type === "brands") {
       return (
         <div className="grid gap-3 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]">
           {(items as Brand[]).map((b) => (
-            <BrandCard key={b.id} brand={b} showName={data.style === "image_title"} />
+            <BrandCard key={b.id} brand={b} showName={style === "image_title"} />
           ))}
         </div>
       );
     }
-    if (data.type === "categories") {
+    if (type === "categories") {
       const cats = items as Category[];
-      if (data.style === "overlay")
+      if (style === "overlay")
         return (
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
             {cats.map((c) => (
@@ -161,7 +192,7 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
             ))}
           </div>
         );
-      if (data.style === "card")
+      if (style === "card")
         return (
           <div className="grid gap-3 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]">
             {cats.map((c) => (
@@ -169,7 +200,7 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
             ))}
           </div>
         );
-      if (data.style === "full")
+      if (style === "full")
         return (
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
             {cats.map((c) => (
@@ -196,11 +227,11 @@ const HomeSectionDetailView: FC<{ data: HomeSectionDetailData }> = ({ data }) =>
 
   return (
     <div className="w-full max-w-site mx-auto px-4 sm:px-6 py-6">
-      <PageHead pageTitle={data.title || t("see_all")} />
+      <PageHead pageTitle={title || t("see_all")} />
 
-      <h1 className="mb-4 text-xl font-bold text-foreground sm:text-2xl">{data.title}</h1>
+      <h1 className="mb-4 text-xl font-bold text-foreground sm:text-2xl">{title}</h1>
 
-      {items.length === 0 ? (
+      {items.length === 0 && !loading ? (
         <EmptyState icon={null} title={t("home.empty.title", "Nothing here yet")} />
       ) : (
         <div className="flex w-full gap-4 flex-col md:flex-row">

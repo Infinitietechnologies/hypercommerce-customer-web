@@ -10,7 +10,8 @@ import { HomeSectionType } from "@/types/ApiResponse";
 import { isSSR } from "@/helpers/getters";
 import { loadTranslations } from "../../../../i18n";
 
-const HomeSectionDetailPage = ({ data }: { data: HomeSectionDetailData }) => (
+// `data` is absent in a static export — the view falls back to the URL params.
+const HomeSectionDetailPage = ({ data }: { data?: HomeSectionDetailData }) => (
   <HomeSectionDetailView data={data} />
 );
 
