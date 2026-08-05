@@ -3,69 +3,62 @@
 # Security Review Session
 
 **Date:** 2026-08-05
-**Time:** 08:44 (24-hour format)
-**Feature / Module:** F9 — Content & SEO (security pass)
+**Time:** 10:02 (24-hour format)
+**Feature / Module:** F10 — Cross-cutting (security pass)
 **Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
 **Reviewer:** Claude
 
 ## Scope
-- Files reviewed: `src/SEO/DynamicSEO.tsx`, `SEOHead.tsx`, `PageHead.tsx`,
-  `src/components/Functional/HTMLRenderer.tsx`, `src/components/StoreProfile.tsx`,
-  `src/components/Cards/PromoCard.tsx`, `src/pages/products/[slug]/index.tsx` (schema build),
-  `src/pages/stores/[slug]/index.tsx`, `scripts/generate-sitemap.mjs`, `scripts/update-robots.mjs`
-- Review areas covered: 4.4 injection sinks · 4.7 platform configuration · 4.8 information
-  exposure · 4.13 privacy
-- Total files inspected: 10
-- **Live testing:** dev server run; `JSON.stringify` escaping behaviour executed directly.
+- Files reviewed: `next.config.ts` (headers, PWA, build mode), `src/pages/_document.tsx`,
+  `src/pages/_app.tsx`, `eslint.config.mjs`, `src/helpers/auth.ts` (logout cleanup)
+- Review areas covered: 4.7 headers and platform configuration · 4.8 secrets exposure ·
+  4.12 PWA and local persistence · 4.13 privacy
+- Total files inspected: 5
+- **Live testing:** response headers read directly from a running server.
 
 ## Findings Summary
-- Critical: 0 · High: 1 · Medium: 0 · Low: 0 · Total Findings: 1
+- Critical: 0 · High: 0 · Medium: 0 · Low: 0 · Total Findings: 0
 
 ## Files Modified
-- QA/security.csv
-- QA/security_append.csv
+- QA/security_append.csv (emptied — no new findings this pass)
 
 ## New Findings Added
-- ID: CWEB-11 — Seller-supplied text injected raw into a JSON-LD script block (High, P1)
+- None.
 
 ## Existing Findings Confirmed
-- Code review #38 — no sanitisation of API-supplied HTML at seven sites. Distinct from CWEB-11 and
-  the distinction matters: #38 is HTML-context injection into rendered descriptions, CWEB-11 is
-  **script-context** breakout through a field (a product title) that no one would normally think to
-  sanitise as HTML. A panel that strips markup from descriptions may well leave titles alone.
-- Code review #3 — no CSP, and #14 — token in `localStorage`. Both named inside CWEB-11 because
-  they are what turns a successful breakout into session theft.
-- Code review #39 and #40 — sandbox indexing and broken sitemap entries. Both observed this session
-  and filed as defects 8 and 9 rather than re-filed here.
+- Code review #3 — **no Content-Security-Policy, now confirmed by request.** Reading the response
+  headers from a running server returns HSTS, `X-Frame-Options`, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Resource-Policy` — and a CSP header
+  count of **zero**. This matters beyond its own row: CSP is the containment named in CWEB-11's
+  chain, so its absence is now measured rather than read from config.
+- Code review #48 — service-worker cache never purged. Unchanged; specified as TC-XC-020 and 021.
+- Code review #45 and #46 — unlabelled icon controls and no error boundary. Both are reliability
+  and accessibility rather than security; specified as TC-XC-012 to TC-XC-016.
 
 ## Chains Identified
-- **CWEB-11 + #3 + #14** — the strongest chain found in this engagement. A stored injection point
-  on the highest-traffic public pages, no CSP to contain execution, and a session token readable
-  from JavaScript in two places. Each link is already recorded; CWEB-11 supplies the entry point.
+- No new chains. The confirmation that no CSP is served strengthens the existing **CWEB-11 + #3 +
+  #14** chain recorded under F9, which remains the most serious in the register.
 
 ## Areas Verified Secure
-- **`SEOHead`'s header and footer script slots are an intended admin feature** — they inject
-  `webSettings.headerScript`/`footerScript`, which is the platform's tag-manager equivalent. Judged
-  as designed rather than filed as injection, consistent with session 8's assessment.
-- **`robots.txt` is regenerated at build** from `NEXT_PUBLIC_SITE_URL`, so the committed dev URL is
-  a build artefact. Re-confirmed; the unset-variable case is specified as TC-SEO-016.
-- **Private routes remain disallowed** — `my-account`, `cart`, `api`, `shopping-list`,
-  `forgot-password` are all present in `robots.txt`.
-- **Search terms and other query values render through React**, so no reflected injection path
-  exists in the SEO layer.
+- **All six configured security headers are actually served**, which was worth testing rather than
+  assuming — a `headers()` block can be silently inert. HSTS carries `includeSubDomains; preload`,
+  frame options are `SAMEORIGIN`, and `Permissions-Policy` denies camera and microphone while
+  allowing geolocation to self only.
+- **`X-Powered-By` is absent**, so `poweredByHeader: false` is taking effect.
+- **`Referrer-Policy: strict-origin-when-cross-origin`** limits what leaks to third parties, which
+  partially mitigates the referrer exposure noted in CWEB-07's off-site navigation.
 
 ## Notes
-- **CWEB-11 is the highest-severity finding of the engagement so far and was established in two
-  steps.** First the mechanism: executing `JSON.stringify` on a value containing a closing script
-  sequence shows it is emitted verbatim — `stringify` escapes quotes and backslashes but not `<`
-  or `/`. Then the reachability: the product page builds its schema from `generateProductSchema`
-  plus a breadcrumb carrying `product.title` and `product.category_name`, and the store page passes
-  `store.name` — all seller-authored in a multi-seller marketplace.
-- The row states its boundary: what is verified is that the injection is raw and that seller fields
-  feed it; what is not verifiable here is whether the panel constrains characters in a title. That
-  is TC-SEO-004.
-- The fix is a single-point change — escape `<`, `>` and `&` at the one emission site in
-  `DynamicSEO` — which covers every page type at once. That is why the row recommends fixing it
-  there rather than per page.
+- **Zero new findings is the correct result for this pass.** The cross-cutting security surface —
+  headers, CSP, service-worker caching, logout purging — was already covered by code review issues
+  3, 41, 48 and 49 and by CWEB-03, CWEB-05 and CWEB-10 in earlier features. Re-filing any of them
+  here would duplicate the register rather than add to it.
+- The one genuinely new piece of information is a **negative** one: the configured headers are
+  served correctly. That removes a whole class of "configured but inert" doubt, and it is recorded
+  as verified-safe with the specific values.
+- **TC-XC-019 records the one header question that remains open**: `headers()` is inert under the
+  static-export build mode, so if any deployment target uses export, none of the six headers
+  applies and the host must supply them. That could not be tested here because the dev server runs
+  in SSR mode.
 
 ---
