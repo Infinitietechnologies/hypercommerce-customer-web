@@ -3,53 +3,52 @@
 # Test Case Authoring Session
 
 **Date:** 2026-08-05
-**Time:** 07:22 (24-hour format)
-**Feature / Module:** F8 — Markets & currency (test-case pass)
+**Time:** 08:44 (24-hour format)
+**Feature / Module:** F9 — Content & SEO (test-case pass)
 **Documentation File:** TEST_CASES_INSTRUCTIONS.md · CLAUDE.md
 **Author:** Claude
 
 ## Scope
-- Areas covered: market scope control and entitlement, cache invalidation on switch, cache keys,
-  revalidation cost, currency formatting, header plumbing, currency consistency across a page,
-  switching success and failure, persistence across logout, default resolution, screen states,
-  i18n.
-- Source registers mined: `QA/security.csv` (CWEB-10), `QA/code_review.csv` (#1, #30, #31, #35,
-  #52).
-- Total cases written: 20 (TC-MKT-001 … TC-MKT-020)
+- Areas covered: structured data escaping, sandbox indexing, sitemap integrity, canonical form,
+  CMS content injection, metadata completeness, Open Graph, site URL configuration, CMS rendering,
+  schema validity, soft 404s.
+- Source registers mined: `QA/security.csv` (CWEB-11), `QA/defects.csv` (8, 9, 10),
+  `QA/code_review.csv` (#38, #42).
+- Total cases written: 20 (TC-SEO-001 … TC-SEO-020)
 
 ## Coverage Summary
-- Positive: 5 · Negative: 5 · Negative (security): 5 · Boundary: 2 · Regression: 10 carry a
-  `Linked Bug ID` · i18n / Performance: 2 · Total Cases: 20
+- Positive: 5 · Negative: 6 · Negative (security): 6 · Regression: 13 carry a `Linked Bug ID` ·
+  Total Cases: 20
 
 ## Files Modified
 - QA/test_cases.csv
 - QA/test_cases_append.csv
 
 ## New Cases Added
-- Test Case ID range: TC-MKT-001 … TC-MKT-020
+- Test Case ID range: TC-SEO-001 … TC-SEO-020
 
 ## Findings Given Regression Coverage
-- SEC-CWEB-10 (001, 002, 003, 004) · CR-1 (005, 006) · CR-35 (007) · CR-52 (008) ·
-  CR-30 (009) · CR-31 (010)
+- SEC-CWEB-11 (001, 002, 003, 004) · DEF-8 (005, 006, 007) · DEF-9 (008, 009) ·
+  DEF-10 (010, 011) · CR-38 (012, 013) · CR-42 (020)
 
 ## Coverage Gaps Remaining
-- **The market picker UI** does not exist yet — `CLAUDE.md` §7.4 records it as Phase 8 work, so
-  there is nothing to specify beyond the switch mechanics already covered.
-- **Multi-currency order history** — how a past order placed in another market renders today is
-  unspecified.
-- **Market-specific tax and delivery rules** are unspecified and need the panel's model first.
-- **Market-scoped promo codes** are unspecified; carried from F2 and F3.
+- **Open Graph image generation** — whether a product image resolves to an absolute, crawlable URL
+  is unspecified and needs real data.
+- **Hreflang and multi-locale SEO** — the storefront serves three languages with no locale routing;
+  whether that is intended is a product decision before a case can assert anything.
+- **Structured data beyond product and breadcrumb** — organisation, FAQ and collection schemas are
+  only partly covered by TC-SEO-019.
+- **Page speed and Core Web Vitals** budgets are unspecified; carried to F10.
 
 ## Notes
-- **TC-MKT-001 to TC-MKT-003 are the priority and are runnable against the API today.** They settle
-  what CWEB-10 deliberately leaves open — whether the panel rejects an unknown market code, checks
-  entitlement, and re-derives the market from the delivery address at order placement. The third is
-  the one that matters financially: it is the difference between a broken page and cross-market
-  arbitrage.
-- TC-MKT-012 and TC-MKT-013 pin the header plumbing that was **verified correct** this session,
-  and the mock-backend technique used to verify it is written into the steps so the case is
-  runnable without a real panel.
-- TC-MKT-006 and TC-MKT-018 similarly pin currently-correct behaviour: the header selector's global
-  revalidation, and the absence of a market header when no cookie exists.
+- **TC-SEO-003 is deliberately written to test where the fix lives, not just that it works.**
+  CWEB-11's remediation must sit at the single emission point in `DynamicSEO` so every page type is
+  covered; a per-page fix would pass TC-SEO-001 while leaving category and brand pages exposed.
+- TC-SEO-004 is the panel-side half of CWEB-11 and is runnable against the API today with a seller
+  account — it asks whether a product title may contain a script terminator at all.
+- TC-SEO-007 pins behaviour that is currently **correct** — private routes disallowed in
+  `robots.txt` — because defect 8's fix edits that same file and could regress it.
+- Thirteen of twenty are regressions, and four of those are against defects found in this session's
+  own defects pass.
 
 ---

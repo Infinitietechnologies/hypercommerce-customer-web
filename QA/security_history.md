@@ -3,72 +3,69 @@
 # Security Review Session
 
 **Date:** 2026-08-05
-**Time:** 07:22 (24-hour format)
-**Feature / Module:** F8 — Markets & currency (security pass)
+**Time:** 08:44 (24-hour format)
+**Feature / Module:** F9 — Content & SEO (security pass)
 **Documentation File:** SECURITY_INSTRUCTIONS.md · CLAUDE.md
 **Reviewer:** Claude
 
 ## Scope
-- Files reviewed: `src/routes/interceptor.ts`, `src/helpers/market.ts`,
-  `src/helpers/functionalHelpers.ts` (`getMarketFromContext`), `src/lib/cookies.ts`,
-  `src/services/market.ts`, `src/contexts/SettingsContext.tsx`, `src/helpers/currency.ts`,
-  `src/helpers/events.ts` (`onLocationChange`)
-- Review areas covered: 4.3 authorization · 4.7 configuration · 4.9 tenancy and market scoping ·
-  4.13 privacy
-- Total files inspected: 8
-- **Live testing:** a mock backend that logs request headers was run alongside the dev server to
-  observe what the storefront actually sends.
+- Files reviewed: `src/SEO/DynamicSEO.tsx`, `SEOHead.tsx`, `PageHead.tsx`,
+  `src/components/Functional/HTMLRenderer.tsx`, `src/components/StoreProfile.tsx`,
+  `src/components/Cards/PromoCard.tsx`, `src/pages/products/[slug]/index.tsx` (schema build),
+  `src/pages/stores/[slug]/index.tsx`, `scripts/generate-sitemap.mjs`, `scripts/update-robots.mjs`
+- Review areas covered: 4.4 injection sinks · 4.7 platform configuration · 4.8 information
+  exposure · 4.13 privacy
+- Total files inspected: 10
+- **Live testing:** dev server run; `JSON.stringify` escaping behaviour executed directly.
 
 ## Findings Summary
-- Critical: 0 · High: 0 · Medium: 1 · Low: 0 · Total Findings: 1
+- Critical: 0 · High: 1 · Medium: 0 · Low: 0 · Total Findings: 1
 
 ## Files Modified
 - QA/security.csv
 - QA/security_append.csv
 
 ## New Findings Added
-- ID: CWEB-10 — The active market is set by a client-writable cookie forwarded verbatim as the
-  highest-precedence backend input (Medium)
+- ID: CWEB-11 — Seller-supplied text injected raw into a JSON-LD script block (High, P1)
 
 ## Existing Findings Confirmed
-- Code review #1 — market switch invalidating only `/settings`. Still accurate for the checkout
-  address path; the correction recorded in code review session 13 (the header selector *does*
-  globally revalidate) stands and is specified as TC-MKT-005 and TC-MKT-006.
-- Code review #35 — market-blind SWR keys. Unchanged and directly relevant: with CWEB-10 the
-  market can change without any key changing.
-- Code review #49 — cookies surviving logout. The `market` cookie is one of the three that
-  persist, which on a shared device silently scopes the next person's session; specified as
-  TC-MKT-017.
+- Code review #38 — no sanitisation of API-supplied HTML at seven sites. Distinct from CWEB-11 and
+  the distinction matters: #38 is HTML-context injection into rendered descriptions, CWEB-11 is
+  **script-context** breakout through a field (a product title) that no one would normally think to
+  sanitise as HTML. A panel that strips markup from descriptions may well leave titles alone.
+- Code review #3 — no CSP, and #14 — token in `localStorage`. Both named inside CWEB-11 because
+  they are what turns a successful breakout into session theft.
+- Code review #39 and #40 — sandbox indexing and broken sitemap entries. Both observed this session
+  and filed as defects 8 and 9 rather than re-filed here.
 
 ## Chains Identified
-- **CWEB-10 + #35** — the client controls the market and the cache is blind to it, so a market
-  value can change while cached catalogue data does not. Each makes the other harder to reason
-  about.
+- **CWEB-11 + #3 + #14** — the strongest chain found in this engagement. A stored injection point
+  on the highest-traffic public pages, no CSP to contain execution, and a session token readable
+  from JavaScript in two places. Each link is already recorded; CWEB-11 supplies the entry point.
 
 ## Areas Verified Secure
-- **The header plumbing is correct and complete.** Running a mock backend that logs headers, a
-  single `/brands/` page load issued exactly two backend calls and **both** carried the market
-  header. No request bypassed the shared axios instance, so there is no mixed-market page where
-  part of the data is scoped and part is not — which was the specific risk worth testing.
-- **No market header is sent when no cookie is present** — the baseline request produced two calls
-  with no `X-Market`, so the panel is left to resolve the default rather than receiving an empty
-  or malformed value.
-- **`getMarketFromContext` strips wrapping quotes and trims** before use, and returns `undefined`
-  rather than an empty string when absent.
-- **`formatCurrency` never trusts a client price** — it formats only what it is given; all
-  monetary values originate from the panel.
+- **`SEOHead`'s header and footer script slots are an intended admin feature** — they inject
+  `webSettings.headerScript`/`footerScript`, which is the platform's tag-manager equivalent. Judged
+  as designed rather than filed as injection, consistent with session 8's assessment.
+- **`robots.txt` is regenerated at build** from `NEXT_PUBLIC_SITE_URL`, so the committed dev URL is
+  a build artefact. Re-confirmed; the unset-variable case is specified as TC-SEO-016.
+- **Private routes remain disallowed** — `my-account`, `cart`, `api`, `shopping-list`,
+  `forgot-password` are all present in `robots.txt`.
+- **Search terms and other query values render through React**, so no reflected injection path
+  exists in the SEO layer.
 
 ## Notes
-- **CWEB-10 was proven by observation, not inferred from the config.** A hand-written cookie of
-  `market=ZZ-ARBITRARY` — not a real market code — was forwarded unchanged as `X-Market` on every
-  backend call from that page. That single test establishes both halves of the finding: the client
-  fully controls the value, and nothing on the storefront validates it.
-- The row is explicit that the impact is conditional. If the panel rejects unknown codes and checks
-  entitlement, the practical effect is a broken page. If it prices from the asserted market without
-  checking, it is cross-market arbitrage and a direct financial loss. The storefront cannot tell
-  which, and TC-MKT-001 to TC-MKT-003 are written to settle it against the API.
-- Severity was held at Medium rather than High for that reason — the exploitability depends
-  entirely on a control that is out of this repository's scope. The `P2` priority reflects that the
-  question should be answered quickly even though the finding itself is bounded.
+- **CWEB-11 is the highest-severity finding of the engagement so far and was established in two
+  steps.** First the mechanism: executing `JSON.stringify` on a value containing a closing script
+  sequence shows it is emitted verbatim — `stringify` escapes quotes and backslashes but not `<`
+  or `/`. Then the reachability: the product page builds its schema from `generateProductSchema`
+  plus a breadcrumb carrying `product.title` and `product.category_name`, and the store page passes
+  `store.name` — all seller-authored in a multi-seller marketplace.
+- The row states its boundary: what is verified is that the injection is raw and that seller fields
+  feed it; what is not verifiable here is whether the panel constrains characters in a title. That
+  is TC-SEO-004.
+- The fix is a single-point change — escape `<`, `>` and `&` at the one emission site in
+  `DynamicSEO` — which covers every page type at once. That is why the row recommends fixing it
+  there rather than per page.
 
 ---

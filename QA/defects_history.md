@@ -3,48 +3,52 @@
 # Defect Testing Session
 
 **Date:** 2026-08-05
-**Time:** 07:22 (24-hour format)
-**Feature / Module:** F8 — Markets & currency (defects pass)
+**Time:** 08:44 (24-hour format)
+**Feature / Module:** F9 — Content & SEO (defects pass)
 **Documentation File:** DEFECTS_INSTRUCTIONS.md · CLAUDE.md
 **Tester:** Claude
 
 ## Scope
-- Environment: dev server plus a mock backend on `127.0.0.1:9099` returning `{ success: true,
-  data: [] }` and logging request headers.
-- Flows tested: market header propagation on the server render path, with and without a market
-  cookie, across the brands and categories listings.
-- Breakpoints tested: none. Locales tested: none.
-- Total screens exercised: 2, plus header-level observation of every backend call they made.
+- Environment: dev server with `NEXT_PUBLIC_SSR=true` and a dead API base URL. SEO output is
+  produced from configuration and route structure, so most of it is observable without a backend.
+- Flows tested: sandbox and design-system route indexability, sitemap route resolution, canonical
+  URL form against the served URL.
+- Breakpoints tested: none. Locales tested: English only.
+- Total screens exercised: 7 routes requested and their HTML inspected.
 
 ## Findings Summary
-- Critical: 0 · High: 0 · Medium: 0 · Low: 0 · Total Defects: 0
+- Critical: 0 · High: 0 · Medium: 3 · Low: 0 · Total Defects: 3
 
 ## Files Modified
-- QA/defects_append.csv (emptied — no defects this pass)
+- QA/defects.csv
+- QA/defects_append.csv
 
 ## New Defects Added
-- None.
+- ID: 8 — Redesign sandbox and design-system routes publicly served with no indexing restriction
+- ID: 9 — Sitemap advertises two routes that return 404
+- ID: 10 — Canonical URLs omit the trailing slash the site serves
 
 ## Existing Defects Confirmed
-- None.
+- None from `defects.csv`. Defects 8 and 9 are the observed symptoms of code review issues 39 and
+  40, which described them from configuration; this pass confirms them by request.
 
 ## Areas Verified Working
-- **Market propagation is consistent.** With a market cookie set, both backend calls from a single
-  page load carried the header; with no cookie, neither did. There is no partial-scoping defect.
-- **The mock backend returning empty data rendered the pages cleanly** — no crash, no error, the
-  listings simply showed their empty states, which is consistent with what F7 observed against a
-  dead backend.
+- **Private routes are correctly disallowed** in `robots.txt` — checked directly.
+- **Eleven of the thirteen static sitemap routes resolve**; only the two filed as defect 9 do not.
+- **Content pages render and emit a canonical** — the defect is the canonical's *form*, not its
+  absence.
 
 ## Notes
-- **Zero defects here is a genuine result rather than a blocked one**, which distinguishes this
-  pass from F3 to F6. The market plumbing was directly observable with a mock backend and it
-  behaved correctly. What could not be tested is the part that needs *two real markets with
-  different data* — currency symbols changing, catalogue contents differing, cached data surviving
-  a switch. A mock returning empty arrays cannot exercise any of that.
-- The currency-formatting defects for this feature (code review #30 and #31) were already measured
-  by direct execution in code review session 6, so they are covered by TC-MKT-009 and TC-MKT-010
-  rather than re-filed from the same evidence.
-- The mock-backend technique used here is worth reusing: it made a header-level property
-  observable without a real panel, and it is how TC-MKT-012 and TC-MKT-013 should be run.
+- **Defect 10 is a new finding, not a confirmation.** Code review §4.12.5 listed
+  "canonical disagreeing with `trailingSlash: true`" as something to check but nothing had been
+  measured. Requesting both forms settled it: the canonical target `/about-us` returns **308** and
+  the served URL `/about-us/` returns **200**, so every canonical points one redirect away from the
+  real page — and it disagrees with the sitemap, whose entries do carry trailing slashes. Two
+  signals that should agree, conflicting.
+- Defects 8 and 9 were both verifiable without a backend because they depend on route structure and
+  build configuration rather than on data. That is why this feature yielded three defects while the
+  authenticated features yielded none — the same environment constraint, different exposure.
+- Not tested: the CMS pages' rendered content, which needs the content endpoint, and Open Graph
+  image resolution, which needs real product data.
 
 ---
