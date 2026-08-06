@@ -51,6 +51,7 @@ export default defineConfig([
   },
 
   globalIgnores([
+    "_to_delete/**",
     ".next/**",
     "out/**",
     "build/**",

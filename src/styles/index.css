@@ -1,8 +1,6 @@
 /* Global app styles */
 @import "./globals.css";
 
-/* Storefront redesign sandbox (/redesign/*) — every rule scoped under `.rd` */
-@import "../redesign/redesign.css";
 
 /* Swiper styles */
 @import "swiper/css";

@@ -26,8 +26,6 @@ const TINTS = [
  */
 const CategoryHorizontalCard: FC<CategoryHorizontalCardProps> = ({ category }) => {
   const tint = TINTS[(category.id ?? 0) % TINTS.length];
-  const backgroundColor = category.background_color || undefined;
-  const color = category.font_color || undefined;
 
   return (
     <Link
