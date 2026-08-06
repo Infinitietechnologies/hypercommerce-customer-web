@@ -36,6 +36,7 @@ import {
 } from "./updators";
 import { clearCart } from "@/lib/redux/slices/cartSlice";
 import { clearRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
+import { clearOfflineCart } from "@/lib/redux/slices/offlineCartSlice";
 import i18n from "../../i18n";
 import {
   setAnalyticsUserId,
@@ -409,7 +410,7 @@ export const checkEmailExists = async (
       value: email,
     });
 
-    if (response.success || response.data?.exists) {
+    if (response.data?.exists) {
       setFieldErrors((prev) => ({
         ...prev,
         email: i18n.t("email_check.email_exists"),
@@ -419,17 +420,10 @@ export const checkEmailExists = async (
     return response.data?.exists;
   } catch (error) {
     console.error("Error checking email:", error);
-    if (error && typeof error === "object" && "response" in error) {
-      const errorResponse = (
-        error as { response: { data?: { message?: string } } }
-      ).response;
-      if (errorResponse?.data?.message !== "User not found") {
-        setFieldErrors((prev) => ({
-          ...prev,
-          email: i18n.t("email_check.check_error"),
-        }));
-      }
-    }
+    setFieldErrors((prev) => ({
+      ...prev,
+      email: i18n.t("email_check.check_error"),
+    }));
   } finally {
     setIsCheckingEmail(false);
   }
@@ -452,26 +446,20 @@ export const checkPhoneExists = async (
       value: phone,
     });
 
-    if (response.success || response.data?.exists) {
+    if (response.data?.exists) {
       setFieldErrors((prev) => ({
         ...prev,
         phone: i18n.t("phone_check.phone_exists"),
       }));
     }
+
     return response.data?.exists;
   } catch (error) {
     console.error("Error checking phone:", error);
-    if (error && typeof error === "object" && "response" in error) {
-      const errorResponse = (
-        error as { response: { data?: { message?: string } } }
-      ).response;
-      if (errorResponse?.data?.message !== "User not found") {
-        setFieldErrors((prev) => ({
-          ...prev,
-          phone: i18n.t("phone_check.check_error"),
-        }));
-      }
-    }
+    setFieldErrors((prev) => ({
+      ...prev,
+      phone: i18n.t("phone_check.check_error"),
+    }));
   } finally {
     setIsCheckingPhone(false);
   }
@@ -649,15 +637,69 @@ export const handleLoginUser = async (
 
 // logout
 
+/**
+ * Everything that has to be dropped locally when a session ends. Runs on the
+ * success path and on the failure path, so a failed logout call can never leave
+ * a half-signed-out browser behind.
+ */
+/**
+ * Direct localStorage writes still exist in a few features (recent searches,
+ * shopping list, ad tracking). None of them belong to the next account that
+ * signs in on this device, so sign-out clears them here. The FCM token is
+ * device-scoped and unbound server-side by the logout call, so it stays.
+ */
+const USER_SCOPED_STORAGE_KEYS = [
+  "recentSearches",
+  "shoppingListKeywords",
+  "shoppingListActiveKeywordString",
+  "ad_impressions_queue",
+  "ad_clicks_queue",
+];
+
+const clearLocalSession = () => {
+  store.dispatch(logout());
+
+  USER_SCOPED_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  deleteCookie("user");
+  deleteCookie("access_token");
+  // Both outlive the session by a year otherwise — the next user of a shared
+  // device would inherit the previous one's precise location.
+  deleteCookie("userLocation");
+  deleteCookie("homeCategory");
+
+  setAnalyticsUserId("");
+
+  updateDataOnAuth();
+  store.dispatch(clearCart());
+  store.dispatch(clearRecentlyViewed());
+  // Persisted — without this it survives sign-out and is merged into the
+  // next account that signs in on this device.
+  store.dispatch(clearOfflineCart());
+
+  void purgeOfflineCaches();
+};
+
+/**
+ * The service worker caches authenticated pages, so the next visitor on this
+ * device could be served the previous account's screens from CacheStorage.
+ */
+const purgeOfflineCaches = async () => {
+  if (typeof window === "undefined" || !("caches" in window)) return;
+
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((key) => caches.delete(key)));
+  } catch (err) {
+    console.error("Failed clearing offline caches on logout:", err);
+  }
+};
+
 export const handleLogout = async (
   renderToast: boolean,
   forceLogout: boolean = false,
 ) => {
   try {
     if (store.getState().auth.isLoggedIn || forceLogout) {
-      localStorage.removeItem("shoppingListActiveKeywordString");
-      localStorage.removeItem("shoppingListKeywords");
-
       const currentPath =
         typeof window !== "undefined" ? window.location.pathname : "";
 
@@ -671,16 +713,7 @@ export const handleLogout = async (
       const fcm_token = localStorage.getItem("fcm-token") || undefined;
       await logoutApi(access_token, { fcm_token });
 
-      store.dispatch(logout());
-      deleteCookie("user");
-      deleteCookie("access_token");
-
-      // Clear analytics user ID
-      setAnalyticsUserId("");
-
-      updateDataOnAuth();
-      store.dispatch(clearCart());
-      store.dispatch(clearRecentlyViewed());
+      clearLocalSession();
 
       if (renderToast) {
         addToast({
@@ -694,7 +727,7 @@ export const handleLogout = async (
     }
   } catch (err) {
     console.error("Logout error:", err);
-    process.exit(1);
+    clearLocalSession();
   }
 };
 
@@ -720,7 +753,6 @@ export const getAccessTokenFromContext = async (
       return cleanToken;
     }
 
-    console.log("No valid token found in SSR context");
     return null;
   } catch (error) {
     console.error("Error getting access token from context:", error);

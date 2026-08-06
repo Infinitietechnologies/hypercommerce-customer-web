@@ -1,3 +1,4 @@
+import { Product } from "@/types/ApiResponse";
 import type { DeliveryZone } from "./delivery";
 
 export interface CartApiResponse {
@@ -31,15 +32,8 @@ export interface FailedCartItem {
   store_id: number;
   product_variant_id: number;
   quantity?: number;
-  product: {
-    id: number;
-    store_id: number;
-    sku: string;
-    price: number;
-    special_price: number;
-    cost: string;
-    stock: number;
-  };
+  // The panel returns the full product resource here (CartService::syncCart).
+  product: Product;
   product_name?: string;
   product_image?: string;
   variant_name?: string;

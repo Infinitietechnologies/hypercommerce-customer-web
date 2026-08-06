@@ -30,7 +30,7 @@ const ProductReviewsSection: FC<ProductReviewsSectionProps> = ({
     if (response.success && response.data) {
       return response.data.data;
     }
-    console.error("Failed to fetch product reviews");
+    throw new Error("Failed to fetch product reviews");
   };
 
   const {

@@ -19,6 +19,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { getUserDataFromRedux } from "@/helpers/getters";
 import { payOrder } from "@/services/orders";
 import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
+import { useTranslation } from "react-i18next";
 
 const CheckoutForm: React.FC<{
   onSuccess: (slug?: string) => void;
@@ -39,6 +40,7 @@ const CheckoutForm: React.FC<{
 }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const { t } = useTranslation();
   const [message, setMessage] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const userData = getUserDataFromRedux();
@@ -107,13 +109,13 @@ const CheckoutForm: React.FC<{
         addToast({
           title:
             usageType === "wallet"
-              ? "Wallet Recharged Successfully!"
-              : "Order Placed Successfully!",
+              ? t("paymentGateway.walletRechargeSubmitted")
+              : t("paymentGateway.orderPlaced"),
           color: "success",
         });
       } catch (err) {
-        addToast({ title: "An unexpected error occurred.", color: "danger" });
-        setMessage("An unexpected error occurred.");
+        addToast({ title: t("paymentGateway.unexpected"), color: "danger" });
+        setMessage(t("paymentGateway.unexpected"));
         console.error("Payment error:", err);
         onError();
       } finally {
@@ -130,6 +132,7 @@ const CheckoutForm: React.FC<{
       onSuccess,
       onError,
       setIsLoading,
+      t,
     ]
   );
 

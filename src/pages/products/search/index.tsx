@@ -22,6 +22,7 @@ import { getAccessTokenFromContext } from "@/helpers/auth";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import NoProductsFound from "@/components/NoProductsFound";
+import { ErrorState } from "@/components/ui";
 import { ArrowRight, ShoppingCart, Search } from "lucide-react";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
@@ -153,6 +154,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
     total,
     loadMore,
     refetch,
+    error: fetchError,
   } = useInfiniteData<Product>({
     fetcher: getProducts,
     dataKey: `/productsSearch:${safeQuery}`,
@@ -351,6 +353,13 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
                   total={total}
                   hasMore={hasMore}
                 />
+              ) : fetchError ? (
+                <ErrorState
+                  title={t("something_went_wrong")}
+                  description={t("search_error_message")}
+                  retryLabel={t("try_again")}
+                  onRetry={() => refetch()}
+                />
               ) : (
                 !isLoading && (
                   <NoProductsFound
@@ -363,7 +372,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
                     description={
                       safeQuery.trim().length === 1
                         ? t("enter_min_2_chars")
-                        : t("no_products_found_message", { safeQuery })
+                        : t("no_products_found_message", { query: safeQuery })
                     }
                     customActions={
                       <div className="flex w-full justify-center items-center">

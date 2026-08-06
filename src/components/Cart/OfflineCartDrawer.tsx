@@ -230,7 +230,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
           <DrawerBody className="flex flex-col gap-4">
             {hasItems ? (
               <>
-                <ScrollShadow className="flex flex-col gap-3 max-h-[50vh] pr-1">
+                <ScrollShadow className="flex flex-col gap-3 max-h-[50vh] pe-1">
                   {offlineCart.items.map((item) => (
                     <div
                       key={item.id}

@@ -8,23 +8,47 @@ import offlineCartSlice from "./slices/offlineCartSlice";
 import recentlyViewedSlice from "./slices/recentlyViewedSlice";
 
 import searchSlice from "./slices/searchSlice";
+import cartNoticeSlice from "./slices/cartNoticeSlice";
+import { createTransform } from "redux-persist";
+import { getCookie } from "@/lib/cookies";
+import type { AuthState } from "./slices/authSlice";
+
+/**
+ * The bearer token never reaches localStorage — it is stripped on the way in
+ * and restored from the session cookie on rehydrate, so a stored blob carries
+ * no usable credential.
+ */
+const stripAccessToken = createTransform<AuthState, AuthState>(
+  (inboundState: AuthState) => ({ ...inboundState, access_token: "" }),
+  (outboundState: AuthState) => ({
+    ...outboundState,
+    access_token: (getCookie("access_token") as string) || "",
+  }),
+  { whitelist: ["auth"] },
+);
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "cart", "offlineCart", "recentlyViewed"], // Don't persist search labels to avoid stale ones
+  // `cart` is a server mirror — always re-fetched, never rehydrated from disk.
+  // `search` stays out deliberately so stale labels are not restored.
+  whitelist: ["auth", "offlineCart", "recentlyViewed"],
+  transforms: [stripAccessToken],
 };
 
 const rootReducer = combineReducers({
   auth: authSlice,
   cart: cartSlice,
+  cartNotice: cartNoticeSlice,
   checkout: checkoutSlice,
   offlineCart: offlineCartSlice,
   recentlyViewed: recentlyViewedSlice,
   search: searchSlice,
 });
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+type AppState = ReturnType<typeof rootReducer>;
+
+const persistedReducer = persistReducer<AppState>(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,

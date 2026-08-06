@@ -2,6 +2,7 @@ import { payOrder } from "@/services/orders";
 import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
 import { addToast, Button } from "@heroui/react";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
 
 const FlutterwavePayment: FC<{
   onSuccess: (slug?: string) => void;
@@ -10,6 +11,7 @@ const FlutterwavePayment: FC<{
   isLoading: boolean;
   orderSlug?: string;
 }> = ({ onError, isLoading, setIsLoading, orderSlug }) => {
+  const { t } = useTranslation();
   const handlePayment = async () => {
     setIsLoading(true);
     try {
@@ -23,7 +25,7 @@ const FlutterwavePayment: FC<{
         return;
       }
       addToast({
-        title: res?.message || "Failed to start payment",
+        title: res?.message || t("paymentGateway.startFailed"),
         color: "danger",
       });
       onError();

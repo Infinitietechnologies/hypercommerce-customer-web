@@ -164,7 +164,7 @@ const CartSummary: FC<CartSummaryProps> = ({ cart }) => {
                 defaultValue: "Cannot proceed to checkout",
               })}
               description={
-                <ul className="list-disc pl-5">
+                <ul className="list-disc ps-5">
                   {validationErrors.map((error, index) => (
                     <li key={index}>{error}</li>
                   ))}

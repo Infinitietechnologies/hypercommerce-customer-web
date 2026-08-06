@@ -38,7 +38,7 @@ const CategoryCard: FC<CategoryCardProps> = ({ category }) => {
             trackCategoryView(category?.id?.toString(), category?.title)
           }
         >
-          <div className="absolute top-3 start-3 end-1 sm:top-4 sm:start-4 z-20 text-start pr-1">
+          <div className="absolute top-3 start-3 end-1 sm:top-4 sm:start-4 z-20 text-start pe-1">
             <h2
               title={category.title}
               className="text-[13px] sm:text-[14px] font-bold text-foreground leading-[1.2] break-words line-clamp-2 max-w-[90%]"

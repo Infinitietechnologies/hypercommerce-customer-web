@@ -23,7 +23,8 @@ import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
 import WalletTransactionTable from "@/components/Tables/WalletTransactionTable";
 import { ErrorState } from "@/components/ui";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
+import { useRouter } from "next/router";
 
 type WalletPageProps = {
   initialUserData: userData;
@@ -56,6 +57,7 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
 }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const router = useRouter();
 
   const { data: userData } = useSWR(
     !isSSR() ? "user-data" : null,
@@ -104,7 +106,9 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
                 title={t("pages.walletPage.errorTitle", "Couldn't load transactions")}
                 description={error}
                 retryLabel={t("retry", "Retry")}
-                onRetry={() => window.location.reload()}
+                onRetry={() =>
+                  router.replace(router.asPath, undefined, { scroll: false })
+                }
               />
             ) : (
               <WalletTransactionTable
@@ -125,15 +129,11 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+
+        if (guard) return guard;
+
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
         const res = await getUserData({ access_token });
         await loadTranslations(context);
 

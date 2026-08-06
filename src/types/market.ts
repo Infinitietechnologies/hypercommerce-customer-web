@@ -31,6 +31,15 @@ export interface MarketInfo {
   format?: MarketFormat;
 }
 
+export interface GeoDetectData {
+  suggested_market?: MarketInfo | null;
+  country?: string | null;
+}
+
+export interface MarketSwitchData {
+  market?: MarketInfo | null;
+}
+
 export interface MarketsSetting {
   current: MarketInfo | null;
   default: MarketInfo | null;

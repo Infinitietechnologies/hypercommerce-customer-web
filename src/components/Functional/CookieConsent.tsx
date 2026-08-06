@@ -48,11 +48,11 @@ const CookieConsent = () => {
             <h2 className="text-medium sm:text-lg font-bold text-gray-900 mb-2">
               {t("cookieConsent.title")}
             </h2>
-            <p className="text-gray-600 text-xxs sm:text-sm leading-relaxed mb-2 ml-2">
+            <p className="text-gray-600 text-xxs sm:text-sm leading-relaxed mb-2 ms-2">
               {t("cookieConsent.description")}
             </p>
 
-            <p className="text-xxs sm:text-xs text-gray-500 ml-2">
+            <p className="text-xxs sm:text-xs text-gray-500 ms-2">
               {t("cookieConsent.learnMore")}{" "}
               <a
                 href="/privacy-policy"

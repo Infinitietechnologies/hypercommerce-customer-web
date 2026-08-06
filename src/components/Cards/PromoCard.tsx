@@ -1,3 +1,4 @@
+import { sanitizeHtml } from "@/helpers/sanitizeHtml";
 import { useSettings } from "@/contexts/SettingsContext";
 import { formatDate } from "@/helpers/validator";
 import { PromoCode } from "@/types/ApiResponse";
@@ -80,7 +81,7 @@ const PromoCard: React.FC<PromoCardProps> = ({
                     className={`html-content text-xxs sm:text-xs text-foreground/50 ${
                       expanded ? "" : "line-clamp-2"
                     }`}
-                    dangerouslySetInnerHTML={{ __html: promo.description }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(promo.description) }}
                   />
                   {(isClamped || expanded) && (
                     <button

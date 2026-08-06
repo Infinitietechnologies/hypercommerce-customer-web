@@ -90,7 +90,7 @@ const OrderCard: FC<OrderCardProps> = ({ item }) => {
       </Chip>
 
       {/* Total */}
-      <div className="min-w-[70px] shrink-0 text-right text-sm font-bold text-foreground">
+      <div className="min-w-[70px] shrink-0 text-end text-sm font-bold text-foreground">
         {formatPrice(item.subtotal)}
       </div>
     </Link>

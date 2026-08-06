@@ -63,21 +63,13 @@ const clampQuantity = (item: OfflineCartItem, desiredQuantity: number) => {
     Math.min(desiredQuantity, maxQuantity, stock)
   );
 
-  if (stepSize > 1) {
-    const remainder = qty % stepSize;
-    if (remainder !== 0) {
-      qty = qty - remainder;
-      if (qty < stepSize) {
-        qty = stepSize;
-      }
-    }
-  } else {
-    const remainder = (qty - minQuantity) % stepSize;
-    if (remainder !== 0) {
-      qty = qty - remainder;
-      if (qty < minQuantity) {
-        qty = minQuantity;
-      }
+  // Steps run from the minimum, not from zero — a minimum that is not itself a
+  // multiple of the step must never be rounded below itself.
+  const remainder = (qty - minQuantity) % stepSize;
+  if (remainder !== 0) {
+    qty = qty - remainder;
+    if (qty < minQuantity) {
+      qty = minQuantity;
     }
   }
 
@@ -195,7 +187,11 @@ const offlineCartSlice = createSlice({
           const nextIndex = state.items.findIndex((item) => item.id === nextId);
           if (nextIndex >= 0 && nextIndex !== existingIndex) {
             // Merge into existing item
-            state.items[nextIndex].quantity += action.payload.newItem.quantity;
+            const mergeTarget = state.items[nextIndex];
+            mergeTarget.quantity = clampQuantity(
+              mergeTarget,
+              mergeTarget.quantity + action.payload.newItem.quantity
+            );
             state.items.splice(existingIndex, 1);
           } else {
             // Just update the item at existing index

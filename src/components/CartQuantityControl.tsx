@@ -168,7 +168,7 @@ const CartQuantityControl: React.FC<CartQuantityControlProps> = ({
       >
         {localQuantity}
         {isUpdating && (
-          <span className="ml-1 inline-block animate-spin">⏳</span>
+          <span className="ms-1 inline-block animate-spin">⏳</span>
         )}
       </div>
 

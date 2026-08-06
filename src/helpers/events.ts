@@ -1,3 +1,4 @@
+import { isMarketScopedKey } from "@/helpers/market";
 import { store } from "@/lib/redux/store";
 import { updateCartData } from "./updators";
 import { getCookie, setCookie } from "@/lib/cookies";
@@ -57,12 +58,10 @@ export const onLocationChange = () => {
 
   buttonIds.forEach((id) => document.getElementById(id)?.click?.());
 
-  // A location/market change affects prices, availability, delivery ETAs and
-  // more across the whole app, so revalidate EVERY mounted SWR key — not just
-  // the pages that registered a refetch button above, or the /infinite-data
-  // lists. Manual-fetch views (e.g. HomeBuilder) are still covered by the button
-  // clicks above; SWR dedupes any overlap.
-  mutate(() => true, undefined, { revalidate: true });
+  // A location/market change moves prices, availability and delivery ETAs, so
+  // every market-scoped key is dropped. Manual-fetch views (e.g. HomeBuilder)
+  // are covered by the button clicks above; SWR dedupes any overlap.
+  mutate(isMarketScopedKey, undefined, { revalidate: true });
 
   updateCartData(false, false, 0, false);
 };

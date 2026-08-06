@@ -9,7 +9,7 @@ import AccountOverviewView from "@/views/AccountOverviewView";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { isSSR } from "@/helpers/getters";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 import { getSettings, getUserData } from "@/routes/api";
 import { RootState } from "@/lib/redux/store";
 import { NextPageWithLayout } from "@/types";
@@ -46,15 +46,11 @@ const AccountOverviewPage: NextPageWithLayout<OverviewPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+
+        if (guard) return guard;
+
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
         const response = await getUserData({ access_token });
         const market = getMarketFromContext(context);
         const res = await getSettings({ market });

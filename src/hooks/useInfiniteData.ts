@@ -1,6 +1,14 @@
 import { isSSR } from "@/helpers/getters";
 import { useCallback, useEffect, useRef, useState , useMemo } from "react";
 import useSWR from "swr";
+import { getCookie } from "@/lib/cookies";
+
+/** Stale times from CLAUDE.md 7.3, in ms. */
+export const STALE_TIME = {
+  list: 2 * 60 * 1000,
+  detail: 5 * 60 * 1000,
+  reference: 30 * 60 * 1000,
+};
 
 interface UseInfiniteDataProps<T> {
   fetcher: (params: {
@@ -17,6 +25,8 @@ interface UseInfiniteDataProps<T> {
   };
   forceFetchOnMount?: boolean;
   dataKey?: string | null;
+  /** SWR dedupingInterval in ms — set per CLAUDE.md 7.3 volatility table. */
+  staleTime?: number;
 }
 
 export const useInfiniteData = <T>({
@@ -27,6 +37,7 @@ export const useInfiniteData = <T>({
   extraParams = {},
   forceFetchOnMount = false,
   dataKey = null,
+  staleTime = STALE_TIME.list,
 }: UseInfiniteDataProps<T>) => {
   const [data, setData] = useState<T[]>(initialData);
   const [page, setPage] = useState(1);
@@ -50,9 +61,13 @@ export const useInfiniteData = <T>({
     [extraParams],
   );
 
+  // The market travels as a header, so it must be part of the key too —
+  // otherwise two markets share one cache entry for the same listing.
+  const market = (getCookie<string>("market") as string) || "";
+
   const swrKey = dataKey
-    ? [`/infinite-data-${dataKey}`, serializedParams]
-    : ["/infinite-data", serializedParams];
+    ? [`/infinite-data-${dataKey}`, serializedParams, market]
+    : ["/infinite-data", serializedParams, market];
 
   const {
     data: swrResponse,
@@ -62,7 +77,7 @@ export const useInfiniteData = <T>({
     mutate,
   } = useSWR(
     swrKey,
-    async ([, params]: [string, string]) => {
+    async ([, params]: [string, string, string]) => {
       const currentParams = JSON.parse(params);
       // hypercommerce: no location gate. Market is auto-detected server-side
       // (X-Market header / market cookie), so we never block on lat/lng.
@@ -74,12 +89,15 @@ export const useInfiniteData = <T>({
       if (res.success) {
         return res.data;
       }
-      console.error("Failed to fetch initial data");
-      return [];
+      // Must throw: returning a value here records a success and leaves `error`
+      // empty, so a failed request renders as a genuine empty result.
+      throw new Error(res.message || "Failed to fetch initial data");
     },
     {
       revalidateOnFocus: false,
       revalidateOnMount: forceFetchOnMount ? forceFetchOnMount : !isSSR(),
+      errorRetryCount: 2,
+      dedupingInterval: staleTime,
     },
   );
 

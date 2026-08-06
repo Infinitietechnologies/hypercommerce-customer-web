@@ -53,7 +53,7 @@ const AppDownloadSection: React.FC = () => {
                     </svg>
                   }
                 >
-                  <div className="text-left">
+                  <div className="text-start">
                     <div className="text-xs opacity-70">Download on</div>
                     <div className="text-sm font-semibold">App Store</div>
                   </div>
@@ -76,7 +76,7 @@ const AppDownloadSection: React.FC = () => {
                     </svg>
                   }
                 >
-                  <div className="text-left">
+                  <div className="text-start">
                     <div className="text-xs opacity-70">Get it on</div>
                     <div className="text-sm font-semibold">Google Play</div>
                   </div>

@@ -19,6 +19,23 @@ const packageJson = JSON.parse(
 const { version = "0" } = packageJson;
 const isExport = process.env.NEXT_PUBLIC_SSR !== "true";
 
+// The optimizer fetches whatever host it is given, so the allowlist is the
+// bound. Panel host by default; add CDNs through NEXT_PUBLIC_IMAGE_HOSTS.
+const hostOf = (url?: string) => {
+  try {
+    return url ? new URL(url).hostname : "";
+  } catch {
+    return "";
+  }
+};
+
+const imageHosts = [
+  hostOf(process.env.NEXT_PUBLIC_ADMIN_PANEL_URL),
+  ...(process.env.NEXT_PUBLIC_IMAGE_HOSTS || "")
+    .split(",")
+    .map((host) => host.trim()),
+].filter(Boolean);
+
 const nextConfig: NextConfig = {
   transpilePackages: ["@heroui/system", "@heroui/react"],
   turbopack: {},
@@ -33,12 +50,10 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
+    remotePatterns: imageHosts.map((hostname) => ({
+      protocol: "https" as const,
+      hostname,
+    })),
   },
   experimental: {
     scrollRestoration: true,

@@ -91,7 +91,7 @@ const LanguageSwitcher = () => {
               />
             }
           >
-            <span className={`fi fi-${language.countryCode} mr-2`} />
+            <span className={`fi fi-${language.countryCode} me-2`} />
             <span>{language.name}</span>
           </DropdownItem>
         ))}

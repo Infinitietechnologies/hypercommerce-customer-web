@@ -12,6 +12,10 @@ Disallow: /shopping-list/
 Disallow: /forgot-password/
 Disallow: /admin/
 
+# Block the design sandbox — mock data, not catalogue content
+Disallow: /redesign/
+Disallow: /design-system/
+
 # Allow Next.js public assets (IMPORTANT: Allow before blocking)
 Allow: /_next/image
 Allow: /images/

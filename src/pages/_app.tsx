@@ -1,4 +1,6 @@
+import ErrorBoundary from "@/components/Functional/ErrorBoundary";
 import type { AppProps } from "next/app";
+import Head from "next/head";
 import { HeroUIProvider } from "@heroui/system";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { useRouter } from "next/router";
@@ -108,8 +110,18 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     pageElement
   );
 
+  const isSandboxRoute =
+    router.pathname.startsWith("/redesign") ||
+    router.pathname.startsWith("/design-system");
+
   return (
     <HeroUIProvider navigate={router.push}>
+      <Head>
+        <style>{`:root{--font-sans:${fontSans.style.fontFamily};}`}</style>
+        {isSandboxRoute && (
+          <meta name="robots" content="noindex, nofollow" key="robots" />
+        )}
+      </Head>
       <NextThemesProvider
         forcedTheme="light"
         defaultTheme="light"
@@ -122,7 +134,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           toastOffset={10}
           toastProps={{
             classNames: {
-              base: "max-w-[calc(100vw-40px)] sm:max-w-md pr-6",
+              base: "max-w-[calc(100vw-40px)] sm:max-w-md pe-6",
               title: "whitespace-normal line-clamp-none overflow-visible",
               description: "whitespace-normal line-clamp-none overflow-visible text-ellipsis-none",
             },
@@ -138,7 +150,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           }}
         />
         <ReduxProvider>
-          {getLayout(content)}
+          <ErrorBoundary>{getLayout(content)}</ErrorBoundary>
           <AuthSheetHost />
         </ReduxProvider>
       </NextThemesProvider>

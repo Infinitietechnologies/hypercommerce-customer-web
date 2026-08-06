@@ -99,3 +99,10 @@ export const staticLng = 69.6669;
 export const demoEmail = "user@gmail.com";
 export const demoPassword = "12345678";
 export const demoNumber = "9000000000";
+
+/**
+ * Ceiling for a single wallet top-up, in the active market currency. The panel
+ * exposes no per-market wallet limit yet, so this is a documented default —
+ * replace it with the setting once the API carries one.
+ */
+export const WALLET_MAX_RECHARGE = 1000000;

@@ -105,6 +105,26 @@ const AddressSection: FC<AddressSectionProps> = ({ onAddAddressModalOpen }) => {
     );
   }, []);
 
+  // The checkout keeps a copy of the address, so re-sync it whenever the list
+  // reloads: an edit elsewhere would otherwise ship to the stale copy, and a
+  // deleted address would stay selected.
+  useEffect(() => {
+    if (!selectedAddress || allAddresses.length === 0) return;
+
+    const current = allAddresses.find(
+      (addr) => addr.id === selectedAddress.id,
+    );
+
+    if (!current) {
+      dispatch(setSelectedAddress(null));
+      return;
+    }
+
+    if (JSON.stringify(current) !== JSON.stringify(selectedAddress)) {
+      dispatch(setSelectedAddress(current));
+    }
+  }, [allAddresses, selectedAddress, dispatch]);
+
   const handleSelectAddressClick = useCallback(async () => {
     setTempSelectedId(selectedAddress?.id?.toString() || "");
     onOpen();

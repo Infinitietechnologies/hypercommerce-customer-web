@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 
-import { EmptyState } from "@/components/ui";
+import { EmptyState, ErrorState } from "@/components/ui";
 import HomeSectionRenderer from "@/components/Home/HomeSectionRenderer";
 import HomeSectionSkeleton from "@/components/Skeletons/HomeSectionSkeleton";
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
@@ -32,6 +32,7 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   const [page, setPage] = useState<number>(initialLayout?.current_page ?? 1);
   const [lastPage, setLastPage] = useState<number>(initialLayout?.last_page ?? 1);
   const [loading, setLoading] = useState<boolean>(!initialLayout);
+  const [failed, setFailed] = useState<boolean>(false);
 
   const fetchPage = useCallback(async (nextPage: number) => {
     const category_slug = getActiveCategory();
@@ -46,6 +47,7 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   const refetch = useCallback(async () => {
     setLoading(true);
     const data = await fetchPage(1);
+    setFailed(!data);
     if (data) {
       setSections(data.sections);
       setPage(data.current_page);
@@ -71,6 +73,7 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
     (async () => {
       const data = await fetchPage(1);
       if (cancelled) return;
+      setFailed(!data);
       if (data) {
         setSections(data.sections);
         setPage(data.current_page);
@@ -100,7 +103,14 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
       {/* Driven by onHomeCategoryChange / onLocationChange (helpers/events). */}
       <button className="hidden" id="home-sections-refetch" onClick={refetch} />
 
-      {sections.length === 0 && !loading ? (
+      {failed && sections.length === 0 && !loading ? (
+        <ErrorState
+          title={t("home.error.title", "We couldn't load the home page")}
+          description={t("home.error.description", "Please try again in a moment.")}
+          retryLabel={t("common.retry", "Retry")}
+          onRetry={refetch}
+        />
+      ) : sections.length === 0 && !loading ? (
         <EmptyState
           actionLabel={t("home.empty.action", "Continue shopping")}
           description={t(

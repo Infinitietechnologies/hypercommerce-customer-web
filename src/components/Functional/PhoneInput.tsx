@@ -380,7 +380,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
           maxLength={state.maxPhoneLength}
           variant={variant}
           classNames={{
-            inputWrapper: "pl-0",
+            inputWrapper: "ps-0",
             errorMessage: "text-xs",
           }}
           isDisabled={isLoading}

@@ -35,13 +35,6 @@ const RemovedItemsModal: React.FC = () => {
   const { t } = useTranslation();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Expose open button
-  useEffect(() => {
-    const btn = document.getElementById("removed-items-modal-open");
-    if (!btn) return;
-    btn.onclick = () => onOpen();
-  }, [onOpen]);
-
   // Auto-open on changes
   useEffect(() => {
     if (removedCount > 0 && removedItems.length > 0) {
@@ -59,8 +52,6 @@ const RemovedItemsModal: React.FC = () => {
 
   return (
     <>
-      <button id="removed-items-modal-open" className="hidden" />
-
       <Modal
         isOpen={isOpen}
         onClose={onClose}

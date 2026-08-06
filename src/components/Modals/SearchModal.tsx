@@ -501,6 +501,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                     searchQuery && (
                       <Button
                         isIconOnly
+                        aria-label={t("a11y.clear_search")}
                         size="sm"
                         variant="light"
                         onPress={() => handleClearSearch()}
@@ -545,7 +546,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <ModalFooter className="flex items-center justify-start w-full border-t border-gray-100 dark:border-default-100">
               {selectedLocation ? (
                 <div className="flex items-center text-sm text-foreground/50">
-                  <MapPin className="w-4 h-4 mr-1" />
+                  <MapPin className="w-4 h-4 me-1" />
                   {selectedLocation?.placeName ? (
                     <div className="flex justify-start gap-2 items-center">
                       <span className="whitespace-nowrap block">
@@ -579,7 +580,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center text-sm text-foreground/50">
-                  <MapPin className="w-4 h-4 mr-1" />
+                  <MapPin className="w-4 h-4 me-1" />
                   {t("delivering_to_your_location")}
                 </div>
               )}

@@ -78,7 +78,7 @@ const ProductReviewsSectionSkeleton: FC<ProductReviewsSectionSkeletonProps> = ({
                     className="h-3 w-3 md:h-4 md:w-4 rounded-full"
                   />
                 ))}
-                <Skeleton className="h-3 w-6 rounded-lg ml-1" />
+                <Skeleton className="h-3 w-6 rounded-lg ms-1" />
               </div>
             </div>
 

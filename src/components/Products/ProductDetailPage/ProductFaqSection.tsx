@@ -45,7 +45,7 @@ const ProductFaqSection: FC<ProductFaqSectionProps> = ({ productSlug }) => {
     if (response.success && response.data) {
       return response.data;
     }
-    console.error("Failed to fetch product FAQs");
+    throw new Error("Failed to fetch product FAQs");
   };
 
   const {

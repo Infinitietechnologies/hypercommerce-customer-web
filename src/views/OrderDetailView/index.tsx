@@ -109,7 +109,7 @@ function LabelValue({ label, value }: { label: string; value: React.ReactNode })
   return (
     <div className="flex items-center justify-between gap-3 py-1 text-sm">
       <span className="text-default-500">{label}</span>
-      <span className="font-medium text-foreground text-right">{value}</span>
+      <span className="font-medium text-foreground text-end">{value}</span>
     </div>
   );
 }
@@ -562,7 +562,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                       key={it.id}
                       type="button"
                       onClick={() => selectItem(it.id)}
-                      className={`flex items-center gap-3 rounded-medium border p-2 text-left transition-colors ${
+                      className={`flex items-center gap-3 rounded-medium border p-2 text-start transition-colors ${
                         active
                           ? "border-primary bg-primary-50"
                           : "border-divider hover:border-primary"

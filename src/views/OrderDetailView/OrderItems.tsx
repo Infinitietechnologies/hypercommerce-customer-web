@@ -219,7 +219,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                                        <span key={idx} className="block">
                                           {groupTitle ? `${groupTitle}: ` : ""}
                                           {itemTitle}
-                                          <span className="ml-1 opacity-80 font-medium">
+                                          <span className="ms-1 opacity-80 font-medium">
                                             ({item.quantity} ×{" "}
                                             {formatPrice(addonPrice)})
                                           </span>

@@ -2,7 +2,7 @@
 import { userData } from "@/types/ApiResponse";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface AuthState {
+export interface AuthState {
   isLoggedIn: boolean;
   access_token: string;
   user: null | userData;

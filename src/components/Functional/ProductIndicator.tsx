@@ -28,7 +28,7 @@ const ProductIndicator: FC<ProductIndicatorProps> = ({
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="inline-block shrink-0 align-middle select-none mr-1"
+        className="inline-block shrink-0 align-middle select-none me-1"
         aria-label="Vegetarian"
       >
         <rect
@@ -54,7 +54,7 @@ const ProductIndicator: FC<ProductIndicatorProps> = ({
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="inline-block shrink-0 align-middle select-none mr-1"
+        className="inline-block shrink-0 align-middle select-none me-1"
         aria-label="Non-Vegetarian"
       >
         <rect

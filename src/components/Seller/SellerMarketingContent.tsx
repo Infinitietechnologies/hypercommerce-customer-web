@@ -240,7 +240,7 @@ export default function SellerMarketingContent() {
             professional riders will pick up orders from your store and deliver
             them to customers.
           </p>
-          <div className="grid md:grid-cols-3 gap-3 text-left">
+          <div className="grid md:grid-cols-3 gap-3 text-start">
             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
               <CheckCircle className="w-5 h-5 mb-1.5 text-green-200" />
               <p className="font-semibold mb-0.5 text-sm">Free Rider Service</p>

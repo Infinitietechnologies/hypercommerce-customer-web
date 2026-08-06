@@ -3,7 +3,11 @@ import Script from "next/script";
 import React from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { siteConfig } from "@/config/site";
-import { getCanonicalUrl, ensureAbsoluteUrl } from "@/helpers/seo";
+import {
+  getCanonicalUrl,
+  ensureAbsoluteUrl,
+  serializeJsonLd,
+} from "@/helpers/seo";
 
 export interface SEOProps {
   // Basic Meta Tags
@@ -213,7 +217,7 @@ const DynamicSEO: React.FC<SEOProps> = ({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(Array.isArray(jsonLd) ? jsonLd : [jsonLd]),
+            __html: serializeJsonLd(Array.isArray(jsonLd) ? jsonLd : [jsonLd]),
           }}
         />
       )}

@@ -1,0 +1,80 @@
+Tab,Row,ID,Status,Dev. Notes
+Web Defects,2,2,done in local,clampQuantity now steps from minQuantity so a min that is not a multiple of the step is never rounded below itself; dead branch removed
+Web Defects,3,3,done in local,the addon-merge path in updateOfflineCartItem routes the summed quantity through clampQuantity like every other write path
+Web Defects,4,4,done in local,search empty-state passes the value under the key the template expects - query not safeQuery
+Web Defects,5,5,done in local,categories subtitle completed in en and ar; the identical truncation on the stores subtitle fixed in the same two bundles
+Web Defects,6,6,done in local,brands listing now renders the existing noBrands empty state and an ErrorState with retry
+Web Defects,7,7,done in local,useInfiniteData fetcher throws on an unsuccessful response so SWR populates error; brands and categories and search render an error state with retry
+Web Defects,8,8,done in local,robots.txt disallows /redesign/ and /design-system/ and _app emits noindex on those paths; the /redesign sandbox no longer exists in the tree so only /design-system is served
+Web Defects,9,9,done in local,/delivery-zones/ and /products/ removed from the sitemap static route list
+Web Defects,10,10,done in local,getCanonicalUrl keeps the trailing slash so the canonical names the URL the site serves
+Web Defects,11,11,done in local,loadTranslations awaits i18n.changeLanguage instead of re-initialising the already-initialised singleton
+Web Defects,12,12,done in local,_document reads the i18nextLng cookie in getInitialProps and sets lang and dir server side
+Web Defects,13,13,done in local,Plus Jakarta Sans loaded through next/font/google in config/fonts.ts; the Figtree Google Fonts link and both preconnects removed from _document
+Web Defects,1,1,done in local,serverSideAuthGuard now runs first in getServerSideProps for /cart and /cart/checkout and /payment/[slug] so all three redirect server side like the account pages; isProtectedRoute matches by prefix so the withAuth fallback covers nested paths. A static export build has no getServerSideProps so the client wrapper stays the only guard in that mode.
+Web Security,01,CWEB-01,open,Panel-side - rate limit /verify-user and return a uniform response. No contained storefront fix; the probe is a panel contract.
+Web Security,02,CWEB-02,Already Working,useResendCooldown ships at src/features/auth/useResendCooldown.ts and both OTP forms gate resend on resendIn > 0. Row is stale. Panel throttle still the real bound.
+Web Security,03,CWEB-03,done in local,handleLogout now dispatches clearOfflineCart alongside clearCart and clearRecentlyViewed. The sync-failure branch still keeps items on purpose - clearing there would discard a guest cart on a transient failure; needs an owner call.
+Web Security,04,CWEB-04,Not Exploitable,Verified end to end. The order path never trusts the callback - OrderPaymentView onSuccess only sets phase waiting then polls getSpecificOrders until the panel reports payment_status completed which the webhook sets. The wallet path re-reads the balance from the server through updateUserDataInRedux. Panel side both webhooks verify an HMAC over the raw body with hash_equals and dedupe on ProcessedWebhookEvent. Residual - the wallet success toast fires before the balance is confirmed so it can read Recharged while the webhook is still in flight; cosmetic only.
+Web Security,05,CWEB-05,done in local,Fixed by deleting the dead WithdrawModal - the component had no render site anywhere in src. deductBalance remains in services/wallet.ts as an unused endpoint wrapper with no flaw of its own.
+Web Security,06,CWEB-06,done in local,ReturnSheet now runs every picked file through rejectImage - mime allowlist excluding SVG plus a 5MB ceiling - and toasts per rejected file. Deleting the dead ReturnOrderItemModal is cleanup still pending.
+Web Security,07,CWEB-07,done in local,getNotificationRedirectUrl returns quickLink only when it is a same-origin path or an absolute http(s) URL; the notifications page opens the absolute form through window.open with noopener and noreferrer as FirebaseInitializer does.
+Web Security,08,CWEB-08,done in local,Avatar picker runs rejectImage and toasts on rejection. The check lives in src/helpers/imageUpload.ts so the return flow and the avatar share one validator.
+Web Security,09,CWEB-09,done in local,images.remotePatterns is now derived from NEXT_PUBLIC_ADMIN_PANEL_URL plus an optional NEXT_PUBLIC_IMAGE_HOSTS list instead of the ** wildcard. dangerouslyAllowSVG left on with contentDispositionType attachment - residual risk noted.
+Web Security,10,CWEB-10,Accepted Risk,Re-verified against the panel: MarketService::byActiveCode looks the code up and requires status ACTIVE so an unknown value like ZZ-ARBITRARY resolves to null and the chain falls through to the default market. The ZZ-ARBITRARY observation proved forwarding only - not that it was honoured. Residual accepted by the owner: a customer can set the cookie to another REAL active market code and browse and price in it since the header outranks fromAuthUser. Checkout deliverability is the backstop. Order money fields snapshot the request market at OrderService:845 rather than re-deriving it from the delivery address.
+Web Security,11,CWEB-11,done in local,serializeJsonLd escapes < and > and & at the single emission point in DynamicSEO so a seller-authored value cannot close the script element.
+Web Code Review,,1,Done in local,"resolveMarketForCountry now invalidates every market-scoped SWR key (settings, products, categories, brands, stores, home-layout, infinite-data, search, seller-reviews) instead of only /settings."
+Web Code Review,,2,Already Working,PROTECTED_ROUTES is a prefix match covering /cart (with /cart/checkout) and /payment.
+Web Code Review,,3,Risk accepted,"Owner decision: the storefront ships as a static export, so an httpOnly token cookie would have to come from the API on another origin (SameSite=None + CORS credentials + Sanctum cookie auth) and would touch the mobile clients. Accepted as-is."
+Web Code Review,,4,Done in local,process.exit removed; success and failure paths share clearLocalSession so the browser session is always cleared.
+Web Code Review,,13,Already Working,"login, register, verify-user and forget-password already post their payload as the request body."
+Web Code Review,,14,Done in local,"redux-persist transform strips access_token on write and restores it from the session cookie on rehydrate, so localStorage holds no usable credential."
+Web Code Review,,17,Done in local,Offline cart keeps any item the server rejected instead of clearing the whole cart on a partial sync.
+Web Code Review,,23,Done in local,"ensureIdempotencyKey keeps one key per checkout attempt, reusing it across retries and minting a new one only when the payment method changes."
+Web Code Review,,27,Done in local,Profile SSR returns null plus an error flag on failure and the page renders ErrorState with retry instead of a blank editable form.
+Web Code Review,,34,Already Working,useInfiniteData already throws when the response is unsuccessful so SWR records the error.
+Web Code Review,,38,Done in local,"Added a dependency-free allow-list sanitiser (src/helpers/sanitizeHtml.ts) applied inside HTMLRenderer and at the two inline call sites; 9 checks cover script, style, iframe, event handlers and javascript: URLs."
+Web Code Review,,43,Already Working,Plus Jakarta Sans is loaded through next/font/google; Figtree is only the --font-mono face.
+Web Code Review,,48,Done in local,Logout purges CacheStorage so the service worker cannot serve the previous account pages.
+Web Code Review,,55,Done in local,The three FAQ/review fetchers throw on failure so their existing error blocks render; HomeBuilder tracks the failure and shows ErrorState with retry.
+Web Code Review,5,5,done in local,verifyUser surfaces failures; availability checks branch on data.exists
+Web Code Review,6,6,done in local,SettingsProvider context value memoised on settings
+Web Code Review,7,7,done in local,maintenanceStore notifies only on a real transition
+Web Code Review,8,8,done in local,getCookie splits on the first = and decodes the key
+Web Code Review,9,9,done in local,all ten account pages plus cart and checkout and payment call serverSideAuthGuard
+Web Code Review,10,10,done in local,closed with defect 1 - prefix matching replaces the dead wildcard branch
+Web Code Review,11,11,done in local,MaintenanceResponse and GeoDetectData and MarketSwitchData replace the any casts
+Web Code Review,12,12,done in local,unconditional SSR log line removed
+Web Code Review,15,15,done in local,cart dropped from the redux-persist whitelist
+Web Code Review,18,18,done in local,closed with defect 2
+Web Code Review,20,20,done in local,four cart toasts moved into the cartStatus namespace in three locales
+Web Code Review,21,21,done in local,closed with defect 3
+Web Code Review,24,24,done in local,lossy /100 then *100 round trip on the Razorpay wallet amount removed
+Web Code Review,25,25,done in local,wallet toast reports submitted-and-pending instead of asserting success
+Web Code Review,26,26,done in local,all five gateway components translated under the paymentGateway namespace
+Web Code Review,29,29,done in local,retry refetches instead of reloading the page on all four account screens
+Web Code Review,30,30,done in local,empty format fields filtered before the spread
+Web Code Review,31,31,done in local,formatCurrency returns a placeholder instead of a fabricated zero
+Web Code Review,32,32,done in local,recharge field keeps the decimal point
+Web Code Review,35,35,done in local,market code included in the useInfiniteData SWR key
+Web Code Review,36,36,done in local,staleTime drives dedupingInterval with the CLAUDE.md 7.3 values
+Web Code Review,37,37,done in local,five debug console.log calls removed from the PDP server path
+Web Code Review,39,39,done in local,closed with defect 8
+Web Code Review,40,40,done in local,closed with defect 9
+Web Code Review,42,42,done in local,share route reuses the product page getServerSideProps
+Web Code Review,47,47,done in local,closed with defect 12
+Web Code Review,49,49,done in local,userLocation and homeCategory cleared at logout
+Web Code Review,,16,Done in local,"Firebase auth errors map to translation keys resolved through i18n; the raw SDK message is no longer surfaced. Keys added to en, hi and ar."
+Web Code Review,,19,Done in local,"The empty-cart branch reads a machine-readable code when the panel sends one and falls back to the message match, so a transport failure can never clear the cart. Panel-side code field flagged, not added."
+Web Code Review,,22,Done in local,The hidden-button click and the window.showFailedItemsModal global are gone; failed sync items now live in a cartNotice slice and the removed-items modal opens off cart state alone.
+Web Code Review,,28,Done in local,SSR handlers return stable error codes (SSR_ERROR_CODES) that the pages resolve through translateErrorCode; keys added to all three locales.
+Web Code Review,,33,Partially,"The recharge ceiling is now a documented WALLET_MAX_RECHARGE constant instead of a bare literal. A per-market limit needs a wallet setting on the panel - flagged rather than added, per the API-contract rule."
+Web Code Review,,41,Partially,"Logout now clears the user-scoped localStorage keys (recent searches, shopping list, ad tracking queues); the FCM token stays because logout unbinds it server-side. Moving those features onto redux-persist is left as the larger refactor."
+Web Code Review,,44,Done in local,"Swept every physical utility to its logical twin - ml/mr/pl/pr to ms/me/ps/pe and text-left/right to text-start/end - across 54 files, including negative margins. Zero physical utilities remain."
+Web Code Review,,45,Done in local,"All 20 unlabelled icon-only controls in shipped screens carry an aria-label from new a11y.* keys in en, hi and ar. The two left are in the design-system sandbox page."
+Web Code Review,,46,Done in local,"Added an ErrorBoundary mounted in _app.tsx rendering ErrorState with retry, plus a styled and translated 500 page."
+Web Code Review,,50,Done in local,"The profile page reads the user from Redux with the SSR prop as the seed, so its own refresh reaches the UI."
+Web Code Review,,51,Done in local,The checkout re-syncs its selected-address copy against the address list on every load and clears the selection when the address is gone.
+Web Code Review,,52,Done in local,A location change revalidates only market-scoped keys instead of every mounted SWR key.
+Web Code Review,,53,Done in local,"Anonymous server-side settings reads go through a 60-second per-market memo, so repeated SSR navigations stop re-fetching the payload."
+Web Code Review,,54,Done in local,"The cart refresh moved out of the finally block to the failure branches only, so a successful order no longer refetches after navigating away."

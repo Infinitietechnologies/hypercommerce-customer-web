@@ -129,7 +129,7 @@ const TabButton: React.FC<TabButtonProps> = ({
           {title}
         </span>
         {isLoading && (
-          <span className="ml-1 animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
+          <span className="ms-1 animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
         )}
       </button>
     );

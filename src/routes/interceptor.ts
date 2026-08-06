@@ -1,6 +1,7 @@
 import { getCookie } from "@/lib/cookies";
 import { AxiosInstance, AxiosResponse, AxiosError } from "axios";
 import { maintenanceStore } from "@/stores/maintenanceStore";
+import { MaintenanceResponse } from "@/types/common";
 
 // Helper function to clean token (remove quotes if present)
 const cleanToken = (token: string): string => {
@@ -91,16 +92,19 @@ export const setupInterceptors = (instance: AxiosInstance): void => {
             // Check for maintenance mode in 503 response
             if (typeof window !== "undefined") {
               try {
-                const responseData = error.response.data;
-                // Check if response has maintenance: true
+                const responseData = error.response.data as
+                  | MaintenanceResponse
+                  | undefined;
+
                 if (
                   responseData &&
                   typeof responseData === "object" &&
-                  (responseData as any).maintenance === true
+                  responseData.maintenance === true
                 ) {
-                  const message =
-                    (responseData as any).message || null;
-                  maintenanceStore.setMaintenance(true, message);
+                  maintenanceStore.setMaintenance(
+                    true,
+                    responseData.message || null
+                  );
                 } else {
                   // If 503 but no maintenance flag, clear maintenance state
                   maintenanceStore.setMaintenance(false, null);

@@ -109,7 +109,7 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
                       </div>
 
                       {isGiven && fbObj ? (
-                        <div className="space-y-2 pl-10">
+                        <div className="space-y-2 ps-10">
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-0.5">
                               {[1, 2, 3, 4, 5].map((star) => (
@@ -147,7 +147,7 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
                           )}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 pl-10">
+                        <div className="flex items-center gap-2 ps-10">
                           <Icon icon="solar:chat-round-linear" className="w-4 h-4 text-warning" />
                           <span className="text-xs text-foreground/60">
                             {t("noSellerReview")}

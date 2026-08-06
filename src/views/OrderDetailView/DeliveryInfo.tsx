@@ -84,7 +84,7 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
                             {product.title || t("na")}
                             {product.variant ? ` — ${product.variant}` : ""}
                           </span>
-                          <span className="shrink-0 ml-2 text-foreground/50">
+                          <span className="shrink-0 ms-2 text-foreground/50">
                             × {product.quantity}
                           </span>
                         </div>

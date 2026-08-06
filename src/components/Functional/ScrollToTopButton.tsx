@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@heroui/react";
 import { ArrowUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const SCROLL_OFFSET = 300;
 
 const ScrollToTopButton: React.FC = () => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [isUpperSide, setIsUpperSide] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -65,6 +67,7 @@ const ScrollToTopButton: React.FC = () => {
       <Button
         onPress={scrollToTop}
         isIconOnly
+        aria-label={t("a11y.scroll_to_top")}
         radius="full"
         color="primary"
         className="fixed bottom-6 right-2 sm:right-6 z-50 shadow-lg hover:scale-110 transition-transform"

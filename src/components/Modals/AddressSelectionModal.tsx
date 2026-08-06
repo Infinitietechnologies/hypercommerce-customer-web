@@ -162,7 +162,7 @@ const AddressSelectionModal: React.FC<AddressSelectionModalProps> = ({
                                 </Chip>
                               )}
                             </div>
-                            <div className="text-left">
+                            <div className="text-start">
                               <p className="text-sm font-medium mb-1">
                                 {address.address_line1}
                                 {address.address_line2 &&

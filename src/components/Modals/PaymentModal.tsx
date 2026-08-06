@@ -1,29 +1,21 @@
 import { FC, useState } from "react";
 import { Sheet, Button, toast } from "@/components/ui";
 import PaymentMethods from "../PaymentMethods";
-import { handleCheckout } from "@/helpers/functionalHelpers";
+import { handleCheckout, ensureIdempotencyKey } from "@/helpers/functionalHelpers";
 import { useRouter } from "next/router";
 import { updateCartData } from "@/helpers/updators";
 import { useTranslation } from "react-i18next";
-import { useDispatch } from "react-redux";
-import { setIdempotencyKey } from "@/lib/redux/slices/checkoutSlice";
 
 interface PaymentModalProps {
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
 
-const genKey = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `idem_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
 const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
   const [selectedPayment, setSelectedPayment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
-  const dispatch = useDispatch();
 
   const handleContinue = async () => {
     if (!selectedPayment) {
@@ -43,7 +35,7 @@ const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
       // Fresh idempotency key per submit — so switching the gateway always
       // creates a new order with the chosen gateway (a double-tap is blocked
       // by the disabled button, not by key reuse).
-      dispatch(setIdempotencyKey(genKey()));
+      ensureIdempotencyKey(selectedPayment);
 
       const res = await handleCheckout(selectedPayment, {});
       if (!res?.success) {

@@ -28,7 +28,7 @@ const SellerReviewSection: FC<SellerReviewSectionProps> = ({ product }) => {
     if (response.success && response.data) {
       return response.data;
     }
-    console.error("Failed to fetch seller reviews");
+    throw new Error("Failed to fetch seller reviews");
   };
 
   const {

@@ -5,6 +5,7 @@ import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
 import { RazorpayOrderData } from "@/types/ApiResponse";
 import { addToast, Button } from "@heroui/react";
 import React, { FC, useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // ✅ Razorpay Types
 interface RazorpayPaymentResponse {
@@ -85,6 +86,7 @@ const RazorPay: FC<{
   orderSlug,
   triggerRef,
 }) => {
+  const { t } = useTranslation();
   const [sdkReady, setSdkReady] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const { paymentSettings } = useSettings();
@@ -126,7 +128,7 @@ const RazorPay: FC<{
       if (usageType === "wallet") {
         if (!walletOrderData?.payment_response) {
           addToast({
-            title: "Invalid wallet order data",
+            title: t("paymentGateway.invalidWalletOrder"),
             color: "danger",
           });
           setIsLoading(false);
@@ -135,22 +137,24 @@ const RazorPay: FC<{
 
         const order = {
           id: walletOrderData.payment_response.id,
-          amount: walletOrderData.payment_response.amount / 100,
+          amount: walletOrderData.payment_response.amount,
           currency: walletOrderData.payment_response.currency,
           receipt: walletOrderData.payment_response.receipt,
         } as RazorpayOrderData;
 
         options = {
           key: paymentSettings?.razorpayKeyId || "",
-          amount: order.amount * 100,
+          // Already the integer minor-unit figure the gateway expects — a
+          // /100 then *100 round trip only introduces float error.
+          amount: order.amount,
           currency: order.currency,
-          description: "Wallet Recharge",
+          description: t("paymentGateway.walletRechargeDescription"),
           order_id: order.id,
           handler: async () => {
             setIsConfirming(true);
             onSuccess();
             addToast({
-              title: "Wallet Recharged Successfully!",
+              title: t("paymentGateway.walletRechargeSubmitted"),
               color: "success",
             });
             setIsLoading(false);
@@ -166,8 +170,8 @@ const RazorPay: FC<{
           modal: {
             ondismiss: () => {
               addToast({
-                title: "Payment Cancelled",
-                description: "You have closed the Razorpay checkout.",
+                title: t("paymentGateway.cancelled"),
+                description: t("paymentGateway.cancelledRazorpay"),
                 color: "warning",
               });
               setIsConfirming(false);
@@ -188,7 +192,7 @@ const RazorPay: FC<{
             return;
           }
           addToast({
-            title: res?.message || "Failed to start payment",
+            title: res?.message || t("paymentGateway.startFailed"),
             color: "danger",
           });
           setIsLoading(false);
@@ -200,7 +204,7 @@ const RazorPay: FC<{
           key: pr.key_id || paymentSettings?.razorpayKeyId || "",
           amount: pr.amount || 0,
           currency: pr.currency || "INR",
-          description: "Pay Safe",
+          description: t("paymentGateway.paySafe"),
           order_id: pr.razorpay_order_id,
           handler: async () => {
             setIsConfirming(true);
@@ -215,8 +219,8 @@ const RazorPay: FC<{
           modal: {
             ondismiss: () => {
               addToast({
-                title: "Payment Cancelled",
-                description: "You have closed the Razorpay checkout.",
+                title: t("paymentGateway.cancelled"),
+                description: t("paymentGateway.cancelledRazorpay"),
                 color: "warning",
               });
               setIsConfirming(false);
@@ -233,7 +237,7 @@ const RazorPay: FC<{
       rzp.on("payment.failed", (response: RazorpayPaymentFailure) => {
         console.error("Payment failed:", response.error);
         addToast({
-          title: "Payment Failed",
+          title: t("paymentGateway.failed"),
           description: response.error.description,
           color: "danger",
         });
@@ -245,8 +249,8 @@ const RazorPay: FC<{
     } catch (err) {
       console.error(err);
       addToast({
-        title: "Error",
-        description: "Failed to initialize payment. Please try again.",
+        title: t("error"),
+        description: t("paymentGateway.initFailed"),
         color: "danger",
       });
       onError();
@@ -264,6 +268,7 @@ const RazorPay: FC<{
     userData,
     setIsConfirming,
     orderSlug,
+    t,
   ]);
 
   // ✅ Expose handlePayment via triggerRef for auto-triggering

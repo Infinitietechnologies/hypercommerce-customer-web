@@ -39,7 +39,7 @@ const ColorSection: FC<ColorSectionProps> = ({
         itemClasses={{
           base: "mx-0",
           title: "text-xs",
-          subtitle: "text-[10px] pl-1 text-foreground/50",
+          subtitle: "text-[10px] ps-1 text-foreground/50",
           content: "text-xs",
           trigger: "h-10",
         }}

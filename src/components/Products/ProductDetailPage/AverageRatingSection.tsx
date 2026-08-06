@@ -47,7 +47,7 @@ const AverageRatingSection: React.FC<AverageRatingSectionProps> = ({
               size="sm"
               aria-label={`Progress for ${rating} stars`}
             />
-            <span className="w-10 shrink-0 text-right text-sm font-medium text-foreground/60">
+            <span className="w-10 shrink-0 text-end text-sm font-medium text-foreground/60">
               {fmtCount(count)}
             </span>
           </div>

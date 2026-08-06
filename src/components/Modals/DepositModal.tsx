@@ -1,3 +1,4 @@
+import { WALLET_MAX_RECHARGE } from "@/config/constants";
 import React, { FormEvent, useState, useRef, useEffect } from "react";
 import {
   Modal,
@@ -38,13 +39,17 @@ const DepositModal = () => {
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
-    const sanitizedValue = inputValue.replace(/\D/g, "");
-    const numberValue = Math.max(0, parseInt(sanitizedValue, 10));
+    // Keep the decimal point — stripping every non-digit turned 100.50 into
+    // 10050 and charged a hundred times the intended amount.
+    const sanitizedValue = inputValue
+      .replace(/[^\d.]/g, "")
+      .replace(/^(\d*\.?\d*).*$/, "$1");
+    const numberValue = Math.max(0, parseFloat(sanitizedValue));
     setErrors((prev) => ({
       ...prev,
       amount: "",
     }));
-    setAmount(isNaN(numberValue) ? "" : numberValue.toString());
+    setAmount(sanitizedValue);
 
     if (!isNaN(numberValue) && numberValue > 0) {
       setErrors((prev) => {
@@ -78,7 +83,7 @@ const DepositModal = () => {
         return;
       }
 
-      if (parsedAmount > 1000000) {
+      if (parsedAmount > WALLET_MAX_RECHARGE) {
         setErrors((prev) => ({
           ...prev,
           amount: t("deposit.error.exceed"),

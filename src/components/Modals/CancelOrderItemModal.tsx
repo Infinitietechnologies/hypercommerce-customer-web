@@ -155,7 +155,7 @@ const CancelOrderItemModal: FC<CancelOrderItemModalProps> = ({
                             title={
                               item.product?.name || item?.variant_title || ""
                             }
-                            className="text-xs font-medium text-foreground truncate max-w-full pr-1 block"
+                            className="text-xs font-medium text-foreground truncate max-w-full pe-1 block"
                           >
                             {item.product?.name || item.variant_title}
                           </Link>
@@ -201,7 +201,7 @@ const CancelOrderItemModal: FC<CancelOrderItemModalProps> = ({
                                         {groupTitle ? `${groupTitle}: ` : ""}
                                         {addonName}
                                       </span>
-                                      <span className="text-[10px] text-primary font-medium ml-0.5">
+                                      <span className="text-[10px] text-primary font-medium ms-0.5">
                                         ({item.quantity} ×{" "}
                                         {formatPrice(Number(addonPrice || 0))})
                                       </span>

@@ -23,8 +23,7 @@ import {
 } from "@/routes/api";
 import { getNotificationRedirectUrl } from "@/helpers/notificationUrl";
 import type { GetServerSideProps } from "next";
-import { loginRedirect } from "@/guards/authGuard";
-import { getAccessTokenFromContext } from "@/helpers/auth";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 import { isSSR } from "@/helpers/getters";
 import { loadTranslations } from "../../../../i18n";
 
@@ -157,7 +156,7 @@ const NotificationItem: React.FC<{
     <button
       type="button"
       onClick={handleClick}
-      className={`flex w-full items-start gap-3 rounded-medium border p-4 text-left transition-colors ${
+      className={`flex w-full items-start gap-3 rounded-medium border p-4 text-start transition-colors ${
         notification.is_read
           ? "border-divider bg-content1"
           : "border-primary-200 bg-primary-50/40"
@@ -234,6 +233,13 @@ const NotificationsPage: NextPageWithLayout = () => {
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleNavigate = useCallback(
     (url: string) => {
+      // An absolute link comes from the notification payload — open it away
+      // from the storefront session as FirebaseInitializer does.
+      if (/^https?:\/\//i.test(url)) {
+        window.open(url, "_blank", "noopener,noreferrer");
+
+        return;
+      }
       router.push(url);
     },
     [router],
@@ -452,10 +458,10 @@ const NotificationsPage: NextPageWithLayout = () => {
 
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
-      const access_token = (await getAccessTokenFromContext(context)) || "";
-      if (!access_token) {
-        return { redirect: { destination: loginRedirect(context), permanent: false } };
-      }
+      const guard = await serverSideAuthGuard(context);
+
+      if (guard) return guard;
+
 
       await loadTranslations(context);
       return { props: {} };

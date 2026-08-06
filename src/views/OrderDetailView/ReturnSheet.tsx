@@ -14,6 +14,7 @@ import {
   toastSuccess,
 } from "@/components/ui";
 import { useSettings } from "@/contexts/SettingsContext";
+import { imageRejectionKeys, rejectImage } from "@/helpers/imageUpload";
 import { returnOrderItem } from "@/services/orders";
 
 /** Reasons that require a written remark + at least one photo (backend enforces). */
@@ -65,7 +66,18 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
 
   const onFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    setImages((prev) => [...prev, ...files].slice(0, 5));
+    const accepted = files.filter((file) => {
+      const rejection = rejectImage(file);
+
+      if (rejection) {
+        const keys = imageRejectionKeys(rejection);
+        toastError(t(keys.title), t(keys.description));
+      }
+
+      return !rejection;
+    });
+
+    setImages((prev) => [...prev, ...accepted].slice(0, 5));
     e.target.value = "";
   };
 

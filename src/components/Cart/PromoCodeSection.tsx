@@ -95,6 +95,7 @@ const PromoCodeSection: FC = () => {
             </div>
             <Button
               isIconOnly
+              aria-label={t("a11y.remove_promo_code")}
               size="sm"
               variant="light"
               color="danger"
@@ -132,7 +133,7 @@ const PromoCodeSection: FC = () => {
       <button
         type="button"
         onClick={onOpen}
-        className="flex w-full items-center justify-between rounded-large border border-divider bg-content1 p-4 text-left transition-colors hover:border-default-300"
+        className="flex w-full items-center justify-between rounded-large border border-divider bg-content1 p-4 text-start transition-colors hover:border-default-300"
       >
         <span className="flex items-center gap-2 text-sm font-medium text-foreground">
           <Icon icon="solar:ticket-sale-linear" className="text-lg text-primary-600" />

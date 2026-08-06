@@ -6,8 +6,7 @@ import { getFavoriteWishlist, toggleFavorite } from "@/routes/api";
 import { Wishlist, WishlistItem } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { isSSR } from "@/helpers/getters";
-import { getAccessTokenFromContext } from "@/helpers/auth";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 import { loadTranslations } from "../../../../i18n";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHead from "@/SEO/PageHead";
@@ -88,12 +87,10 @@ const WishlistsPage: NextPageWithLayout = () => {
 
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
-      const access_token = (await getAccessTokenFromContext(context)) || "";
-      if (!access_token) {
-        return {
-          redirect: { destination: loginRedirect(context), permanent: false },
-        };
-      }
+      const guard = await serverSideAuthGuard(context);
+
+      if (guard) return guard;
+
       await loadTranslations(context);
       return { props: {} };
     }

@@ -1,3 +1,4 @@
+import { SSR_ERROR_CODES, translateErrorCode } from "@/helpers/errorCodes";
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
@@ -19,7 +20,7 @@ import { NextPageWithLayout } from "@/types";
 import { loadTranslations } from "../../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 
 const per_page = 6;
 
@@ -129,7 +130,7 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
           />
           <ErrorState
             title={t("pages.addresses.errorLoading")}
-            description={error}
+            description={translateErrorCode(t, error)}
             retryLabel={t("pages.addresses.tryAgain")}
             onRetry={handleRetry}
           />
@@ -248,15 +249,11 @@ const AddressesPage: NextPageWithLayout<AddressesPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+
+        if (guard) return guard;
+
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
         const page = parseInt(context.query.page as string) || 1;
 
         const response = await getAddresses({ access_token, page, per_page });
@@ -281,7 +278,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
             paginatedAddresses: null,
             initialSettings: null,
             initialPage: 1,
-            error: "Unable to load addresses. Please try again later.",
+            error: SSR_ERROR_CODES.addressesLoadFailed,
           },
         };
       }

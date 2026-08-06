@@ -401,7 +401,8 @@
   "closed": "Closed",
   "code": "Code",
   "common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "retry": "Retry"
   },
   "compareWithOthers": "Compare With Others",
   "completed": "Completed",
@@ -637,6 +638,10 @@
       "title": "Nothing here yet",
       "description": "New products and offers are on the way.",
       "action": "Continue shopping"
+    },
+    "error": {
+      "title": "We couldn't load the home page",
+      "description": "Please try again in a moment."
     }
   },
   "home_title": "Home",
@@ -860,7 +865,8 @@
     "wishlists": "Wishlists",
     "seller-registration": "Seller Registration",
     "checkout": "Checkout",
-    "payment": "Payment"
+    "payment": "Payment",
+    "500": "Something went wrong"
   },
   "pages": {
     "aboutUs": {
@@ -917,7 +923,7 @@
         "description": "No categories are currently available.",
         "title": "No Categories Available"
       },
-      "subtitle": "Discover our complete collection of",
+      "subtitle": "Discover our complete collection of categories",
       "title": "All Categories"
     },
     "categoryProducts": {
@@ -1225,7 +1231,7 @@
         "title": "No Stores Available"
       },
       "search_placeholder": "Search stores...",
-      "subtitle": "Explore our complete collection of",
+      "subtitle": "Explore our complete collection of stores",
       "title": "All Stores"
     },
     "termsAndConditions": {
@@ -1339,7 +1345,7 @@
         "badge": "Elevate Your Brand With Us",
         "titleMain": "Empowering Your Success with",
         "titleAccent": "Digital Expertise",
-        "description": "Designed for hyperlocal commerce. Enable online ordering, manage your catalog, and connect fulfillment options that fit your operations.",
+        "description": "Built for modern online commerce. Launch your store on HyperCommerce, list your catalog, reach customers across the marketplace, and manage orders, payments, and fulfillment from one dashboard.",
         "explore": "Explore More",
         "registerNow": "Register Now",
         "bubble": {
@@ -1362,7 +1368,7 @@
         "badge": "About Us",
         "titleMain": "Empowering Your Success with",
         "titleAccent": "Digital Expertise",
-        "description": "We support local commerce by connecting sellers with nearby customers through hyperlocal fulfillment. The platform helps businesses grow while simplifying logistics, payments, and technology.",
+        "description": "HyperCommerce connects sellers with customers across the entire marketplace. We help your business grow online while simplifying catalog management, logistics, payments, and technology — so you can focus on selling.",
         "button": "About Us",
         "metrics": {
           "marketingGrowth": "Marketing & Business Growth",
@@ -1386,9 +1392,9 @@
             "metric": "Configurable"
           },
           "localFulfillment": {
-            "title": "Local Fulfillment",
-            "desc": "Optimized for nearby orders",
-            "metric": "Hyperlocal"
+            "title": "Reliable Fulfillment",
+            "desc": "Ship orders to customers wherever they are",
+            "metric": "Anywhere"
           },
           "businessInsights": {
             "title": "Business Insights",
@@ -1402,8 +1408,8 @@
           },
           "customerReach": {
             "title": "Customer Reach",
-            "desc": "Connect with local buyers",
-            "metric": "Local"
+            "desc": "Reach shoppers across the entire marketplace",
+            "metric": "Marketplace"
           }
         }
       },
@@ -1448,19 +1454,19 @@
         "subtitle": "Real stories from real sellers",
         "items": {
           "localSeller": {
-            "name": "Local Seller",
-            "business": "Grocery",
-            "text": "Onboarding and catalog management were straightforward."
+            "name": "Fashion Store",
+            "business": "Apparel",
+            "text": "Onboarding and catalog management were effortless, and our online reach grew fast."
           },
           "bakeryOwner": {
-            "name": "Bakery Owner",
-            "business": "Bakery",
-            "text": "Flexible delivery options fit our operations."
+            "name": "Home & Living",
+            "business": "Home Decor",
+            "text": "Flexible shipping options fit our operations perfectly."
           },
           "electronicsShop": {
             "name": "Electronics Shop",
             "business": "Electronics",
-            "text": "Insights helped us optimize processes."
+            "text": "The insights helped us optimize pricing and grow sales."
           }
         }
       },
@@ -1928,6 +1934,7 @@
     "storeClosed": "Store is currently closed.",
     "storeLabel": "Store:"
   },
+  "content_load_error_message": "We couldn't load this content right now. Please try again.",
   "something_went_wrong": "Something went wrong",
   "sponsored": "Sponsored",
   "start_typing_to_search": "Start typing to search...",
@@ -2126,5 +2133,63 @@
   "wishlist_emptyItemsDescription": "Start adding items to see them here",
   "cart.calculatedAtCheckout": "Delivery & fees calculated at checkout",
   "copied": "Copied",
-  "office": "Office"
+  "office": "Office",
+  "errors": {
+    "profile_load_failed": "We couldn't load your profile",
+    "try_again_later": "Please try again in a moment.",
+    "orders_load_failed": "We couldn't load your orders. Please try again later.",
+    "order_details_load_failed": "We couldn't load this order. Please try again later.",
+    "invalid_order_identifier": "That order link isn't valid.",
+    "addresses_load_failed": "We couldn't load your addresses. Please try again later."
+  },
+  "paymentGateway": {
+    "invalidWalletOrder": "Invalid wallet order data",
+    "walletRechargeDescription": "Wallet Recharge",
+    "walletRechargeSubmitted": "Recharge submitted - confirming with your bank",
+    "orderPlaced": "Order Placed Successfully!",
+    "cancelled": "Payment Cancelled",
+    "cancelledRazorpay": "You have closed the Razorpay checkout.",
+    "cancelledPaystack": "You have closed the PayStack checkout.",
+    "startFailed": "Failed to start payment",
+    "initFailed": "Failed to initialize payment. Please try again.",
+    "failed": "Payment Failed",
+    "paySafe": "Pay Safe",
+    "unexpected": "An unexpected error occurred.",
+    "copied": "Copied to clipboard!",
+    "copyFailed": "Failed to copy",
+    "orderFailed": "Failed to place order"
+  },
+  "cartStatus": {
+    "emptyTitle": "Cart is Empty",
+    "emptyDescription": "Add a product to proceed.",
+    "fetchFailedTitle": "Cart Fetch Failed",
+    "fetchFailedDescription": "Could not update the cart after adding the item."
+  },
+  "firebase": {
+    "errors": {
+      "invalid_phone_number": "Invalid phone number format. Please check and try again.",
+      "invalid_verification_code": "Invalid verification code. Please enter the correct code.",
+      "code_expired": "Verification code has expired. Please request a new one.",
+      "too_many_requests": "Too many attempts. Please try again later.",
+      "quota_exceeded": "SMS quota exceeded. Please try again later.",
+      "missing_verification_code": "Please enter the verification code.",
+      "network_request_failed": "Network error. Please check your connection and try again.",
+      "captcha_check_failed": "Verification failed. Please try again.",
+      "operation_not_allowed": "This sign-in method isn't available right now.",
+      "default": "An error occurred. Please try again."
+    }
+  },
+  "a11y": {
+    "add_to_wishlist": "Add to wishlist",
+    "share_product": "Share this product",
+    "increase_quantity": "Increase quantity",
+    "decrease_quantity": "Decrease quantity",
+    "add_to_cart": "Add to cart",
+    "clear_search": "Clear search",
+    "remove_promo_code": "Remove promo code",
+    "remove_attachment": "Remove attachment",
+    "close": "Close",
+    "scroll_to_top": "Scroll to top",
+    "change_profile_photo": "Change profile photo"
+  }
 }

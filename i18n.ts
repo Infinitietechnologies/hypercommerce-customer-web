@@ -58,15 +58,9 @@ export const loadTranslations = async (context: GetServerSidePropsContext) => {
   const lang =
     (getCookieFromContext(context, LANGUAGE_KEY) as string) || DEFAULT_LANG;
 
-  // Initialize i18next with the loaded resources
-  i18n.init({
-    resources: languages,
-    lng: lang,
-    fallbackLng: DEFAULT_LANG,
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+  // The singleton is already initialised at module scope, so a second init()
+  // is a no-op — changeLanguage is what actually switches the active language.
+  await i18n.changeLanguage(lang);
 };
 
 export default i18n;

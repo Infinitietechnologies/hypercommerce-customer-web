@@ -298,11 +298,8 @@ button[aria-label="Toggle fullscreen view"] {
   }
 }
 
-/* Figtree is loaded from Google Fonts via a <link> in _document.tsx.
-   Expose it as the Tailwind `--font-sans` variable used across the app. */
-:root {
-  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-}
+/* `--font-sans` is defined in _app.tsx from the next/font/google Plus Jakarta
+   Sans family (src/config/fonts.ts) — it cannot be named statically here. */
 
 /* CategoryTabs: when the strip's tabs don't overflow, stretch them to fill the
    container width (equal columns, centered content) instead of left-aligning

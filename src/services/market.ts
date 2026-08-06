@@ -2,6 +2,7 @@ import { api } from "./client";
 import {
   ApiResponse,
 } from "@/types/ApiResponse";
+import { GeoDetectData, MarketSwitchData } from "@/types/market";
 
 
 import {
@@ -13,7 +14,7 @@ import {
 // (X-Country-Code), so we can preview the market for a picked location.
 export const geoDetectForCountry = async (
   countryCode?: string,
-): Promise<ApiResponse<any>> => {
+): Promise<ApiResponse<GeoDetectData>> => {
   try {
     const response = await api.get("/geo-detect", {
       headers: countryCode ? { "X-Country-Code": countryCode } : undefined,
@@ -32,7 +33,7 @@ export const geoDetectForCountry = async (
 // authenticated, updates the user_market pivot. Body: { code }.
 export const switchMarket = async (
   code: string,
-): Promise<ApiResponse<any>> => {
+): Promise<ApiResponse<MarketSwitchData>> => {
   try {
     const response = await api.post("/markets/switch", { code });
     return response.data;

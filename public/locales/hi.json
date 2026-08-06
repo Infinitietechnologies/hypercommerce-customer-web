@@ -401,7 +401,8 @@
   "closed": "बंद",
   "code": "कोड",
   "common": {
-    "cancel": "रद्द करें"
+    "cancel": "रद्द करें",
+    "retry": "पुनः प्रयास करें"
   },
   "compareWithOthers": "अन्य के साथ तुलना करें",
   "completed": "पूरा हुआ",
@@ -637,6 +638,10 @@
       "title": "यहाँ अभी कुछ नहीं है",
       "description": "नए उत्पाद और ऑफ़र जल्द आ रहे हैं।",
       "action": "खरीदारी जारी रखें"
+    },
+    "error": {
+      "title": "हम होम पेज लोड नहीं कर सके",
+      "description": "कृपया थोड़ी देर बाद पुनः प्रयास करें।"
     }
   },
   "home_title": "मुखपृष्ठ",
@@ -860,7 +865,8 @@
     "wishlists": "इच्छा सूची",
     "seller-registration": "विक्रेता पंजीकरण",
     "checkout": "Checkout",
-    "payment": "भुगतान"
+    "payment": "भुगतान",
+    "500": "कुछ गलत हो गया"
   },
   "pages": {
     "aboutUs": {
@@ -1930,6 +1936,7 @@
     "storeClosed": "स्टोर वर्तमान में बंद है।",
     "storeLabel": "स्टोर:"
   },
+  "content_load_error_message": "हम अभी यह सामग्री लोड नहीं कर सके। कृपया पुनः प्रयास करें।",
   "something_went_wrong": "कुछ गलत हो गया",
   "start_typing_to_search": "खोजने के लिए लिखना शुरू करें",
   "status": "स्थिति",
@@ -2127,5 +2134,63 @@
   "wishlist_emptyItemsDescription": "यहाँ देखने के लिए आइटम जोड़ना शुरू करें",
   "cart.calculatedAtCheckout": "Delivery & fees calculated at checkout",
   "copied": "कॉपी किया गया",
-  "office": "ऑफिस"
+  "office": "ऑफिस",
+  "errors": {
+    "profile_load_failed": "हम आपकी प्रोफ़ाइल लोड नहीं कर सके",
+    "try_again_later": "कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+    "orders_load_failed": "हम आपके ऑर्डर लोड नहीं कर सके। कृपया बाद में पुनः प्रयास करें।",
+    "order_details_load_failed": "हम यह ऑर्डर लोड नहीं कर सके। कृपया बाद में पुनः प्रयास करें।",
+    "invalid_order_identifier": "यह ऑर्डर लिंक मान्य नहीं है।",
+    "addresses_load_failed": "हम आपके पते लोड नहीं कर सके। कृपया बाद में पुनः प्रयास करें।"
+  },
+  "paymentGateway": {
+    "invalidWalletOrder": "वॉलेट ऑर्डर डेटा अमान्य है",
+    "walletRechargeDescription": "वॉलेट रिचार्ज",
+    "walletRechargeSubmitted": "रिचार्ज सबमिट किया गया - आपके बैंक से पुष्टि की जा रही है",
+    "orderPlaced": "ऑर्डर सफलतापूर्वक दिया गया!",
+    "cancelled": "भुगतान रद्द",
+    "cancelledRazorpay": "आपने Razorpay चेकआउट बंद कर दिया है।",
+    "cancelledPaystack": "आपने PayStack चेकआउट बंद कर दिया है।",
+    "startFailed": "भुगतान शुरू करने में विफल",
+    "initFailed": "भुगतान आरंभ करने में विफल। कृपया पुनः प्रयास करें।",
+    "failed": "भुगतान विफल",
+    "paySafe": "सुरक्षित भुगतान",
+    "unexpected": "एक अनपेक्षित त्रुटि हुई।",
+    "copied": "क्लिपबोर्ड पर कॉपी किया गया!",
+    "copyFailed": "कॉपी करने में विफल",
+    "orderFailed": "ऑर्डर देने में विफल"
+  },
+  "cartStatus": {
+    "emptyTitle": "कार्ट खाली है",
+    "emptyDescription": "आगे बढ़ने के लिए कोई उत्पाद जोड़ें।",
+    "fetchFailedTitle": "कार्ट लोड करने में विफल",
+    "fetchFailedDescription": "आइटम जोड़ने के बाद कार्ट अपडेट नहीं हो सका।"
+  },
+  "firebase": {
+    "errors": {
+      "invalid_phone_number": "फ़ोन नंबर का प्रारूप अमान्य है। कृपया जाँच कर पुनः प्रयास करें।",
+      "invalid_verification_code": "सत्यापन कोड अमान्य है। कृपया सही कोड दर्ज करें।",
+      "code_expired": "सत्यापन कोड समाप्त हो गया है। कृपया नया कोड मांगें।",
+      "too_many_requests": "बहुत अधिक प्रयास। कृपया बाद में पुनः प्रयास करें।",
+      "quota_exceeded": "एसएमएस कोटा समाप्त। कृपया बाद में पुनः प्रयास करें।",
+      "missing_verification_code": "कृपया सत्यापन कोड दर्ज करें।",
+      "network_request_failed": "नेटवर्क त्रुटि। कृपया अपना कनेक्शन जाँचें और पुनः प्रयास करें।",
+      "captcha_check_failed": "सत्यापन विफल रहा। कृपया पुनः प्रयास करें।",
+      "operation_not_allowed": "यह साइन-इन विधि अभी उपलब्ध नहीं है।",
+      "default": "एक त्रुटि हुई। कृपया पुनः प्रयास करें।"
+    }
+  },
+  "a11y": {
+    "add_to_wishlist": "विशलिस्ट में जोड़ें",
+    "share_product": "यह उत्पाद साझा करें",
+    "increase_quantity": "मात्रा बढ़ाएँ",
+    "decrease_quantity": "मात्रा घटाएँ",
+    "add_to_cart": "कार्ट में जोड़ें",
+    "clear_search": "खोज साफ़ करें",
+    "remove_promo_code": "प्रोमो कोड हटाएँ",
+    "remove_attachment": "अटैचमेंट हटाएँ",
+    "close": "बंद करें",
+    "scroll_to_top": "ऊपर जाएँ",
+    "change_profile_photo": "प्रोफ़ाइल फ़ोटो बदलें"
+  }
 }

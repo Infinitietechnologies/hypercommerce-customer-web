@@ -14,8 +14,8 @@ const config: import("tailwindcss").Config = {
   ],
   theme: {
     extend: {
-      // Font weights use Tailwind's standard scale — Figtree ships every face
-      // the app uses (300-800), so no remap is needed.
+      // Font weights use Tailwind's standard scale — Plus Jakarta Sans ships
+      // every face the app uses (400-800), so no remap is needed.
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],

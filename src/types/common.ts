@@ -7,6 +7,12 @@ export type ApiResponse<T> = {
   total?: number;
 };
 
+/** Body of a 503 when the panel is in maintenance mode. */
+export type MaintenanceResponse = {
+  maintenance?: boolean;
+  message?: string;
+};
+
 // ---- Market currency / formatting (hypercommerce) ----
 
 export type PaginatedResponse<T, M = {}> = {

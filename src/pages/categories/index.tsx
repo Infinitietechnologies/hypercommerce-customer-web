@@ -9,11 +9,12 @@ import CategoryCard from "@/components/Cards/CategoryCard";
 import CategoryCardSkeleton from "@/components/Skeletons/CategoryCardSkeleton";
 import InfiniteScroll from "@/components/Functional/InfiniteScroll";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
-import { useInfiniteData } from "@/hooks/useInfiniteData";
+import { STALE_TIME, useInfiniteData } from "@/hooks/useInfiniteData";
 import { Category, PaginatedResponse } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { ArrowRight, FolderOpen } from "lucide-react";
 import NoProductsFound from "@/components/NoProductsFound";
+import { ErrorState } from "@/components/ui";
 import { loadTranslations } from "../../../i18n";
 import { useTranslation } from "react-i18next";
 import DynamicSEO from "@/SEO/DynamicSEO";
@@ -45,12 +46,14 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
     total,
     loadMore,
     refetch,
+    error: fetchError,
   } = useInfiniteData<Category>({
     fetcher: getCategories,
     perPage: PER_PAGE,
     initialData: initialCategories?.data?.data || [],
     initialTotal: initialCategories?.data?.total || 0,
     dataKey: "categories-page",
+    staleTime: STALE_TIME.reference,
     extraParams: {
       slug: router.query.slug as string,
     },
@@ -133,6 +136,13 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
               entityType={t("pages.categories.infiniteScroll")}
               total={total}
               hasMore={hasMore}
+            />
+          ) : fetchError ? (
+            <ErrorState
+              title={t("something_went_wrong")}
+              description={t("content_load_error_message")}
+              retryLabel={t("try_again")}
+              onRetry={() => refetch()}
             />
           ) : (
             <NoProductsFound

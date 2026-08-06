@@ -1,3 +1,4 @@
+import { SSR_ERROR_CODES, translateErrorCode } from "@/helpers/errorCodes";
 import OrderCard from "@/components/Cards/OrderCard";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
@@ -20,7 +21,7 @@ import PageHead from "@/SEO/PageHead";
 import OrderCardSkeleton from "@/components/Skeletons/OrderCardSkeleton";
 import { useSettings } from "@/contexts/SettingsContext";
 import { getCookie } from "@/lib/cookies";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 
 const PER_PAGE = 9;
 
@@ -106,14 +107,20 @@ const OrdersLoading = () => {
 };
 
 // Error component
-const OrdersError = ({ error }: { error: string }) => {
+const OrdersError = ({
+  error,
+  onRetry,
+}: {
+  error: string;
+  onRetry: () => void;
+}) => {
   const { t } = useTranslation();
   return (
     <ErrorState
       title={t("pages.ordersPage.errorTitle")}
-      description={error}
+      description={translateErrorCode(t, error)}
       retryLabel={t("pages.ordersPage.tryAgain")}
-      onRetry={() => window.location.reload()}
+      onRetry={onRetry}
     />
   );
 };
@@ -315,7 +322,7 @@ const OrdersPage: NextPageWithLayout<OrdersPageProps> = ({
     return (
       <OrdersLayout rightContent={renderFilters()}>
         <PageHead pageTitle={t("pageTitle.orders")} />
-        <OrdersError error={error} />
+        <OrdersError error={error} onRetry={() => mutate()} />
       </OrdersLayout>
     );
   }
@@ -342,18 +349,14 @@ const OrdersPage: NextPageWithLayout<OrdersPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+
+        if (guard) return guard;
+
         const access_token = (await getAccessTokenFromContext(context)) || "";
         const { page = "1", date_range, status } = context.query;
         await loadTranslations(context);
 
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
 
         const response: PaginatedResponse<OrderListItem[]> = await getOrders({
           access_token: access_token,
@@ -406,7 +409,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
               total: 0,
             },
             initialSettings: null,
-            error: "Unable to load orders. Please try again later.",
+            error: SSR_ERROR_CODES.ordersLoadFailed,
             isSSR: true,
           },
         };

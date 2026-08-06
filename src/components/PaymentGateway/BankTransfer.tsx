@@ -16,6 +16,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { Copy } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { setPromoCode } from "@/lib/redux/slices/checkoutSlice";
+import { useTranslation } from "react-i18next";
 
 const BankTransfer: FC<{
   setIsLoading: (value: boolean) => void;
@@ -23,6 +24,7 @@ const BankTransfer: FC<{
 }> = ({ isLoading, setIsLoading }) => {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { paymentSettings } = useSettings();
   const { onOpen, onClose, isOpen, onOpenChange } = useDisclosure();
 
@@ -38,10 +40,10 @@ const BankTransfer: FC<{
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      addToast({ title: "Copied to clipboard!", color: "success" });
+      addToast({ title: t("paymentGateway.copied"), color: "success" });
     } catch (error) {
       console.error("Copy failed:", error);
-      addToast({ title: "Failed to copy", color: "danger" });
+      addToast({ title: t("paymentGateway.copyFailed"), color: "danger" });
     }
   };
 
@@ -50,14 +52,14 @@ const BankTransfer: FC<{
       setIsLoading(true);
       const res = await handleCheckout("directBankTransfer", {});
       if (res.success) {
-        addToast({ title: "Order placed successfully!", color: "success" });
+        addToast({ title: t("paymentGateway.orderPlaced"), color: "success" });
         onClose();
         await router.push("/my-account/orders");
         dispatch(setPromoCode(""));
       }
     } catch (error) {
       console.error("Bank transfer checkout error:", error);
-      addToast({ title: "Failed to place order", color: "danger" });
+      addToast({ title: t("paymentGateway.orderFailed"), color: "danger" });
     } finally {
       updateCartData(true, false);
       setIsLoading(false);

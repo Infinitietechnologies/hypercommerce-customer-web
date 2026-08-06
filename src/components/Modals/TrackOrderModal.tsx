@@ -91,7 +91,7 @@ const TrackOrderModal: FC<TrackOrderModalProps> = ({
                   </div>
                 </div>
                 {order.estimated_delivery_time ? (
-                  <div className="text-right text-xs">
+                  <div className="text-end text-xs">
                     <p className="text-foreground/70">
                       {t("estimatedDelivery")}
                     </p>

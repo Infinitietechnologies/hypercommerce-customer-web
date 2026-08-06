@@ -2,6 +2,7 @@ import { payOrder } from "@/services/orders";
 import { redirectToCheckoutOnRetryLimit } from "@/helpers/paymentRetry";
 import { addToast, Button } from "@heroui/react";
 import React, { FC, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // ✅ PayStack Types
 interface PayStackResponse {
@@ -46,6 +47,7 @@ const PayStack: FC<{
   orderSlug,
   triggerRef,
 }) => {
+  const { t } = useTranslation();
   const [sdkReady, setSdkReady] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -85,7 +87,7 @@ const PayStack: FC<{
       if (usageType === "wallet") {
         if (!walletOrderData?.payment_response?.access_code) {
           addToast({
-            title: "Invalid wallet order data",
+            title: t("paymentGateway.invalidWalletOrder"),
             color: "danger",
           });
           setIsLoading(false);
@@ -104,7 +106,7 @@ const PayStack: FC<{
             return;
           }
           addToast({
-            title: res?.message || "Failed to start payment",
+            title: res?.message || t("paymentGateway.startFailed"),
             color: "danger",
           });
           setIsLoading(false);
@@ -127,8 +129,8 @@ const PayStack: FC<{
         addToast({
           title:
             usageType === "wallet"
-              ? "Wallet Recharged Successfully!"
-              : "Order Placed Successfully!",
+              ? t("paymentGateway.walletRechargeSubmitted")
+              : t("paymentGateway.orderPlaced"),
           color: "success",
         });
         setIsLoading(false);
@@ -140,8 +142,8 @@ const PayStack: FC<{
         onSuccess: () => confirmSuccess(),
         onCancel: () => {
           addToast({
-            title: "Payment Cancelled",
-            description: "You have closed the PayStack checkout.",
+            title: t("paymentGateway.cancelled"),
+            description: t("paymentGateway.cancelledPaystack"),
             color: "warning",
           });
           setIsConfirming(false);
@@ -154,8 +156,8 @@ const PayStack: FC<{
     } catch (err) {
       console.error(err);
       addToast({
-        title: "Error",
-        description: "Failed to initialize payment. Please try again.",
+        title: t("error"),
+        description: t("paymentGateway.initFailed"),
         color: "danger",
       });
       onError();
@@ -170,6 +172,7 @@ const PayStack: FC<{
     onError,
     setIsConfirming,
     orderSlug,
+    t,
   ]);
 
   // ✅ Expose handlePayment via triggerRef for auto-triggering

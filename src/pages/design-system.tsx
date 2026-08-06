@@ -142,7 +142,7 @@ const DesignSystemPage: NextPageWithLayout = () => {
             </div>
             <div className="flex items-center gap-0.5 text-primary">
               {[1, 1, 1, 1, 0].map((f, i) => <Icon key={i} icon={f ? "solar:star-bold" : "solar:star-linear"} className="text-2xl" />)}
-              <span className="text-sm text-default-500 ml-1.5 font-semibold">4.0 (128)</span>
+              <span className="text-sm text-default-500 ms-1.5 font-semibold">4.0 (128)</span>
             </div>
             <span className="flex items-center gap-1.5 bg-success text-white px-2.5 py-1 rounded-md text-sm font-extrabold">4.2 <Icon icon="solar:star-bold" className="text-[15px]" /></span>
           </div>
@@ -338,7 +338,7 @@ function Accordion() {
       {data.map(([q, body], i) => (
         <div key={q} className="border border-divider rounded-medium overflow-hidden">
           <button onClick={() => setOpen((o) => (o === i ? -1 : i))} className="w-full flex items-center justify-between px-4 py-3.5">
-            <span className="text-sm font-bold text-left">{q}</span>
+            <span className="text-sm font-bold text-start">{q}</span>
             <motion.span animate={{ rotate: open === i ? 180 : 0 }}><Icon icon="solar:alt-arrow-down-linear" className="text-xl text-default-500" /></motion.span>
           </button>
           <AnimatePresence initial={false}>

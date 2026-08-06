@@ -401,7 +401,8 @@
   "closed": "مغلق",
   "code": "الرمز",
   "common": {
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "retry": "إعادة المحاولة"
   },
   "compareWithOthers": "قارن مع الآخرين",
   "completed": "مكتمل",
@@ -637,6 +638,10 @@
       "title": "لا شيء هنا بعد",
       "description": "منتجات وعروض جديدة في الطريق.",
       "action": "متابعة التسوق"
+    },
+    "error": {
+      "title": "تعذر تحميل الصفحة الرئيسية",
+      "description": "يرجى المحاولة مرة أخرى بعد قليل."
     }
   },
   "home_title": "الصفحة الرئيسية",
@@ -860,7 +865,8 @@
     "wishlists": "قوائم الأمنيات",
     "seller-registration": "تسجيل البائع",
     "checkout": "Checkout",
-    "payment": "الدفع"
+    "payment": "الدفع",
+    "500": "حدث خطأ ما"
   },
   "pages": {
     "aboutUs": {
@@ -917,7 +923,7 @@
         "description": "لا توجد فئات متاحة حاليًا.",
         "title": "لا توجد فئات متاحة"
       },
-      "subtitle": "اكتشف مجموعتنا الكاملة من",
+      "subtitle": "اكتشف مجموعتنا الكاملة من الفئات",
       "title": "جميع الفئات"
     },
     "categoryProducts": {
@@ -1225,7 +1231,7 @@
         "title": "لا توجد متاجر متاحة"
       },
       "search_placeholder": "ابحث عن متاجر...",
-      "subtitle": "استكشف مجموعتنا الكاملة من",
+      "subtitle": "استكشف مجموعتنا الكاملة من المتاجر",
       "title": "جميع المتاجر"
     },
     "termsAndConditions": {
@@ -1928,6 +1934,7 @@
     "storeClosed": "المتجر مغلق حاليًا.",
     "storeLabel": "المتجر:"
   },
+  "content_load_error_message": "لم نتمكن من تحميل هذا المحتوى الآن. يرجى المحاولة مرة أخرى.",
   "something_went_wrong": "حدث خطأ ما",
   "start_typing_to_search": "ابدأ الكتابة للبحث...",
   "status": "الحالة",
@@ -2125,5 +2132,63 @@
   "wishlist_emptyItemsDescription": "ابدأ بإضافة العناصر لتظهر هنا",
   "cart.calculatedAtCheckout": "Delivery & fees calculated at checkout",
   "copied": "تم النسخ",
-  "office": "المكتب"
+  "office": "المكتب",
+  "errors": {
+    "profile_load_failed": "تعذر تحميل ملفك الشخصي",
+    "try_again_later": "يرجى المحاولة مرة أخرى بعد قليل.",
+    "orders_load_failed": "تعذر تحميل طلباتك. يرجى المحاولة لاحقاً.",
+    "order_details_load_failed": "تعذر تحميل هذا الطلب. يرجى المحاولة لاحقاً.",
+    "invalid_order_identifier": "رابط الطلب غير صالح.",
+    "addresses_load_failed": "تعذر تحميل عناوينك. يرجى المحاولة لاحقاً."
+  },
+  "paymentGateway": {
+    "invalidWalletOrder": "بيانات طلب المحفظة غير صالحة",
+    "walletRechargeDescription": "شحن المحفظة",
+    "walletRechargeSubmitted": "تم إرسال الشحن - جارٍ التأكيد مع البنك",
+    "orderPlaced": "تم تقديم الطلب بنجاح!",
+    "cancelled": "تم إلغاء الدفع",
+    "cancelledRazorpay": "لقد أغلقت صفحة الدفع في Razorpay.",
+    "cancelledPaystack": "لقد أغلقت صفحة الدفع في PayStack.",
+    "startFailed": "فشل بدء الدفع",
+    "initFailed": "فشل تهيئة الدفع. يرجى المحاولة مرة أخرى.",
+    "failed": "فشل الدفع",
+    "paySafe": "دفع آمن",
+    "unexpected": "حدث خطأ غير متوقع.",
+    "copied": "تم النسخ إلى الحافظة!",
+    "copyFailed": "فشل النسخ",
+    "orderFailed": "فشل تقديم الطلب"
+  },
+  "cartStatus": {
+    "emptyTitle": "السلة فارغة",
+    "emptyDescription": "أضف منتجًا للمتابعة.",
+    "fetchFailedTitle": "فشل تحميل السلة",
+    "fetchFailedDescription": "تعذر تحديث السلة بعد إضافة العنصر."
+  },
+  "firebase": {
+    "errors": {
+      "invalid_phone_number": "صيغة رقم الهاتف غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.",
+      "invalid_verification_code": "رمز التحقق غير صحيح. يرجى إدخال الرمز الصحيح.",
+      "code_expired": "انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.",
+      "too_many_requests": "محاولات كثيرة جداً. يرجى المحاولة لاحقاً.",
+      "quota_exceeded": "تم تجاوز حصة الرسائل النصية. يرجى المحاولة لاحقاً.",
+      "missing_verification_code": "يرجى إدخال رمز التحقق.",
+      "network_request_failed": "خطأ في الشبكة. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+      "captcha_check_failed": "فشل التحقق. يرجى المحاولة مرة أخرى.",
+      "operation_not_allowed": "طريقة تسجيل الدخول هذه غير متاحة حالياً.",
+      "default": "حدث خطأ. يرجى المحاولة مرة أخرى."
+    }
+  },
+  "a11y": {
+    "add_to_wishlist": "أضف إلى قائمة الرغبات",
+    "share_product": "شارك هذا المنتج",
+    "increase_quantity": "زيادة الكمية",
+    "decrease_quantity": "تقليل الكمية",
+    "add_to_cart": "أضف إلى السلة",
+    "clear_search": "مسح البحث",
+    "remove_promo_code": "إزالة رمز الخصم",
+    "remove_attachment": "إزالة المرفق",
+    "close": "إغلاق",
+    "scroll_to_top": "العودة إلى الأعلى",
+    "change_profile_photo": "تغيير صورة الملف الشخصي"
+  }
 }

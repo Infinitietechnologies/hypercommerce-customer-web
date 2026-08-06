@@ -35,6 +35,16 @@ const firstStringValue = (
 
 const normalizeType = (type?: string): string => (type ?? "").toString().trim().toLowerCase();
 
+/**
+ * A payload-supplied link is attacker-influenced. Accept only a same-origin
+ * path or an absolute http(s) URL — never `javascript:`, `data:`, or the
+ * protocol-relative `//host` form. Consumers open the absolute form in a new
+ * tab with `noopener`; see FirebaseInitializer.
+ */
+const isSafeRedirect = (value: string): boolean =>
+  (value.startsWith("/") && !value.startsWith("//")) ||
+  /^https?:\/\//i.test(value);
+
 export const getNotificationRedirectUrl = (
   rawData?: NotificationData,
   notificationType?: string,
@@ -49,7 +59,7 @@ export const getNotificationRedirectUrl = (
     "target_url",
     "target",
   ]);
-  if (quickLink) return quickLink;
+  if (quickLink && isSafeRedirect(quickLink)) return quickLink;
 
   switch (type) {
     case "order":

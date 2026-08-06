@@ -84,14 +84,14 @@ const SearchBar: FC<SearchBarProps> = ({
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => submit()}
-              className="bg-primary text-primary-foreground font-extrabold text-sm rounded-lg px-5 py-2 -mr-1 transition-transform active:scale-95"
+              className="bg-primary text-primary-foreground font-extrabold text-sm rounded-lg px-5 py-2 -me-1 transition-transform active:scale-95"
             >
               {t("search")}
             </button>
           }
           classNames={{
             inputWrapper:
-              "bg-content2 border border-divider h-12 pr-1 data-[focus=true]:border-primary data-[hover=true]:border-primary/60",
+              "bg-content2 border border-divider h-12 pe-1 data-[focus=true]:border-primary data-[hover=true]:border-primary/60",
             input: "text-sm font-medium",
           }}
         />
@@ -151,7 +151,7 @@ const SearchBar: FC<SearchBarProps> = ({
                     key={s.label}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => submit(s.label)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-content2 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-content2 transition-colors"
                   >
                     {s.icon && (
                       <Icon

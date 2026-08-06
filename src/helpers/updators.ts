@@ -10,7 +10,11 @@ import { ApiResponse, CartResponse, CartSyncData } from "@/types/ApiResponse";
 import { addToast } from "@heroui/react";
 import i18n from "../../i18n";
 import { resetCheckOutState } from "./functionalHelpers";
-import { clearOfflineCart } from "@/lib/redux/slices/offlineCartSlice";
+import {
+  clearOfflineCart,
+  setOfflineCart,
+} from "@/lib/redux/slices/offlineCartSlice";
+import { setFailedCartItems } from "@/lib/redux/slices/cartNoticeSlice";
 
 export const updateCartData = async (
   passAddress: boolean = true,
@@ -43,16 +47,14 @@ export const updateCartData = async (
 
     if (cartRes.success && cartRes.data) {
       store.dispatch(setCartData(cartRes.data));
-      if (cartRes?.data?.removed_count && cartRes.data.removed_count > 0) {
-        document.getElementById("removed-items-modal-open")?.click();
-      }
-    } else if (!cartRes.success && cartRes.message == "Your cart is empty") {
+
+    } else if (isEmptyCartResponse(cartRes)) {
       store.dispatch(clearCart());
       resetCheckOutState();
       if (renderToast && emtyCartToast) {
         addToast({
-          title: "Cart is Empty",
-          description: "Add Product to processed !",
+          title: i18n.t("cartStatus.emptyTitle"),
+          description: i18n.t("cartStatus.emptyDescription"),
           color: "warning",
         });
       }
@@ -60,8 +62,8 @@ export const updateCartData = async (
       store.dispatch(setError("Failed to fetch updated cart"));
       if (renderToast) {
         addToast({
-          title: "Cart Fetch Failed",
-          description: "Could not update cart after adding item",
+          title: i18n.t("cartStatus.fetchFailedTitle"),
+          description: i18n.t("cartStatus.fetchFailedDescription"),
           color: "warning",
         });
       }
@@ -72,6 +74,21 @@ export const updateCartData = async (
   } finally {
     store.dispatch(setCartLoading(false));
   }
+};
+
+/**
+ * The panel answers an empty cart with `success: false` and an empty `data`,
+ * carrying no machine-readable marker yet, so the message is the fallback. A
+ * transport failure must never take this branch — it would clear a cart the
+ * customer still has.
+ */
+const isEmptyCartResponse = (res: ApiResponse<CartResponse>): boolean => {
+  if (res.success) return false;
+
+  const code = (res as { code?: string }).code;
+  if (code) return code === "cart_is_empty";
+
+  return (res.message || "").trim().toLowerCase() === "your cart is empty";
 };
 
 export const syncOfflineCartToServer = async (): Promise<boolean> => {
@@ -106,18 +123,25 @@ export const syncOfflineCartToServer = async (): Promise<boolean> => {
         store.dispatch(setCartData(response.data.cart));
       }
 
-      // Clear offline cart after successful sync
-      store.dispatch(clearOfflineCart());
+      // Keep anything the server refused — it only exists locally, so clearing
+      // the whole offline cart here would lose it.
+      const failedItems = response.data.failed_items ?? [];
+      const rejected = offlineCartItems.filter((item) =>
+        failedItems.some(
+          (failed) =>
+            failed.store_id === item.store_id &&
+            failed.product_variant_id === item.product_variant_id,
+        ),
+      );
 
-      // Show failed items modal if there are any failed items
-      if (response.data.failed_items && response.data.failed_items.length > 0) {
-        // Trigger the global modal function
-        if (
-          typeof window !== "undefined" &&
-          (window as any).showFailedItemsModal
-        ) {
-          (window as any).showFailedItemsModal(response.data.failed_items);
-        }
+      if (rejected.length > 0) {
+        store.dispatch(setOfflineCart(rejected));
+      } else {
+        store.dispatch(clearOfflineCart());
+      }
+
+      if (failedItems.length > 0) {
+        store.dispatch(setFailedCartItems(failedItems));
       }
 
       // Show success message after 3 seconds

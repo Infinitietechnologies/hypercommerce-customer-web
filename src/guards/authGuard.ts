@@ -2,24 +2,16 @@
 import { GetServerSidePropsContext } from "next";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 
-export const PROTECTED_ROUTES = [
-  "/cart",
-  "/my-account",
-  "/my-account/orders",
-  "/my-account/addresses",
-  "/my-account/wallet",
-  "/my-account/transactions",
-  "/my-account/refer-and-earn",
-];
+export const PROTECTED_ROUTES = ["/cart", "/my-account", "/payment"];
 
+/**
+ * Matches a route and everything below it, so `/payment/[slug]` and
+ * `/cart/checkout` are covered by their parent entry.
+ */
 export const isProtectedRoute = (path: string) => {
-  return PROTECTED_ROUTES.some((route) => {
-    if (route.endsWith("/*")) {
-      const baseRoute = route.slice(0, -2);
-      return path.startsWith(baseRoute);
-    }
-    return path === route;
-  });
+  return PROTECTED_ROUTES.some(
+    (route) => path === route || path.startsWith(`${route}/`)
+  );
 };
 
 /**

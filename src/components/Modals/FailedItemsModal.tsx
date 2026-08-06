@@ -1,4 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
+import { clearFailedCartItems } from "@/lib/redux/slices/cartNoticeSlice";
+import React, { useEffect, useMemo } from "react";
 import {
   Modal,
   ModalContent,
@@ -12,38 +15,22 @@ import {
   Image,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import { Product } from "@/types/ApiResponse";
 import Link from "next/link";
 
-export interface FailedItem {
-  store_id: number;
-  product_variant_id: number;
-  product: Product;
-  reason: string;
-}
-
 const FailedItemsModal: React.FC = () => {
-  const [failedItems, setFailedItems] = useState<FailedItem[]>([]);
+  const dispatch = useDispatch();
+  const failedItems = useSelector(
+    (state: RootState) => state.cartNotice.failedItems,
+  );
   const { t } = useTranslation();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Expose function to open modal with failed items
   useEffect(() => {
-    // Create a global function that can be called from anywhere
-    (window as any).showFailedItemsModal = (items: FailedItem[]) => {
-      if (items && items.length > 0) {
-        setFailedItems(items);
-        onOpen();
-      }
-    };
-
-    return () => {
-      delete (window as any).showFailedItemsModal;
-    };
-  }, [onOpen]);
+    if (failedItems.length > 0) onOpen();
+  }, [failedItems.length, onOpen]);
 
   const handleClose = () => {
-    setFailedItems([]);
+    dispatch(clearFailedCartItems());
     onClose();
   };
 
@@ -108,7 +95,7 @@ const FailedItemsModal: React.FC = () => {
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-foreground/50 mb-2">
                     {item.product.variants[0].store_name && (
                       <div>
-                        <span className="mr-1">{t("failedItems.store")}:</span>
+                        <span className="me-1">{t("failedItems.store")}:</span>
                         <Link
                           onClick={handleClose}
                           href={`/stores/${item.product.variants[0].store_slug}`}
@@ -122,7 +109,7 @@ const FailedItemsModal: React.FC = () => {
                   {/* Reason */}
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-2">
                     <div className="text-xs text-red-600 dark:text-red-400">
-                      <span className="font-semibold mr-1">
+                      <span className="font-semibold me-1">
                         {t("failedItems.reason")}:
                       </span>
                       {item.reason}

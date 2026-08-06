@@ -297,30 +297,12 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
 
         const slug = getSlugFromContext(context);
 
-        console.log("========== SSR PRODUCT PAGE ==========");
-        console.log("Requested Slug:", slug);
-
         const data = await fetchProductDetailPageData({
           slug,
           access_token,
           market,
           country_iso2,
         });
-
-        console.log(
-          "SSR Product Exists:",
-          !!data?.initialProduct
-        );
-
-        console.log(
-          "SSR Product Slug:",
-          data?.initialProduct?.slug
-        );
-
-        console.log(
-  "Fetched Product Full:",
-  JSON.stringify(data?.initialProduct?.slug, null, 2)
-);
 
         if (!data?.initialProduct) {
           console.error(

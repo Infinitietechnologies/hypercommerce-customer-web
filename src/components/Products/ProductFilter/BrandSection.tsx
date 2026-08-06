@@ -38,10 +38,10 @@ const BrandSection: FC<BrandSectionProps> = ({
         itemClasses={{
           base: "overflow-hidden !important",
           title: "text-xs",
-          subtitle: "text-[10px] pl-1 text-foreground/50",
+          subtitle: "text-[10px] ps-1 text-foreground/50",
           content: "text-xs p-0",
           trigger: "h-10",
-          indicator: "pr-2",
+          indicator: "pe-2",
         }}
         defaultExpandedKeys={["1"]}
       >

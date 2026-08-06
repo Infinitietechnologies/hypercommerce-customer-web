@@ -128,7 +128,7 @@ const StoreMarkerPopup: React.FC<StoreMarkerPopupProps> = ({
               <span className="text-xs font-semibold text-gray-800 dark:text-default-800">
                 {rating.toFixed(2)}
               </span>
-              <span className="text-xs text-default-500 ml-1">
+              <span className="text-xs text-default-500 ms-1">
                 ({store.total_store_feedback})
               </span>
             </div>

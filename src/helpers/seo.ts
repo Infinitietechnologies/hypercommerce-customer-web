@@ -1,6 +1,19 @@
 import { Product, Store } from "@/types/ApiResponse";
 
 /**
+ * Serialises JSON-LD for injection into a <script> block.
+ *
+ * `JSON.stringify` leaves `<` and `>` intact, so a seller-authored value
+ * containing `</script>` would close the element and let the rest parse as
+ * HTML. The three escapes below are inert inside JSON and close that.
+ */
+export const serializeJsonLd = (value: unknown): string =>
+  JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+
+/**
  * Generates canonical URL for a page
  */
 export const getCanonicalUrl = (path: string, baseUrl?: string): string => {
@@ -8,7 +21,9 @@ export const getCanonicalUrl = (path: string, baseUrl?: string): string => {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   // Ensure we don't have double slashes if base ends with a slash or cleanPath starts with one
   const fullUrl = `${base.replace(/\/$/, "")}${cleanPath}`;
-  return fullUrl.replace(/\/$/, ""); // Remove trailing slash from the final URL
+  // next.config.ts sets trailingSlash — the canonical must name the URL the site
+  // actually serves, not the form that 308s to it.
+  return fullUrl.endsWith("/") ? fullUrl : `${fullUrl}/`;
 };
 
 /**

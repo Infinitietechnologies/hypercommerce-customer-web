@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import {
   initializeApp,
   getApps,
@@ -244,28 +245,21 @@ export function initializeRecaptchaVerifier(
   }
 }
 
+const FIREBASE_ERROR_KEYS: Record<string, string> = {
+  "auth/invalid-phone-number": "firebase.errors.invalid_phone_number",
+  "auth/invalid-verification-code": "firebase.errors.invalid_verification_code",
+  "auth/code-expired": "firebase.errors.code_expired",
+  "auth/too-many-requests": "firebase.errors.too_many_requests",
+  "auth/quota-exceeded": "firebase.errors.quota_exceeded",
+  "auth/missing-verification-code": "firebase.errors.missing_verification_code",
+  "auth/network-request-failed": "firebase.errors.network_request_failed",
+  "auth/captcha-check-failed": "firebase.errors.captcha_check_failed",
+  "auth/operation-not-allowed": "firebase.errors.operation_not_allowed",
+};
+
+/** The raw SDK message is never surfaced — it is English and unbounded. */
 export const getFirebaseErrorMessage = (error: FirebaseError) => {
-  const errorCode = error?.code;
-  switch (errorCode) {
-    case "auth/invalid-phone-number":
-      return "Invalid phone number format. Please check and try again.";
-    case "auth/invalid-verification-code":
-      return "Invalid verification code. Please enter the correct code.";
-    case "auth/code-expired":
-      return "Verification code has expired. Please request a new one.";
-    case "auth/too-many-requests":
-      return "Too many attempts. Please try again later.";
-    case "auth/quota-exceeded":
-      return "SMS quota exceeded. Please try again later.";
-    case "auth/missing-verification-code":
-      return "Please enter the verification code.";
-    case "auth/network-request-failed":
-      return "Network error. Please check your connection and try again.";
-    case "auth/captcha-check-failed":
-      return "reCAPTCHA verification failed. Please try again.";
-    case "auth/operation-not-allowed":
-      return "This login method is not enabled in Firebase Console. Please enable it in Authentication > Sign-in method.";
-    default:
-      return error.message || "An error occurred. Please try again.";
-  }
+  const key = FIREBASE_ERROR_KEYS[error?.code ?? ""];
+
+  return i18n.t(key ?? "firebase.errors.default");
 };

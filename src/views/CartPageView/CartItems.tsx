@@ -301,7 +301,7 @@ const CartItems: FC<CartItemsProps> = ({
                   : ""}
                 {addon.title || addon.item?.title}
                 {addonPrice > 0 && (
-                  <span className="ml-0.5 opacity-80 font-medium">
+                  <span className="ms-0.5 opacity-80 font-medium">
                     ({formatPrice(addonPrice)})
                   </span>
                 )}
@@ -636,7 +636,7 @@ const CartItems: FC<CartItemsProps> = ({
                                       : ""}
                                     {addon.title || addon.item?.title}
                                     {addonPrice > 0 && (
-                                      <span className="ml-0.5 opacity-80 font-medium">
+                                      <span className="ms-0.5 opacity-80 font-medium">
                                         ({formatPrice(addonPrice)})
                                       </span>
                                     )}

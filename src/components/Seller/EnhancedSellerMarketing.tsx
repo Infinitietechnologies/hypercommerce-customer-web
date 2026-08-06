@@ -153,8 +153,8 @@ export default function EnhancedSellerMarketing() {
     bg-cover bg-center bg-no-repeat
   "
       >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full -mr-48 -mt-48" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-black opacity-5 rounded-full -ml-48 -mb-48" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full -me-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-black opacity-5 rounded-full -ms-48 -mb-48" />
         <div className="relative max-w-7xl mx-auto px-4 py-10 md:py-14">
           <div className="grid md:grid-cols-2 gap-10 items-center">
             <div className="space-y-5">
@@ -394,8 +394,8 @@ export default function EnhancedSellerMarketing() {
       <div className="py-12 px-4 hidden">
         <div className="max-w-6xl mx-auto">
           <div className="relative overflow-hidden bg-linear-to-r from-primary-600 via-primary-500 to-primary-600 rounded-2xl p-6 md:p-10 text-white shadow-2xl">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-white opacity-5 rounded-full -mr-24 -mt-24" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-5 rounded-full -ml-32 -mb-32" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white opacity-5 rounded-full -me-24 -mt-24" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black opacity-5 rounded-full -ms-32 -mb-32" />
 
             <div className="relative text-center mb-6">
               <h2 className="text-2xl md:text-3xl font-bold mb-3">
@@ -541,8 +541,8 @@ export default function EnhancedSellerMarketing() {
       <div className="py-12 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="relative overflow-hidden bg-linear-to-r from-primary-600 via-primary-500 to-primary-600 rounded-2xl p-6 md:p-10 text-white text-center shadow-2xl">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-white opacity-5 rounded-full -mr-24 -mt-24" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black opacity-5 rounded-full -ml-24 -mb-24" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white opacity-5 rounded-full -me-24 -mt-24" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black opacity-5 rounded-full -ms-24 -mb-24" />
 
             <div className="relative">
               <h2 className="text-2xl md:text-3xl font-bold mb-3">

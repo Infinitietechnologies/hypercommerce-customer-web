@@ -57,7 +57,7 @@ const SubcategorySidebar: React.FC<Props> = ({
           {/* All Products Option */}
           <Button
             variant={!selectedSubcategory ? "solid" : "ghost"}
-            className={`w-full  border-1 border-gray-100 dark:border-default-100 mb-3 justify-start text-left py-3 px-4 rounded-lg transition-all duration-200 ${
+            className={`w-full  border-1 border-gray-100 dark:border-default-100 mb-3 justify-start text-start py-3 px-4 rounded-lg transition-all duration-200 ${
               !selectedSubcategory ? "bg-primary-600 text-white shadow-md" : ""
             }`}
             onPress={handleClear}

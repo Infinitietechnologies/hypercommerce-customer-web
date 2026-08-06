@@ -7,6 +7,7 @@ import { NextPageWithLayout } from "@/types";
 import dynamic from "next/dynamic";
 import { updateCartData } from "@/helpers/updators";
 import { withAuth } from "@/guards/withAuth";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 import { loadTranslations } from "../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
@@ -49,6 +50,9 @@ const CartPage: NextPageWithLayout<CartPageProps> = () => {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+        if (guard) return guard;
+
         const market = getMarketFromContext(context);
         const settingsRes = await getSettings({ market });
         await loadTranslations(context);

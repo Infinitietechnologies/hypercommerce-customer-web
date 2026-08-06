@@ -252,7 +252,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                 {product.ratings !== undefined && (
                   <div className="flex items-center gap-1">
                     <RatingStars rating={Number(product.ratings)} size={14} />
-                    <span className="text-xs text-foreground/50 ml-1">
+                    <span className="text-xs text-foreground/50 ms-1">
                       ({product.ratings})
                     </span>
                   </div>
@@ -378,6 +378,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                 <div className="flex items-center gap-1">
                   <Button
                     isIconOnly
+                    aria-label={t("a11y.decrease_quantity")}
                     size="sm"
                     variant="flat"
                     isDisabled={
@@ -395,6 +396,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                   </span>
                   <Button
                     isIconOnly
+                    aria-label={t("a11y.increase_quantity")}
                     size="sm"
                     variant="flat"
                     isDisabled={

@@ -22,7 +22,7 @@ const DeliveryBanner: React.FC = () => {
                   p-4 lg:p-10
                   flex flex-col justify-center
                   space-y-5
-                  text-left rtl:text-right
+                  text-start rtl:text-end
                   max-w-full
                   rtl:lg:max-w-[85%]
                 "

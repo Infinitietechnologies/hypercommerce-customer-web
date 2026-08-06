@@ -202,7 +202,7 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
                           <span key={i} className="flex items-center">
                             {addon.title || addon.item?.title}
                             {addonPrice > 0 && (
-                              <span className="ml-0.5 font-medium opacity-80">
+                              <span className="ms-0.5 font-medium opacity-80">
                                 ({formatPrice(addonPrice)})
                               </span>
                             )}

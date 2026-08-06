@@ -241,6 +241,7 @@ const AttachmentUploader: FC<AttachmentUploaderProps> = ({
 
                   <Button
                     isIconOnly
+                    aria-label={t("a11y.remove_attachment")}
                     size="sm"
                     variant="light"
                     color="danger"

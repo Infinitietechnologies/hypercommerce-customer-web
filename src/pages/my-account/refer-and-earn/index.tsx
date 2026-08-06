@@ -3,7 +3,7 @@ import PageHeader from "@/components/custom/PageHeader";
 import { Button } from "@heroui/react";
 import { ErrorState } from "@/components/ui";
 import { Icon } from "@iconify/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getReferralInfo } from "@/routes/api";
 import { NextPageWithLayout } from "@/types";
 import { ReferralInfo } from "@/types/ApiResponse";
@@ -11,8 +11,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
 import type { GetServerSideProps } from "next";
-import { loginRedirect } from "@/guards/authGuard";
-import { getAccessTokenFromContext } from "@/helpers/auth";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 import { isSSR } from "@/helpers/getters";
 import { loadTranslations } from "../../../../i18n";
 
@@ -23,25 +22,27 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
   const [error, setError] = useState<string | undefined>(undefined);
   const { t } = useTranslation();
 
-  useEffect(() => {
-    const fetchReferralInfo = async () => {
-      try {
-        const referralRes = await getReferralInfo();
-        if (referralRes.success && referralRes.data) {
-          setReferralInfo(referralRes.data);
-        } else {
-          setError(referralRes.message || "Failed to fetch referral data");
-        }
-      } catch (err) {
-        console.error("Referral fetch error:", err);
-        setError("Failed to fetch referral data");
-      } finally {
-        setLoading(false);
+  const fetchReferralInfo = useCallback(async () => {
+    setLoading(true);
+    setError(undefined);
+    try {
+      const referralRes = await getReferralInfo();
+      if (referralRes.success && referralRes.data) {
+        setReferralInfo(referralRes.data);
+      } else {
+        setError(referralRes.message || "Failed to fetch referral data");
       }
-    };
-
-    fetchReferralInfo();
+    } catch (err) {
+      console.error("Referral fetch error:", err);
+      setError("Failed to fetch referral data");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchReferralInfo();
+  }, [fetchReferralInfo]);
 
   const referralCode = referralInfo?.referral_code || "";
   const { formatPrice } = useSettings();
@@ -117,7 +118,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
               title={t("pages.referAndEarnPage.errorTitle", "Couldn't load referral info")}
               description={error}
               retryLabel={t("retry", "Retry")}
-              onRetry={() => window.location.reload()}
+              onRetry={() => fetchReferralInfo()}
             />
           ) : loading ? (
             /* ── Skeleton ── */
@@ -148,7 +149,7 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
                   </div>
 
                   {/* How it works skeleton */}
-                  <div className="lg:w-[40%] lg:border-l lg:border-divider lg:pl-6 space-y-4">
+                  <div className="lg:w-[40%] lg:border-l lg:border-divider lg:ps-6 space-y-4">
                     <div className="h-5 w-1/3 rounded bg-default-200" />
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="flex gap-3 items-start">
@@ -229,10 +230,10 @@ const ReferAndEarnPage: NextPageWithLayout = () => {
 
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
-      const access_token = (await getAccessTokenFromContext(context)) || "";
-      if (!access_token) {
-        return { redirect: { destination: loginRedirect(context), permanent: false } };
-      }
+      const guard = await serverSideAuthGuard(context);
+
+      if (guard) return guard;
+
 
       await loadTranslations(context);
       return { props: {} };

@@ -269,6 +269,7 @@ const GlobalSearchBar: React.FC = () => {
               title={t("userLayout.shoppingList")}
               onPress={() => router.push("/shopping-list")}
               isIconOnly
+              aria-label={t("userLayout.shoppingList")}
               radius="full"
               className="p-0 min-w-8 w-8 h-8 bg-transparent shrink-0"
             >
@@ -283,7 +284,7 @@ const GlobalSearchBar: React.FC = () => {
           className="cursor-pointer"
           classNames={{
             inputWrapper:
-              "bg-background border border-divider h-12 pr-1 data-[focus=true]:border-primary data-[hover=true]:border-primary shadow-none",
+              "bg-background border border-divider h-12 pe-1 data-[focus=true]:border-primary data-[hover=true]:border-primary shadow-none",
             input: "text-sm font-medium",
           }}
         />

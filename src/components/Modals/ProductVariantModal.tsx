@@ -369,7 +369,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                       rating={Number(product.ratings || 0)}
                       size={14}
                     />
-                    <span className="text-xs text-foreground/50 ml-1">
+                    <span className="text-xs text-foreground/50 ms-1">
                       ({product.ratings || 0})
                     </span>
                   </div>
@@ -814,7 +814,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                   }}
                   className="space-y-3"
                 >
-                  <ScrollShadow className="space-y-3 h-[40vh] pr-2 pb-2">
+                  <ScrollShadow className="space-y-3 h-[40vh] pe-2 pb-2">
                     {product.variants.map((v) => {
                       const price = getFinalPrice(v);
                       const original = getOriginalPrice(v);
@@ -939,6 +939,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                 <div className="flex items-center gap-1">
                                   <Button
                                     isIconOnly
+                                    aria-label={t("a11y.decrease_quantity")}
                                     size="sm"
                                     variant="flat"
                                     onPress={() =>
@@ -959,6 +960,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                   </span>
                                   <Button
                                     isIconOnly
+                                    aria-label={t("a11y.increase_quantity")}
                                     size="sm"
                                     variant="flat"
                                     onPress={() =>
@@ -1027,6 +1029,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                     <div className="flex items-center gap-1">
                       <Button
                         isIconOnly
+                        aria-label={t("a11y.decrease_quantity")}
                         size="sm"
                         variant="flat"
                         onPress={() =>
@@ -1046,6 +1049,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                       </span>
                       <Button
                         isIconOnly
+                        aria-label={t("a11y.increase_quantity")}
                         size="sm"
                         variant="flat"
                         onPress={() =>

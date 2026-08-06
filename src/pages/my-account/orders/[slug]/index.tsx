@@ -1,3 +1,4 @@
+import { SSR_ERROR_CODES, translateErrorCode } from "@/helpers/errorCodes";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHeader from "@/components/custom/PageHeader";
 import { GetServerSideProps } from "next";
@@ -16,7 +17,7 @@ import { loadTranslations } from "../../../../../i18n";
 import { useTranslation } from "react-i18next";
 import PageHead from "@/SEO/PageHead";
 import { getCookie } from "@/lib/cookies";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 
 interface OrderDetailsPageProps {
   order?: Order;
@@ -100,7 +101,7 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
 
   if (isClientLoading) {
     return renderContent(
-      <div className="grid w-full grid-cols-1 gap-4 text-left lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid w-full grid-cols-1 gap-4 text-start lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="flex flex-col gap-4">
           <Skeleton className="h-28 w-full rounded-large" />
           <Skeleton className="h-20 w-full rounded-large" />
@@ -119,7 +120,7 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
     return renderContent(
       <ErrorState
         title={t("pages.order.errorLoading")}
-        description={error}
+        description={translateErrorCode(t, error)}
         retryLabel={t("retry", "Retry")}
         onRetry={() => router.reload()}
       />
@@ -148,15 +149,11 @@ const OrderDetailsPage: NextPageWithLayout<OrderDetailsPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+
+        if (guard) return guard;
+
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
         const { slug } = context.params || {};
         await loadTranslations(context);
 
@@ -164,7 +161,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           return {
             props: {
               order: null,
-              error: "Invalid order identifier",
+              error: SSR_ERROR_CODES.invalidOrderIdentifier,
             },
           };
         }
@@ -192,7 +189,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           props: {
             order: null,
             initialSettings: null,
-            error: "Unable to load order details. Please try again later.",
+            error: SSR_ERROR_CODES.orderDetailsLoadFailed,
             isSSR: true,
           },
         };

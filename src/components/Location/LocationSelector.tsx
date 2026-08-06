@@ -427,7 +427,7 @@ const LocationSelector = () => {
         type="button"
         onClick={isCheckoutLocked ? undefined : onOpen}
         disabled={!isInitialized || isCheckoutLocked}
-        className="flex max-w-full items-center gap-2 min-[1024px]:w-auto shrink-0 text-left transition-colors disabled:opacity-60
+        className="flex max-w-full items-center gap-2 min-[1024px]:w-auto shrink-0 text-start transition-colors disabled:opacity-60
           rounded-medium border border-shell-divider bg-transparent text-shell-foreground px-3.5 h-11 hover:border-primary"
       >
         <Icon
@@ -556,7 +556,7 @@ const LocationSelector = () => {
                       type="button"
                       onClick={() => handleSelectAddress(address)}
                       disabled={isBusy}
-                      className={`flex items-start gap-3 w-full text-left rounded-xl px-3 py-3 border bg-content2 transition-colors disabled:opacity-60 ${
+                      className={`flex items-start gap-3 w-full text-start rounded-xl px-3 py-3 border bg-content2 transition-colors disabled:opacity-60 ${
                         isSelected
                           ? "border-primary"
                           : "border-divider hover:border-primary/60"

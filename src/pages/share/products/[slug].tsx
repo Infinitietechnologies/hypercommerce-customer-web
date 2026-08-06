@@ -1,45 +1,12 @@
-import { GetServerSideProps } from "next";
-import { getSlugFromContext, isSSR } from "@/helpers/getters";
-import { getAccessTokenFromContext } from "@/helpers/auth";
-import { getMarketFromContext } from "@/helpers/functionalHelpers";
-import { getSettings } from "@/routes/api";
-import { fetchProductDetailPageData } from "@/services/ProductDetailPageService";
-import ProductPage from "@/pages/products/[slug]/index";
+import ProductPage, {
+  getServerSideProps as productPageServerSideProps,
+} from "@/pages/products/[slug]/index";
 
-export const getServerSideProps: GetServerSideProps = isSSR()
-  ? async (context) => {
-      try {
-        const access_token = (await getAccessTokenFromContext(context)) || "";
-        const market = getMarketFromContext(context);
-        const slug = getSlugFromContext(context);
-
-        const settingsRes = await getSettings({ market });
-        const settings = settingsRes.data || null;
-
-        // Fetch all product page data (market resolved server-side via header)
-        const data = await fetchProductDetailPageData({
-          slug,
-          access_token,
-          market,
-          PER_PAGE: 20,
-        });
-
-        return {
-          props: {
-            ...data,
-            initialSettings: settings,
-            slug,
-          },
-        };
-      } catch (err) {
-        console.error("Error in share page getServerSideProps:", err);
-        return {
-          props: {
-            error: err instanceof Error ? err.message : "An unexpected error occurred",
-          },
-        };
-      }
-    }
-  : undefined as any;
+/**
+ * The share landing renders the product page. It reuses that page's own server
+ * logic rather than keeping a second copy — the duplicate had already drifted
+ * (no notFound guard for a removed product; no country_iso2).
+ */
+export const getServerSideProps = productPageServerSideProps;
 
 export default ProductPage;

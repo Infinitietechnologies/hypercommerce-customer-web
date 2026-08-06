@@ -261,7 +261,7 @@ export const Navbar: FC = () => {
               <GlobalSearchbar />
             </div>
 
-            <div className="flex items-center gap-6 shrink-0 ml-auto">
+            <div className="flex items-center gap-6 shrink-0 ms-auto">
               {WishlistAction}
               {OrdersAction}
               {AccountAction}

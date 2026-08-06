@@ -490,7 +490,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                 {product.ratings !== undefined && (
                   <div className="flex items-center gap-1">
                     <RatingStars rating={Number(product.ratings)} size={14} />
-                    <span className="text-xs text-foreground/50 ml-1">
+                    <span className="text-xs text-foreground/50 ms-1">
                       ({product.ratings})
                     </span>
                   </div>
@@ -590,6 +590,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
               <div className="flex items-center gap-1">
                 <Button
                   isIconOnly
+                  aria-label={t("a11y.decrease_quantity")}
                   size="sm"
                   variant="flat"
                   isDisabled={loading || selectedVariant.stock === 0}
@@ -603,6 +604,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                 </span>
                 <Button
                   isIconOnly
+                  aria-label={t("a11y.increase_quantity")}
                   size="sm"
                   variant="flat"
                   isDisabled={loading || selectedVariant.stock === 0}

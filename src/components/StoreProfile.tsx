@@ -1,3 +1,4 @@
+import { sanitizeHtml } from "@/helpers/sanitizeHtml";
 import React, { useState } from "react";
 import { Avatar, Image } from "@heroui/react";
 import { Icon } from "@iconify/react";
@@ -151,7 +152,7 @@ const StoreProfile: React.FC<StoreProfileProps> = ({ store }) => {
           {store.description && (
             <div
               className="html-content max-w-3xl text-sm leading-relaxed text-foreground/60"
-              dangerouslySetInnerHTML={{ __html: store.description }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(store.description) }}
             />
           )}
 

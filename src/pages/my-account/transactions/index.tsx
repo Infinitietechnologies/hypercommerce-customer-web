@@ -17,7 +17,8 @@ import { GetServerSideProps } from "next";
 import { loadTranslations } from "../../../../i18n";
 import { useTranslation } from "react-i18next";
 import PageHead from "@/SEO/PageHead";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
+import { useRouter } from "next/router";
 
 type TransactionsPageProps = {
   initialUserData: userData;
@@ -36,6 +37,7 @@ const TransactionsPage: NextPageWithLayout<TransactionsPageProps> = ({
   error,
 }) => {
   const { t } = useTranslation();
+  const router = useRouter();
 
   return (
     <>
@@ -66,7 +68,9 @@ const TransactionsPage: NextPageWithLayout<TransactionsPageProps> = ({
               title={t("pages.transactionsPage.errorTitle", "Couldn't load transactions")}
               description={error}
               retryLabel={t("retry", "Retry")}
-              onRetry={() => window.location.reload()}
+              onRetry={() =>
+                  router.replace(router.asPath, undefined, { scroll: false })
+                }
             />
           ) : (
             <TransactionTable
@@ -85,15 +89,11 @@ const TransactionsPage: NextPageWithLayout<TransactionsPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+
+        if (guard) return guard;
+
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
         const res = await getUserData({ access_token });
         await loadTranslations(context);
 

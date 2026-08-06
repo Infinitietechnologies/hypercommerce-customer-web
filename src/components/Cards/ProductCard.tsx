@@ -204,7 +204,7 @@ const ProductCard: FC<ProductCardProps> = ({
       key={product.id}
       ref={elementRef}
       as="div"
-      className="w-full h-full border border-divider bg-content1 rounded-large hover:shadow-md hover:border-default-300 transition-all duration-200 overflow-hidden text-left"
+      className="w-full h-full border border-divider bg-content1 rounded-large hover:shadow-md hover:border-default-300 transition-all duration-200 overflow-hidden text-start"
       shadow="none"
     >
       {/* grow-0: HeroUI CardBody is `flex-1 flex-auto` and would grow to fill a
@@ -252,6 +252,7 @@ const ProductCard: FC<ProductCardProps> = ({
           <div className="absolute top-2.5 right-2.5 z-20 flex flex-col gap-2">
             <Button
               isIconOnly
+              aria-label={t("a11y.add_to_wishlist")}
               variant="light"
               size="sm"
               radius="full"
@@ -272,6 +273,7 @@ const ProductCard: FC<ProductCardProps> = ({
 
             <Button
               isIconOnly
+              aria-label={t("a11y.share_product")}
               variant="light"
               size="sm"
               radius="full"

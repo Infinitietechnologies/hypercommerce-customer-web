@@ -1,3 +1,4 @@
+import { SSR_ERROR_CODES } from "@/helpers/errorCodes";
 import { GetServerSideProps } from "next";
 import {
   Card,
@@ -16,6 +17,7 @@ import {
   ModalFooter,
   useDisclosure,
   toast as addToast,
+  ErrorState,
 } from "@/components/ui";
 import { FormEvent, useRef, useState, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
@@ -33,6 +35,7 @@ import {
   verifyOtp,
 } from "@/routes/api";
 import { isSSR } from "@/helpers/getters";
+import { imageRejectionKeys, rejectImage } from "@/helpers/imageUpload";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import {
@@ -55,17 +58,21 @@ import { useTranslation } from "react-i18next";
 import { getFirebaseErrorMessage } from "@/lib/firebase";
 import Lightbox from "yet-another-react-lightbox";
 import { useSettings } from "@/contexts/SettingsContext";
-import { loginRedirect } from "@/guards/authGuard";
+import { serverSideAuthGuard } from "@/guards/authGuard";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
 });
 
 type MyAccountPageProps = {
-  initialData: userData;
+  initialData: userData | null;
+  error?: string | null;
 };
 
-const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
+const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
+  initialData,
+  error,
+}) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { demoMode, authSettings } = useSettings();
   const { t } = useTranslation();
@@ -73,7 +80,9 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const userData = useSelector((state: RootState) => state.auth.user);
-  const user = isSSR() ? initialData : userData;
+  // Redux is authoritative once the page has refreshed the profile; the SSR
+  // snapshot only seeds the first paint.
+  const user = userData ?? initialData;
   const stripDialCode = (mobile: string, iso_2: string) => {
     if (!mobile || !iso_2) return mobile;
     const countryData = CountryList.findOneByCountryCode(iso_2);
@@ -186,7 +195,25 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file) setProfileImageFile(file);
+
+    if (!file) return;
+
+    const rejection = rejectImage(file);
+
+    if (rejection) {
+      const keys = imageRejectionKeys(rejection);
+
+      addToast({
+        title: t(keys.title),
+        description: t(keys.description),
+        color: "danger",
+      });
+      e.target.value = "";
+
+      return;
+    }
+
+    setProfileImageFile(file);
   };
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -527,6 +554,17 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
     }
   };
 
+  if (error && !user) {
+    return (
+      <ErrorState
+        title={t("errors.profile_load_failed", "We couldn't load your profile")}
+        description={t("errors.try_again_later", "Please try again in a moment.")}
+        retryLabel={t("common.retry", "Retry")}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+
   return (
     <>
       <MyBreadcrumbs
@@ -586,6 +624,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                     )}
                     <Button
                       isIconOnly
+                      aria-label={t("a11y.change_profile_photo")}
                       size="sm"
                       className="absolute -bottom-1 -right-1 min-w-unit-6 w-6 h-7"
                       radius="full"
@@ -680,7 +719,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                         <Icon icon="solar:letter-linear" width={20} height={20} className="text-default-400" />
                       }
                       endContent={
-                        <div className="flex items-center gap-2 mr-1">
+                        <div className="flex items-center gap-2 me-1">
                           {formData.email !== user?.email &&
                           !isDemoEmailLockedUser ? (
                             <Button
@@ -738,7 +777,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                                     "pages.myAccount.labels.resendVerification",
                                   )}
                                 </span>
-                                <span className="sm:hidden ml-1">
+                                <span className="sm:hidden ms-1">
                                   {t("pages.myAccount.labels.resendVerification")}
                                 </span>
                               </Button>
@@ -768,7 +807,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                         handlePhoneValidation(phoneNumber);
                       }}
                       endContent={
-                        <div className="flex items-center gap-2 mr-1">
+                        <div className="flex items-center gap-2 me-1">
                           {(formData.mobile !== user?.mobile ||
                             formData.iso_2 !== user?.iso_2) &&
                           !isDemoPhoneLockedUser ? (
@@ -828,7 +867,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
                                   {t("pages.myAccount.labels.verify") ||
                                     "Verify"}
                                 </span>
-                                <span className="sm:hidden ml-1">
+                                <span className="sm:hidden ms-1">
                                   {t("pages.myAccount.labels.verify", "Verify")}
                                 </span>
                               </Button>
@@ -937,15 +976,11 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({ initialData }) => {
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
+        const guard = await serverSideAuthGuard(context);
+
+        if (guard) return guard;
+
         const access_token = (await getAccessTokenFromContext(context)) || "";
-        if (!access_token) {
-          return {
-            redirect: {
-              destination: loginRedirect(context),
-              permanent: false,
-            },
-          };
-        }
         const response = await getUserData({ access_token });
         const market = getMarketFromContext(context);
         const res = await getSettings({ market });
@@ -953,8 +988,11 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
 
         return {
           props: {
-            initialData: response.success ? response.data : {},
+            initialData: response.success ? response.data : null,
             initialSettings: res?.success ? res.data : [],
+            error: response.success
+              ? null
+              : response.message || "Failed to load profile",
           },
         };
       } catch (error) {
@@ -962,7 +1000,8 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         return {
           props: {
             initialSettings: null,
-            initialData: {},
+            initialData: null,
+            error: SSR_ERROR_CODES.profileLoadFailed,
           },
         };
       }

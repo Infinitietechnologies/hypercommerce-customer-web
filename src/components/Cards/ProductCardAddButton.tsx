@@ -249,6 +249,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
       >
         <Button
           isIconOnly
+          aria-label={t("a11y.decrease_quantity")}
           size="sm"
           variant="flat"
           color="primary"
@@ -263,13 +264,14 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
         >
           {localQuantity}
           {isUpdating && (
-            <span className="ml-1 -mt-4 inline-block animate-spin text-xs">
+            <span className="ms-1 -mt-4 inline-block animate-spin text-xs">
               ⏳
             </span>
           )}
         </span>
         <Button
           isIconOnly
+          aria-label={t("a11y.increase_quantity")}
           size="sm"
           variant="flat"
           color="primary"
@@ -301,6 +303,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
         className="rounded-full md:hidden"
         color="primary"
         isIconOnly
+        aria-label={t("a11y.add_to_cart")}
         onPress={handleInitialAdd}
         size="sm"
         isDisabled={isUpdating}

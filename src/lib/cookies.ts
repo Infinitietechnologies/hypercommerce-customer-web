@@ -58,8 +58,17 @@ export function getCookie<T>(name: string): T | null {
   const cookies = document.cookie
     .split(";")
     .reduce((acc: { [key: string]: string }, cookie: string) => {
-      const [key, value] = cookie.trim().split("=");
-      acc[key] = value;
+      // Split on the FIRST "=" only — a backend-set cookie is not necessarily
+      // encoded, and base64 or JSON values carry their own.
+      const trimmed = cookie.trim();
+      const separator = trimmed.indexOf("=");
+
+      if (separator === -1) return acc;
+
+      acc[decodeURIComponent(trimmed.slice(0, separator))] = trimmed.slice(
+        separator + 1
+      );
+
       return acc;
     }, {});
   try {

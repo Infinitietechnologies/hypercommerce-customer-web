@@ -9,9 +9,12 @@ import { Brand, PaginatedResponse } from "@/types/ApiResponse";
 import BrandCard from "@/components/Cards/BrandCard";
 import BrandCardSkeleton from "@/components/Skeletons/BrandCardSkeleton";
 import InfiniteScroll from "@/components/Functional/InfiniteScroll";
-import { useInfiniteData } from "@/hooks/useInfiniteData";
+import { STALE_TIME, useInfiniteData } from "@/hooks/useInfiniteData";
 import { NextPageWithLayout } from "@/types";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
+import NoProductsFound from "@/components/NoProductsFound";
+import { ArrowRight, Tag } from "lucide-react";
+import { Button, ErrorState } from "@/components/ui";
 import { loadTranslations } from "../../../i18n";
 import { useTranslation } from "react-i18next";
 import DynamicSEO from "@/SEO/DynamicSEO";
@@ -38,12 +41,14 @@ const BrandsPage: NextPageWithLayout<BrandsPageProps> = ({ initialBrands }) => {
     total,
     loadMore,
     refetch,
+    error: fetchError,
   } = useInfiniteData<Brand>({
     fetcher: getBrands,
     perPage: PER_PAGE,
     initialData: initialBrands?.data?.data || [],
     initialTotal: initialBrands?.data?.total || 0,
     dataKey: "brands-page",
+    staleTime: STALE_TIME.reference,
     extraParams: {
       scope_category_slug: router.query.slug as string,
     },
@@ -120,12 +125,40 @@ const BrandsPage: NextPageWithLayout<BrandsPageProps> = ({ initialBrands }) => {
           </div>
         )}
 
-        {brands.length > 0 && (
+        {brands.length > 0 ? (
           <InfiniteScrollStatus
             entityType={t("pages.brands.infiniteScroll")}
             total={total}
             hasMore={hasMore}
           />
+        ) : fetchError ? (
+          <ErrorState
+            title={t("something_went_wrong")}
+            description={t("content_load_error_message")}
+            retryLabel={t("try_again")}
+            onRetry={() => refetch()}
+          />
+        ) : (
+          !isLoading && (
+            <NoProductsFound
+              icon={Tag}
+              title={t("pages.brands.noBrands.title")}
+              description={t("pages.brands.noBrands.description")}
+              customActions={
+                <div className="flex w-full justify-center items-center">
+                  <Button
+                    color="primary"
+                    className="h-8"
+                    variant="solid"
+                    onPress={() => router.push("/")}
+                    endContent={<ArrowRight size={16} />}
+                  >
+                    {t("home_title")}
+                  </Button>
+                </div>
+              }
+            />
+          )
         )}
       </InfiniteScroll>
     </>

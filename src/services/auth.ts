@@ -18,13 +18,11 @@ export const verifyUser = async (params: {
   type: "email" | "mobile";
   value: string;
 }): Promise<ApiResponse<VerifyUserData>> => {
-  try {
-    const response = await api.post("/verify-user", params);
-    return response.data;
-  } catch (error) {
-    console.error("API error:", error);
-    return fallbackApiRes;
-  }
+  // Deliberately not caught: a failed request must not be indistinguishable
+  // from "this identifier is free" — the callers show a check-error instead.
+  const response = await api.post("/verify-user", params);
+
+  return response.data;
 };
 
 export const registerUser = async (params: RegisterUserParams) => {

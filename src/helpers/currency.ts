@@ -18,6 +18,9 @@ const DEFAULT_FORMAT: Required<Omit<MarketFormat, "grouping_style">> = {
   negative_format: "-{n}",
 };
 
+/** Shown instead of a fabricated 0 when the amount is absent or unparseable. */
+export const MISSING_AMOUNT = "—";
+
 /** Group the integer part with the given thousands separator (western style). */
 const groupThousands = (intDigits: string, separator: string): string =>
   intDigits.replace(/\B(?=(\d{3})+(?!\d))/g, separator || "");
@@ -32,9 +35,21 @@ export const formatCurrency = (
   symbol: string = "",
   format?: MarketFormat | null,
 ): string => {
-  const f = { ...DEFAULT_FORMAT, ...(format || {}) };
+  // A present-but-null field must not beat the default, so drop empties
+  // before the spread rather than guarding each read.
+  const supplied = Object.fromEntries(
+    Object.entries(format || {}).filter(
+      ([, value]) => value !== null && value !== undefined && value !== ""
+    )
+  );
+  const f = { ...DEFAULT_FORMAT, ...supplied };
   const num = Number(amount);
-  const safe = Number.isFinite(num) ? num : 0;
+
+  // A missing or unparseable amount is not zero — rendering it as one turns a
+  // failed fetch into a believable balance.
+  if (!Number.isFinite(num)) return MISSING_AMOUNT;
+
+  const safe = num;
 
   const negative = safe < 0;
   const abs = Math.abs(safe);

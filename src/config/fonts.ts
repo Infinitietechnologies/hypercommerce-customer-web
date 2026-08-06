@@ -1,17 +1,22 @@
 import localFont from "next/font/local";
+import { Plus_Jakarta_Sans } from "next/font/google";
 
-// Figtree is loaded globally from Google Fonts via the <link> in _document.tsx
-// and exposed to Tailwind through the `--font-sans` CSS variable (globals.css).
-// This plain descriptor keeps existing imports (e.g. `_app`'s `fonts` export)
-// resolving to the Figtree family without bundling a second, self-hosted copy.
-export const fontSans = {
-  className: "",
-  variable: "",
-  style: {
-    fontFamily:
-      '"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif',
-  },
-} as const;
+// The storefront sans. Exposed to Tailwind through the `--font-sans` variable,
+// which _app.tsx defines from this family.
+export const fontSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  fallback: [
+    "ui-sans-serif",
+    "system-ui",
+    "-apple-system",
+    "Segoe UI",
+    "Roboto",
+    "Arial",
+    "sans-serif",
+  ],
+});
 
 export const fontMono = localFont({
   src: "../assets/fonts/Figtree-VariableFont_wght.ttf",

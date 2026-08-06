@@ -1,6 +1,8 @@
 // components/HTMLRenderer.tsx
 
-import { FC } from "react";
+import { FC, useMemo } from "react";
+
+import { sanitizeHtml } from "@/helpers/sanitizeHtml";
 
 interface HTMLRendererProps {
   html: string;
@@ -8,10 +10,12 @@ interface HTMLRendererProps {
 }
 
 const HTMLRenderer: FC<HTMLRendererProps> = ({ html, className }) => {
+  const safeHtml = useMemo(() => sanitizeHtml(html), [html]);
+
   return (
     <div
       className={`html-content ${className ?? ""}`}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   );
 };

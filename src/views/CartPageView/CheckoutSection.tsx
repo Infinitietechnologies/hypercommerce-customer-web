@@ -10,22 +10,16 @@ import { updateCartData } from "@/helpers/updators";
 import {
   setPromoCode,
   setUseWallet,
-  setIdempotencyKey,
 } from "@/lib/redux/slices/checkoutSlice";
 import { clearCart } from "@/routes/api";
 import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
-import { handleCheckout } from "@/helpers/functionalHelpers";
+import { handleCheckout, ensureIdempotencyKey } from "@/helpers/functionalHelpers";
 
 interface CheckoutSectionProps {
   cart: CartResponse;
 }
-
-const genKey = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `idem_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
 const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
   const { t } = useTranslation();
@@ -122,7 +116,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
 
     setLoading(true);
     try {
-      dispatch(setIdempotencyKey(genKey()));
+      ensureIdempotencyKey(method);
       const res = await handleCheckout(method, {});
 
       if (!res?.success) {
@@ -130,6 +124,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
           title: res?.message || t("checkout.failed.title"),
           color: "danger",
         });
+        updateCartData(true, false);
         return;
       }
 
@@ -149,9 +144,9 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
         description: t("general.error.somethingWentWrong"),
         color: "danger",
       });
+      updateCartData(true, false);
     } finally {
       setLoading(false);
-      updateCartData(true, false);
     }
   };
 
@@ -324,10 +319,10 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
                       .map((it) => (
                         <div
                           key={it.cart_item_id}
-                          className="flex justify-between pl-2 text-danger"
+                          className="flex justify-between ps-2 text-danger"
                         >
                           <span>{it.product_name}</span>
-                          <span className="text-right">
+                          <span className="text-end">
                             {it.unfulfillable_reason ||
                               t("checkout.notAvailable", {
                                 defaultValue: "Not available",
@@ -353,7 +348,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
               {payment_summary.tax_breakdown?.map((tax) => (
                 <div
                   key={tax.tax_rate_id}
-                  className="flex justify-between pl-2 text-xs text-foreground/40"
+                  className="flex justify-between ps-2 text-xs text-foreground/40"
                 >
                   <span>
                     {tax.title} ({tax.rate}%)
@@ -565,7 +560,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
             defaultValue: "Cannot proceed to checkout",
           })}
           description={
-            <ul className="list-disc pl-5">
+            <ul className="list-disc ps-5">
               {validationErrors.map((error, index) => (
                 <li key={index}>{error}</li>
               ))}

@@ -450,6 +450,30 @@ export const handleUpdateOfflineCartItem = (params: {
   };
 };
 
+/**
+ * One idempotency key per checkout attempt, not per tap. The key is reused
+ * while the payment method is unchanged, so retrying after a timeout reaches
+ * the same order instead of creating a second one. Switching gateway mints a
+ * new key because that is a different order.
+ */
+export const ensureIdempotencyKey = (paymentMethod: string): string => {
+  const existing = store.getState()?.checkout?.idempotencyKey || "";
+
+  if (existing.startsWith(`${paymentMethod}|`)) {
+    return existing;
+  }
+
+  const random =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const key = `${paymentMethod}|${random}`;
+
+  store.dispatch(setIdempotencyKey(key));
+
+  return key;
+};
+
 export const resetCheckOutState = () => {
   store.dispatch(setPromoCode(""));
   store.dispatch(setUseWallet(false));

@@ -105,10 +105,10 @@ const WebMaintenanceMode: NextPageWithLayout<WebMaintenanceModeProps> = ({
             <Card isHoverable classNames={{ base: "p-4 w-full" }}>
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 bg-blue-100 dark:bg-blue-900">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center me-3 bg-blue-100 dark:bg-blue-900">
                     <Clock className="text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div className="text-left">
+                  <div className="text-start">
                     <p className="font-medium">
                       {t("maintenance.estimatedTimeTitle")}
                     </p>
@@ -123,10 +123,10 @@ const WebMaintenanceMode: NextPageWithLayout<WebMaintenanceModeProps> = ({
             <Card isHoverable classNames={{ base: "p-4 w-full" }}>
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mr-3 bg-green-100 dark:bg-green-900">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center me-3 bg-green-100 dark:bg-green-900">
                     <Settings className="text-green-600 dark:text-green-400" />
                   </div>
-                  <div className="text-left">
+                  <div className="text-start">
                     <p className="font-medium">{t("maintenance.workTitle")}</p>
                     <p className="text-sm text-foreground/50">
                       {t("maintenance.workDescription")}

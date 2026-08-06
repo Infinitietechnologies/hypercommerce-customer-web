@@ -15,6 +15,14 @@ export const maintenanceStore = {
   getState: (): MaintenanceState => maintenanceState,
 
   setMaintenance: (isActive: boolean, message: string | null = null) => {
+    // Every successful response calls this — notify only on a real transition.
+    if (
+      maintenanceState.isActive === isActive &&
+      maintenanceState.message === message
+    ) {
+      return;
+    }
+
     maintenanceState = {
       isActive,
       message,
