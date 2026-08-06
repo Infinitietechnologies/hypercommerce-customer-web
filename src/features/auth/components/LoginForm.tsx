@@ -2,7 +2,7 @@ import type { FormEvent } from "react";
 
 import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 
@@ -21,6 +21,10 @@ import {
 import { handleLoginUser } from "@/helpers/auth";
 import { looksLikeEmail } from "@/helpers/validator";
 import { useOtpLogin } from "@/features/auth/useOtpLogin";
+import useSWR from "swr";
+import { getSettings } from "@/routes/api";
+import { getSpecificSettings } from "@/helpers/getters";
+import type { Settings, SystemSettings } from "@/types/ApiResponse";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -48,14 +52,37 @@ const LoginForm = ({
 }: LoginFormProps) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  // AuthSheetHost is mounted in _app OUTSIDE the layout's SettingsProvider, so
+  // useSettings() would return defaults here. Read the shared "/settings" SWR
+  // cache (populated by the layout) to know whether demo mode is on.
+  const { data: settings } = useSWR<Settings | null>("/settings", async () => {
+    const res = await getSettings();
+    return res.data ?? null;
+  });
+  const demoMode = Boolean(
+    (getSpecificSettings(settings, "system") as SystemSettings | undefined)
+      ?.demoMode,
+  );
 
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
+  // Demo mode ships with a shared test account — prefill it so reviewers can
+  // sign in without knowing the credentials.
+  const [identifier, setIdentifier] = useState(demoMode ? "9000000000" : "");
+  const [password, setPassword] = useState(demoMode ? "12345678" : "");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
 
   const otp = useOtpLogin({ onSuccess });
+
+  // Prefill the shared demo account once demo mode is known (settings may load
+  // after this form mounts, so lazy state init alone can miss it).
+  const demoPrefilledRef = useRef(false);
+  useEffect(() => {
+    if (!demoMode || demoPrefilledRef.current) return;
+    demoPrefilledRef.current = true;
+    setIdentifier((v) => v || "9000000000");
+    setPassword((v) => v || "12345678");
+  }, [demoMode]);
 
   const onPasswordSubmit = useCallback(
     async (event: FormEvent) => {
