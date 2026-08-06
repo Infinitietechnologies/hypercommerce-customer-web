@@ -13,6 +13,7 @@ import type { Swiper as SwiperType } from "swiper";
 import { Product } from "@/types/ApiResponse";
 import { toggleFavorite, addToCart } from "@/routes/api";
 import { updateCartData } from "@/helpers/updators";
+import { handleOfflineAddToCart } from "@/helpers/functionalHelpers";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
@@ -105,12 +106,19 @@ const ProductCard: FC<ProductCardProps> = ({
   };
 
   const handleAddToCart = async () => {
+    if (!defaultVariant.id) return;
+
+    // Guests add to the local (offline) cart — same behaviour as the PDP — so
+    // they are not forced to log in just to build a cart.
     if (!isLoggedIn) {
-      document.getElementById("login-btn")?.click();
-      toast({ title: t("please_login"), color: "warning" });
+      handleOfflineAddToCart({
+        product,
+        variant: defaultVariant,
+        quantity: product.minimum_order_quantity || 1,
+        renderToast: true,
+      });
       return;
     }
-    if (!defaultVariant.id) return;
 
     setIsAddingToCart(true);
     try {
