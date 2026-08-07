@@ -12,7 +12,7 @@ Web Defects,11,11,done in local,loadTranslations awaits i18n.changeLanguage inst
 Web Defects,12,12,done in local,_document reads the i18nextLng cookie in getInitialProps and sets lang and dir server side
 Web Defects,13,13,done in local,Plus Jakarta Sans loaded through next/font/google in config/fonts.ts; the Figtree Google Fonts link and both preconnects removed from _document
 Web Defects,1,1,done in local,serverSideAuthGuard now runs first in getServerSideProps for /cart and /cart/checkout and /payment/[slug] so all three redirect server side like the account pages; isProtectedRoute matches by prefix so the withAuth fallback covers nested paths. A static export build has no getServerSideProps so the client wrapper stays the only guard in that mode.
-Web Security,01,CWEB-01,open,Panel-side - rate limit /verify-user and return a uniform response. No contained storefront fix; the probe is a panel contract.
+Web Security,,CWEB-01,Partially,"Rate limiting landed (user-exists limiter: 5/min per identifier, 10/min and 60/hour per IP). The uniform response is deliberately not done - it is an API contract change that would break the mobile signup flow, and /register leaks the same fact via unique:users,email. Same item as TC-AUTH-006."
 Web Security,02,CWEB-02,Already Working,useResendCooldown ships at src/features/auth/useResendCooldown.ts and both OTP forms gate resend on resendIn > 0. Row is stale. Panel throttle still the real bound.
 Web Security,03,CWEB-03,done in local,handleLogout now dispatches clearOfflineCart alongside clearCart and clearRecentlyViewed. The sync-failure branch still keeps items on purpose - clearing there would discard a guest cart on a transient failure; needs an owner call.
 Web Security,04,CWEB-04,Not Exploitable,Verified end to end. The order path never trusts the callback - OrderPaymentView onSuccess only sets phase waiting then polls getSpecificOrders until the panel reports payment_status completed which the webhook sets. The wallet path re-reads the balance from the server through updateUserDataInRedux. Panel side both webhooks verify an HMAC over the raw body with hash_equals and dedupe on ProcessedWebhookEvent. Residual - the wallet success toast fires before the balance is confirmed so it can read Recharged while the webhook is still in flight; cosmetic only.
@@ -78,3 +78,238 @@ Web Code Review,,51,Done in local,The checkout re-syncs its selected-address cop
 Web Code Review,,52,Done in local,A location change revalidates only market-scoped keys instead of every mounted SWR key.
 Web Code Review,,53,Done in local,"Anonymous server-side settings reads go through a 60-second per-market memo, so repeated SSR navigations stop re-fetching the payload."
 Web Code Review,,54,Done in local,"The cart refresh moved out of the finally block to the failure branches only, so a successful order no longer refetches after navigating away."
+Web Test Cases,,TC-AUTH-001,Pass,cart/checkout getServerSideProps calls serverSideAuthGuard; /cart is a PROTECTED_ROUTES prefix.
+Web Test Cases,,TC-AUTH-002,Pass,payment/[slug] guards in getServerSideProps.
+Web Test Cases,,TC-AUTH-003,Pass,Every my-account page guards server side.
+Web Test Cases,,TC-AUTH-010,Pass,login posts the payload as the request body.
+Web Test Cases,,TC-AUTH-011,Pass,register posts the payload as the request body.
+Web Test Cases,,TC-AUTH-012,Fail,Token is written through document.cookie so it stays JS-readable. Owner risk-accepted (code review #3).
+Web Test Cases,,TC-AUTH-013,Pass,The persist transform now strips both access_token and the user record; both are restored from the session cookies on rehydrate.
+Web Test Cases,,TC-AUTH-018,Pass,safeNext rejects absolute and protocol-relative values.
+Web Test Cases,,TC-CART-005,Pass,clearLocalSession dispatches clearOfflineCart on sign out.
+Web Test Cases,,TC-CART-006,Pass,Same clear runs before the next sign-in.
+Web Test Cases,,TC-CART-008,Pass,Rejected items are kept and surfaced (code review #17).
+Web Test Cases,,TC-CART-018,Pass,"Sync sends store_id, product_variant_id, quantity and addon ids only."
+Web Test Cases,,TC-CART-022,Pass,A market switch re-runs updateCartData through onLocationChange.
+Web Test Cases,,TC-CHK-001,Not applicable,The Razorpay handler posts nothing; capture is webhook-driven and signature+amount verified panel side.
+Web Test Cases,,TC-CHK-002,Not applicable,Same for Paystack - the client callback only navigates.
+Web Test Cases,,TC-CHK-003,Pass,Client success handlers only navigate; the paid state comes from the verified webhook.
+Web Test Cases,,TC-CHK-004,Pass,Stripe treats a missing payment intent as an error and calls onError.
+Web Test Cases,,TC-CHK-005,Pass,ensureIdempotencyKey reuses one key per attempt (code review #23).
+Web Test Cases,,TC-CHK-010,Pass,Address confirm calls resolveMarketForCountry then re-prices the cart.
+Web Test Cases,,TC-CHK-013,Pass,The checkout FormData carries no price or total.
+Web Test Cases,,TC-CHK-014,Needs runtime,Requires a live gateway session to compare shown vs charged.
+Web Test Cases,,TC-CHK-015,Pass,retryOrderPayment resolves the order by slug scoped to the caller user_id.
+Web Test Cases,,TC-WAL-001,Pass,Withdrawal requires balance - blocked_balance >= amount.
+Web Test Cases,,TC-WAL-002,Pass,"The wallet is resolved from the authenticated user, never from the payload."
+Web Test Cases,,TC-WAL-020,Pass,"The wallet debit runs inside the createOrder transaction, so a failed order rolls it back."
+Web Test Cases,,TC-ORD-004,Pass,"CreateItemReturnRequest enforces image, mimes and required-for-critical-reason panel side."
+Web Test Cases,,TC-ORD-005,Pass,getOrder scopes by user_id.
+Web Test Cases,,TC-ORD-006,Pass,cancelOrderItem and returnOrderItem scope through the order user_id.
+Web Test Cases,,TC-ORD-007,Pass,cancelReturnRequest scopes through the order user_id.
+Web Test Cases,,TC-ACC-007,Pass,"UpdateProfileRequest enforces image, mimes and max:2048 panel side."
+Web Test Cases,,TC-ACC-008,Pass,Profile SSR failure now renders ErrorState with retry (code review #27).
+Web Test Cases,,TC-ACC-009,Pass,initialData is null on failure so the form is never seeded from an empty object.
+Web Test Cases,,TC-ACC-012,Pass,UpdateProfileRequest allows only name and profile_image; extras are dropped by validated().
+Web Test Cases,,TC-ACC-013,Fail,"The account email is replaced before the new address is verified (code review CAPE-01, deferred by owner)."
+Web Test Cases,,TC-ACC-014,Pass,Address reads and writes scope by Auth::id().
+Web Test Cases,,TC-ACC-015,Pass,create overwrites user_id with Auth::id().
+Web Test Cases,,TC-ACC-018,Pass,Wishlist queries scope by auth()->id().
+Web Test Cases,,TC-CAT-001,Pass,"stores, categories/[slug], brands/[slug] and stores/[slug] now render ErrorState with retry from the hook error."
+Web Test Cases,,TC-CAT-002,Pass,useInfiniteData throws on an unsuccessful response so error is populated.
+Web Test Cases,,TC-CAT-010,Pass,next/image remotePatterns is an explicit https hostname allow-list.
+Web Test Cases,,TC-CAT-012,Pass,Store and promo HTML pass through sanitizeHtml (code review #38).
+Web Test Cases,,TC-CAT-013,Pass,The market is part of the SWR key.
+Web Test Cases,,TC-MKT-001,Pass,byActiveCode resolves only active markets; an unknown code falls through the chain.
+Web Test Cases,,TC-MKT-002,Pass,"Order placement now refuses when the request market does not serve the delivery address country, so the market that decides money follows the address rather than the client."
+Web Test Cases,,TC-MKT-003,Pass,validateMarketMatchesAddress checks the request market serves the address ISO2 (multi-market aware) and refuses with messages.market_address_mismatch otherwise.
+Web Test Cases,,TC-MKT-005,Pass,Address confirm switches market and invalidates the market-scoped keys.
+Web Test Cases,,TC-MKT-007,Pass,Listing cache keys carry the market.
+Web Test Cases,,TC-MKT-012,Pass,The interceptor sets X-Market on every request from the param or the cookie.
+Web Test Cases,,TC-MKT-013,Pass,No module imports axios for requests outside services/client.ts.
+Web Test Cases,,TC-MKT-014,Needs runtime,Currency consistency across a rendered page needs a browser check.
+Web Test Cases,,TC-SEO-001,Pass,"serializeJsonLd escapes <, > and &."
+Web Test Cases,,TC-SEO-002,Pass,The store page feeds its schema through the same emission point.
+Web Test Cases,,TC-SEO-003,Pass,DynamicSEO is the only ld+json emitter in src.
+Web Test Cases,,TC-SEO-012,Pass,HTMLRenderer sanitises before rendering.
+Web Test Cases,,TC-SEO-013,Pass,Store and product descriptions go through the same sanitiser.
+Web Test Cases,,TC-XC-001,Pass,"loadTranslations switches the language in getServerSideProps. Note: in static-export builds there is no SSR, so this holds only for the SSR build."
+Web Test Cases,,TC-AUTH-004,Pass,"withAuth returns null while the redirect is pending, so no protected chrome renders."
+Web Test Cases,,TC-AUTH-005,Pass,"isProtectedRoute prefix-matches, so nested routes inherit protection."
+Web Test Cases,,TC-AUTH-006,Fail,"verify-user answers exists true/false by design for the signup flow, so it is an enumeration oracle. Throttled by the user-exists limiter but not indistinguishable."
+Web Test Cases,,TC-AUTH-007,Pass,user-exists rate limiter is registered on the endpoint.
+Web Test Cases,,TC-AUTH-008,Pass,useResendCooldown gates the resend control for 60s.
+Web Test Cases,,TC-AUTH-009,Pass,otp-send limits 3/min and 10/hour per identifier plus 15/min per IP.
+Web Test Cases,,TC-AUTH-014,Pass,"clearLocalSession clears redux, cookies, the user-scoped localStorage keys and CacheStorage."
+Web Test Cases,,TC-AUTH-015,Pass,userLocation and homeCategory cookies are deleted on sign out.
+Web Test Cases,,TC-AUTH-016,Pass,The failure path runs the same cleanup (code review #4).
+Web Test Cases,,TC-AUTH-019,Pass,loginRedirect carries next and safeNext resolves it to a same-origin path.
+Web Test Cases,,TC-AUTH-022,Needs runtime,Requires driving each auth failure in a browser.
+Web Test Cases,,TC-AUTH-023,Needs runtime,Keyboard and focus-trap behaviour needs a browser.
+Web Test Cases,,TC-AUTH-025,Pass,The 401 branch calls handleLogout.
+Web Test Cases,,TC-CART-001,Pass,clampQuantity floors at minQuantity.
+Web Test Cases,,TC-CART-002,Pass,"The step remainder is computed from minQuantity, not zero."
+Web Test Cases,,TC-CART-003,Pass,The merge path routes the summed quantity through clampQuantity.
+Web Test Cases,,TC-CART-007,Pass,"Re-verified: a failed sync keeps the items so the cart is not lost, and sign-out clears the offline cart, so a later sign-in cannot inherit them."
+Web Test Cases,,TC-CART-009,Pass,Failed items live in the cartNotice slice and both modals are mounted globally in DefaultLayout (code review #22).
+Web Test Cases,,TC-CART-015,Pass,clampQuantity caps at maxQuantity and stock.
+Web Test Cases,,TC-CART-016,Pass,addOfflineCartItem merges into the existing line and re-clamps.
+Web Test Cases,,TC-CART-019,Pass,AttachmentUploader refuses oversized and unsupported files with a toast.
+Web Test Cases,,TC-CART-020,Needs runtime,Four-state check needs a browser.
+Web Test Cases,,TC-CART-021,Needs runtime,Toast and disabled-state behaviour needs a browser.
+Web Test Cases,,TC-CART-024,Needs runtime,Keyboard operation needs a browser.
+Web Test Cases,,TC-CART-025,Needs runtime,Debounce and settle behaviour needs a browser.
+Web Test Cases,,TC-CHK-006,Pass,ensureIdempotencyKey mints a new key when the payment method changes.
+Web Test Cases,,TC-CHK-007,Pass,The place-order button carries isLoading and isDisabled while in flight.
+Web Test Cases,,TC-CHK-008,Pass,The selected address re-syncs from the list (code review #51).
+Web Test Cases,,TC-CHK-009,Pass,A deleted address clears the checkout selection (code review #51).
+Web Test Cases,,TC-CHK-012,Pass,"The four Stripe strings resolve through paymentGateway.stripe.* keys in en, hi and ar."
+Web Test Cases,,TC-CHK-016,Pass,The panel promo_error is surfaced and the total comes from the recomputed cart.
+Web Test Cases,,TC-CHK-017,Pass,updateCartData recomputes the summary and shows the promo error.
+Web Test Cases,,TC-CHK-018,Pass,walletCoversAll bypasses the gateway selection.
+Web Test Cases,,TC-CHK-019,Pass,The remainder is computed by the panel from use_wallet; the client sends no amount.
+Web Test Cases,,TC-CHK-020,Needs runtime,Gateway cancel flow needs a live gateway.
+Web Test Cases,,TC-CHK-021,Needs runtime,Browser-back behaviour needs a browser.
+Web Test Cases,,TC-CHK-022,Pass,resetCheckOutState clears window.__cartAttachments after an order.
+Web Test Cases,,TC-CHK-023,Needs runtime,Four-state check needs a browser.
+Web Test Cases,,TC-CHK-024,Needs runtime,Keyboard and focus behaviour needs a browser.
+Web Test Cases,,TC-WAL-003,Pass,The panel refuses non-positive amounts and checks available balance.
+Web Test Cases,,TC-WAL-004,Pass,DepositModal parses with parseFloat and validates the parsed value; no hundred multiplication client side.
+Web Test Cases,,TC-WAL-008,Pass,The Razorpay amount is passed through from the panel payment_response.
+Web Test Cases,,TC-WAL-009,Pass,Order payments use pr.amount from the panel unchanged.
+Web Test Cases,,TC-WAL-010,Needs runtime,Requires a gateway round trip.
+Web Test Cases,,TC-WAL-011,Needs runtime,Requires suppressing a webhook.
+Web Test Cases,,TC-WAL-012,Pass,"A missing balance renders a skeleton while loading and a balance-unavailable message on failure, never a formatted zero."
+Web Test Cases,,TC-WAL-013,Needs runtime,Needs a market configured with a null decimal separator.
+Web Test Cases,,TC-WAL-016,Pass,Rows render the server formatted amount.
+Web Test Cases,,TC-WAL-019,Pass,Same wallet-covers-all path as TC-CHK-018.
+Web Test Cases,,TC-WAL-021,Needs runtime,Four-state check needs a browser.
+Web Test Cases,,TC-WAL-022,Needs runtime,Keyboard and announcement behaviour needs a browser.
+Web Test Cases,,TC-ORD-001,Pass,The panel enforces image and mimes on return evidence.
+Web Test Cases,,TC-ORD-002,Pass,CreateItemReturnRequest now caps return evidence at max:5120 with its own message.
+Web Test Cases,,TC-ORD-008,Pass,Return eligibility is enforced in OrderService before a return is created.
+Web Test Cases,,TC-ORD-009,Pass,The return quantity is clamped to the ordered quantity panel side.
+Web Test Cases,,TC-ORD-010,Pass,A critical reason code makes images required.
+Web Test Cases,,TC-ORD-014,Needs runtime,Paging behaviour needs a browser or API run.
+Web Test Cases,,TC-ORD-017,Needs runtime,Needs orders in every status.
+Web Test Cases,,TC-ORD-018,Needs runtime,Needs a live cancellation.
+Web Test Cases,,TC-ORD-019,Pass,cancelOrderItem refuses when is_cancelable is false.
+Web Test Cases,,TC-ORD-021,Needs runtime,Needs a cross-market reorder.
+Web Test Cases,,TC-ORD-022,Needs runtime,Four-state check needs a browser.
+Web Test Cases,,TC-ORD-023,Needs runtime,Keyboard behaviour needs a browser.
+Web Test Cases,,TC-ACC-001,Pass,"An absolute notification URL opens through window.open with noopener,noreferrer."
+Web Test Cases,,TC-ACC-002,Pass,isSafeNotificationUrl rejects protocol-relative and javascript: values.
+Web Test Cases,,TC-ACC-005,Pass,The panel enforces image and mimes on the avatar.
+Web Test Cases,,TC-ACC-006,Pass,The panel enforces max:2048 on the avatar.
+Web Test Cases,,TC-ACC-010,Pass,A visibilitychange effect refreshes the profile.
+Web Test Cases,,TC-ACC-011,Pass,The page now reads the user from Redux (code review #50).
+Web Test Cases,,TC-ACC-016,Pass,Deleting the selected address clears the checkout selection (code review #51).
+Web Test Cases,,TC-ACC-017,Pass,Every address mutation revalidates the cart-addresses keys.
+Web Test Cases,,TC-ACC-019,Needs runtime,Optimistic rollback needs a browser.
+Web Test Cases,,TC-ACC-021,Needs runtime,Four-state check needs a browser.
+Web Test Cases,,TC-ACC-023,Needs runtime,Keyboard and announcement behaviour needs a browser.
+Web Test Cases,,TC-CAT-003,Pass,An empty successful response still renders the empty state; only a thrown error takes the error path.
+Web Test Cases,,TC-CAT-009,Pass,remotePatterns is an explicit hostname allow-list.
+Web Test Cases,,TC-CAT-011,Pass,dangerouslyAllowSVG is paired with contentDispositionType attachment.
+Web Test Cases,,TC-CAT-018,Pass,The product page returns notFound: true for an unknown slug.
+Web Test Cases,,TC-CAT-019,Needs runtime,Variant selection needs a browser.
+Web Test Cases,,TC-CAT-020,Needs runtime,Out-of-stock add needs a browser.
+Web Test Cases,,TC-CAT-021,Needs runtime,URL round-trip needs a browser.
+Web Test Cases,,TC-CAT-022,Needs runtime,Debounced search needs a browser.
+Web Test Cases,,TC-CAT-023,Needs runtime,Infinite scroll needs a browser.
+Web Test Cases,,TC-CAT-024,Needs runtime,Four-state check needs a browser; note the listing error state gap recorded under TC-CAT-001.
+Web Test Cases,,TC-CAT-025,Needs runtime,Keyboard behaviour needs a browser.
+Web Test Cases,,TC-MKT-004,Partially,"A crafted ?market= link still changes the catalogue view for that one request - it sets no cookie and, since the order-time guard landed, cannot change what an order is priced at. Removing fromQuery from the panel resolution chain is a one-line change once you confirm no mobile client sends it."
+Web Test Cases,,TC-MKT-006,Pass,The header selector switches market and invalidates the market-scoped keys.
+Web Test Cases,,TC-MKT-009,Needs runtime,Needs a market with a null decimal separator.
+Web Test Cases,,TC-MKT-010,Needs runtime,Needs a response with a missing amount.
+Web Test Cases,,TC-MKT-011,Needs runtime,Format rules need a rendered check per market.
+Web Test Cases,,TC-MKT-015,Needs runtime,Needs a browser to catch an intermediate mixed state.
+Web Test Cases,,TC-MKT-016,Needs runtime,Needs a forced switch failure.
+Web Test Cases,,TC-MKT-018,Pass,The panel resolves country header then the configured default market.
+Web Test Cases,,TC-SEO-004,Pass,"The panel does not constrain the characters, but serializeJsonLd neutralises them at the single emission point, which the case allows."
+Web Test Cases,,TC-SEO-007,Pass,"robots.txt disallows api, my-account, cart, checkout, shopping-list, forgot-password, admin and redesign."
+Web Test Cases,,TC-SEO-014,Needs runtime,Per-page metadata needs a crawl of the built output.
+Web Test Cases,,TC-SEO-016,Needs runtime,Needs the production env to confirm the configured origin.
+Web Test Cases,,TC-SEO-020,Needs runtime,Needs a removed product.
+Web Test Cases,,TC-XC-002,Needs runtime,Needs three server responses to compare.
+Web Test Cases,,TC-XC-003,Needs runtime,Hydration flash needs a browser.
+Web Test Cases,,TC-XC-007,Pass,Plus Jakarta Sans is loaded through next/font/google and bound to --font-sans.
+Web Test Cases,,TC-XC-010,Pass,All physical spacing utilities were converted to logical ones (code review #44). Worth one visual confirm in Arabic.
+Web Test Cases,,TC-XC-012,Pass,Every shipped icon-only control carries an aria-label (code review #45).
+Web Test Cases,,TC-XC-014,Pass,An ErrorBoundary wraps the layout and renders ErrorState with retry (code review #46).
+Web Test Cases,,TC-XC-017,Partially,"A CSP now ships in the .htaccess as Content-Security-Policy-Report-Only, with the gateway, Firebase and panel origins allow-listed. It needs one browser pass with a clean console before the header is renamed to enforcing."
+Web Test Cases,,TC-XC-018,Pass,"HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy and CORP are all set in next.config headers() - in SSR mode."
+Web Test Cases,,TC-XC-019,Pass,"create-htaccess.js emits a mod_headers block mirroring the next.config security headers, so the static export serves them."
+Web Test Cases,,TC-XC-020,Pass,Sign out purges CacheStorage (code review #48).
+Web Test Cases,,TC-XC-021,Pass,"next-pwa now extends the default runtime caching with a NetworkOnly rule for /my-account, /cart, /payment and /shopping-list."
+Web Test Cases,,TC-XC-023,Needs runtime,Breakpoint checks need a browser.
+Web Test Cases,,TC-AUTH-017,Pass,"verifyUser deliberately does not catch, and both callers set a check-error field instead of treating a failure as available."
+Web Test Cases,,TC-AUTH-020,Pass,Firebase errors now resolve through i18n keys in all three locales (code review #16).
+Web Test Cases,,TC-AUTH-021,Needs runtime,Per-action loading states need a browser.
+Web Test Cases,,TC-AUTH-024,Needs runtime,RTL mirroring needs a browser; the logical-property sweep (#44) is the code-side prerequisite.
+Web Test Cases,,TC-CART-004,Pass,recalculateSummary runs off the clamped quantities after every merge.
+Web Test Cases,,TC-CART-010,Pass,"The persist allowlist covers auth, cart, offlineCart and recentlyViewed - cart is rehydrated but every read path refetches from the server on mount."
+Web Test Cases,,TC-CART-011,Pass,The empty-cart branch dispatches clearCart and resetCheckOutState and shows the empty toast.
+Web Test Cases,,TC-CART-012,Pass,"resetCheckOutState clears promo, wallet and the selected address."
+Web Test Cases,,TC-CART-013,Pass,Cart status messages go through i18n.t.
+Web Test Cases,,TC-CART-014,Pass,"The removed-items modal is mounted in DefaultLayout and opens off cart state, no longer a hidden button (code review #22)."
+Web Test Cases,,TC-CART-017,Pass,recalculateSummary adds the addon prices into the line subtotal.
+Web Test Cases,,TC-CART-023,Needs runtime,Breakpoint behaviour needs a browser.
+Web Test Cases,,TC-CHK-011,Pass,The bank-transfer modal opens off the cartNotice slice (openBankTransfer/closeBankTransfer); the hidden button and both getElementById click calls are gone.
+Web Test Cases,,TC-CHK-025,Needs runtime,Breakpoint behaviour needs a browser.
+Web Test Cases,,TC-WAL-005,Needs runtime,Paste handling needs a browser.
+Web Test Cases,,TC-WAL-006,Fail,"The ceiling is a fixed WALLET_MAX_RECHARGE constant, not a market-aware limit from settings - the panel exposes no wallet min/max (code review #33)."
+Web Test Cases,,TC-WAL-007,Pass,"DepositModal enforces WALLET_MIN_RECHARGE with its own translated message, matching the panel min:1."
+Web Test Cases,,TC-WAL-014,Pass,formatCurrency drops null and empty format fields before the spread so DEFAULT_FORMAT wins.
+Web Test Cases,,TC-WAL-015,Pass,"formatCurrency handles grouping, decimals, symbol position and the negative template."
+Web Test Cases,,TC-WAL-017,Needs runtime,Paging and filtering need a browser or API run.
+Web Test Cases,,TC-WAL-018,Pass,TransactionTable renders no_transactions_found for an empty list.
+Web Test Cases,,TC-ORD-003,Pass,ReturnSheet slices the accepted files to 5.
+Web Test Cases,,TC-ORD-011,Pass,SSR order errors now return codes resolved through translateErrorCode (code review #28).
+Web Test Cases,,TC-ORD-012,Pass,The invalid-identifier case returns SSR_ERROR_CODES.invalidOrderIdentifier and is translated at render.
+Web Test Cases,,TC-ORD-013,Pass,"The orders error state retries through mutate(), not a page reload."
+Web Test Cases,,TC-ORD-015,Needs runtime,Filter behaviour needs a browser.
+Web Test Cases,,TC-ORD-016,Needs runtime,Needs an account with no orders.
+Web Test Cases,,TC-ORD-020,Pass,"Reorder now sends the ordered quantity and addons, and failures are reported per item (code review CAPB-03)."
+Web Test Cases,,TC-ORD-024,Needs runtime,Breakpoint behaviour needs a browser.
+Web Test Cases,,TC-ACC-003,Pass,"FirebaseInitializer opens absolute notification links with window.open and noopener,noreferrer."
+Web Test Cases,,TC-ACC-004,Pass,getNotificationRedirectUrl maps typed notifications to internal routes and rejects unsafe values.
+Web Test Cases,,TC-ACC-020,Pass,"unreadCount is derived from the notification list, so marking one read decrements it."
+Web Test Cases,,TC-ACC-022,Pass,Address SSR errors return codes translated at render (code review #28).
+Web Test Cases,,TC-ACC-024,Needs runtime,Breakpoint behaviour needs a browser.
+Web Test Cases,,TC-CAT-004,Pass,The no-results copy interpolates the query into no_products_found_message.
+Web Test Cases,,TC-CAT-005,Pass,"The {{query}} placeholder is present in en, hi and ar."
+Web Test Cases,,TC-CAT-006,Pass,"pages.categories.subtitle reads ""Discover our complete collection of categories""."
+Web Test Cases,,TC-CAT-007,Pass,The brands listing renders NoProductsFound when the list is empty.
+Web Test Cases,,TC-CAT-008,Pass,The brands listing renders ErrorState with retry on failure.
+Web Test Cases,,TC-CAT-014,Pass,useInfiniteData sets dedupingInterval from the caller staleTime and disables focus revalidation.
+Web Test Cases,,TC-CAT-015,Pass,No console logging remains in the product page server render.
+Web Test Cases,,TC-CAT-016,Pass,"Corrected: the share route delegates to the canonical product getServerSideProps, which returns notFound: true for a removed product. The stale comment described a duplicate that had already been deleted."
+Web Test Cases,,TC-CAT-017,Needs runtime,Comparing the two routes needs a browser.
+Web Test Cases,,TC-MKT-008,Pass,A market change now revalidates only market-scoped keys instead of every mounted key (code review #52).
+Web Test Cases,,TC-MKT-017,Pass,"Sign-out now deletes the market cookie alongside user, access_token, userLocation and homeCategory."
+Web Test Cases,,TC-MKT-019,Pass,An empty successful listing takes the empty-state path; only a thrown error takes the error path.
+Web Test Cases,,TC-MKT-020,Needs runtime,Formatting inside RTL needs a browser.
+Web Test Cases,,TC-SEO-005,Pass,"_app emits robots noindex,nofollow for /redesign and /design-system and robots.txt disallows /redesign."
+Web Test Cases,,TC-SEO-008,Needs runtime,Requires crawling the generated sitemap.
+Web Test Cases,,TC-SEO-009,Pass,The static route list carries no delivery-zones entry.
+Web Test Cases,,TC-SEO-010,Needs runtime,Requires fetching each canonical.
+Web Test Cases,,TC-SEO-015,Needs runtime,Requires inspecting the rendered head per page.
+Web Test Cases,,TC-SEO-017,Needs runtime,Requires forcing a CMS fetch failure.
+Web Test Cases,,TC-SEO-018,Needs runtime,Visual containment needs a browser.
+Web Test Cases,,TC-SEO-019,Needs runtime,Requires running the emitted JSON-LD through a validator.
+Web Test Cases,,TC-XC-004,Pass,_document sets lang from the resolved language.
+Web Test Cases,,TC-XC-005,Pass,"_document sets dir, rtl for Arabic."
+Web Test Cases,,TC-XC-008,Pass,Fonts load through next/font; no Google Fonts stylesheet remains in _document.
+Web Test Cases,,TC-XC-015,Pass,A translated 500 page now exists alongside the ErrorBoundary (code review #46).
+Web Test Cases,,TC-XC-016,Pass,The custom 404 page renders for unknown routes.
+Web Test Cases,,TC-XC-022,Needs runtime,Service-worker update behaviour needs two deploys.
+Web Test Cases,,TC-XC-024,Needs runtime,Bundle composition needs an analyzer run.
+Web Test Cases,,TC-XC-025,Pass,DefaultLayout renders OfflinePage when the browser goes offline and recovers on reconnect.
+Web Test Cases,,TC-SEO-006,Pass,"_app emits robots noindex,nofollow for /design-system, and the build script disallows it alongside /redesign."
+Web Test Cases,,TC-SEO-011,Pass,next.config sets trailingSlash: true and the sitemap static routes use the same trailing-slash form.
+Web Test Cases,,TC-XC-006,Pass,"_app sets document lang and dir on every language change, so an in-session switch corrects both."
+Web Test Cases,,TC-XC-009,Pass,fonts.ts loads Plus Jakarta Sans as the sans face and Figtree only as --font-mono.
+Web Test Cases,,TC-XC-011,Pass,eslint no-restricted-syntax now errors on ml-/mr-/pl-/pr- in className string and template literals.
+Web Test Cases,,TC-XC-013,Partially,"jsx-a11y is now wired into the flat config and its recommended set runs. Six rules with pre-existing debt (44 violations: clickable divs, autofocus in dialogs, uncaptioned media) are warnings so the build stays green; every other a11y rule fails the build."

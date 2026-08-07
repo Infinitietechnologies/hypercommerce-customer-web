@@ -1,3 +1,4 @@
+import { openBankTransfer } from "@/lib/redux/slices/cartNoticeSlice";
 import { FC, useEffect, useState } from "react";
 import { CartResponse } from "@/types/ApiResponse";
 import { Button, Switch, toast, Divider, Alert } from "@/components/ui";
@@ -103,7 +104,7 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
 
     // Bank transfer opens its own dedicated modal.
     if (!walletCoversAll && selectedPayment === "directBankTransfer") {
-      document.getElementById("bank_transfer_modal_btn")?.click();
+      dispatch(openBankTransfer());
       return;
     }
 
@@ -120,10 +121,6 @@ const CheckoutSection: FC<CheckoutSectionProps> = ({ cart }) => {
       const res = await handleCheckout(method, {});
 
       if (!res?.success) {
-        toast({
-          title: res?.message || t("checkout.failed.title"),
-          color: "danger",
-        });
         updateCartData(true, false);
         return;
       }

@@ -1,3 +1,4 @@
+import { ErrorState } from "@/components/ui";
 import { GetServerSideProps } from "next";
 import { getProducts, getSettings, getSpecificStore } from "@/routes/api";
 import React, {
@@ -183,6 +184,7 @@ const StoreProductsPage: NextPageWithLayout<StoreProductsPageProps> = ({
     hasMore,
     total,
     loadMore,
+    error: listError,
     refetch,
   } = useInfiniteData<Product>({
     fetcher: (params) => getProducts({ ...params, store: slug }),
@@ -393,6 +395,15 @@ const StoreProductsPage: NextPageWithLayout<StoreProductsPageProps> = ({
             </div>
 
             <div className="flex-1">
+              {listError && (
+                <ErrorState
+                  title={t("errors.listing_load_failed")}
+                  description={t("errors.try_again_later")}
+                  retryLabel={t("common.retry")}
+                  onRetry={() => refetch()}
+                />
+              )}
+
               <InfiniteScroll
                 hasMore={hasMore}
                 isLoading={isLoadingMore}

@@ -451,7 +451,8 @@
       "invalid": "يجب أن يكون المبلغ رقمًا موجبًا",
       "message": "فشل في إضافة الرصيد",
       "positive": "يرجى إدخال رقم صحيح موجب",
-      "title": "خطأ"
+      "title": "خطأ",
+      "belowMinimum": "الحد الأدنى للشحن هو {{minimum}}."
     },
     "input": {
       "amount": {
@@ -1258,7 +1259,8 @@
       },
       "totalFound": "{{total}} من المعاملات تم العثور عليها",
       "availableBalance": "الرصيد المتاح",
-      "errorTitle": "تعذّر تحميل المعاملات"
+      "errorTitle": "تعذّر تحميل المعاملات",
+      "balanceUnavailable": "الرصيد غير متاح"
     },
     "wishlistsPage": {
       "confirmDelete": "هل أنت متأكد أنك تريد حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
@@ -2139,7 +2141,8 @@
     "orders_load_failed": "تعذر تحميل طلباتك. يرجى المحاولة لاحقاً.",
     "order_details_load_failed": "تعذر تحميل هذا الطلب. يرجى المحاولة لاحقاً.",
     "invalid_order_identifier": "رابط الطلب غير صالح.",
-    "addresses_load_failed": "تعذر تحميل عناوينك. يرجى المحاولة لاحقاً."
+    "addresses_load_failed": "تعذر تحميل عناوينك. يرجى المحاولة لاحقاً.",
+    "listing_load_failed": "تعذر تحميل هذه القائمة. يرجى المحاولة مرة أخرى."
   },
   "paymentGateway": {
     "invalidWalletOrder": "بيانات طلب المحفظة غير صالحة",
@@ -2156,7 +2159,13 @@
     "unexpected": "حدث خطأ غير متوقع.",
     "copied": "تم النسخ إلى الحافظة!",
     "copyFailed": "فشل النسخ",
-    "orderFailed": "فشل تقديم الطلب"
+    "orderFailed": "فشل تقديم الطلب",
+    "stripe": {
+      "notLoaded": "لم يتم تحميل Stripe بعد. يرجى المحاولة مرة أخرى.",
+      "formLoading": "لا يزال نموذج الدفع قيد التحميل. يرجى الانتظار.",
+      "unexpected": "حدث خطأ غير متوقع.",
+      "noIntent": "فشل الدفع. يرجى المحاولة مرة أخرى."
+    }
   },
   "cartStatus": {
     "emptyTitle": "السلة فارغة",

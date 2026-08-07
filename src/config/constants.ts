@@ -106,3 +106,9 @@ export const demoNumber = "9000000000";
  * replace it with the setting once the API carries one.
  */
 export const WALLET_MAX_RECHARGE = 1000000;
+
+/**
+ * Floor for a single wallet top-up, in the active market currency. Mirrors the
+ * panel's own `min:1` on the recharge request.
+ */
+export const WALLET_MIN_RECHARGE = 1;

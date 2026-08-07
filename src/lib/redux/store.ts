@@ -14,15 +14,20 @@ import { getCookie } from "@/lib/cookies";
 import type { AuthState } from "./slices/authSlice";
 
 /**
- * The bearer token never reaches localStorage — it is stripped on the way in
- * and restored from the session cookie on rehydrate, so a stored blob carries
- * no usable credential.
+ * Neither the bearer token nor the user record reaches localStorage — both are
+ * stripped on the way in and restored from the session cookies on rehydrate, so
+ * a stored blob carries no credential and no PII.
  */
 const stripAccessToken = createTransform<AuthState, AuthState>(
-  (inboundState: AuthState) => ({ ...inboundState, access_token: "" }),
+  (inboundState: AuthState) => ({
+    ...inboundState,
+    access_token: "",
+    user: null,
+  }),
   (outboundState: AuthState) => ({
     ...outboundState,
     access_token: (getCookie("access_token") as string) || "",
+    user: outboundState.user ?? getCookie<AuthState["user"]>("user") ?? null,
   }),
   { whitelist: ["auth"] },
 );

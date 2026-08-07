@@ -451,7 +451,8 @@
       "invalid": "Amount must be a positive number",
       "message": "Failed to add balance",
       "positive": "Please enter a positive integer",
-      "title": "Error"
+      "title": "Error",
+      "belowMinimum": "The minimum top-up is {{minimum}}."
     },
     "input": {
       "amount": {
@@ -1258,7 +1259,8 @@
       },
       "totalFound": "{{total}} Transactions Found",
       "availableBalance": "Available balance",
-      "errorTitle": "Couldn't load transactions"
+      "errorTitle": "Couldn't load transactions",
+      "balanceUnavailable": "Balance unavailable"
     },
     "wishlistsPage": {
       "confirmDelete": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
@@ -2140,7 +2142,8 @@
     "orders_load_failed": "We couldn't load your orders. Please try again later.",
     "order_details_load_failed": "We couldn't load this order. Please try again later.",
     "invalid_order_identifier": "That order link isn't valid.",
-    "addresses_load_failed": "We couldn't load your addresses. Please try again later."
+    "addresses_load_failed": "We couldn't load your addresses. Please try again later.",
+    "listing_load_failed": "We couldn't load this list. Please try again."
   },
   "paymentGateway": {
     "invalidWalletOrder": "Invalid wallet order data",
@@ -2157,7 +2160,13 @@
     "unexpected": "An unexpected error occurred.",
     "copied": "Copied to clipboard!",
     "copyFailed": "Failed to copy",
-    "orderFailed": "Failed to place order"
+    "orderFailed": "Failed to place order",
+    "stripe": {
+      "notLoaded": "Stripe hasn't loaded yet. Please try again.",
+      "formLoading": "The payment form is still loading. Please wait.",
+      "unexpected": "An unexpected error occurred.",
+      "noIntent": "Payment failed. Please try again."
+    }
   },
   "cartStatus": {
     "emptyTitle": "Cart is Empty",

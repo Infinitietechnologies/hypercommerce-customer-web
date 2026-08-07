@@ -62,13 +62,13 @@ const CheckoutForm: React.FC<{
 
       if (!stripe || !elements) {
         console.error("❌ Stripe or Elements not loaded");
-        setMessage("Stripe hasn't loaded yet. Please try again.");
+        setMessage(t("paymentGateway.stripe.notLoaded"));
         return;
       }
 
       if (!isReady) {
         console.error("❌ Payment form not ready");
-        setMessage("Payment form is still loading. Please wait...");
+        setMessage(t("paymentGateway.stripe.formLoading"));
         return;
       }
 
@@ -93,12 +93,12 @@ const CheckoutForm: React.FC<{
             title: error.message,
             color: "danger",
           });
-          setMessage(error.message || "An unexpected error occurred.");
+          setMessage(error.message || t("paymentGateway.stripe.unexpected"));
           return;
         }
 
         if (!paymentIntent) {
-          setMessage("Payment failed. No payment intent returned.");
+          setMessage(t("paymentGateway.stripe.noIntent"));
           onError();
           return;
         }

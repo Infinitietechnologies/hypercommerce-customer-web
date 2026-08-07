@@ -1,3 +1,4 @@
+import { openBankTransfer } from "@/lib/redux/slices/cartNoticeSlice";
 import { FC, useState } from "react";
 import { Sheet, Button, toast } from "@/components/ui";
 import PaymentMethods from "../PaymentMethods";
@@ -5,6 +6,7 @@ import { handleCheckout, ensureIdempotencyKey } from "@/helpers/functionalHelper
 import { useRouter } from "next/router";
 import { updateCartData } from "@/helpers/updators";
 import { useTranslation } from "react-i18next";
+import { useDispatch } from "react-redux";
 
 interface PaymentModalProps {
   open: boolean;
@@ -16,6 +18,7 @@ const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
+  const dispatch = useDispatch();
 
   const handleContinue = async () => {
     if (!selectedPayment) {
@@ -26,25 +29,18 @@ const PaymentModal: FC<PaymentModalProps> = ({ open, onOpenChange }) => {
     }
 
     if (selectedPayment === "directBankTransfer") {
-      document.getElementById("bank_transfer_modal_btn")?.click();
+      dispatch(openBankTransfer());
       return;
     }
 
     setIsLoading(true);
     try {
-      // Fresh idempotency key per submit — so switching the gateway always
-      // creates a new order with the chosen gateway (a double-tap is blocked
-      // by the disabled button, not by key reuse).
+      // One key per attempt: a retry reaches the same order, switching gateway
+      // mints a new one.
       ensureIdempotencyKey(selectedPayment);
 
       const res = await handleCheckout(selectedPayment, {});
-      if (!res?.success) {
-        toast({
-          title: res?.message || t("checkout.failed.title"),
-          color: "danger",
-        });
-        return;
-      }
+      if (!res?.success) return;
 
       const slug = res?.data?.slug;
       onOpenChange(false);

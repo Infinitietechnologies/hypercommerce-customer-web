@@ -259,7 +259,7 @@ const ProductCard: FC<ProductCardProps> = ({
               isLoading={isWishlistMode ? isWishlistRemoving : isTogglingFavorite}
               onPress={isWishlistMode ? onWishlistRemove : handleToggleFavorite}
               className="bg-content1 shadow-sm min-w-0 w-8 h-8 hover:text-danger transition-colors"
-              title={isWishlistMode ? t("delete") : t("pageTitle.wishlists")}
+              title={isWishlistMode ? t("delete") : t("pageTitle.wishlist")}
             >
               <Icon
                 icon={isWishlistMode || isFavorited ? "solar:heart-bold" : "solar:heart-linear"}

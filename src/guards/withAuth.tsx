@@ -24,6 +24,10 @@ export const withAuth = <P extends object>(
       }
     }, [isLoggedIn, router]);
 
+    if (!isLoggedIn && isProtectedRoute(router.pathname)) {
+      return null;
+    }
+
     return <WrappedComponent {...props} />;
   };
 };

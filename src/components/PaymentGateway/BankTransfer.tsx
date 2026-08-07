@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -14,8 +14,10 @@ import { useRouter } from "next/router";
 import { updateCartData } from "@/helpers/updators";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Copy } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setPromoCode } from "@/lib/redux/slices/checkoutSlice";
+import { closeBankTransfer } from "@/lib/redux/slices/cartNoticeSlice";
+import { RootState } from "@/lib/redux/store";
 import { useTranslation } from "react-i18next";
 
 const BankTransfer: FC<{
@@ -27,6 +29,18 @@ const BankTransfer: FC<{
   const { t } = useTranslation();
   const { paymentSettings } = useSettings();
   const { onOpen, onClose, isOpen, onOpenChange } = useDisclosure();
+  const requested = useSelector(
+    (state: RootState) => state.cartNotice.bankTransferOpen,
+  );
+
+  useEffect(() => {
+    if (requested) onOpen();
+  }, [requested, onOpen]);
+
+  const handleClose = () => {
+    dispatch(closeBankTransfer());
+    onClose();
+  };
 
   // Example bank details (you can fetch these from settings or API)
   const bankDetails = {
@@ -53,7 +67,7 @@ const BankTransfer: FC<{
       const res = await handleCheckout("directBankTransfer", {});
       if (res.success) {
         addToast({ title: t("paymentGateway.orderPlaced"), color: "success" });
-        onClose();
+        handleClose();
         await router.push("/my-account/orders");
         dispatch(setPromoCode(""));
       }
@@ -68,11 +82,6 @@ const BankTransfer: FC<{
 
   return (
     <>
-      <button
-        id="bank_transfer_modal_btn"
-        onClick={onOpen}
-        className="hidden"
-      />
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
@@ -176,7 +185,7 @@ const BankTransfer: FC<{
               </Button>
               <Button
                 variant="light"
-                onPress={onClose}
+                onPress={handleClose}
                 className="w-full"
                 isDisabled={isLoading}
               >

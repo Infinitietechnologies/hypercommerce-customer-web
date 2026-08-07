@@ -10,6 +10,17 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
+  // Authenticated screens must never reach the shared on-disk cache — the next
+  // person on this device would be served the previous account's pages.
+  extendDefaultRuntimeCaching: true,
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        urlPattern: /^\/(my-account|cart|payment|shopping-list)(\/|$)/,
+        handler: "NetworkOnly" as const,
+      },
+    ],
+  },
 });
 
 // Read package.json to get version

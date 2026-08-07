@@ -1,4 +1,7 @@
-import { WALLET_MAX_RECHARGE } from "@/config/constants";
+import {
+  WALLET_MAX_RECHARGE,
+  WALLET_MIN_RECHARGE,
+} from "@/config/constants";
 import React, { FormEvent, useState, useRef, useEffect } from "react";
 import {
   Modal,
@@ -79,6 +82,16 @@ const DepositModal = () => {
         setErrors((prev) => ({
           ...prev,
           amount: t("deposit.error.invalid"),
+        }));
+        return;
+      }
+
+      if (parsedAmount < WALLET_MIN_RECHARGE) {
+        setErrors((prev) => ({
+          ...prev,
+          amount: t("deposit.error.belowMinimum", {
+            minimum: WALLET_MIN_RECHARGE,
+          }),
         }));
         return;
       }

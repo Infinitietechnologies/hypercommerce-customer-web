@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { userData } from "@/types/ApiResponse";
+import { Skeleton } from "@/components/ui";
 import DepositModal from "../Modals/DepositModal";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation } from "react-i18next";
@@ -26,10 +27,18 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
   const { formatPrice } = useSettings();
   const { t } = useTranslation();
 
-  const { data: wallet } = useSWR("user-wallet", async () => {
+  const { data: wallet, isLoading: isWalletLoading } = useSWR("user-wallet", async () => {
     const res = await getWallet();
-    return res.success ? res.data : null;
+    if (!res.success) throw new Error(res.message || "Failed to load wallet");
+
+    return res.data;
   });
+
+  const resolvedBalance =
+    wallet?.formatted_balance ??
+    (typeof userData?.wallet_balance === "number"
+      ? formatPrice(userData.wallet_balance)
+      : null);
 
   const formattedId =
     userData?.id
@@ -55,11 +64,18 @@ const WalletCard: FC<WalletCardPageProps> = ({ loading = true }) => {
               <div className="text-xs text-default-500">
                 {t("pages.walletPage.availableBalance", "Available balance")}
               </div>
-              {!loading && (
-                <div className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
-                  {wallet?.formatted_balance ?? formatPrice(userData?.wallet_balance)}
-                </div>
-              )}
+              {!loading &&
+                (isWalletLoading && resolvedBalance === null ? (
+                  <Skeleton className="mt-1 h-8 w-28 rounded-medium" />
+                ) : resolvedBalance === null ? (
+                  <div className="text-sm font-medium text-danger">
+                    {t("pages.walletPage.balanceUnavailable")}
+                  </div>
+                ) : (
+                  <div className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+                    {resolvedBalance}
+                  </div>
+                ))}
             </div>
           </div>
           <DepositModal />
