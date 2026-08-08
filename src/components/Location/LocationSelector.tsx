@@ -20,6 +20,7 @@ import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 import { RootState } from "@/lib/redux/store";
 import { Address } from "@/types/ApiResponse";
+import { MapPin } from "lucide-react";
 
 type SelectedLocation = {
   placeName: string;
@@ -27,7 +28,7 @@ type SelectedLocation = {
   placeDescription: string;
 };
 
-const LocationSelector = () => {
+const LocationSelector = ({ variant = "desktop" }: { variant?: "desktop" | "mobile" }) => {
   const { defaultLocation, demoMode } = useSettings();
   const { t } = useTranslation();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
@@ -423,30 +424,30 @@ const LocationSelector = () => {
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={isCheckoutLocked ? undefined : onOpen}
-        disabled={!isInitialized || isCheckoutLocked}
-        className="flex max-w-full items-center gap-2 min-[1024px]:w-auto shrink-0 text-start transition-colors disabled:opacity-60
-          rounded-medium border border-shell-divider bg-transparent text-shell-foreground px-3.5 h-11 hover:border-primary"
-      >
-        <Icon
-          icon="solar:map-point-bold"
-          className="text-lg text-primary-500 shrink-0"
-        />
-        <span className="leading-tight min-w-0 flex-1 min-[1024px]:flex-none">
-          <span className="block text-xxs font-semibold text-shell-muted">
-            {t("locationSelector.deliverTo")}
-          </span>
-          <span className="block text-compact font-semibold truncate min-[1024px]:max-w-[150px] text-shell-foreground">
-            {getButtonText()}
-          </span>
-        </span>
-        <Icon
-          icon="solar:alt-arrow-down-linear"
-          className="text-base text-shell-muted shrink-0"
-        />
-      </button>
+      {variant === "desktop" ? (
+        <button
+          type="button"
+          onClick={isCheckoutLocked ? undefined : onOpen}
+          disabled={!isInitialized || isCheckoutLocked}
+          className="hidden min-w-0 items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-xs whitespace-nowrap transition-colors hover:border-primary/60 min-[1024px]:flex text-ink-foreground cursor-pointer"
+        >
+          <MapPin className="h-4 w-4 shrink-0 text-primary" />
+          <span className="truncate opacity-80">{getButtonText()}</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={isCheckoutLocked ? undefined : onOpen}
+          disabled={!isInitialized || isCheckoutLocked}
+          className="flex items-center justify-between w-full rounded-full bg-white/10 px-4 py-2 text-[13px] text-white hover:bg-white/15 transition-all cursor-pointer border border-white/5"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <MapPin className="h-4 w-4 shrink-0 text-primary" />
+            <span className="truncate opacity-90">{getButtonText()}</span>
+          </div>
+          <Icon icon="solar:alt-arrow-down-linear" className="text-sm shrink-0 opacity-70" />
+        </button>
+      )}
 
       <Sheet
         isOpen={isOpen}

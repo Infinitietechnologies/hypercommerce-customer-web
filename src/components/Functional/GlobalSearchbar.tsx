@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { Button, Input, useDisclosure } from "@/components/ui";
+import { useDisclosure } from "@/components/ui";
 import { Icon } from "@iconify/react";
 import useSWR from "swr";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -249,56 +249,19 @@ const GlobalSearchBar: React.FC = () => {
 
   return (
     <>
-      {/* New redesign search: a clean rounded field on the page surface with a
-          solar magnifier and grey placeholder — no button. Radius 14 (`md`),
-          hairline border that turns amber on hover/focus. The shopping-list
-          shortcut stays as a subtle trailing icon. */}
-      <div className="relative w-full overflow-hidden">
-        <Input
-          as={"div"}
-          radius="md"
-          variant="flat"
-          startContent={
-            <Icon
-              icon="solar:magnifer-linear"
-              className="text-default-500 text-xl shrink-0"
-            />
-          }
-          endContent={
-            <Button
-              title={t("userLayout.shoppingList")}
-              onPress={() => router.push("/shopping-list")}
-              isIconOnly
-              aria-label={t("userLayout.shoppingList")}
-              radius="full"
-              className="p-0 min-w-8 w-8 h-8 bg-transparent shrink-0"
-            >
-              <Icon
-                icon="solar:clipboard-text-linear"
-                className="text-xl text-default-500"
-              />
-            </Button>
-          }
-          onClick={onOpen}
-          readOnly
-          className="cursor-pointer"
-          classNames={{
-            inputWrapper:
-              "bg-background border border-divider h-12 pe-1 data-[focus=true]:border-primary data-[hover=true]:border-primary shadow-none",
-            input: "text-sm font-medium",
-          }}
+      <div
+        onClick={onOpen}
+        className="relative flex w-full cursor-pointer items-center h-10 px-4 rounded-full bg-white/10 border border-white/10 hover:border-primary/60 transition-colors gap-2"
+      >
+        <Icon
+          icon="solar:magnifer-linear"
+          className="text-white/70 text-lg shrink-0"
         />
 
-        {/* Animated placeholder text — vertically centred on the field via a
-            full-height flex wrapper (stays centred regardless of the input's
-            label slot); the inner span carries the enter/exit motion. */}
-        <span
-          aria-hidden
-          className="absolute inset-y-0 left-12 right-12 flex items-center overflow-hidden pointer-events-none"
-        >
+        <div className="relative flex-1 min-w-0 h-5 overflow-hidden pointer-events-none">
           <span
             key={placeholderIndex}
-            className="truncate text-default-500 text-sm font-medium leading-none
+            className="absolute inset-0 truncate text-white/60 text-sm font-medium leading-5
               transition-all duration-600 ease-in-out"
             style={{
               transform: `translateY(${animationState === "enter" ? "20px" : animationState === "exit" ? "-20px" : "0px"})`,
@@ -309,7 +272,22 @@ const GlobalSearchBar: React.FC = () => {
               .replace(/_/g, " ")
               .replace(/\b\w/g, (c) => c.toUpperCase()) || "Search"}
           </span>
-        </span>
+        </div>
+
+        <button
+          title={t("userLayout.shoppingList")}
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push("/shopping-list");
+          }}
+          aria-label={t("userLayout.shoppingList")}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+        >
+          <Icon
+            icon="solar:clipboard-text-linear"
+            className="text-xl"
+          />
+        </button>
       </div>
 
       <SearchModal

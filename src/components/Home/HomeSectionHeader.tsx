@@ -1,8 +1,7 @@
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
-
-import { Link } from "@/components/ui";
+import Link from "next/link";
 
 interface HomeSectionHeaderProps {
   title: string;
@@ -20,10 +19,10 @@ const HomeSectionHeader: FC<HomeSectionHeaderProps> = ({ title, seeAllHref, ligh
   const { t } = useTranslation();
 
   return (
-    <div className="mb-2.5 sm:mb-4 flex items-center justify-between gap-3">
+    <div className="mb-4 sm:mb-6 flex items-end justify-between gap-4">
       <h2
-        className={`text-[15px] sm:text-[19px] font-semibold leading-tight capitalize ${
-          light ? "text-white" : "text-foreground"
+        className={`font-display text-lg sm:text-2xl font-bold tracking-tight leading-none capitalize ${
+          light ? "text-white" : "text-zinc-900"
         }`}
       >
         {title}
@@ -32,14 +31,14 @@ const HomeSectionHeader: FC<HomeSectionHeaderProps> = ({ title, seeAllHref, ligh
         <Link
           href={seeAllHref}
           title={t("see_all")}
-          className={`shrink-0 inline-flex items-center gap-0.5 text-xs sm:text-compact font-semibold ${
-            light ? "text-white" : "text-primary-600"
+          className={`group shrink-0 inline-flex items-center gap-1 text-xs sm:text-sm font-bold transition-all hover:opacity-85 ${
+            light ? "text-white" : "text-primary"
           }`}
         >
           {t("see_all")}
           <Icon
             icon="solar:arrow-right-linear"
-            className="text-sm transition-transform group-hover:translate-x-0.5 rtl:rotate-180"
+            className="text-xs sm:text-sm transition-transform group-hover:translate-x-0.5 rtl:rotate-180"
           />
         </Link>
       ) : null}

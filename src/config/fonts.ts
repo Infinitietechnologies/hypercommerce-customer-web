@@ -1,11 +1,27 @@
 import localFont from "next/font/local";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Sans, Space_Grotesk } from "next/font/google";
 
 // The storefront sans. Exposed to Tailwind through the `--font-sans` variable,
 // which _app.tsx defines from this family.
-export const fontSans = Plus_Jakarta_Sans({
+export const fontSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  fallback: [
+    "ui-sans-serif",
+    "system-ui",
+    "-apple-system",
+    "Segoe UI",
+    "Roboto",
+    "Arial",
+    "sans-serif",
+  ],
+});
+
+// The display font for headings, titles etc.
+export const fontDisplay = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
   display: "swap",
   fallback: [
     "ui-sans-serif",
@@ -28,3 +44,4 @@ export const fontMono = localFont({
   adjustFontFallback: "Arial",
   fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });
+

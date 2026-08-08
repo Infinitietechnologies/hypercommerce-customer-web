@@ -19,6 +19,7 @@ const config: import("tailwindcss").Config = {
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
+        display: ["var(--font-display)"],
       },
       fontSize: {
         tiny: "0.4375rem", // 7px
@@ -63,6 +64,16 @@ const config: import("tailwindcss").Config = {
         "shell-muted": shell.muted,
         "shell-divider": shell.divider,
         "shell-surface": shell.surface,
+        ink: "var(--ink, oklch(0.2 0.012 70))",
+        "ink-foreground": "var(--ink-foreground, oklch(0.98 0.004 95))",
+        "tint-grape": "var(--tint-grape)",
+        "tint-mint": "var(--tint-mint)",
+        "tint-butter": "var(--tint-butter)",
+        "tint-blush": "var(--tint-blush)",
+        "tint-sky": "var(--tint-sky)",
+        "tint-peach": "var(--tint-peach)",
+        "tint-lilac": "var(--tint-lilac)",
+        "tint-sand": "var(--tint-sand)",
       },
       screens: {
         xxs: "320px",

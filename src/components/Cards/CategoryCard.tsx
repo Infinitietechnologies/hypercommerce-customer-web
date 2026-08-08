@@ -1,7 +1,6 @@
-import { useScreenType } from "@/hooks/useScreenType";
 import { trackCategoryView } from "@/lib/analytics";
 import { Category } from "@/types/ApiResponse";
-import { Card, Image } from "@heroui/react";
+import { Image } from "@heroui/react";
 import Link from "next/link";
 import { FC, memo } from "react";
 
@@ -9,58 +8,100 @@ interface CategoryCardProps {
   category: Category;
 }
 
+const TINTS = [
+  "bg-tint-mint",
+  "bg-tint-sky",
+  "bg-tint-butter",
+  "bg-tint-peach",
+  "bg-tint-blush",
+  "bg-tint-lilac",
+  "bg-tint-grape",
+  "bg-tint-sand",
+];
+
+const getTint = (slug: string) => {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = slug.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % TINTS.length;
+  return TINTS[index];
+};
+
+import { Icon } from "@iconify/react";
+
 /**
- * Category card — new amber redesign: white surface, hairline border, 18px
- * radius, soft shadow that lifts and turns amber on hover.
- * (Source: /redesign cards `CategoryCard`.)
+ * Category card — slim pill style layout with icon fallback circle container.
  */
 const CategoryCard: FC<CategoryCardProps> = ({ category }) => {
   const link = category?.parent_slug
     ? `/categories/${category.parent_slug}?subcategory=${category.slug}`
     : `/categories/${category.slug}`;
 
-  const screen = useScreenType();
+  const tint = getTint(category.slug || category.title || "");
+  const count = category.product_count ?? (category as any).products_count;
+
+  const isUrl = (str: string) =>
+    str.startsWith("http://") || str.startsWith("https://") || str.startsWith("/");
+
+  const renderIcon = () => {
+    const iconStr = category.icon || "";
+    const imageStr = category.image || "";
+
+    if (iconStr) {
+      if (isUrl(iconStr)) {
+        return (
+          <Image
+            src={iconStr}
+            alt={category.title}
+            className="h-6 w-6 object-contain"
+            loading="eager"
+            removeWrapper
+          />
+        );
+      } else {
+        return <Icon icon={iconStr} className="text-xl text-zinc-950" />;
+      }
+    }
+
+    if (imageStr) {
+      return (
+        <Image
+          src={imageStr}
+          alt={category.title}
+          className="h-6 w-6 object-contain"
+          loading="eager"
+          removeWrapper
+        />
+      );
+    }
+
+    return <Icon icon="solar:widget-2-linear" className="text-xl text-zinc-950" />;
+  };
 
   return (
-    <div className="flex flex-col items-center w-full min-w-0 px-1 py-1 sm:py-2">
-      <div
-        className="w-full max-w-full overflow-hidden rounded-large border border-divider bg-content1
-           transition-all duration-200 hover:border-primary hover:shadow-md"
+    <div className="flex flex-col items-center w-full min-w-0 px-1 py-1">
+      <Link
+        href={link}
+        title={category.title}
+        onClick={() => trackCategoryView(category?.id?.toString(), category?.title)}
+        className={`group relative flex items-center justify-between w-full h-[68px] sm:h-[76px] rounded-3xl px-4 sm:px-5 overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer ${tint}`}
       >
-        <Card
-          className="relative w-full aspect-[4/4.8] sm:aspect-[4/5] border-none bg-transparent"
-          shadow="none"
-          isPressable={screen !== "mobile"}
-          as={Link}
-          href={link}
-          title={category.title}
-          onPress={() =>
-            trackCategoryView(category?.id?.toString(), category?.title)
-          }
-        >
-          <div className="absolute top-3 start-3 end-1 sm:top-4 sm:start-4 z-20 text-start pe-1">
-            <h2
-              title={category.title}
-              className="text-[13px] sm:text-[14px] font-bold text-foreground leading-[1.2] break-words line-clamp-2 max-w-[90%]"
-            >
-              {category.title}
-            </h2>
-          </div>
+        <div className="flex flex-col text-left justify-center min-w-0 z-10 max-w-[62%]">
+          <span className="block truncate font-display text-sm sm:text-base font-bold text-zinc-900 leading-tight">
+            {category.title}
+          </span>
+          {count !== undefined && (
+            <span className="text-[11px] sm:text-xs text-zinc-500 mt-1 font-semibold">
+              {count} items
+            </span>
+          )}
+        </div>
 
-          <div className="absolute bottom-0 end-0 w-full h-[70%] flex justify-end items-end z-10">
-            <Image
-              src={category.image}
-              alt={category.title}
-              className="max-w-[95%] max-h-[95%] object-contain drop-shadow-md"
-              classNames={{
-                img: "object-contain block",
-              }}
-              loading="eager"
-              removeWrapper
-            />
-          </div>
-        </Card>
-      </div>
+        <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 shadow-sm transition-transform duration-300 group-hover:scale-110 z-10">
+          {renderIcon()}
+        </div>
+      </Link>
     </div>
   );
 };

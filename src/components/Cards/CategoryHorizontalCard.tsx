@@ -1,57 +1,103 @@
 import { FC, memo } from "react";
-
-import { Image, Link } from "@/components/ui";
+import { Image } from "@heroui/react";
+import Link from "next/link";
 import { trackCategoryView } from "@/lib/analytics";
 import { Category } from "@/types/ApiResponse";
 import { categoryHref } from "@/helpers/homeLayout";
+
+import { Icon } from "@iconify/react";
 
 interface CategoryHorizontalCardProps {
   category: Category;
 }
 
-/** Paired pastel tint + matching darker title colour, cycled per category. */
 const TINTS = [
-  { bg: "bg-warning-100", text: "text-primary-700" },
-  { bg: "bg-secondary-100", text: "text-secondary-700" },
-  { bg: "bg-success-100", text: "text-success-700" },
-  { bg: "bg-warning-100", text: "text-warning-700" },
-  { bg: "bg-danger-100", text: "text-danger-700" },
+  "bg-tint-mint",
+  "bg-tint-sky",
+  "bg-tint-butter",
+  "bg-tint-peach",
+  "bg-tint-blush",
+  "bg-tint-lilac",
+  "bg-tint-grape",
+  "bg-tint-sand",
 ];
+
+const getTint = (slug: string) => {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) {
+    hash = slug.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % TINTS.length;
+  return TINTS[index];
+};
 
 /**
  * Category — `full` style: a soft colored tile with the title pinned top-start
  * and the product image resting in the lower-end corner. Background and title
- * colours come from the category's own theme (`background_color` / `font_color`),
- * falling back to a pastel tint cycled per category so the row stays colourful.
+ * colours come from the category's own theme, falling back to a pastel tint.
  */
 const CategoryHorizontalCard: FC<CategoryHorizontalCardProps> = ({ category }) => {
-  const tint = TINTS[(category.id ?? 0) % TINTS.length];
+  const tint = getTint(category.slug || category.title || "");
+  const count = category.product_count ?? (category as any).products_count;
+
+  const isUrl = (str: string) =>
+    str.startsWith("http://") || str.startsWith("https://") || str.startsWith("/");
+
+  const renderIcon = () => {
+    const iconStr = category.icon || "";
+    const imageStr = category.image || "";
+
+    if (iconStr) {
+      if (isUrl(iconStr)) {
+        return (
+          <Image
+            src={iconStr}
+            alt={category.title}
+            className="h-6 w-6 object-contain"
+            loading="eager"
+            removeWrapper
+          />
+        );
+      } else {
+        return <Icon icon={iconStr} className="text-xl text-zinc-950" />;
+      }
+    }
+
+    if (imageStr) {
+      return (
+        <Image
+          src={imageStr}
+          alt={category.title}
+          className="h-6 w-6 object-contain"
+          loading="eager"
+          removeWrapper
+        />
+      );
+    }
+
+    return <Icon icon="solar:widget-2-linear" className="text-xl text-zinc-950" />;
+  };
 
   return (
     <Link
       href={categoryHref(category)}
       title={category.title}
-      onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
-      className={`group relative block aspect-[16/10] overflow-hidden rounded-large
-         transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md
-        ${tint.bg}`}
+      onClick={() => trackCategoryView(category?.id?.toString(), category?.title)}
+      className={`group relative flex items-center justify-between w-full h-[68px] sm:h-[76px] rounded-3xl px-4 sm:px-5 overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer ${tint}`}
     >
-      <div className="relative z-10 max-w-[55%] p-3 sm:p-4">
-        <div
-          className={`line-clamp-3 text-sm sm:text-lg font-bold leading-tight ${tint.text}`}
-        >
+      <div className="flex flex-col text-left justify-center min-w-0 z-10 max-w-[62%]">
+        <span className="block truncate font-display text-sm sm:text-base font-bold text-zinc-900 leading-tight">
           {category.title}
-        </div>
+        </span>
+        {count !== undefined && (
+          <span className="text-[11px] sm:text-xs text-zinc-500 mt-1 font-semibold">
+            {count} items
+          </span>
+        )}
       </div>
 
-      <div className="pointer-events-none absolute inset-y-0 end-0 flex w-[58%] items-end justify-end p-2">
-        <Image
-          alt={category.title}
-          src={category.image || category.banner || ""}
-          removeWrapper
-          loading="eager"
-          className="max-h-full max-w-full object-contain transition-transform duration-200 group-hover:scale-105"
-        />
+      <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 shadow-sm transition-transform duration-300 group-hover:scale-110 z-10">
+        {renderIcon()}
       </div>
     </Link>
   );

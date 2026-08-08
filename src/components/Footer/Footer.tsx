@@ -32,12 +32,12 @@ const LinkColumn = ({
   links: { label: string; href: string }[];
 }) => (
   <div>
-    <h2 className="text-compact font-bold text-shell-foreground mb-3.5">{header}</h2>
+    <h3 className="font-display text-sm font-semibold tracking-wide uppercase text-ink-foreground mb-4">{header}</h3>
     <div className="flex flex-col gap-2.5">
       {links.map(({ label, href }) => (
         <Link
           key={label}
-          className="text-compact text-shell-muted hover:text-primary-500 transition-colors"
+          className="text-sm text-ink-foreground/70 hover:text-primary transition-colors"
           href={href}
           title={label}
         >
@@ -111,9 +111,9 @@ const Footer: FC = () => {
   ].filter((s) => s.href);
 
   return (
-    <footer className="w-full border-t border-shell-divider bg-shell-surface">
-      <div className="w-full max-w-site mx-auto px-4 sm:px-6 pt-10 pb-7">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-7">
+    <footer className="w-full bg-ink text-ink-foreground border-t border-white/10">
+      <div className="w-full max-w-site mx-auto px-4 sm:px-6 pt-12 pb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Company */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" title={t("nav.home")}>
@@ -124,22 +124,22 @@ const Footer: FC = () => {
                 src={siteHeaderDarkLogo}
               />
             </Link>
-            <p className="text-xs text-shell-muted leading-relaxed mt-3 max-w-xs">
+            <p className="text-xs text-ink-foreground/70 leading-relaxed mt-4 max-w-xs">
               {shortDescription}
             </p>
-            <div className="flex flex-col gap-2 mt-4">
+            <div className="flex flex-col gap-2.5 mt-5">
               <a
-                className="flex items-center gap-2 text-sm text-shell-muted hover:text-primary-500 transition-colors"
+                className="flex items-center gap-2 text-sm text-ink-foreground/70 hover:text-primary transition-colors"
                 href={`tel:${supportNumber}`}
               >
-                <Icon className="text-lg text-primary-500" icon="solar:phone-linear" />
+                <Icon className="text-lg text-primary" icon="solar:phone-linear" />
                 {supportNumber}
               </a>
               <a
-                className="flex items-center gap-2 text-sm text-shell-muted hover:text-primary-500 transition-colors"
+                className="flex items-center gap-2 text-sm text-ink-foreground/70 hover:text-primary transition-colors"
                 href={`mailto:${supportEmail}`}
               >
-                <Icon className="text-lg text-primary-500" icon="solar:letter-linear" />
+                <Icon className="text-lg text-primary" icon="solar:letter-linear" />
                 {supportEmail}
               </a>
             </div>
@@ -150,16 +150,16 @@ const Footer: FC = () => {
 
           {/* Social + trust */}
           <div>
-            <h2 className="text-compact font-bold text-shell-foreground mb-3.5">
+            <h3 className="font-display text-sm font-semibold tracking-wide uppercase text-ink-foreground mb-4">
               {t("footer.social.follow_us")}
-            </h2>
+            </h3>
             {socials.length > 0 && (
-              <div className="flex items-center gap-2.5 mb-5">
+              <div className="flex items-center gap-2.5 mb-6">
                 {socials.map((s) => (
                   <a
                     key={s.label}
                     aria-label={s.label}
-                    className="grid place-items-center w-9 h-9 rounded-full border border-shell-divider bg-shell-surface text-shell-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground transition-colors"
+                    className="grid place-items-center w-9 h-9 rounded-full border border-white/10 bg-white/5 text-ink-foreground hover:bg-primary hover:border-primary hover:text-zinc-950 transition-colors"
                     href={s.href as string}
                     rel="noopener noreferrer"
                     target="_blank"
@@ -177,17 +177,17 @@ const Footer: FC = () => {
                 ))}
               </div>
             )}
-            <div className="flex flex-col gap-2 text-xs text-shell-muted">
+            <div className="flex flex-col gap-2 text-xs text-ink-foreground/70">
               <span className="flex items-center gap-2">
-                <Icon className="text-base text-primary-500" icon="solar:box-linear" />
+                <Icon className="text-base text-primary" icon="solar:box-linear" />
                 {t("footer.company_info.quality")}
               </span>
               <span className="flex items-center gap-2">
-                <Icon className="text-base text-primary-500" icon="solar:shield-check-linear" />
+                <Icon className="text-base text-primary" icon="solar:shield-check-linear" />
                 {t("footer.company_info.secure")}
               </span>
               <span className="flex items-center gap-2">
-                <Icon className="text-base text-primary-500" icon="solar:verified-check-linear" />
+                <Icon className="text-base text-primary" icon="solar:verified-check-linear" />
                 {t("footer.company_info.trusted")}
               </span>
             </div>
@@ -195,23 +195,23 @@ const Footer: FC = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 pt-5.5 border-t border-shell-divider flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-shell-muted">
+        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-ink-foreground/60">
             <span>
               &copy; {new Date().getFullYear()} {siteCopyright}
             </span>
             <Chip
-              className="h-5 px-1 text-xs bg-shell-surface text-shell-foreground"
+              className="h-5 px-2 text-[10px] bg-white/10 text-ink-foreground border-none"
               radius="sm"
               size="sm"
             >
               {`V ${version}`}
             </Chip>
           </div>
-          <div className="text-xs text-shell-muted">
+          <div className="text-xs text-ink-foreground/60">
             {t("footer.bottom_bar.powered_by")}{" "}
             <a
-              className="text-primary-500 hover:text-primary-400 font-semibold"
+              className="text-primary hover:text-primary/80 transition-colors font-semibold"
               href="https://infinitietech.com/"
               rel="noopener noreferrer"
               target="_blank"

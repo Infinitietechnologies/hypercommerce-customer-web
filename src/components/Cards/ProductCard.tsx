@@ -331,26 +331,26 @@ const ProductCard: FC<ProductCardProps> = ({
 
         <Link
           href={productHref}
-          className="truncate text-[13px] sm:text-sm font-semibold leading-snug"
+          className="line-clamp-2 text-sm font-medium leading-snug hover:text-primary transition-colors min-h-[40px] text-zinc-800"
           title={product.title}
           onClick={handleAdClick}
         >
           {product.title ?? t("untitled_product")}
         </Link>
 
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-[15px] sm:text-lg font-bold leading-none">
+        <div className="flex items-baseline gap-2 flex-wrap mt-auto">
+          <span className="font-display text-base sm:text-lg font-bold leading-none text-zinc-900">
             {hasDiscount
               ? (defaultVariant.formatted_special_price ?? formatPrice(specialPrice))
               : (defaultVariant.formatted ?? formatPrice(price))}
           </span>
           {hasDiscount && (
-            <span className="text-[11px] sm:text-[13px] text-default-400 line-through">
+            <span className="text-xs text-zinc-400 line-through">
               {defaultVariant.formatted ?? formatPrice(price)}
             </span>
           )}
           {discountPercentage > 0 && (
-            <span className="text-[11px] sm:text-[13px] font-semibold text-success">
+            <span className="text-xs font-bold text-success">
               {t("discount", { percent: discountPercentage })}
             </span>
           )}
@@ -358,9 +358,8 @@ const ProductCard: FC<ProductCardProps> = ({
 
         {showAddToCart && (
           <Button
-            color="primary"
-            radius="lg"
-            className="mt-auto w-full font-medium"
+            radius="full"
+            className="w-full font-semibold brand-gradient text-primary-foreground hover:brightness-105 active:scale-[0.98] transition-all text-sm py-2 px-4"
             isLoading={isAddingToCart}
             onPress={handleAddToCart}
             startContent={isAddingToCart ? undefined : <Icon icon="mdi:plus" className="text-lg" />}

@@ -1,13 +1,10 @@
-import { Link } from "@/components/ui";
+import Link from "next/link";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
-
-import AnimatedIcon from "./Functional/AnimatedIcon";
+import { User } from "lucide-react";
 
 /**
- * Header account affordance — new amber redesign. A stacked glyph + "Account"
- * label (matching Wishlist / Orders / Cart) that navigates straight to the
- * account hub on click, rather than opening a dropdown (decision 2026-07-27).
+ * Header account affordance — styled to match the new dark header actions.
  */
 const ProfileBtn: FC = () => {
   const { t } = useTranslation();
@@ -16,18 +13,13 @@ const ProfileBtn: FC = () => {
     <Link
       href="/my-account"
       title={t("nav.account", "Account")}
-      className="group flex flex-col items-center gap-0.5 text-shell-foreground text-2xl"
+      className="hidden flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex text-ink-foreground"
     >
-      <AnimatedIcon
-        icon="solar:user-circle-linear"
-        anim="float"
-        className="text-[23px] transition-colors group-hover:text-primary-500"
-      />
-      <span className="text-[11px] font-semibold group-hover:text-primary-500 transition-colors">
-        {t("nav.account", "Account")}
-      </span>
+      <User className="h-5 w-5" />
+      <span>{t("nav.account", "Account")}</span>
     </Link>
   );
 };
 
 export default ProfileBtn;
+

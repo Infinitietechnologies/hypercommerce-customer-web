@@ -16,7 +16,7 @@ const AuthSheetHost = dynamic(
 import DefaultLayout from "@/layouts/default";
 import UserLayout from "@/layouts/UserLayout";
 import { NextPageWithLayout } from "@/types";
-import { fontSans, fontMono } from "@/config/fonts";
+import { fontSans, fontMono, fontDisplay } from "@/config/fonts";
 import { trackPageView } from "@/lib/analytics";
 import { adTrackingService } from "@/services/adTrackingService";
 import "@/styles/index.css";
@@ -117,7 +117,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <HeroUIProvider navigate={router.push}>
       <Head>
-        <style>{`:root{--font-sans:${fontSans.style.fontFamily};}`}</style>
+        <style>{`:root{--font-sans:${fontSans.style.fontFamily};--font-display:${fontDisplay.style.fontFamily};}`}</style>
         {isSandboxRoute && (
           <meta name="robots" content="noindex, nofollow" key="robots" />
         )}
@@ -163,4 +163,5 @@ export default App;
 export const fonts = {
   sans: fontSans.style.fontFamily,
   mono: fontMono.style.fontFamily,
+  display: fontDisplay.style.fontFamily,
 };

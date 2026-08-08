@@ -1,7 +1,8 @@
 import { FC, memo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Image, Link } from "@/components/ui";
+import { Image } from "@/components/ui";
+import Link from "next/link";
 import { trackCategoryView } from "@/lib/analytics";
 import { Category } from "@/types/ApiResponse";
 import { categoryHref } from "@/helpers/homeLayout";
@@ -21,24 +22,24 @@ const CategoryFullImageCard: FC<CategoryFullImageCardProps> = ({ category }) => 
     <Link
       href={categoryHref(category)}
       title={category.title}
-      onPress={() => trackCategoryView(category?.id?.toString(), category?.title)}
-      className="flex flex-col overflow-hidden rounded-large border border-divider bg-content1 text-foreground
-         transition-all duration-200 hover:border-primary hover:shadow-md"
+      onClick={() => trackCategoryView(category?.id?.toString(), category?.title)}
+      className="group flex flex-col overflow-hidden rounded-3xl border border-zinc-100 bg-white text-foreground
+         transition-all duration-300 hover:border-primary hover:shadow-xl cursor-pointer"
     >
-      <div className="aspect-square sm:aspect-[5/3] w-full overflow-hidden bg-content2">
+      <div className="aspect-square sm:aspect-[5/3] w-full overflow-hidden bg-zinc-50/50">
         <Image
           alt={category.title}
           src={category.image || category.banner || ""}
           removeWrapper
           loading="eager"
-          className="h-full w-full object-contain"
+          className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
         />
       </div>
-      <div className="px-2 py-2 sm:px-3 sm:py-2.5">
-        <div className="line-clamp-2 text-[11px] sm:text-[13px] font-bold leading-tight">
+      <div className="px-3 py-3 sm:px-4 sm:py-3.5 flex-1 flex flex-col">
+        <div className="line-clamp-2 text-sm font-semibold transition-colors hover:text-primary leading-tight text-zinc-800">
           {category.title}
         </div>
-        <div className="mt-0.5 hidden sm:block text-[11px] font-semibold text-primary-600">
+        <div className="mt-1 hidden sm:block text-xs font-bold text-primary">
           {t("home.shop_now", "Shop now")} →
         </div>
       </div>

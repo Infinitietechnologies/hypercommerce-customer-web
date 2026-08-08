@@ -1,31 +1,35 @@
 import React, { FC, useEffect, useState, useSyncExternalStore } from "react";
-import { Link, Image, useDisclosure, Button, Badge } from "@/components/ui";
+import { useDisclosure, Button } from "@/components/ui";
+import Link from "next/link";
+import { Image } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import LocationSelector from "./Location/LocationSelector";
-import AnimatedIcon from "./Functional/AnimatedIcon";
 import GlobalSearchbar from "./Functional/GlobalSearchbar";
 import dynamic from "next/dynamic";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { useRouter } from "next/router";
 import { useSettings } from "@/contexts/SettingsContext";
-import CategoryTabs from "./Functional/CategoryTabs";
 import { useTranslation } from "react-i18next";
 import { authSheetStore } from "@/stores/authSheetStore";
+import { Heart, ShoppingCart, User, Package } from "lucide-react";
+import { setCookie } from "@/lib/cookies";
+import { onHomeCategoryChange } from "@/helpers/events";
 
 const ProfileBtn = dynamic(() => import("./ProfileBtn"), { ssr: false });
 const OfflineCartDrawer = dynamic(() => import("./Cart/OfflineCartDrawer"), {
   ssr: false,
 });
 
-/** Stacked glyph + label header action (sandbox `HeaderIconButton`). */
+const navItems = ["All", "Electronics", "Clothing", "Furniture", "Cosmetics", "Shoes"];
+
 const HeaderAction = ({
   icon,
   label,
   href,
   onClick,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   href?: string;
   onClick?: (e: React.MouseEvent) => void;
@@ -34,41 +38,16 @@ const HeaderAction = ({
     href={href ?? "#"}
     title={label}
     onClick={onClick}
-    className="group flex flex-col items-center gap-0.5 text-shell-foreground text-2xl"
+    className="hidden flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex text-ink-foreground cursor-pointer"
   >
-    <AnimatedIcon
-      icon={icon}
-      className="text-[23px] transition-colors group-hover:text-primary-500"
-    />
-    <span className="text-label font-semibold group-hover:text-primary-500 transition-colors">
-      {label}
-    </span>
+    {icon}
+    <span>{label}</span>
   </Link>
 );
 
-/**
- * Storefront header — new amber redesign, ported 1:1 from the `/redesign`
- * sandbox `FullHeader` (`src/redesign/components/Shell.tsx`).
- *
- *  • ≥1024px → desktop single row: logo · location · search · stacked
- *    Wishlist / Orders / Account / Cart.
- *  • <1024px → app-style two-row bar: location + Account / Cart on top,
- *    full-width search + Wishlist below.
- *
- * Cutover is 1024px (sandbox parity) via arbitrary `min-[1024px]:` variants,
- * NOT Tailwind's `lg` (1440). Matches the confirmed expected screenshots
- * (2026-07-27): no top-nav/menu button — Brands/FAQs/About live in the footer;
- * the language switch lives inside the Account menu (see ProfileBtn); the
- * account affordance is a stacked "Account" glyph in every auth state.
- *
- * Preserved behaviour: demo banner, dynamic white-label logo, offline-cart
- * drawer, cart badge, auth-aware account, category tabs on home.
- */
 export const Navbar: FC = () => {
   const { t } = useTranslation();
   const [showDemoWarning, setShowDemoWarning] = useState(true);
-  // Gate the client-only cart count so SSR and first client render match
-  // (the count comes from redux and is 0/undefined on the server).
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -90,10 +69,6 @@ export const Navbar: FC = () => {
     onOpen: openOfflineCart,
     onClose: closeOfflineCart,
   } = useDisclosure();
-  const {
-    siteHeaderDarkLogo = "https://placehold.co/160x40?text=Logo",
-    siteName = "Site Logo",
-  } = webSettings || {};
 
   useEffect(() => {
     if (webSettings?.headerScript) {
@@ -128,10 +103,16 @@ export const Navbar: FC = () => {
     }
   };
 
+  const {
+    siteHeaderDarkLogo = "https://placehold.co/160x40?text=Logo",
+    siteName = "Site Logo",
+  } = webSettings || {};
+
   const SiteLogo = (
     <Link
       href="/"
       title={t("nav.home")}
+      className="flex shrink-0 items-center"
       onClick={(event) => {
         event.preventDefault();
         router.push("/");
@@ -139,9 +120,6 @@ export const Navbar: FC = () => {
     >
       <Image
         loading="eager"
-        // Keep the logo static: no skeleton/fade replay when the header
-        // re-renders (e.g. after a settings refetch), so it never appears to
-        // "reload" while the src is unchanged.
         disableSkeleton
         disableAnimation
         src={siteHeaderDarkLogo}
@@ -149,18 +127,13 @@ export const Navbar: FC = () => {
         radius="none"
         className="object-contain"
         classNames={{
-          img: "h-14 sm:h-12 min-[1024px]:h-14 w-auto max-w-[160px]",
+          img: "h-11 min-[640px]:h-10 min-[1024px]:h-11 w-auto max-w-[160px]",
           wrapper: "cursor-pointer",
         }}
       />
     </Link>
   );
 
-  /** Auth-aware account: profile dropdown when logged-in, login trigger else.
-   *  Gated behind `mounted` so SSR and the first client render always show the
-   *  same (logged-out) markup — ProfileBtn is client-only (ssr:false) and
-   *  `isLoggedIn` comes from a client-rehydrated store, so rendering it during
-   *  SSR would mismatch and break hydration for the whole layout. */
   const AccountAction = mounted && isLoggedIn ? (
     <ProfileBtn />
   ) : (
@@ -169,27 +142,18 @@ export const Navbar: FC = () => {
       id="login-btn"
       aria-label={t("nav.account", "Account")}
       onClick={() => authSheetStore.open()}
-      className="group flex flex-col items-center gap-0.5 text-shell-foreground cursor-pointer text-2xl"
+      className="hidden flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex text-ink-foreground cursor-pointer"
     >
-      <AnimatedIcon
-        icon="solar:user-circle-linear"
-        anim="float"
-        className="text-[23px] transition-colors group-hover:text-primary-500"
-      />
-      <span className="text-label font-semibold group-hover:text-primary-500 transition-colors">
-        {t("nav.account", "Account")}
-      </span>
+      <User className="h-5 w-5" />
+      <span>{t("nav.account", "Account")}</span>
     </button>
   );
 
-  // Wishlist and Orders point at protected `/my-account/*` routes, so they only
-  // make sense once signed in. Gated behind `mounted` for the same SSR-parity
-  // reason as AccountAction.
   const showAccountLinks = mounted && isLoggedIn;
 
   const WishlistAction = showAccountLinks ? (
     <HeaderAction
-      icon="solar:heart-linear"
+      icon={<Heart className="h-5 w-5" />}
       label={t("nav.wishlist", "Wishlist")}
       href="/my-account/wishlists"
     />
@@ -197,105 +161,134 @@ export const Navbar: FC = () => {
 
   const OrdersAction = showAccountLinks ? (
     <HeaderAction
-      icon="solar:box-linear"
+      icon={<Package className="h-5 w-5" />}
       label={t("nav.orders", "Orders")}
       href="/my-account/orders"
     />
   ) : null;
 
   const CartAction = (
-    <Badge
-      color="primary"
-      content={mounted ? bagCount || undefined : undefined}
-      isInvisible={!mounted || bagCount <= 0}
-      variant="solid"
-      classNames={{ badge: "text-xs font-extrabold text-primary-foreground" }}
+    <button
+      onClick={openCart}
+      aria-label={t("nav.cart", "Cart")}
+      className="relative flex flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] opacity-90 transition hover:text-primary hover:opacity-100 text-ink-foreground cursor-pointer"
     >
-      <HeaderAction
-        icon="solar:cart-large-2-linear"
-        label={t("nav.cart", "Cart")}
-        href="#"
-        onClick={openCart}
-      />
-    </Badge>
+      <ShoppingCart className="h-5 w-5" />
+      <span className="hidden min-[640px]:block">{t("nav.cart", "Cart")}</span>
+      {mounted && bagCount > 0 && (
+        <span className="absolute -top-1 right-0 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+          {bagCount}
+        </span>
+      )}
+    </button>
   );
 
   return (
     <>
-      <div className="w-full flex flex-col items-start">
-        {demoMode && showDemoWarning && (
-          <div className="relative flex w-full items-center justify-center gap-2 border-b border-amber-200/70 bg-amber-50 px-10 py-2 text-amber-800">
-            <Icon
-              icon="solar:info-circle-bold"
-              className="shrink-0 text-base text-amber-500"
-            />
-            <span className="text-center text-xs font-medium leading-snug sm:text-[13px]">
-              {systemSettings?.customerDemoModeMessage
-                ? systemSettings.customerDemoModeMessage
-                : "Currently running in Demo Mode"}
-            </span>
-            <Button
-              onPress={() => setShowDemoWarning(false)}
-              aria-label="Close demo mode warning"
-              isIconOnly
-              size="sm"
-              radius="full"
-              variant="light"
-              className="absolute right-2 top-1/2 h-6 w-6 min-w-6 -translate-y-1/2 text-amber-700"
+      {demoMode && showDemoWarning && (
+        <div className="w-full relative flex items-center justify-center gap-2 border-b border-amber-200/70 bg-amber-50 px-10 py-2 text-amber-800">
+          <Icon
+            icon="solar:info-circle-bold"
+            className="shrink-0 text-base text-amber-500"
+          />
+          <span className="text-center text-xs font-medium leading-snug sm:text-[13px]">
+            {systemSettings?.customerDemoModeMessage
+              ? systemSettings.customerDemoModeMessage
+              : "Currently running in Demo Mode"}
+          </span>
+          <Button
+            onPress={() => setShowDemoWarning(false)}
+            aria-label="Close demo mode warning"
+            isIconOnly
+            size="sm"
+            radius="full"
+            variant="light"
+            className="absolute right-2 top-1/2 h-6 w-6 min-w-6 -translate-y-1/2 text-amber-700"
+          >
+            <Icon icon="solar:close-circle-linear" className="text-base" />
+          </Button>
+        </div>
+      )}
+
+      {/* Mobile-only location selector row at the top (not sticky) */}
+      <div className="w-full bg-ink px-4 py-2.5 min-[1024px]:hidden border-b border-white/5">
+        <div className="mx-auto max-w-7xl flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <LocationSelector variant="mobile" />
+          </div>
+          {showAccountLinks && (
+            <button
+              type="button"
+              aria-label="Notifications"
+              onClick={() => {
+                router.push("/my-account/notifications");
+              }}
+              className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
             >
-              <Icon icon="solar:close-circle-linear" className="text-base" />
-            </Button>
-          </div>
-        )}
+              <Icon icon="solar:bell-bing-linear" className="text-lg" />
+            </button>
+          )}
+        </div>
+      </div>
 
-        {/* ---------- desktop header (>= 1024px) ---------- */}
-        <header className="hidden min-[1024px]:block w-full sticky top-0 z-40 bg-shell border-b border-shell-divider shadow-[0_2px_16px_-12px_rgba(0,0,0,0.6)]">
-          <div className="w-full max-w-site mx-auto px-6 py-3.5 flex items-center gap-5">
-            <div className="shrink-0">{SiteLogo}</div>
+      <header className="sticky top-0 z-40 w-full">
+          <div className="bg-ink text-ink-foreground">
+            <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 min-[640px]:gap-6">
+              {SiteLogo}
 
-            <div className="shrink-0">
-              <LocationSelector />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <GlobalSearchbar />
-            </div>
-
-            <div className="flex items-center gap-6 shrink-0 ms-auto">
-              {WishlistAction}
-              {OrdersAction}
-              {AccountAction}
-              {CartAction}
-            </div>
-          </div>
-        </header>
-
-        {/* ---------- mobile / tablet header (< 1024px) ---------- */}
-        <header className="min-[1024px]:hidden w-full sticky top-0 z-40 bg-shell border-b border-shell-divider">
-          <div className="w-full max-w-site mx-auto px-4 py-3 flex flex-col gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="flex-1 min-w-0">
+              <div className="flex min-w-0 items-center gap-3 flex-1">
                 <LocationSelector />
-              </div>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                {CartAction}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
                 <GlobalSearchbar />
               </div>
-              {WishlistAction}
+
+              <nav className="flex shrink-0 items-center gap-1 min-[640px]:gap-3">
+                {WishlistAction}
+                {OrdersAction}
+                {AccountAction}
+                {CartAction}
+              </nav>
             </div>
           </div>
-        </header>
 
-        {/* CategoryTabs on home — owns its own white strip; renders nothing when
-            there are no categories beyond "All". */}
-        {router.pathname === "/" && <CategoryTabs className="w-full" />}
-      </div>
+          <div className="relative border-b border-zinc-100/60 bg-white/75 backdrop-blur-md">
+            <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 no-scrollbar">
+              {navItems.map((item) => {
+                const currentCategory = (router.query.category as string) || "";
+                const isAll = item === "All";
+                const isActive = isAll ? !currentCategory : (currentCategory.toLowerCase() === item.toLowerCase());
+                return (
+                  <button
+                    key={item}
+                    onClick={async () => {
+                      const slug = isAll ? "all" : item.toLowerCase();
+                      setCookie("homeCategory", slug);
+                      if (router.pathname === "/") {
+                        await router.push(
+                          { pathname: "/", query: isAll ? {} : { category: slug } },
+                          undefined,
+                          { shallow: true }
+                        );
+                        onHomeCategoryChange();
+                      } else {
+                        router.push(isAll ? "/" : `/?category=${slug}`);
+                      }
+                    }}
+                    className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-primary text-zinc-950 font-bold"
+                        : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Right fade gradient indicator on mobile/tablet to signal horizontal scroll UX */}
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent min-[1024px]:hidden" />
+        </div>
+      </header>
+
       <OfflineCartDrawer
         isOpen={isOfflineCartOpen}
         onClose={closeOfflineCart}
