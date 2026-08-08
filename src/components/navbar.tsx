@@ -183,6 +183,44 @@ export const Navbar: FC = () => {
     </button>
   );
 
+  const isCheckoutOrPayment =
+    router.pathname === "/cart/checkout" || router.pathname.startsWith("/payment");
+
+  if (isCheckoutOrPayment) {
+    const isPaymentPage = router.pathname.startsWith("/payment");
+    const backHref = isPaymentPage ? "/cart/checkout" : "/cart";
+    const backText = isPaymentPage ? t("nav.backToCheckout", "Back to Checkout") : t("nav.backToCart", "Back to Cart");
+    const titleText = isPaymentPage ? t("nav.securePayment", "Secure Payment") : t("nav.secureCheckout", "Secure Checkout");
+
+    return (
+      <header className="sticky top-0 z-50 w-full bg-ink text-ink-foreground border-b border-zinc-800">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:py-4">
+          {/* Logo on the left */}
+          <div className="flex items-center">
+            {SiteLogo}
+          </div>
+
+          {/* Secure label in the center */}
+          <div className="flex items-center gap-1.5 text-zinc-300">
+            <Icon icon="solar:shield-keyhole-bold-duotone" className="text-emerald-400 text-lg sm:text-xl shrink-0" />
+            <span className="font-display text-sm sm:text-base font-bold tracking-tight text-white leading-none">
+              {titleText}
+            </span>
+          </div>
+
+          {/* Back Action on the right */}
+          <Link
+            href={backHref}
+            className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <Icon icon="solar:alt-arrow-left-linear" className="text-sm transition-transform group-hover:-translate-x-0.5 rtl:rotate-180" />
+            {backText}
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <>
       {demoMode && showDemoWarning && (
