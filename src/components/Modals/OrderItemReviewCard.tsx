@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -7,7 +7,6 @@ import {
   ModalFooter,
   Button,
   useDisclosure,
-  Chip,
   Image,
 } from "@heroui/react";
 import RatingStars from "../RatingStars";
@@ -34,9 +33,13 @@ interface UserReview {
 
 interface OrderItemReviewCardProps {
   userReview: UserReview | null;
+  onUpdated?: () => void;
 }
 
-const OrderItemReviewCard: FC<OrderItemReviewCardProps> = ({ userReview }) => {
+const OrderItemReviewCard: FC<OrderItemReviewCardProps> = ({
+  userReview,
+  onUpdated,
+}) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { t } = useTranslation();
 
@@ -47,24 +50,34 @@ const OrderItemReviewCard: FC<OrderItemReviewCardProps> = ({ userReview }) => {
     onClose: onEditClose,
   } = useDisclosure();
 
+  // Stable identity: RatingModal reloads its image previews whenever this prop changes.
+  const editReview = useMemo(
+    () =>
+      userReview
+        ? {
+            id: userReview.id,
+            rating: userReview.rating,
+            title: userReview.title,
+            comment: userReview.comment,
+            review_images: userReview.review_images || [],
+          }
+        : null,
+    [userReview],
+  );
+
   if (!userReview) return null;
 
   return (
     <>
       {/* Trigger Button */}
-      <Chip
-        as={Button}
+      <Button
         onPress={onOpen}
-        size="sm"
-        color="success"
-        variant="flat"
-        radius="sm"
-        className="cursor-pointer"
-        classNames={{ content: "text-xs" }}
-        startContent={<Star size={12} className="fill-current" />}
+        size="md"
+        variant="bordered"
+        startContent={<Star size={16} className="fill-current" />}
       >
         {t("view_review")}
-      </Chip>
+      </Button>
 
       {/* Review Modal */}
       <Modal
@@ -143,14 +156,9 @@ const OrderItemReviewCard: FC<OrderItemReviewCardProps> = ({ userReview }) => {
         onClose={() => {
           onEditClose();
         }}
+        onSuccess={onUpdated}
         type="product"
-        existingReview={{
-          id: userReview.id,
-          rating: userReview.rating,
-          title: userReview.title,
-          comment: userReview.comment,
-          review_images: userReview.review_images || [],
-        }}
+        existingReview={editReview}
       />
 
       {/* Lightbox*/}

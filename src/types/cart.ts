@@ -61,10 +61,16 @@ export interface CartSyncData {
 }
 
 export interface CartItemAddon {
+  id?: number;
   addon_group_id: number;
   addon_item_id: number;
-  title: string;
   price: number;
+  /** Flat labels — the offline cart and the addon-picker payload carry these. */
+  title?: string;
+  addon_group_name?: string;
+  /** Nested labels — the server cart/order payload carries these instead. */
+  group?: { id: number; title: string } | null;
+  item?: { id: number; title: string; price?: number } | null;
 }
 
 export interface CartItem {
@@ -118,6 +124,11 @@ export interface CartItem {
     unit: string;
   } | null;
   addons?: CartItemAddon[];
+  /** Addon line total, in the active market's currency. */
+  addons_total?: number;
+  addons_total_base?: number;
+  /** Payable line total: effective unit price × quantity + addons. */
+  total?: number;
   total_item_price?: number;
   total_item_special_price?: number;
   created_at: string;

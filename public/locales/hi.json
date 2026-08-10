@@ -650,6 +650,7 @@
   "image_limit_exceeded": "छवि सीमा पार हो गई",
   "image_load_failed": "छवि लोड करने में विफल रही।",
   "image_size_limit_5mb": "प्रत्येक छवि 5MB से कम होनी चाहिए",
+  "image_size_limit_2mb": "प्रत्येक छवि 2MB से कम होनी चाहिए",
   "images": "छवियाँ",
   "inclusiveTax": "(सभी कर शामिल हैं)",
   "increase_quantity": "मात्रा बढ़ाएं",

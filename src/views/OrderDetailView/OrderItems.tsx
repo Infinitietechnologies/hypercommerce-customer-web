@@ -316,7 +316,7 @@ const OrderItems: FC<OrderItemsProps> = ({
                         )}
 
                         {/* Review Section */}
-                        {item.status === "delivered" && (
+                        {item.customer_status?.code === "delivered" && (
                           <div className="pt-1">
                             {item.is_user_review_given ? (
                               <OrderItemReviewCard

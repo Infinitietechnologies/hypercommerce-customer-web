@@ -28,6 +28,7 @@ import { getFormattedDate } from "@/helpers/getters";
 import { orderStatusColorMap } from "@/config/constants";
 import CancelOrderItemModal from "@/components/Modals/CancelOrderItemModal";
 import RatingModal from "@/components/Modals/RatingModal";
+import OrderItemReviewCard from "@/components/Modals/OrderItemReviewCard";
 import ShippingInfo from "./ShippingInfo";
 import DeliveryInfo from "./DeliveryInfo";
 import ReturnSheet from "./ReturnSheet";
@@ -409,7 +410,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 {t("return")}
               </Button>
             )}
-            {selected.status === "delivered" && !selected.is_user_review_given && (
+            {selected.customer_status?.code === "delivered" && !selected.is_user_review_given && (
               <Button
                 size="md"
                 variant="bordered"
@@ -418,6 +419,12 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               >
                 {t("pages.order.rateProduct", "Rate this product")}
               </Button>
+            )}
+            {selected.is_user_review_given && (
+              <OrderItemReviewCard
+                userReview={selected.user_review}
+                onUpdated={() => router.replace(router.asPath)}
+              />
             )}
             {order.invoice && order.status !== "cancelled" && (
               <Button
@@ -690,7 +697,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           onClose={ratingSheet.onClose}
           productId={selected.product_id}
           orderItemId={selected.id}
-          onSuccess={() => {}}
+          onSuccess={() => router.replace(router.asPath)}
           type="product"
         />
       )}

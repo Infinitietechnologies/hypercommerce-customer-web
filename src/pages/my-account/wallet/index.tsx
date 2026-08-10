@@ -98,7 +98,9 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
           </div>
 
           <div className="w-full flex flex-col gap-2">
-            <WalletCard loading={false} />
+            <div className="bg-amber-50/10 backdrop-blur-lg rounded-xl p-4 shadow-md">
+          <WalletCard loading={false} />
+        </div>
 
             {/* Table */}
             {error ? (

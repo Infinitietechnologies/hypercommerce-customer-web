@@ -1,4 +1,5 @@
 import { FC, memo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Card,
   CardBody,
@@ -20,6 +21,10 @@ import { RootState } from "@/lib/redux/store";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useAdTracking } from "@/hooks/useAdTracking";
+
+const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
+  ssr: false,
+});
 
 interface ProductCardProps {
   product: Product;
@@ -64,6 +69,7 @@ const ProductCard: FC<ProductCardProps> = ({
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isAddonModalOpen, setAddonModalOpen] = useState(false);
   const swiperRef = useRef<SwiperType | null>(null);
 
   const isWishlistMode = typeof onWishlistRemove === "function";
@@ -105,8 +111,17 @@ const ProductCard: FC<ProductCardProps> = ({
     }
   };
 
+  // Any variant carrying addon groups must be configured before it can be added,
+  // so the card defers to the same modal the PDP uses.
+  const hasAddons = variants.some((v) => (v.addon_groups?.length ?? 0) > 0);
+
   const handleAddToCart = async () => {
     if (!defaultVariant.id) return;
+
+    if (hasAddons) {
+      setAddonModalOpen(true);
+      return;
+    }
 
     // Guests add to the local (offline) cart — same behaviour as the PDP — so
     // they are not forced to log in just to build a cart.
@@ -368,6 +383,16 @@ const ProductCard: FC<ProductCardProps> = ({
           </Button>
         )}
       </CardFooter>
+
+      {isAddonModalOpen && (
+        <ProductModal
+          isOpen={isAddonModalOpen}
+          onClose={() => setAddonModalOpen(false)}
+          product={product}
+          selectedVariant={defaultVariant}
+          initialStep="addons"
+        />
+      )}
     </Card>
   );
 };

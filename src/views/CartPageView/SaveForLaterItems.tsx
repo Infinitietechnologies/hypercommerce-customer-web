@@ -15,6 +15,7 @@ import { Scrollbar } from "swiper/modules";
 import { handleAddToCart, isRTL } from "@/helpers/functionalHelpers";
 import { CartItem } from "@/types/ApiResponse";
 import Lightbox from "yet-another-react-lightbox";
+import CartAddonList from "@/components/Cart/CartAddonList";
 
 const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
   moreProductsInline = false,
@@ -193,24 +194,11 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
                   </h3>
 
                   {item.addons && item.addons.length > 0 && (
-                    <div className="mt-0.5 line-clamp-1 flex flex-wrap gap-x-1 break-words text-[10px] leading-tight text-foreground/40">
-                      {item.addons.map((addon: any, i: number) => {
-                        const addonPrice = Number(
-                          addon.price || addon.item?.price || 0,
-                        );
-                        return (
-                          <span key={i} className="flex items-center">
-                            {addon.title || addon.item?.title}
-                            {addonPrice > 0 && (
-                              <span className="ms-0.5 font-medium opacity-80">
-                                ({formatPrice(addonPrice)})
-                              </span>
-                            )}
-                            {i < item.addons!.length - 1 && ","}
-                          </span>
-                        );
-                      })}
-                    </div>
+                    <CartAddonList
+                      addons={item.addons}
+                      className="mt-1"
+                      showGroupTitle={false}
+                    />
                   )}
 
                   <p className="mt-1 flex items-baseline gap-2">

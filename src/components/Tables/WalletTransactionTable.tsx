@@ -265,7 +265,7 @@ const WalletTransactionTable: FC<TransactionTableProps> = ({
   );
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-x-auto p-2">
       {topContent}
 
       <div className="mt-4 flex flex-col gap-2">

@@ -650,6 +650,7 @@
   "image_limit_exceeded": "تم تجاوز الحد المسموح للصور",
   "image_load_failed": "فشل تحميل الصورة.",
   "image_size_limit_5mb": "يجب ألا يتجاوز حجم كل صورة 5 ميغابايت",
+  "image_size_limit_2mb": "يجب ألا يتجاوز حجم كل صورة 2 ميغابايت",
   "images": "الصور",
   "inclusiveTax": "(يشمل جميع الضرائب)",
   "increase_quantity": "زيادة الكمية",

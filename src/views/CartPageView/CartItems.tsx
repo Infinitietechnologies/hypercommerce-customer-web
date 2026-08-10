@@ -32,6 +32,7 @@ import { mutate } from "swr";
 import { useSettings } from "@/contexts/SettingsContext";
 import AttachmentUploader from "@/components/Cart/AttachmentUploader";
 import type { AttachmentFile } from "@/components/Cart/AttachmentUploader";
+import CartAddonList from "@/components/Cart/CartAddonList";
 
 interface CartItemsProps {
   items: CartItem[];
@@ -43,6 +44,28 @@ interface CartItemsProps {
    */
   layout?: "default" | "cart";
 }
+
+/**
+ * Line amounts for a cart row, addons included. `total` is the payable line
+ * total from the API; `total_item_price` is the pre-discount unit price it is
+ * compared against.
+ */
+const getLineAmounts = (item: CartItem) => {
+  const unitPrice = Number(item.total_item_price ?? item.variant.price) || 0;
+  const lineOriginal = unitPrice * (item.quantity || 1);
+  const shownPrice = Number(item.total ?? lineOriginal) || lineOriginal;
+  const hasDiscount = shownPrice > 0 && shownPrice < lineOriginal;
+
+  return {
+    lineOriginal,
+    shownPrice,
+    hasDiscount,
+    saving: hasDiscount ? lineOriginal - shownPrice : 0,
+    discountPct: hasDiscount
+      ? Math.round(((lineOriginal - shownPrice) / lineOriginal) * 100)
+      : 0,
+  };
+};
 
 const CartItems: FC<CartItemsProps> = ({
   items = [],
@@ -291,25 +314,7 @@ const CartItems: FC<CartItemsProps> = ({
       )}
 
       {item.addons && item.addons.length > 0 && (
-        <div className="text-[10px] text-foreground/40 leading-tight break-words flex flex-wrap gap-x-1">
-          {item.addons.map((addon: any, i: number) => {
-            const addonPrice = Number(addon.price || addon.item?.price || 0);
-            return (
-              <span key={i} className="flex items-center">
-                {addon.group?.title || addon.addon_group_name
-                  ? `${addon.group?.title || addon.addon_group_name}: `
-                  : ""}
-                {addon.title || addon.item?.title}
-                {addonPrice > 0 && (
-                  <span className="ms-0.5 opacity-80 font-medium">
-                    ({formatPrice(addonPrice)})
-                  </span>
-                )}
-                {i < item.addons!.length - 1 && ","}
-              </span>
-            );
-          })}
-        </div>
+        <CartAddonList addons={item.addons} />
       )}
 
       {item.variant.is_addons && (
@@ -407,15 +412,8 @@ const CartItems: FC<CartItemsProps> = ({
             item.variant.stock > 0 &&
             item.variant.stock <= lowStockLimit;
 
-          const unitPrice =
-            Number(item.total_item_price ?? item.variant.price) || 0;
-          const unitSpecial = Number(item.total_item_special_price ?? 0) || 0;
-          const hasDiscount = unitSpecial > 0 && unitSpecial < unitPrice;
-          const shownPrice = hasDiscount ? unitSpecial : unitPrice;
-          const unitSaving = hasDiscount ? unitPrice - unitSpecial : 0;
-          const discountPct = hasDiscount
-            ? Math.round((unitSaving / unitPrice) * 100)
-            : 0;
+          const { lineOriginal, shownPrice, hasDiscount, saving, discountPct } =
+            getLineAmounts(item);
 
           return (
             <div
@@ -476,7 +474,7 @@ const CartItems: FC<CartItemsProps> = ({
                         </span>
                         {hasDiscount && (
                           <span className="text-[13px] text-default-400 line-through">
-                            {formatPrice(unitPrice)}
+                            {formatPrice(lineOriginal)}
                           </span>
                         )}
                         {discountPct > 0 && (
@@ -486,11 +484,11 @@ const CartItems: FC<CartItemsProps> = ({
                         )}
                       </div>
 
-                      {unitSaving > 0 && (
+                      {saving > 0 && (
                         <span className="text-xs font-medium text-success">
                           {t("cart.youSaved", {
-                            amount: formatPrice(unitSaving),
-                            defaultValue: `You saved ${formatPrice(unitSaving)}`,
+                            amount: formatPrice(saving),
+                            defaultValue: `You saved ${formatPrice(saving)}`,
                           })}
                         </span>
                       )}
@@ -573,6 +571,7 @@ const CartItems: FC<CartItemsProps> = ({
             {/* Items in this store */}
             <div className="flex flex-col gap-3">
               {group.items.map((item, itemIndex) => {
+                const line = getLineAmounts(item);
                 const isLowStock =
                   lowStockLimit !== null &&
                   item.variant.stock > 0 &&
@@ -624,27 +623,10 @@ const CartItems: FC<CartItemsProps> = ({
                           )}
 
                           {item.addons && item.addons.length > 0 && (
-                            <div className="text-[10px] text-foreground/40 leading-tight mt-0.5 break-words flex flex-wrap gap-x-1">
-                              {item.addons.map((addon: any, i: number) => {
-                                const addonPrice = Number(
-                                  addon.price || addon.item?.price || 0,
-                                );
-                                return (
-                                  <span key={i} className="flex items-center">
-                                    {addon.group?.title || addon.addon_group_name
-                                      ? `${addon.group?.title || addon.addon_group_name}: `
-                                      : ""}
-                                    {addon.title || addon.item?.title}
-                                    {addonPrice > 0 && (
-                                      <span className="ms-0.5 opacity-80 font-medium">
-                                        ({formatPrice(addonPrice)})
-                                      </span>
-                                    )}
-                                    {i < item.addons!.length - 1 && ","}
-                                  </span>
-                                );
-                              })}
-                            </div>
+                            <CartAddonList
+                              addons={item.addons}
+                              className="mt-1"
+                            />
                           )}
 
                           {/* CUSTOMIZE BUTTON - Show if the item supports addons (item.variant.is_addons is present) */}
@@ -671,21 +653,14 @@ const CartItems: FC<CartItemsProps> = ({
                         {/* Price and Quantity - Stack on mobile */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mt-1">
                           <span className="font-medium text-xs text-foreground/60 whitespace-nowrap">
-                            {item.total_item_special_price &&
-                            item.total_item_special_price !==
-                              item.total_item_price ? (
-                              <>
-                                <span className="line-through opacity-60">
-                                  {formatPrice(item.total_item_price)}
-                                </span>{" "}
-                                {formatPrice(item.total_item_special_price)}
-                              </>
-                            ) : (
-                              formatPrice(
-                                item.total_item_price || item.variant.price,
-                              )
+                            {line.hasDiscount && (
+                              <span className="line-through opacity-60">
+                                {formatPrice(line.lineOriginal)}
+                              </span>
                             )}{" "}
-                            × {item.quantity}
+                            <span className="text-sm font-semibold text-foreground">
+                              {formatPrice(line.shownPrice)}
+                            </span>
                           </span>
 
                           <CartQuantityControl

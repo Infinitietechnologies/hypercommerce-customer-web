@@ -27,6 +27,7 @@ import ConfirmationModal from "@/components/Modals/ConfirmationModal";
 import dynamic from "next/dynamic";
 import { getProductBySlug } from "@/routes/api";
 import { Product, ProductVariant } from "@/types/ApiResponse";
+import CartAddonList from "@/components/Cart/CartAddonList";
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
   ssr: false,
@@ -369,21 +370,10 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                           </button>
 
                           {item.addons && item.addons.length > 0 && (
-                            <div className="text-xxs text-foreground/40 leading-tight mt-1 break-words">
-                              {item.addons
-                                .map((addon: any) => {
-                                  const groupTitle =
-                                    addon.group?.title ||
-                                    addon.addon_group_name;
-                                  const itemTitle =
-                                    addon.item?.title || addon.title;
-                                  return groupTitle
-                                    ? `${groupTitle}: ${itemTitle}`
-                                    : itemTitle;
-                                })
-                                .filter(Boolean)
-                                .join(", ")}
-                            </div>
+                            <CartAddonList
+                              addons={item.addons}
+                              className="mt-1"
+                            />
                           )}
                         </div>
                       </div>

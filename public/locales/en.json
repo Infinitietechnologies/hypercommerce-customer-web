@@ -650,6 +650,7 @@
   "image_limit_exceeded": "Image limit exceeded",
   "image_load_failed": "Image failed to load.",
   "image_size_limit_5mb": "Each image must be less than 5MB",
+  "image_size_limit_2mb": "Each image must be less than 2MB",
   "images": "images",
   "inclusiveTax": "( Include all taxes )",
   "increase_quantity": "Increase quantity",

@@ -14,6 +14,20 @@ import {
   fallbackPaginateResOfProductReviews,
 } from "@/config/constants";
 
+/**
+ * A 422 carries the reason the review was rejected (image too large, comment
+ * too long). Swallowing it into the generic fallback leaves the shopper with
+ * "something went wrong" and no way to fix the form.
+ */
+const validationError = (error: unknown): ApiResponse<object> | null => {
+  const res = (error as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } } })
+    .response;
+  if (res?.status !== 422) return null;
+
+  const first = Object.values(res.data?.errors ?? {})[0]?.[0];
+  return { success: false, message: first || res.data?.message || "", data: {} };
+};
+
 export const getProductReviews = async (params: {
   page: string | number;
   per_page: string | number;
@@ -66,7 +80,7 @@ export const giveProductReview = async (
     return response.data;
   } catch (error) {
     console.error("API error:", error);
-    return fallbackApiRes;
+    return validationError(error) ?? fallbackApiRes;
   }
 };
 
@@ -77,13 +91,15 @@ export const updateProductReview = async (
     title?: string;
     comment?: string;
     images?: File[];
+    keepImages?: string[];
   } = {},
 ): Promise<ApiResponse<object>> => {
   try {
     let response;
 
-    if (params.images && params.images.length > 0) {
-      // Use FormData when uploading images
+    if (params.images || params.keepImages) {
+      // The saved images NOT listed in `keepImages` were removed by the
+      // shopper, so the replace flag tells the backend to drop them.
       const formData = new FormData();
 
       if (params.id) formData.append("id", params.id.toString());
@@ -91,8 +107,13 @@ export const updateProductReview = async (
         formData.append("rating", params.rating.toString());
       if (params.title) formData.append("title", params.title);
       if (params.comment) formData.append("comment", params.comment);
+      formData.append("replace_review_images", "1");
 
-      params.images.forEach((file) => {
+      (params.keepImages ?? []).forEach((url) => {
+        formData.append("keep_review_images[]", url);
+      });
+
+      (params.images ?? []).forEach((file) => {
         formData.append("review_images[]", file);
       });
 
@@ -102,14 +123,14 @@ export const updateProductReview = async (
         },
       });
     } else {
-      // Send as JSON when no images
+      // Send as JSON when the caller isn't touching images
       response = await api.post(`/reviews/${params.id}`, params);
     }
 
     return response.data;
   } catch (error) {
     console.error("API error:", error);
-    return fallbackApiRes;
+    return validationError(error) ?? fallbackApiRes;
   }
 };
 

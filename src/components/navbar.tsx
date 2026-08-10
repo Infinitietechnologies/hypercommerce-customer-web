@@ -288,43 +288,45 @@ export const Navbar: FC = () => {
             </div>
           </div>
 
-          <div className="relative border-b border-zinc-100/60 bg-white/75 backdrop-blur-md">
-            <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 no-scrollbar">
-              {navItems.map((item) => {
-                const currentCategory = (router.query.category as string) || "";
-                const isAll = item === "All";
-                const isActive = isAll ? !currentCategory : (currentCategory.toLowerCase() === item.toLowerCase());
-                return (
-                  <button
-                    key={item}
-                    onClick={async () => {
-                      const slug = isAll ? "all" : item.toLowerCase();
-                      setCookie("homeCategory", slug);
-                      if (router.pathname === "/") {
-                        await router.push(
-                          { pathname: "/", query: isAll ? {} : { category: slug } },
-                          undefined,
-                          { shallow: true }
-                        );
-                        onHomeCategoryChange();
-                      } else {
-                        router.push(isAll ? "/" : `/?category=${slug}`);
-                      }
-                    }}
-                    className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                      isActive
-                        ? "bg-primary text-zinc-950 font-bold"
-                        : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                );
-              })}
+          {router.pathname === "/" && (
+            <div className="relative border-b border-zinc-100/60 bg-white/75 backdrop-blur-md">
+              <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 no-scrollbar">
+                {navItems.map((item) => {
+                  const currentCategory = (router.query.category as string) || "";
+                  const isAll = item === "All";
+                  const isActive = isAll ? !currentCategory : (currentCategory.toLowerCase() === item.toLowerCase());
+                  return (
+                    <button
+                      key={item}
+                      onClick={async () => {
+                        const slug = isAll ? "all" : item.toLowerCase();
+                        setCookie("homeCategory", slug);
+                        if (router.pathname === "/") {
+                          await router.push(
+                            { pathname: "/", query: isAll ? {} : { category: slug } },
+                            undefined,
+                            { shallow: true }
+                          );
+                          onHomeCategoryChange();
+                        } else {
+                          router.push(isAll ? "/" : `/?category=${slug}`);
+                        }
+                      }}
+                      className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                        isActive
+                          ? "bg-primary text-zinc-950 font-bold"
+                          : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Right fade gradient indicator on mobile/tablet to signal horizontal scroll UX */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent min-[1024px]:hidden" />
             </div>
-            {/* Right fade gradient indicator on mobile/tablet to signal horizontal scroll UX */}
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent min-[1024px]:hidden" />
-        </div>
+          )}
       </header>
 
       <OfflineCartDrawer

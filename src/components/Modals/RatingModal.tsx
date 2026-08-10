@@ -22,7 +22,7 @@ import {
 } from "@/routes/api";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
-import { urlToFile } from "@/helpers/functionalHelpers";
+import { MAX_REVIEW_IMAGE_SIZE_MB, rejectImage } from "@/helpers/imageUpload";
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -53,7 +53,10 @@ type RatingConfig = {
 };
 
 interface ImagePreview {
-  file: File;
+  /** Absent for an already-saved image: it stays put unless removed. */
+  file?: File;
+  /** Set for an already-saved image — sent back as the keep list. */
+  savedUrl?: string;
   preview: string;
   id: string;
 }
@@ -101,54 +104,20 @@ const RatingModal: React.FC<RatingModalProps> = ({
     // only run when isOpen changes
   }, [isOpen, existingReview]);
 
+  // Saved images are shown straight from their URL — they are never
+  // re-downloaded, and the ones still listed at submit time are kept.
   useEffect(() => {
-    const preselectedImages = existingReview?.review_images || [];
-    const loadPreselectedImages = async () => {
-      if (
-        isOpen &&
-        type === "product" &&
-        preselectedImages &&
-        preselectedImages.length > 0
-      ) {
-        setImages([]); // Clear existing images first
+    if (!isOpen || type !== "product") return;
 
-        const loadedImages: ImagePreview[] = [];
-
-        for (let i = 0; i < Math.min(preselectedImages.length, 5); i++) {
-          const url = preselectedImages[i];
-          try {
-            // Extract filename from URL or generate one
-            const filename = url.split("/").pop() || `image_${i + 1}.jpg`;
-            const file = await urlToFile(url, filename);
-
-            const newImage: ImagePreview = {
-              file,
-              preview: url, // Use the original URL for preview
-              id:
-                Date.now().toString() +
-                Math.random().toString(36).substr(2, 9) +
-                i,
-            };
-
-            loadedImages.push(newImage);
-          } catch (error) {
-            console.error(`Failed to load preselected image ${i}:`, error);
-            addToast({
-              title: t("image_load_failed"),
-              description: t("could_not_load_some_images"),
-              color: "warning",
-            });
-          }
-        }
-
-        if (loadedImages.length > 0) {
-          setImages(loadedImages);
-        }
-      }
-    };
-
-    loadPreselectedImages();
-  }, [isOpen, type, existingReview, t]);
+    const saved = existingReview?.review_images || [];
+    setImages(
+      saved.slice(0, 5).map((url, i) => ({
+        savedUrl: url,
+        preview: url,
+        id: `saved-${i}-${url}`,
+      })),
+    );
+  }, [isOpen, type, existingReview]);
 
   const ratingConfig: RatingConfig[] = [
     {
@@ -201,20 +170,13 @@ const RatingModal: React.FC<RatingModalProps> = ({
     }
 
     files.forEach((file) => {
-      if (!file.type.startsWith("image/")) {
+      const rejection = rejectImage(file, MAX_REVIEW_IMAGE_SIZE_MB);
+      if (rejection) {
         addToast({
-          title: t("invalid_file_type"),
-          description: t("only_images_allowed"),
-          color: "danger",
-        });
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        // 5MB limit
-        addToast({
-          title: t("file_too_large"),
-          description: t("image_size_limit_5mb"),
+          title: t(rejection === "type" ? "invalid_file_type" : "file_too_large"),
+          description: t(
+            rejection === "type" ? "only_images_allowed" : "image_size_limit_2mb",
+          ),
           color: "danger",
         });
         return;
@@ -294,7 +256,8 @@ const RatingModal: React.FC<RatingModalProps> = ({
             rating,
             title: title.trim(),
             comment: comment.trim(),
-            images: images.map((img) => img.file),
+            images: images.flatMap((img) => img.file ?? []),
+            keepImages: images.flatMap((img) => img.savedUrl ?? []),
           });
         } else {
           // create new product review
@@ -303,7 +266,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
             rating,
             title: title.trim(),
             comment: comment.trim(),
-            images: images.map((img) => img.file),
+            images: images.flatMap((img) => img.file ?? []),
             order_item_id: orderItemId ? orderItemId : undefined,
           });
         }
@@ -501,7 +464,8 @@ const RatingModal: React.FC<RatingModalProps> = ({
                         <button
                           type="button"
                           onClick={() => removeImage(image.id)}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-danger-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-danger-600 z-50 cursor-pointer"
+                          aria-label={t("remove_image")}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-danger-500 text-white rounded-full flex items-center justify-center transition-colors hover:bg-danger-600 z-50 cursor-pointer"
                         >
                           <svg
                             className="w-4 h-4"

@@ -1,5 +1,8 @@
 export const MAX_IMAGE_SIZE_MB = 5;
 
+/** Review images are validated at 2MB by the panel (`review_images.*|max:2048`). */
+export const MAX_REVIEW_IMAGE_SIZE_MB = 2;
+
 /**
  * An explicit list rather than a `image/` prefix test: the prefix admits
  * `image/svg+xml`, which is a script-carrying document once a host serves it.

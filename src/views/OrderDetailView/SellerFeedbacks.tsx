@@ -40,7 +40,7 @@ const SellerFeedbacks: React.FC<SellerFeedbacksProps> = ({
       const sellerItems = items.filter(
         (it: OrderItem) =>
           String(it.seller_id) === String(sellerId) &&
-          String(it.status).toLowerCase() === "delivered"
+          it.customer_status?.code === "delivered"
       );
 
       if (sellerItems.length === 0) return null;
