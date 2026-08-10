@@ -4,11 +4,27 @@ import {
   Button,
   Card,
   CardBody,
+  Checkbox,
   Divider,
+  Autocomplete,
+  AutocompleteItem,
+  Image,
+  Select,
+  SelectItem,
   addToast,
 } from "@heroui/react";
-import { Upload, CheckCircle, MapPin, FileCheck, User } from "lucide-react";
+import {
+  Upload,
+  CheckCircle,
+  ArrowLeft,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Pencil,
+} from "lucide-react";
 import { sellerRegister } from "@/routes/api";
+import CountryList from "country-list-with-dial-code-and-flag";
+import { getFlagEmoji } from "@/helpers/getters";
 import { useTranslation } from "react-i18next";
 import LocationAutoComplete from "@/components/Location/LocationAutoComplete";
 import type { LocationAutoCompleteRef } from "@/components/Location/types/LocationAutoComplete.types";
@@ -28,6 +44,12 @@ interface FormData {
   countryCode: string;
   latitude: string;
   longitude: string;
+  bankName: string;
+  bankBranchCode: string;
+  accountHolderName: string;
+  accountNumber: string;
+  routingNumber: string;
+  bankAccountType: string;
 }
 
 interface FileData {
@@ -35,14 +57,56 @@ interface FileData {
   articlesOfIncorporation: File | null;
   nationalId: File | null;
   authorizedSignature: File | null;
+  addressProof: File | null;
+  voidedCheck: File | null;
 }
 
 // Allowed image MIME types
 const validImageTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+// Bank proofs also accept a PDF (panel rule: mimes:pdf,jpg,jpeg,png,webp)
+const validProofTypes = [...validImageTypes, "application/pdf"];
+
+const STEP_KEYS = ["basic", "business", "documents", "review"] as const;
+
+const DOC_FIELDS: (keyof FileData)[] = [
+  "businessLicense",
+  "articlesOfIncorporation",
+  "nationalId",
+  "authorizedSignature",
+  "addressProof",
+  "voidedCheck",
+];
+
+const allowedTypesFor = (name: keyof FileData) =>
+  name === "addressProof" || name === "voidedCheck"
+    ? validProofTypes
+    : validImageTypes;
+
+const BANK_TEXT_FIELDS = [
+  "bankName",
+  "bankBranchCode",
+  "accountHolderName",
+  "accountNumber",
+  "routingNumber",
+] as const;
+
+const BANK_ACCOUNT_TYPES = ["checking", "savings"] as const;
+
+const COUNTRIES: { name: string; code: string }[] = Array.from(
+  new Map(
+    ((CountryList.getAll?.() || []) as { name: string; code: string }[]).map(
+      (country) => [country.code, { name: country.name, code: country.code }]
+    )
+  ).values()
+);
 
 export default function SellerRegisterForm() {
   const locationAutoCompleteRef = useRef<LocationAutoCompleteRef>(null);
   const { t } = useTranslation();
+  const [step, setStep] = useState(0);
+  const [agreed, setAgreed] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [files, setFiles] = useState<FileData>({
@@ -50,6 +114,8 @@ export default function SellerRegisterForm() {
     articlesOfIncorporation: null,
     nationalId: null,
     authorizedSignature: null,
+    addressProof: null,
+    voidedCheck: null,
   });
   const [formData, setFormData] = useState<FormData>({
     sellerName: "",
@@ -66,6 +132,12 @@ export default function SellerRegisterForm() {
     countryCode: "",
     latitude: "",
     longitude: "",
+    bankName: "",
+    bankBranchCode: "",
+    accountHolderName: "",
+    accountNumber: "",
+    routingNumber: "",
+    bankAccountType: "",
   });
 
   const resetState = () => {
@@ -84,14 +156,24 @@ export default function SellerRegisterForm() {
       countryCode: "",
       latitude: "",
       longitude: "",
+      bankName: "",
+      bankBranchCode: "",
+      accountHolderName: "",
+      accountNumber: "",
+      routingNumber: "",
+      bankAccountType: "",
     });
     setFiles({
       businessLicense: null,
       articlesOfIncorporation: null,
       nationalId: null,
       authorizedSignature: null,
+      addressProof: null,
+      voidedCheck: null,
     });
     setErrors({});
+    setAgreed(false);
+    setStep(0);
     if (locationAutoCompleteRef.current) {
       locationAutoCompleteRef.current.setInputValue("");
     }
@@ -172,7 +254,7 @@ export default function SellerRegisterForm() {
     if (!file) return;
 
     // Validate by MIME type
-    if (!validImageTypes.includes(file.type)) {
+    if (!allowedTypesFor(name).includes(file.type)) {
       addToast({
         title: t("pages.sellerRegister.toast.invalidFileTitle"),
         description: t("pages.sellerRegister.toast.invalidFileDescription"),
@@ -189,6 +271,82 @@ export default function SellerRegisterForm() {
     // Valid file
     setFiles((prev) => ({ ...prev, [name]: file }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validationToast = () =>
+    addToast({
+      title: t("pages.sellerRegister.toast.validationErrorTitle"),
+      description: t("pages.sellerRegister.toast.validationErrorDesc"),
+      color: "danger",
+    });
+
+  const validateStep = (index: number) => {
+    const newErrors: { [key: string]: string } = {};
+    const required = (field: keyof FormData) => {
+      if (!formData[field].trim())
+        newErrors[field] = t("pages.sellerRegister.error.required");
+    };
+
+    if (index === 0) {
+      required("sellerName");
+      required("mobile");
+      required("email");
+      required("password");
+      if (
+        formData.email &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+      )
+        newErrors.email = t("pages.sellerRegister.error.invalidEmail");
+      if (formData.mobile && formData.mobile.length < 7)
+        newErrors.mobile = t("pages.sellerRegister.error.invalidMobile");
+      if (formData.password && formData.password.length < 8)
+        newErrors.password = t("pages.sellerRegister.error.shortPassword");
+      if (formData.password !== formData.confirmPassword)
+        newErrors.confirmPassword = t(
+          "pages.sellerRegister.error.passwordMismatch"
+        );
+    }
+
+    if (index === 1) {
+      (
+        [
+          "address",
+          "city",
+          "landmark",
+          "state",
+          "zipcode",
+          "country",
+          ...BANK_TEXT_FIELDS,
+          "bankAccountType",
+        ] as (keyof FormData)[]
+      ).forEach(required);
+    }
+
+    if (index === 2) {
+      DOC_FIELDS.forEach((field) => {
+        const file = files[field];
+        if (!file) newErrors[field] = t("pages.sellerRegister.error.required");
+        else if (!allowedTypesFor(field).includes(file.type))
+          newErrors[field] = t("pages.sellerRegister.error.invalidFile");
+      });
+    }
+
+    if (index === 3 && !agreed) {
+      newErrors.consent = t("pages.sellerRegister.error.consentRequired");
+    }
+
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+
+    if (Object.keys(newErrors).length > 0) {
+      validationToast();
+      return false;
+    }
+    return true;
+  };
+
+  const goNext = () => {
+    if (!validateStep(step)) return;
+    setStep((prev) => Math.min(prev + 1, STEP_KEYS.length - 1));
   };
 
   const validateForm = () => {
@@ -219,10 +377,10 @@ export default function SellerRegisterForm() {
       newErrors.landmark = t("pages.sellerRegister.error.required");
     if (!formData.country)
       newErrors.country = t("pages.sellerRegister.error.required");
-    if (!formData.latitude)
-      newErrors.latitude = t("pages.sellerRegister.error.required");
-    if (!formData.longitude)
-      newErrors.longitude = t("pages.sellerRegister.error.required");
+    [...BANK_TEXT_FIELDS, "bankAccountType" as const].forEach((field) => {
+      if (!formData[field])
+        newErrors[field] = t("pages.sellerRegister.error.required");
+    });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -246,7 +404,7 @@ export default function SellerRegisterForm() {
       if (!file) {
         missingFiles.push(label);
         newErrors[key as string] = t("pages.sellerRegister.error.required");
-      } else if (!validImageTypes.includes(file.type)) {
+      } else if (!allowedTypesFor(key).includes(file.type)) {
         invalidTypes.push(label);
         newErrors[key as string] = t("pages.sellerRegister.error.invalidFile");
       }
@@ -264,6 +422,8 @@ export default function SellerRegisterForm() {
       "Authorized Signature",
       "authorizedSignature"
     );
+    checkFile(files.addressProof, "Address Proof", "addressProof");
+    checkFile(files.voidedCheck, "Voided Check", "voidedCheck");
 
     if (missingFiles.length > 0) {
       addToast({
@@ -294,7 +454,7 @@ export default function SellerRegisterForm() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!validateStep(3) || !validateForm()) {
       return;
     }
 
@@ -317,6 +477,12 @@ export default function SellerRegisterForm() {
       submitData.append("country", formData.country);
       submitData.append("latitude", formData.latitude);
       submitData.append("longitude", formData.longitude);
+      submitData.append("bank_name", formData.bankName);
+      submitData.append("bank_branch_code", formData.bankBranchCode);
+      submitData.append("account_holder_name", formData.accountHolderName);
+      submitData.append("account_number", formData.accountNumber);
+      submitData.append("routing_number", formData.routingNumber);
+      submitData.append("bank_account_type", formData.bankAccountType);
 
       // Append files directly as binary
       if (files.businessLicense) {
@@ -333,6 +499,12 @@ export default function SellerRegisterForm() {
       }
       if (files.authorizedSignature) {
         submitData.append("authorized_signature", files.authorizedSignature);
+      }
+      if (files.addressProof) {
+        submitData.append("address_proof", files.addressProof);
+      }
+      if (files.voidedCheck) {
+        submitData.append("voided_check", files.voidedCheck);
       }
 
       const response = await sellerRegister(submitData);
@@ -506,37 +678,33 @@ export default function SellerRegisterForm() {
     }
   };
 
-  const FileUploadField = ({
-    label,
-    name,
-    required = false,
-  }: {
-    label: string;
-    name: keyof FileData;
-    required?: boolean;
-  }) => {
+  const renderFileUpload = (
+    label: string,
+    name: keyof FileData,
+    required = false
+  ) => {
     const file = files[name];
     const error = errors[name];
 
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5" key={name}>
         <label className="text-sm font-medium">
           {t(label)} {required && <span className="text-danger">*</span>}
         </label>
         <div
-          className={`border rounded-md px-4 py-3 flex justify-between items-center cursor-pointer transition 
-            ${file && !error ? "bg-success-50 border-success text-success" : ""}
-            ${
-              error
-                ? "border-danger bg-danger-50"
-                : "border-gray-300 dark:border-default-100 hover:border-primary"
-            }`}
+          className={`border rounded-medium px-4 py-3 flex items-center gap-2 transition ${
+            error
+              ? "border-danger bg-danger-50"
+              : file
+                ? "border-success bg-success-50 text-success"
+                : "border-divider hover:border-primary"
+          }`}
         >
           <input
             type="file"
             id={name}
             className="hidden"
-            accept="image/jpeg,image/png,image/jpg,image/webp,.jpeg,.png,.jpg,.webp"
+            accept={allowedTypesFor(name).join(",")}
             onChange={(e) => handleFileChange(name, e)}
           />
           <label
@@ -545,16 +713,16 @@ export default function SellerRegisterForm() {
           >
             {file && !error ? (
               <>
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="w-4 h-4 shrink-0" />
                 <span className="truncate text-sm">{file.name}</span>
               </>
             ) : (
               <>
                 <Upload
-                  className={`w-4 h-4 ${error ? "text-danger" : "text-gray-500"}`}
+                  className={`w-4 h-4 shrink-0 ${error ? "text-danger" : "text-foreground/50"}`}
                 />
                 <span
-                  className={`text-sm ${error ? "text-danger" : "text-gray-500"}`}
+                  className={`text-sm ${error ? "text-danger" : "text-foreground/50"}`}
                 >
                   {t("pages.sellerRegister.button.chooseFile")}
                 </span>
@@ -562,265 +730,548 @@ export default function SellerRegisterForm() {
             )}
           </label>
         </div>
-        {error && <p className="text-xs text-danger mt-0.5">{error}</p>}
+        {error && <p className="text-xs text-danger">{error}</p>}
       </div>
     );
   };
 
+  const reviewRow = (label: string, value: string) => (
+    <div key={label}>
+      <p className="text-xs uppercase text-foreground/50">{label}</p>
+      <p className="text-sm font-medium break-words">{value || "—"}</p>
+    </div>
+  );
+
+  const inputProps = {
+    variant: "bordered" as const,
+    labelPlacement: "outside" as const,
+    radius: "md" as const,
+    classNames: { errorMessage: "text-xs" },
+  };
+
   return (
     <Card
-      className="border border-gray-200  dark:border-default-100  w-full"
+      className="border border-divider w-full shadow-sm"
       id="seller-register"
     >
-      <CardBody className="p-6 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Left Column */}
-          <div className="flex flex-col gap-6 h-full">
-            {/* Personal Information */}
-            <section>
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold text-lg">
-                  {t("pages.sellerRegister.personalInfo")}
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label={t("pages.sellerRegister.form.sellerName")}
-                  placeholder={t("pages.sellerRegister.placeholder.sellerName")}
-                  value={formData.sellerName}
-                  onValueChange={(v) => handleInputChange("sellerName", v)}
-                  isInvalid={!!errors.sellerName}
-                  errorMessage={errors.sellerName}
-                  variant="bordered"
-                  isRequired
-                  classNames={{ errorMessage: "text-xs" }}
-                />
-                <Input
-                  label={t("pages.sellerRegister.form.mobile")}
-                  placeholder={t("pages.sellerRegister.placeholder.mobile")}
-                  value={formData.mobile}
-                  onValueChange={(v) => {
-                    if (/^\d*$/.test(v)) {
-                      handleInputChange("mobile", v);
-                    }
-                  }}
-                  isInvalid={!!errors.mobile}
-                  errorMessage={errors.mobile}
-                  variant="bordered"
-                  isRequired
-                  maxLength={10}
-                  classNames={{ errorMessage: "text-xs" }}
-                />
-                <Input
-                  label={t("pages.sellerRegister.form.email")}
-                  placeholder={t("pages.sellerRegister.placeholder.email")}
-                  value={formData.email}
-                  onValueChange={(v) => handleInputChange("email", v)}
-                  isInvalid={!!errors.email}
-                  errorMessage={errors.email}
-                  variant="bordered"
-                  isRequired
-                  type="email"
-                  classNames={{ errorMessage: "text-xs" }}
-                />
-                <Input
-                  label={t("pages.sellerRegister.form.password")}
-                  type="password"
-                  value={formData.password}
-                  onValueChange={(v) => handleInputChange("password", v)}
-                  variant="bordered"
-                  isInvalid={!!errors.password}
-                  errorMessage={errors.password}
-                  isRequired
-                  classNames={{ errorMessage: "text-xs" }}
-                />
-                <Input
-                  label={t("pages.sellerRegister.form.confirmPassword")}
-                  type="password"
-                  value={formData.confirmPassword}
-                  onValueChange={(v) => handleInputChange("confirmPassword", v)}
-                  variant="bordered"
-                  isInvalid={!!errors.confirmPassword}
-                  errorMessage={errors.confirmPassword}
-                  isRequired
-                  classNames={{ errorMessage: "text-xs" }}
-                />
-              </div>
-            </section>
+      <CardBody className="p-0">
+        <div className="grid lg:grid-cols-[300px_1fr]">
+          {/* Stepper */}
+          <div className="p-4 lg:p-6">
+            <div className="h-full rounded-large border border-primary-200 bg-primary-50/40 p-5">
+              <h2 className="text-lg font-bold">
+                {t("pages.sellerRegister.pageTitle")}
+              </h2>
+              <Divider className="my-4" />
 
-            <Divider />
-
-            {/* Required Documents */}
-            <section className="flex flex-col justify-between flex-1">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <FileCheck className="w-5 h-5 text-primary" />
-                  <h2 className="font-semibold text-lg">
-                    {t("pages.sellerRegister.requiredDocs")}
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FileUploadField
-                    label="pages.sellerRegister.docs.businessLicense"
-                    name="businessLicense"
-                    required
-                  />
-                  <FileUploadField
-                    label="pages.sellerRegister.docs.articlesOfIncorporation"
-                    name="articlesOfIncorporation"
-                    required
-                  />
-                  <FileUploadField
-                    label="pages.sellerRegister.docs.nationalId"
-                    name="nationalId"
-                    required
-                  />
-                  <FileUploadField
-                    label="pages.sellerRegister.docs.authorizedSignature"
-                    name="authorizedSignature"
-                    required
-                  />
-                </div>
-              </div>
-            </section>
+              <ol>
+                {STEP_KEYS.map((key, idx) => (
+                  <li key={key} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <span
+                        className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
+                          idx === step
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-content1 border border-divider text-foreground/50"
+                        }`}
+                      >
+                        {idx + 1}
+                      </span>
+                      {idx < STEP_KEYS.length - 1 && (
+                        <span className="w-px grow bg-divider my-1" />
+                      )}
+                    </div>
+                    <div className="pb-6">
+                      <p
+                        className={`text-sm font-semibold ${idx === step ? "text-primary" : ""}`}
+                      >
+                        {t(`pages.sellerRegister.steps.${key}.title`)}
+                      </p>
+                      <p className="text-xs text-foreground/50 leading-relaxed">
+                        {t(`pages.sellerRegister.steps.${key}.desc`)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
 
-          {/* Right Column */}
-          <section className="flex flex-col justify-between h-full">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold text-lg">
-                  {t("pages.sellerRegister.businessAddress")}
-                </h2>
-              </div>
-              <div className="flex flex-col gap-4">
-                <LocationAutoComplete
-                  ref={locationAutoCompleteRef}
-                  onLocationSelect={handleLocationSelect}
-                  initialLocation={null}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label={t("pages.sellerRegister.form.address")}
-                    placeholder={t("pages.sellerRegister.placeholder.address")}
-                    value={formData.address}
-                    onValueChange={(v) => handleInputChange("address", v)}
-                    variant="bordered"
-                    isInvalid={!!errors.address}
-                    errorMessage={errors.address}
-                    isRequired
-                    classNames={{ errorMessage: "text-xs" }}
-                  />
-                  <Input
-                    label={t("pages.sellerRegister.form.city")}
-                    placeholder={t("pages.sellerRegister.placeholder.city")}
-                    value={formData.city}
-                    onValueChange={(v) => handleInputChange("city", v)}
-                    variant="bordered"
-                    isInvalid={!!errors.city}
-                    errorMessage={errors.city}
-                    isRequired
-                    classNames={{ errorMessage: "text-xs" }}
-                  />
-                  <Input
-                    label={t("pages.sellerRegister.form.landmark")}
-                    placeholder={t("pages.sellerRegister.placeholder.landmark")}
-                    value={formData.landmark}
-                    onValueChange={(v) => handleInputChange("landmark", v)}
-                    variant="bordered"
-                    isInvalid={!!errors.landmark}
-                    errorMessage={errors.landmark}
-                    classNames={{ errorMessage: "text-xs" }}
-                    isRequired
-                  />
-                  <Input
-                    label={t("pages.sellerRegister.form.state")}
-                    placeholder={t("pages.sellerRegister.placeholder.state")}
-                    value={formData.state}
-                    onValueChange={(v) => handleInputChange("state", v)}
-                    variant="bordered"
-                    isInvalid={!!errors.state}
-                    errorMessage={errors.state}
-                    isRequired
-                    classNames={{ errorMessage: "text-xs" }}
-                  />
-                  <Input
-                    label={t("pages.sellerRegister.form.zipcode")}
-                    placeholder={t("pages.sellerRegister.placeholder.zipcode")}
-                    value={formData.zipcode}
-                    onValueChange={(v) => handleInputChange("zipcode", v)}
-                    variant="bordered"
-                    isInvalid={!!errors.zipcode}
-                    errorMessage={errors.zipcode}
-                    isRequired
-                    classNames={{ errorMessage: "text-xs" }}
-                  />
-                  <Input
-                    label={t("pages.sellerRegister.form.country")}
-                    placeholder={t("pages.sellerRegister.placeholder.country")}
-                    value={formData.country}
-                    onValueChange={(v) => handleInputChange("country", v)}
-                    variant="bordered"
-                    isInvalid={!!errors.country}
-                    errorMessage={errors.country}
-                    isRequired
-                    classNames={{ errorMessage: "text-xs" }}
-                  />
-                  <Input
-                    label={t("pages.sellerRegister.form.latitude")}
-                    placeholder={t("pages.sellerRegister.placeholder.latitude")}
-                    value={formData.latitude}
-                    variant="bordered"
-                    onValueChange={(v) => {
-                      // Allow empty string or valid number format
-                      if (v === "" || /^-?\d*\.?\d*$/.test(v)) {
-                        handleInputChange("latitude", v);
-                      }
-                    }}
-                    isInvalid={!!errors.latitude}
-                    errorMessage={errors.latitude}
-                    isRequired
-                    classNames={{ errorMessage: "text-xs" }}
-                  />
+          {/* Step content */}
+          <div className="flex flex-col p-4 lg:p-6 lg:ps-0">
+            <div className="grow">
+              <h3 className="text-xl font-bold">
+                {t(`pages.sellerRegister.steps.${STEP_KEYS[step]}.heading`)}
+              </h3>
+              <p className="text-sm text-foreground/50 mt-1">
+                {t(`pages.sellerRegister.steps.${STEP_KEYS[step]}.subheading`)}
+              </p>
+              <Divider className="my-5" />
 
+              {step === 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <Input
-                    label={t("pages.sellerRegister.form.longitude")}
-                    placeholder={t(
-                      "pages.sellerRegister.placeholder.longitude"
-                    )}
-                    value={formData.longitude}
-                    variant="bordered"
-                    onValueChange={(v) => {
-                      // Allow empty string or valid number format
-                      if (v === "" || /^-?\d*\.?\d*$/.test(v)) {
-                        handleInputChange("longitude", v);
-                      }
-                    }}
-                    isInvalid={!!errors.longitude}
-                    errorMessage={errors.longitude}
+                    {...inputProps}
+                    className="md:col-span-2"
+                    label={t("pages.sellerRegister.form.sellerName")}
+                    placeholder={t("pages.sellerRegister.placeholder.sellerName")}
+                    value={formData.sellerName}
+                    onValueChange={(v) => handleInputChange("sellerName", v)}
+                    isInvalid={!!errors.sellerName}
+                    errorMessage={errors.sellerName}
                     isRequired
-                    classNames={{ errorMessage: "text-xs" }}
+                  />
+                  <Input
+                    {...inputProps}
+                    label={t("pages.sellerRegister.form.mobile")}
+                    placeholder={t("pages.sellerRegister.placeholder.mobile")}
+                    value={formData.mobile}
+                    onValueChange={(v) => {
+                      if (/^\d*$/.test(v)) handleInputChange("mobile", v);
+                    }}
+                    isInvalid={!!errors.mobile}
+                    errorMessage={errors.mobile}
+                    isRequired
+                    type="tel"
+                  />
+                  <Input
+                    {...inputProps}
+                    label={t("pages.sellerRegister.form.email")}
+                    placeholder={t("pages.sellerRegister.placeholder.email")}
+                    value={formData.email}
+                    onValueChange={(v) => handleInputChange("email", v)}
+                    isInvalid={!!errors.email}
+                    errorMessage={errors.email}
+                    isRequired
+                    type="email"
+                  />
+                  <Input
+                    {...inputProps}
+                    label={t("pages.sellerRegister.form.password")}
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onValueChange={(v) => handleInputChange("password", v)}
+                    isInvalid={!!errors.password}
+                    errorMessage={errors.password}
+                    isRequired
+                    endContent={
+                      <button
+                        type="button"
+                        aria-label={t("pages.sellerRegister.button.togglePassword")}
+                        onClick={() => setShowPassword((prev) => !prev)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4 text-foreground/50" />
+                        ) : (
+                          <Eye className="w-4 h-4 text-foreground/50" />
+                        )}
+                      </button>
+                    }
+                  />
+                  <Input
+                    {...inputProps}
+                    label={t("pages.sellerRegister.form.confirmPassword")}
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmPassword}
+                    onValueChange={(v) =>
+                      handleInputChange("confirmPassword", v)
+                    }
+                    isInvalid={!!errors.confirmPassword}
+                    errorMessage={errors.confirmPassword}
+                    isRequired
+                    endContent={
+                      <button
+                        type="button"
+                        aria-label={t("pages.sellerRegister.button.togglePassword")}
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4 text-foreground/50" />
+                        ) : (
+                          <Eye className="w-4 h-4 text-foreground/50" />
+                        )}
+                      </button>
+                    }
                   />
                 </div>
-              </div>
+              )}
+
+              {step === 1 && (
+                <div className="flex flex-col gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <Input
+                      {...inputProps}
+                      className="md:col-span-2"
+                      label={t("pages.sellerRegister.form.address")}
+                      placeholder={t("pages.sellerRegister.placeholder.address")}
+                      value={formData.address}
+                      onValueChange={(v) => handleInputChange("address", v)}
+                      isInvalid={!!errors.address}
+                      errorMessage={errors.address}
+                      isRequired
+                    />
+                    <Input
+                      {...inputProps}
+                      label={t("pages.sellerRegister.form.city")}
+                      placeholder={t("pages.sellerRegister.placeholder.city")}
+                      value={formData.city}
+                      onValueChange={(v) => handleInputChange("city", v)}
+                      isInvalid={!!errors.city}
+                      errorMessage={errors.city}
+                      isRequired
+                    />
+                    <Input
+                      {...inputProps}
+                      label={t("pages.sellerRegister.form.landmark")}
+                      placeholder={t("pages.sellerRegister.placeholder.landmark")}
+                      value={formData.landmark}
+                      onValueChange={(v) => handleInputChange("landmark", v)}
+                      isInvalid={!!errors.landmark}
+                      errorMessage={errors.landmark}
+                      isRequired
+                    />
+                    <Input
+                      {...inputProps}
+                      label={t("pages.sellerRegister.form.state")}
+                      placeholder={t("pages.sellerRegister.placeholder.state")}
+                      value={formData.state}
+                      onValueChange={(v) => handleInputChange("state", v)}
+                      isInvalid={!!errors.state}
+                      errorMessage={errors.state}
+                      isRequired
+                    />
+                    <Input
+                      {...inputProps}
+                      label={t("pages.sellerRegister.form.zipcode")}
+                      placeholder={t("pages.sellerRegister.placeholder.zipcode")}
+                      value={formData.zipcode}
+                      onValueChange={(v) => handleInputChange("zipcode", v)}
+                      isInvalid={!!errors.zipcode}
+                      errorMessage={errors.zipcode}
+                      isRequired
+                    />
+                    <Autocomplete
+                      variant="bordered"
+                      labelPlacement="outside"
+                      radius="md"
+                      inputProps={{ classNames: { errorMessage: "text-xs" } }}
+                      label={t("pages.sellerRegister.form.country")}
+                      placeholder={t("pages.sellerRegister.placeholder.country")}
+                      defaultItems={COUNTRIES}
+                      selectedKey={formData.countryCode || null}
+                      onSelectionChange={(key) => {
+                        const code = (key as string) || "";
+                        setFormData((prev) => ({
+                          ...prev,
+                          countryCode: code,
+                          country:
+                            COUNTRIES.find((c) => c.code === code)?.name || "",
+                        }));
+                        setErrors((prev) => ({ ...prev, country: "" }));
+                      }}
+                      isInvalid={!!errors.country}
+                      errorMessage={errors.country}
+                      isRequired
+                    >
+                      {(country) => (
+                        <AutocompleteItem
+                          key={country.code}
+                          textValue={country.name}
+                          startContent={
+                            <Image
+                              src={getFlagEmoji(country.code)}
+                              alt=""
+                              radius="none"
+                              removeWrapper
+                              className="w-5 h-3.5 object-cover"
+                            />
+                          }
+                        >
+                          {country.name}
+                        </AutocompleteItem>
+                      )}
+                    </Autocomplete>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium mb-2">
+                      {t("pages.sellerRegister.selectOnMap")}
+                    </p>
+                    <LocationAutoComplete
+                      ref={locationAutoCompleteRef}
+                      onLocationSelect={handleLocationSelect}
+                      initialLocation={null}
+                    />
+                  </div>
+
+                  <Divider />
+
+                  <div>
+                    <h4 className="font-bold text-sm mb-4">
+                      {t("pages.sellerRegister.bankDetails")}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {BANK_TEXT_FIELDS.map((field) => (
+                        <Input
+                          key={field}
+                          {...inputProps}
+                          label={t(`pages.sellerRegister.form.${field}`)}
+                          placeholder={t(
+                            `pages.sellerRegister.placeholder.${field}`
+                          )}
+                          value={formData[field]}
+                          onValueChange={(v) => handleInputChange(field, v)}
+                          isInvalid={!!errors[field]}
+                          errorMessage={errors[field]}
+                          isRequired
+                        />
+                      ))}
+                      <Select
+                        variant="bordered"
+                        labelPlacement="outside"
+                        radius="md"
+                        classNames={{ errorMessage: "text-xs" }}
+                        label={t("pages.sellerRegister.form.bankAccountType")}
+                        placeholder={t(
+                          "pages.sellerRegister.placeholder.bankAccountType"
+                        )}
+                        selectedKeys={
+                          formData.bankAccountType
+                            ? [formData.bankAccountType]
+                            : []
+                        }
+                        onSelectionChange={(keys) =>
+                          handleInputChange(
+                            "bankAccountType",
+                            (Array.from(keys)[0] as string) || ""
+                          )
+                        }
+                        isInvalid={!!errors.bankAccountType}
+                        errorMessage={errors.bankAccountType}
+                        isRequired
+                      >
+                        {BANK_ACCOUNT_TYPES.map((type) => (
+                          <SelectItem key={type}>
+                            {t(`pages.sellerRegister.bankAccountType.${type}`)}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {DOC_FIELDS.map((field) =>
+                    renderFileUpload(
+                      `pages.sellerRegister.docs.${field}`,
+                      field,
+                      true
+                    )
+                  )}
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="flex flex-col gap-6">
+                  <section>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-sm">
+                        {t("pages.sellerRegister.review.accountDetails")}
+                      </h4>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        color="primary"
+                        className="text-sm"
+                        startContent={<Pencil className="w-3.5 h-3.5" />}
+                        onPress={() => setStep(0)}
+                      >
+                        {t("pages.sellerRegister.button.edit")}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {reviewRow(
+                        t("pages.sellerRegister.form.sellerName"),
+                        formData.sellerName
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.email"),
+                        formData.email
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.mobile"),
+                        formData.mobile
+                      )}
+                    </div>
+                  </section>
+
+                  <Divider />
+
+                  <section>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-sm">
+                        {t("pages.sellerRegister.review.businessInformation")}
+                      </h4>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        color="primary"
+                        className="text-sm"
+                        startContent={<Pencil className="w-3.5 h-3.5" />}
+                        onPress={() => setStep(1)}
+                      >
+                        {t("pages.sellerRegister.button.edit")}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {reviewRow(
+                        t("pages.sellerRegister.form.address"),
+                        formData.address
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.landmark"),
+                        formData.landmark
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.city"),
+                        formData.city
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.state"),
+                        formData.state
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.zipcode"),
+                        formData.zipcode
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.country"),
+                        formData.country
+                      )}
+                      {BANK_TEXT_FIELDS.map((field) =>
+                        reviewRow(
+                          t(`pages.sellerRegister.form.${field}`),
+                          formData[field]
+                        )
+                      )}
+                      {reviewRow(
+                        t("pages.sellerRegister.form.bankAccountType"),
+                        formData.bankAccountType
+                          ? t(
+                              `pages.sellerRegister.bankAccountType.${formData.bankAccountType}`
+                            )
+                          : ""
+                      )}
+                    </div>
+                  </section>
+
+                  <Divider />
+
+                  <section>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-sm">
+                        {t("pages.sellerRegister.review.documentsProvided")}
+                      </h4>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        color="primary"
+                        className="text-sm"
+                        startContent={<Pencil className="w-3.5 h-3.5" />}
+                        onPress={() => setStep(2)}
+                      >
+                        {t("pages.sellerRegister.button.edit")}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {DOC_FIELDS.map((field) => (
+                        <p
+                          key={field}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <CheckCircle
+                            className={`w-4 h-4 shrink-0 ${files[field] ? "text-success" : "text-foreground/30"}`}
+                          />
+                          {t(`pages.sellerRegister.docs.${field}`)}
+                        </p>
+                      ))}
+                    </div>
+                  </section>
+
+                  <div>
+                    <Checkbox
+                      isSelected={agreed}
+                      onValueChange={(value) => {
+                        setAgreed(value);
+                        if (value)
+                          setErrors((prev) => ({ ...prev, consent: "" }));
+                      }}
+                      size="sm"
+                      isInvalid={!!errors.consent}
+                    >
+                      <span className="text-xs text-foreground/70">
+                        {t("pages.sellerRegister.review.consent")}
+                      </span>
+                    </Checkbox>
+                    {errors.consent && (
+                      <p className="text-xs text-danger mt-1">
+                        {errors.consent}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Buttons side-by-side */}
-            <div className="flex justify-end gap-4 mt-6">
-              <Button variant="bordered" onPress={() => resetState()}>
-                {t("pages.sellerRegister.button.reset")}
-              </Button>
-              <Button
-                color="primary"
-                onPress={handleSubmit}
-                isLoading={isSubmitting}
-              >
-                {t("pages.sellerRegister.button.register")}
-              </Button>
+            <Divider className="my-6" />
+
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                {step > 0 ? (
+                  <Button
+                    variant="light"
+                    onPress={() => setStep((prev) => prev - 1)}
+                    startContent={<ArrowLeft className="w-4 h-4" />}
+                    isDisabled={isSubmitting}
+                  >
+                    {t("pages.sellerRegister.button.back")}
+                  </Button>
+                ) : (
+                  <span />
+                )}
+
+                <Button
+                  color="primary"
+                  className={`font-semibold ${step === 0 ? "w-full" : ""}`}
+                  endContent={<ArrowRight className="w-4 h-4" />}
+                  isLoading={isSubmitting}
+                  onPress={step === STEP_KEYS.length - 1 ? handleSubmit : goNext}
+                >
+                  {step === STEP_KEYS.length - 1
+                    ? t("pages.sellerRegister.button.submitApplication")
+                    : t(
+                        `pages.sellerRegister.steps.${STEP_KEYS[step + 1]}.title`
+                      )}
+                </Button>
+              </div>
+
+              {step === 0 && (
+                <p className="text-xs text-center text-foreground/50">
+                  {t("pages.sellerRegister.haveAccount")}{" "}
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_ADMIN_PANEL_URL}/seller`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary font-semibold"
+                  >
+                    {t("pages.sellerRegister.signIn")}
+                  </a>
+                </p>
+              )}
             </div>
-          </section>
+          </div>
         </div>
       </CardBody>
     </Card>

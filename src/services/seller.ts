@@ -25,10 +25,18 @@ export const sellerRegister = async (
         country?: string;
         latitude?: string;
         longitude?: string;
+        bank_name?: string;
+        bank_branch_code?: string;
+        account_holder_name?: string;
+        account_number?: string;
+        routing_number?: string;
+        bank_account_type?: "checking" | "savings";
         business_license?: string | File;
         articles_of_incorporation?: string | File;
         national_identity_card?: string | File;
         authorized_signature?: string | File;
+        address_proof?: string | File;
+        voided_check?: string | File;
       },
 ): Promise<ApiResponse<PaystackCreateOrderResponse>> => {
   try {

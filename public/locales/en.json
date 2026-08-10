@@ -1297,7 +1297,13 @@
         "zipcode": "Zipcode",
         "country": "Country",
         "latitude": "Latitude",
-        "longitude": "Longitude"
+        "longitude": "Longitude",
+        "bankName": "Bank Name",
+        "bankBranchCode": "Bank Branch Code",
+        "accountHolderName": "Account Holder Name",
+        "accountNumber": "Account Number",
+        "routingNumber": "Routing Number",
+        "bankAccountType": "Bank Account Type"
       },
       "placeholder": {
         "sellerName": "Enter your full name",
@@ -1310,18 +1316,30 @@
         "zipcode": "e.g. 370001",
         "country": "e.g. India",
         "latitude": "e.g. 23.241999",
-        "longitude": "e.g. 69.666881"
+        "longitude": "e.g. 69.666881",
+        "bankName": "e.g. State Bank",
+        "bankBranchCode": "e.g. SBIN0001234",
+        "accountHolderName": "Name as per bank records",
+        "accountNumber": "Enter your account number",
+        "routingNumber": "e.g. 110000000",
+        "bankAccountType": "Select account type"
       },
       "docs": {
         "businessLicense": "Business License",
         "articlesOfIncorporation": "Articles of Incorporation",
         "nationalId": "National ID Card",
-        "authorizedSignature": "Authorized Signature"
+        "authorizedSignature": "Authorized Signature",
+        "addressProof": "Address Proof",
+        "voidedCheck": "Voided Check"
       },
       "button": {
         "chooseFile": "Choose File",
         "register": "Register",
-        "reset": "Reset"
+        "reset": "Reset",
+        "back": "Back",
+        "edit": "Edit",
+        "submitApplication": "Submit Application",
+        "togglePassword": "Toggle password visibility"
       },
       "toast": {
         "invalidFileTitle": "Invalid File Type",
@@ -1341,15 +1359,59 @@
       "error": {
         "required": "Required",
         "passwordMismatch": "Passwords must match",
-        "invalidFile": "Invalid file type"
+        "invalidFile": "Invalid file type",
+        "invalidEmail": "Enter a valid email address",
+        "invalidMobile": "Enter a valid mobile number with country code",
+        "shortPassword": "Password must be at least 8 characters",
+        "consentRequired": "Please confirm the details are accurate"
+      },
+      "steps": {
+        "basic": {
+          "title": "Basic Information",
+          "desc": "Access a massive network of active buyers",
+          "heading": "Create Your Seller Account",
+          "subheading": "Enter your basic information to create your seller account."
+        },
+        "business": {
+          "title": "Business Information",
+          "desc": "Tell us where your business operates",
+          "heading": "Tell Us About Your Business",
+          "subheading": "Add your store details so customers can discover and reach your business."
+        },
+        "documents": {
+          "title": "Business Documents",
+          "desc": "Upload the documents we need to verify",
+          "heading": "Submit Your Business Proof",
+          "subheading": "Upload the documents we need to verify your business."
+        },
+        "review": {
+          "title": "Review Details",
+          "desc": "Check everything before you submit",
+          "heading": "Review Your Details",
+          "subheading": "Review the information below and confirm that everything is accurate."
+        }
+      },
+      "review": {
+        "accountDetails": "Account Details",
+        "businessInformation": "Business Information",
+        "documentsProvided": "Documents Provided",
+        "consent": "I confirm that all the information provided above is accurate and complete. I understand that false information may lead to application rejection."
+      },
+      "selectOnMap": "Select location on map",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign In",
+      "bankDetails": "Bank Details",
+      "bankAccountType": {
+        "checking": "Checking",
+        "savings": "Savings"
       }
     },
     "enhancedSellerMarketing": {
       "hero": {
-        "badge": "Elevate Your Brand With Us",
-        "titleMain": "Empowering Your Success with",
-        "titleAccent": "Digital Expertise",
-        "description": "Built for modern online commerce. Launch your store on HyperCommerce, list your catalog, reach customers across the marketplace, and manage orders, payments, and fulfillment from one dashboard.",
+        "badge": "Grow Your Business Online",
+        "titleMain": "Start. Sell. Succeed.",
+        "titleAccent": "We Power Your Growth",
+        "description": "Join thousands of successful sellers on HyperCommerce. Manage products, orders and deliveries — all in one place.",
         "explore": "Explore More",
         "registerNow": "Register Now",
         "bubble": {
@@ -1360,6 +1422,25 @@
           "easyOnboarding": "Easy Onboarding",
           "deliveryPartnerSupport": "Delivery Partner Support",
           "reliableSettlements": "Reliable Settlements"
+        },
+        "trust": "Quick setup · No hidden fees · 100% secure",
+        "features": {
+          "reach": {
+            "title": "Reach More Customers",
+            "desc": "Access a massive network of active buyers looking for your products."
+          },
+          "manage": {
+            "title": "Easy Product Management",
+            "desc": "Simple tools to upload, edit and track your inventory seamlessly."
+          },
+          "payments": {
+            "title": "Secure Payments",
+            "desc": "Fast, reliable payouts with industry-leading fraud protection."
+          },
+          "insights": {
+            "title": "Business Insights",
+            "desc": "Detailed analytics to understand sales trends and grow faster."
+          }
         }
       },
       "marquee": {
@@ -1419,7 +1500,7 @@
       },
       "how": {
         "title": "Start Selling in 3 Simple Steps",
-        "subtitle": "Get started quickly",
+        "subtitle": "Set up your business with us and start selling",
         "steps": {
           "register": {
             "title": "Register & Verify",
@@ -1433,7 +1514,9 @@
             "title": "Start Selling",
             "desc": "Receive orders, fulfill via partners or your own team"
           }
-        }
+        },
+        "titleMain": "Start Selling in",
+        "titleAccent": "3 Simple Steps"
       },
       "fulfillment": {
         "title": "Flexible Fulfillment Options",
@@ -1455,7 +1538,7 @@
       },
       "testimonials": {
         "title": "What Our Sellers Say",
-        "subtitle": "Real stories from real sellers",
+        "subtitle": "See how businesses like yours are growing with HyperCommerce",
         "items": {
           "localSeller": {
             "name": "Fashion Store",
@@ -1472,7 +1555,8 @@
             "business": "Electronics",
             "text": "The insights helped us optimize pricing and grow sales."
           }
-        }
+        },
+        "verifiedBuyer": "Verified buyer"
       },
       "cta": {
         "title": "Ready to Start Your Success Story?",
