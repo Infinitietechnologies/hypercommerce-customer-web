@@ -24,6 +24,8 @@ export const getCategories = async (
     per_page?: string | number;
     slug?: string;
     market?: string;
+    /** Only the categories flagged for the home category strip. */
+    home?: boolean;
   } = {},
 ): Promise<PaginatedResponse<Category[]>> => {
   try {

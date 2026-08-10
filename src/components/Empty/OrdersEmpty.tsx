@@ -1,10 +1,12 @@
 import React from "react";
+import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import { EmptyState } from "@/components/ui";
 
 const OrdersEmpty: React.FC = () => {
   const { t } = useTranslation();
+  const router = useRouter();
 
   return (
     <EmptyState
@@ -14,9 +16,7 @@ const OrdersEmpty: React.FC = () => {
       title={t("orders_empty_title")}
       description={t("orders_empty_description")}
       actionLabel={t("orders_empty_button")}
-      onAction={() => {
-        window.location.href = "/";
-      }}
+      onAction={() => router.push("/")}
     />
   );
 };

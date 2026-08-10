@@ -18,6 +18,7 @@ import { RootState } from "@/lib/redux/store";
 import ProductIndicator from "@/components/Functional/ProductIndicator";
 import RatingStars from "@/components/RatingStars";
 import { formatDeliveryByDate } from "@/helpers/delivery";
+import { getDiscountPercent } from "@/helpers/getters";
 
 interface ProductDetailSectionProps {
   initialProduct: Product;
@@ -82,7 +83,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const price = Number(selectedVariant?.price) || 0;
   const special = Number(selectedVariant?.special_price) || 0;
   const hasDiscount = special > 0 && special < price;
-  const offPct = hasDiscount ? Math.round(((price - special) / price) * 100) : 0;
+  const offPct = getDiscountPercent(price, special);
 
   // Stock is surfaced ONLY when it drops to/below the system low-stock limit
   // (Settings → lowStockLimit), shown as an urgency warning rather than the

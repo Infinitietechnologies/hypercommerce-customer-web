@@ -15,13 +15,16 @@ import { authSheetStore } from "@/stores/authSheetStore";
 import { Heart, ShoppingCart, User, Package } from "lucide-react";
 import { setCookie } from "@/lib/cookies";
 import { onHomeCategoryChange } from "@/helpers/events";
+import useSWR from "swr";
+import { getCategories } from "@/services/catalog";
+import { STALE_TIME } from "@/hooks/useInfiniteData";
 
 const ProfileBtn = dynamic(() => import("./ProfileBtn"), { ssr: false });
 const OfflineCartDrawer = dynamic(() => import("./Cart/OfflineCartDrawer"), {
   ssr: false,
 });
 
-const navItems = ["All", "Electronics", "Clothing", "Furniture", "Cosmetics", "Shoes"];
+const NAV_CATEGORY_COUNT = 6;
 
 const HeaderAction = ({
   icon,
@@ -54,7 +57,8 @@ export const Navbar: FC = () => {
     () => false,
   );
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
-  const { webSettings, demoMode, systemSettings } = useSettings();
+  const { webSettings, demoMode, systemSettings, homeGeneralSettings } =
+    useSettings();
   const router = useRouter();
   const cartCount =
     useSelector((state: RootState) => state.cart.cartData?.items_count) || 0;
@@ -63,6 +67,15 @@ export const Navbar: FC = () => {
     useSelector((state: RootState) => state.offlineCart.items)?.length || 0;
 
   const bagCount = isLoggedIn ? cartCount : offLineCartCount;
+
+  // The strip must carry real category slugs: `/home-layout` silently falls
+  // back to the global layout for a slug it can't resolve.
+  const { data: navCategoriesRes } = useSWR(
+    router.pathname === "/" ? "home-nav-categories" : null,
+    () => getCategories({ page: 1, per_page: NAV_CATEGORY_COUNT, home: true }),
+    { revalidateOnFocus: false, dedupingInterval: STALE_TIME.reference },
+  );
+  const navCategories = navCategoriesRes?.data?.data ?? [];
 
   const {
     isOpen: isOfflineCartOpen,
@@ -291,15 +304,20 @@ export const Navbar: FC = () => {
           {router.pathname === "/" && (
             <div className="relative border-b border-zinc-100/60 bg-white/75 backdrop-blur-md">
               <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 no-scrollbar">
-                {navItems.map((item) => {
+                {[
+                  { slug: "all", title: homeGeneralSettings?.title || "All" },
+                  ...navCategories.map((c) => ({ slug: c.slug, title: c.title })),
+                ].map((item) => {
                   const currentCategory = (router.query.category as string) || "";
-                  const isAll = item === "All";
-                  const isActive = isAll ? !currentCategory : (currentCategory.toLowerCase() === item.toLowerCase());
+                  const isAll = item.slug === "all";
+                  const isActive = isAll
+                    ? !currentCategory
+                    : currentCategory === item.slug;
                   return (
                     <button
-                      key={item}
+                      key={item.slug}
                       onClick={async () => {
-                        const slug = isAll ? "all" : item.toLowerCase();
+                        const slug = item.slug;
                         setCookie("homeCategory", slug);
                         if (router.pathname === "/") {
                           await router.push(
@@ -318,7 +336,7 @@ export const Navbar: FC = () => {
                           : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                       }`}
                     >
-                      {item}
+                      {item.title}
                     </button>
                   );
                 })}

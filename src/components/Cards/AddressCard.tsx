@@ -2,7 +2,6 @@ import { FC, useState } from "react";
 import { Button, Chip, useDisclosure, addToast } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { Address } from "@/types/ApiResponse";
-import AddressGoogleModal from "../Modals/AddressGoogleModal";
 import AddressModal from "../Modals/AddressModal";
 import ConfirmationModal from "../Modals/ConfirmationModal";
 import { deleteAddress } from "@/routes/api";
@@ -15,7 +14,6 @@ interface AddressCardProps {
 }
 
 const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -148,16 +146,6 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            onPress={onOpen}
-            isDisabled={isLoading}
-            aria-label={t("view_map")}
-          >
-            <Icon icon="solar:map-point-linear" width={16} height={16} />
-          </Button>
           <button
             type="button"
             onClick={editOnOpen}
@@ -180,11 +168,6 @@ const AddressCard: FC<AddressCardProps> = ({ address, onDelete, onEdit }) => {
         </div>
       </div>
 
-      <AddressGoogleModal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        address={address}
-      />
       <AddressModal
         isOpen={editOpen}
         onOpenChange={editOnOpenChange}

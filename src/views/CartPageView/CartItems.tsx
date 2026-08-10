@@ -33,6 +33,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import AttachmentUploader from "@/components/Cart/AttachmentUploader";
 import type { AttachmentFile } from "@/components/Cart/AttachmentUploader";
 import CartAddonList from "@/components/Cart/CartAddonList";
+import { getDiscountPercent } from "@/helpers/getters";
 
 interface CartItemsProps {
   items: CartItem[];
@@ -43,6 +44,8 @@ interface CartItemsProps {
    * the compact list reused by the checkout summary. Cart page only.
    */
   layout?: "default" | "cart";
+  /** Product attachment uploaders. Checkout only — the cart page never collects them. */
+  showAttachments?: boolean;
 }
 
 /**
@@ -61,9 +64,7 @@ const getLineAmounts = (item: CartItem) => {
     shownPrice,
     hasDiscount,
     saving: hasDiscount ? lineOriginal - shownPrice : 0,
-    discountPct: hasDiscount
-      ? Math.round(((lineOriginal - shownPrice) / lineOriginal) * 100)
-      : 0,
+    discountPct: getDiscountPercent(lineOriginal, shownPrice),
   };
 };
 
@@ -71,6 +72,7 @@ const CartItems: FC<CartItemsProps> = ({
   items = [],
   scrollable = false,
   layout = "default",
+  showAttachments = false,
 }) => {
   const { t } = useTranslation();
   const { formatPrice, systemSettings, isSingleVendor } = useSettings();
@@ -336,7 +338,7 @@ const CartItems: FC<CartItemsProps> = ({
   };
 
   const renderAttachment = (item: CartItem): ReactNode =>
-    item.product.is_attachment_required ? (
+    showAttachments && item.product.is_attachment_required ? (
       <div className="w-full mt-3 space-y-3 rounded-xl border border-divider p-3 bg-content2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <p className="text-xxs font-semibold text-foreground">
@@ -703,7 +705,7 @@ const CartItems: FC<CartItemsProps> = ({
                     </div>
 
                     {/* Attachment Section - Full Width Below Item */}
-                    {item.product.is_attachment_required && (
+                    {showAttachments && item.product.is_attachment_required && (
                       <div className="w-full mt-3 mb-2 space-y-3 rounded-xl border border-divider p-3 bg-content1">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <p className="text-xxs font-semibold text-foreground">

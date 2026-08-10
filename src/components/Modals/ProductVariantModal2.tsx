@@ -17,6 +17,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { handleAddToCart } from "@/helpers/functionalHelpers";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import { getDiscountPercent } from "@/helpers/getters";
 
 interface ProductVariantModalProps {
   isOpen: boolean;
@@ -171,12 +172,8 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
     return specialPrice > 0 && specialPrice < price ? specialPrice : price;
   };
 
-  const getDiscountPercentage = (variant: ProductVariant) => {
-    const price = Number(variant?.price) || 0;
-    const specialPrice = Number(variant?.special_price) || 0;
-    const hasDiscount = specialPrice > 0 && specialPrice < price;
-    return hasDiscount ? Math.round(((price - specialPrice) / price) * 100) : 0;
-  };
+  const getDiscountPercentage = (variant: ProductVariant) =>
+    getDiscountPercent(variant?.price ?? 0, variant?.special_price ?? 0);
 
   // Calculate price for selected variant
   const price = Number(selectedVariant?.price) || 0;

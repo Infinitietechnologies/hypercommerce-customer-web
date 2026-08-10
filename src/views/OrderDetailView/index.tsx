@@ -29,6 +29,7 @@ import { orderStatusColorMap } from "@/config/constants";
 import CancelOrderItemModal from "@/components/Modals/CancelOrderItemModal";
 import RatingModal from "@/components/Modals/RatingModal";
 import OrderItemReviewCard from "@/components/Modals/OrderItemReviewCard";
+import FilePreview from "@/components/FilePreview";
 import ShippingInfo from "./ShippingInfo";
 import DeliveryInfo from "./DeliveryInfo";
 import ReturnSheet from "./ReturnSheet";
@@ -197,6 +198,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
   const timelineEvents = flattenTimeline(selected.timeline);
   const currentStatus = selected.customer_status;
   const addons = selected.addons ?? [];
+  const attachments = selected.attachments ?? [];
 
   const savings =
     Number(order.promo_discount || 0) + Number(order.gift_card_discount || 0);
@@ -287,6 +289,14 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+                {attachments.length > 0 && (
+                  <div className="mt-2 border-t border-divider pt-2">
+                    <div className="text-[10px] font-bold uppercase text-default-500">
+                      {t("attachments")}
+                    </div>
+                    <FilePreview attachments={attachments} />
                   </div>
                 )}
               </div>

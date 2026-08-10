@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import { Breadcrumbs, BreadcrumbItem } from "@heroui/react";
 import { Home } from "lucide-react";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
+import { getActiveCategory } from "@/helpers/getters";
 
 interface Breadcrumb {
   href?: string;
@@ -28,8 +29,20 @@ const MyBreadcrumbs: React.FC<MyBreadcrumbsProps> = ({
   const router = useRouter();
   const { t } = useTranslation();
 
+  // The shopper's home is whichever category strip they last picked, so "Home"
+  // returns them there rather than to "All". Cookie-backed, hence client-only.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  const activeCategory = mounted ? getActiveCategory() : undefined;
+  const homeHref = activeCategory
+    ? `/?category=${encodeURIComponent(activeCategory)}`
+    : "/";
+
   const defaultBreadcrumb = {
-    href: "/",
+    href: homeHref,
     label: t("home_title"),
     startContent: <Home size={12} />,
   };

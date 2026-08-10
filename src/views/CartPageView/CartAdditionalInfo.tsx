@@ -49,7 +49,7 @@ const CartAdditionalInfo: FC<CartAdditionalInfoProps> = () => {
           <h2 className="mb-3 text-base font-bold text-foreground">
             {t("cart.title", { defaultValue: "Cart" })} ({cartData?.total_quantity})
           </h2>
-          <CartItems items={items} layout="cart" />
+          <CartItems items={items} layout="cart" showAttachments />
         </div>
       )}
 

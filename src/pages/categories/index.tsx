@@ -113,7 +113,7 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
           isLoading={isLoadingMore}
           onLoadMore={loadMore}
         >
-          <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 2xl:grid-cols-10 gap-2 sm:gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 sm:gap-3">
             {isLoading && categories.length === 0
               ? Array.from({ length: 10 }).map((_, index) => (
                   <CategoryCardSkeleton key={index} />
@@ -124,7 +124,7 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
           </div>
 
           {isLoadingMore && (
-            <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 2xl:grid-cols-10 gap-2 sm:gap-3 mt-6">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 sm:gap-3 mt-6">
               {Array.from({ length: 10 }).map((_, index) => (
                 <CategoryCardSkeleton key={`loading-${index}`} />
               ))}

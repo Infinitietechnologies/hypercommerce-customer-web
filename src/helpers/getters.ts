@@ -449,3 +449,20 @@ export const getFileType = (
   }
   return "other";
 };
+
+/**
+ * Exact discount percentage between a price and its special price, kept to two
+ * decimals with trailing zeros trimmed (30.05 stays 30.05, 30.00 reads 30).
+ * Returns 0 when there is no discount.
+ */
+export const getDiscountPercent = (
+  price: number | string,
+  specialPrice: number | string,
+): number => {
+  const base = Number(price) || 0;
+  const special = Number(specialPrice) || 0;
+
+  if (base <= 0 || special <= 0 || special >= base) return 0;
+
+  return Number((((base - special) / base) * 100).toFixed(2));
+};

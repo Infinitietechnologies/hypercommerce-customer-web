@@ -21,6 +21,7 @@ import { RootState } from "@/lib/redux/store";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useAdTracking } from "@/hooks/useAdTracking";
+import { getDiscountPercent } from "@/helpers/getters";
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
   ssr: false,
@@ -178,9 +179,7 @@ const ProductCard: FC<ProductCardProps> = ({
   const price = Number(defaultVariant?.price) || 0;
   const specialPrice = Number(defaultVariant?.special_price) || 0;
   const hasDiscount = specialPrice > 0 && specialPrice < price;
-  const discountPercentage = hasDiscount
-    ? Math.round(((price - specialPrice) / price) * 100)
-    : 0;
+  const discountPercentage = getDiscountPercent(price, specialPrice);
 
   const rating = Number(product.ratings) || 0;
   const hasRating = (product.rating_count ?? 0) > 0 && rating > 0;

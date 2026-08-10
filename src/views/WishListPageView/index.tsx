@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/router";
 import { Skeleton } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
@@ -25,6 +26,7 @@ const WishListPageView: React.FC<WishListPageViewProps> = ({
   onRetry,
 }) => {
   const { t } = useTranslation();
+  const router = useRouter();
 
   return (
     <div className="w-full">
@@ -59,9 +61,7 @@ const WishListPageView: React.FC<WishListPageViewProps> = ({
             "Start adding items to see them here",
           )}
           actionLabel={t("orders_empty_button", "Browse products")}
-          onAction={() => {
-            window.location.href = "/";
-          }}
+          onAction={() => router.push("/")}
         />
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

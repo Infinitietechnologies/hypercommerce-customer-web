@@ -40,6 +40,7 @@ import { RootState } from "@/lib/redux/store";
 import { addRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { trackProductView } from "@/lib/analytics";
 import { motion, AnimatePresence } from "framer-motion";
+import { getDiscountPercent } from "@/helpers/getters";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -364,9 +365,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
   const finalPrice = hasDiscount ? specialPrice : price;
   const totalPrice = (finalPrice + addonTotalPrice) * quantity;
   const savings = hasDiscount ? (price - specialPrice) * quantity : 0;
-  const discountPercentage = hasDiscount
-    ? Math.round(((price - specialPrice) / price) * 100)
-    : 0;
+  const discountPercentage = getDiscountPercent(price, specialPrice);
 
   const handleAddonChange = (
     group: AddonGroup,

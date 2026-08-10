@@ -33,6 +33,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { addRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { trackProductView } from "@/lib/analytics";
+import { getDiscountPercent } from "@/helpers/getters";
 
 const Lightbox = dynamic(() => import("yet-another-react-lightbox"), {
   ssr: false,
@@ -139,12 +140,8 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
     const sp = Number(v.special_price) || 0;
     return sp > 0 && sp < p;
   };
-  const getDiscountPct = (v: ProductVariant) => {
-    if (!variantHasDiscount(v)) return 0;
-    const p = getOriginalPrice(v);
-    const sp = Number(v.special_price) || 0;
-    return Math.round(((p - sp) / p) * 100);
-  };
+  const getDiscountPct = (v: ProductVariant) =>
+    getDiscountPercent(getOriginalPrice(v), v.special_price ?? 0);
 
   const lowStockLimitRaw = Number(systemSettings?.lowStockLimit);
   const lowStockLimit =
