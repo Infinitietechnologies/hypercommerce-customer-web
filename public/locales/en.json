@@ -1506,19 +1506,35 @@
         "steps": {
           "register": {
             "title": "Register & Verify",
-            "desc": "Simple registration and verification"
+            "desc": "Simple registration and verification",
+            "points": {
+              "p1": "Sign up with your business email and mobile",
+              "p2": "Upload your licence and identity documents",
+              "p3": "Get verified by our onboarding team"
+            }
           },
           "list": {
             "title": "List Products",
-            "desc": "Add products with our easy tools"
+            "desc": "Add products with our easy tools",
+            "points": {
+              "p1": "Add products one by one or in bulk",
+              "p2": "Set pricing, stock and delivery options",
+              "p3": "Organise your catalog with categories"
+            }
           },
           "start": {
             "title": "Start Selling",
-            "desc": "Receive orders, fulfill via partners or your own team"
+            "desc": "Receive orders, fulfill via partners or your own team",
+            "points": {
+              "p1": "Receive orders straight to your dashboard",
+              "p2": "Fulfil with our partners or your own team",
+              "p3": "Track payouts and sales in one place"
+            }
           }
         },
         "titleMain": "Start Selling in",
-        "titleAccent": "3 Simple Steps"
+        "titleAccent": "3 Simple Steps",
+        "stepLabel": "Step {{number}}"
       },
       "fulfillment": {
         "title": "Flexible Fulfillment Options",

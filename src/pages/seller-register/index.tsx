@@ -12,6 +12,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 import SellerRegisterForm from "@/components/Seller/SellerRegisterForm";
 import PageHead from "@/SEO/PageHead";
 import EnhancedSellerMarketing from "@/components/Seller/EnhancedSellerMarketing";
+import SellerSteps from "@/components/Seller/SellerSteps";
+import SellerTestimonials from "@/components/Seller/SellerTestimonials";
 
 export default function SellerRegistration() {
   const { t } = useTranslation();
@@ -28,7 +30,7 @@ export default function SellerRegistration() {
 
   return (
     <div className="min-h-screen w-full">
-      <div className="w-full flex flex-col items-start">
+      <div className="w-full flex flex-col items-start gap-12">
         <PageHead pageTitle={t("pages.sellerRegister.pageTitle")} />
 
         <MyBreadcrumbs
@@ -50,7 +52,11 @@ export default function SellerRegistration() {
         {/* <SellerMarketingContent /> */}
         <EnhancedSellerMarketing />
 
+        <SellerSteps />
+
         <SellerRegisterForm />
+
+        <SellerTestimonials />
       </div>
     </div>
   );
