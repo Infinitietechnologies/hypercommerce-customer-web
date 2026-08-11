@@ -1339,7 +1339,9 @@
         "back": "رجوع",
         "edit": "تعديل",
         "submitApplication": "إرسال الطلب",
-        "togglePassword": "إظهار/إخفاء كلمة المرور"
+        "togglePassword": "إظهار/إخفاء كلمة المرور",
+        "replaceFile": "اضغط للاستبدال",
+        "removeFile": "إزالة الملف"
       },
       "toast": {
         "invalidFileTitle": "نوع الملف غير صالح",

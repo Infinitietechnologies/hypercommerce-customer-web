@@ -1339,7 +1339,9 @@
         "back": "Back",
         "edit": "Edit",
         "submitApplication": "Submit Application",
-        "togglePassword": "Toggle password visibility"
+        "togglePassword": "Toggle password visibility",
+        "replaceFile": "Click to replace",
+        "removeFile": "Remove file"
       },
       "toast": {
         "invalidFileTitle": "Invalid File Type",

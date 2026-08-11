@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Input,
   Button,
@@ -20,6 +21,8 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
+  FileText,
+  X,
   Pencil,
 } from "lucide-react";
 import { sellerRegister } from "@/routes/api";
@@ -104,11 +107,16 @@ export default function SellerRegisterForm() {
   const locationAutoCompleteRef = useRef<LocationAutoCompleteRef>(null);
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+  const stepShift = prefersReducedMotion ? 0 : 12;
   const [agreed, setAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [previews, setPreviews] = useState<
+    Partial<Record<keyof FileData, string>>
+  >({});
   const [files, setFiles] = useState<FileData>({
     businessLicense: null,
     articlesOfIncorporation: null,
@@ -172,6 +180,10 @@ export default function SellerRegisterForm() {
       voidedCheck: null,
     });
     setErrors({});
+    Object.values(previews).forEach(
+      (url) => url && URL.revokeObjectURL(url as string)
+    );
+    setPreviews({});
     setAgreed(false);
     setStep(0);
     if (locationAutoCompleteRef.current) {
@@ -260,7 +272,7 @@ export default function SellerRegisterForm() {
         description: t("pages.sellerRegister.toast.invalidFileDescription"),
         color: "danger",
       });
-      setFiles((prev) => ({ ...prev, [name]: null }));
+      clearFile(name);
       setErrors((prev) => ({
         ...prev,
         [name]: t("pages.sellerRegister.error.invalidFile"),
@@ -271,6 +283,23 @@ export default function SellerRegisterForm() {
     // Valid file
     setFiles((prev) => ({ ...prev, [name]: file }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
+    setPreviews((prev) => {
+      if (prev[name]) URL.revokeObjectURL(prev[name] as string);
+      return {
+        ...prev,
+        [name]: file.type.startsWith("image/")
+          ? URL.createObjectURL(file)
+          : undefined,
+      };
+    });
+  };
+
+  const clearFile = (name: keyof FileData) => {
+    setFiles((prev) => ({ ...prev, [name]: null }));
+    setPreviews((prev) => {
+      if (prev[name]) URL.revokeObjectURL(prev[name] as string);
+      return { ...prev, [name]: undefined };
+    });
   };
 
   const validationToast = () =>
@@ -692,11 +721,11 @@ export default function SellerRegisterForm() {
           {t(label)} {required && <span className="text-danger">*</span>}
         </label>
         <div
-          className={`border rounded-medium px-4 py-3 flex items-center gap-2 transition ${
+          className={`border rounded-medium px-4 py-3 flex items-center gap-3 transition ${
             error
               ? "border-danger bg-danger-50"
               : file
-                ? "border-success bg-success-50 text-success"
+                ? "border-success bg-success-50"
                 : "border-divider hover:border-primary"
           }`}
         >
@@ -707,28 +736,60 @@ export default function SellerRegisterForm() {
             accept={allowedTypesFor(name).join(",")}
             onChange={(e) => handleFileChange(name, e)}
           />
-          <label
-            htmlFor={name}
-            className="flex items-center gap-2 w-full cursor-pointer"
-          >
-            {file && !error ? (
-              <>
-                <CheckCircle className="w-4 h-4 shrink-0" />
-                <span className="truncate text-sm">{file.name}</span>
-              </>
-            ) : (
-              <>
-                <Upload
-                  className={`w-4 h-4 shrink-0 ${error ? "text-danger" : "text-foreground/50"}`}
-                />
-                <span
-                  className={`text-sm ${error ? "text-danger" : "text-foreground/50"}`}
-                >
-                  {t("pages.sellerRegister.button.chooseFile")}
+
+          {file && !error ? (
+            <>
+              <label
+                htmlFor={name}
+                className="flex items-center gap-3 w-full min-w-0 cursor-pointer"
+              >
+                {previews[name] ? (
+                  <Image
+                    src={previews[name] as string}
+                    alt={file.name}
+                    radius="sm"
+                    removeWrapper
+                    className="w-12 h-12 shrink-0 object-cover border border-divider"
+                  />
+                ) : (
+                  <span className="w-12 h-12 shrink-0 rounded-small bg-content2 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-foreground/50" />
+                  </span>
+                )}
+                <span className="min-w-0">
+                  <span className="block truncate text-sm">{file.name}</span>
+                  <span className="flex items-center gap-1 text-xs text-success">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    {t("pages.sellerRegister.button.replaceFile")}
+                  </span>
                 </span>
-              </>
-            )}
-          </label>
+              </label>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                radius="full"
+                aria-label={t("pages.sellerRegister.button.removeFile")}
+                onPress={() => clearFile(name)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </>
+          ) : (
+            <label
+              htmlFor={name}
+              className="flex items-center gap-2 w-full cursor-pointer"
+            >
+              <Upload
+                className={`w-4 h-4 shrink-0 ${error ? "text-danger" : "text-foreground/50"}`}
+              />
+              <span
+                className={`text-sm ${error ? "text-danger" : "text-foreground/50"}`}
+              >
+                {t("pages.sellerRegister.button.chooseFile")}
+              </span>
+            </label>
+          )}
         </div>
         {error && <p className="text-xs text-danger">{error}</p>}
       </div>
@@ -769,7 +830,7 @@ export default function SellerRegisterForm() {
                   <li key={key} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <span
-                        className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
+                        className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
                           idx === step
                             ? "bg-primary text-primary-foreground"
                             : "bg-content1 border border-divider text-foreground/50"
@@ -783,7 +844,7 @@ export default function SellerRegisterForm() {
                     </div>
                     <div className="pb-6">
                       <p
-                        className={`text-sm font-semibold ${idx === step ? "text-primary" : ""}`}
+                        className={`text-sm font-semibold transition-colors duration-300 ${idx === step ? "text-primary" : ""}`}
                       >
                         {t(`pages.sellerRegister.steps.${key}.title`)}
                       </p>
@@ -808,6 +869,14 @@ export default function SellerRegisterForm() {
               </p>
               <Divider className="my-5" />
 
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, x: stepShift }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -stepShift }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
               {step === 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <Input
@@ -1223,6 +1292,8 @@ export default function SellerRegisterForm() {
                   </div>
                 </div>
               )}
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             <Divider className="my-6" />
@@ -1244,7 +1315,7 @@ export default function SellerRegisterForm() {
 
                 <Button
                   color="primary"
-                  className={`font-semibold ${step === 0 ? "w-full" : ""}`}
+                  className={`font-semibold transition-all hover:-translate-y-0.5 hover:shadow-md ${step === 0 ? "w-full" : ""}`}
                   endContent={<ArrowRight className="w-4 h-4" />}
                   isLoading={isSubmitting}
                   onPress={step === STEP_KEYS.length - 1 ? handleSubmit : goNext}

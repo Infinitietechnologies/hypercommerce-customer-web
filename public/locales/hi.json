@@ -1339,7 +1339,9 @@
         "back": "वापस",
         "edit": "संपादित करें",
         "submitApplication": "आवेदन जमा करें",
-        "togglePassword": "पासवर्ड दिखाएँ/छिपाएँ"
+        "togglePassword": "पासवर्ड दिखाएँ/छिपाएँ",
+        "replaceFile": "बदलने के लिए क्लिक करें",
+        "removeFile": "फ़ाइल हटाएँ"
       },
       "toast": {
         "invalidFileTitle": "अमान्य फ़ाइल प्रकार",
