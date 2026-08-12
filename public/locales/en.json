@@ -1445,61 +1445,6 @@
           }
         }
       },
-      "marquee": {
-        "contentMarketing": "Content Marketing",
-        "socialMediaMarketing": "Social Media Marketing",
-        "seo": "Search Engine Optimization",
-        "businessGrowth": "Business Growth"
-      },
-      "about": {
-        "badge": "About Us",
-        "titleMain": "Empowering Your Success with",
-        "titleAccent": "Digital Expertise",
-        "description": "HyperCommerce connects sellers with customers across the entire marketplace. We help your business grow online while simplifying catalog management, logistics, payments, and technology — so you can focus on selling.",
-        "button": "About Us",
-        "metrics": {
-          "marketingGrowth": "Marketing & Business Growth",
-          "creativityInnovation": "Creativity & Innovation",
-          "businessFinanceMgmt": "Business & Financial Management"
-        }
-      },
-      "benefits": {
-        "badge": "Why Choose Us",
-        "title": "Everything You Need to Succeed",
-        "description": "Focus on selling great products while we handle the rest",
-        "items": {
-          "deliveryIntegrations": {
-            "title": "Delivery Integrations",
-            "desc": "Works with your preferred delivery partners",
-            "metric": "Flexible"
-          },
-          "flexibleOnboarding": {
-            "title": "Flexible Onboarding",
-            "desc": "Start quickly with configurable requirements",
-            "metric": "Configurable"
-          },
-          "localFulfillment": {
-            "title": "Reliable Fulfillment",
-            "desc": "Ship orders to customers wherever they are",
-            "metric": "Anywhere"
-          },
-          "businessInsights": {
-            "title": "Business Insights",
-            "desc": "Analytics to understand performance",
-            "metric": "Insights"
-          },
-          "trustedPayments": {
-            "title": "Trusted Payments",
-            "desc": "Support for secure settlement flows",
-            "metric": "Secure"
-          },
-          "customerReach": {
-            "title": "Customer Reach",
-            "desc": "Reach shoppers across the entire marketplace",
-            "metric": "Marketplace"
-          }
-        }
-      },
       "how": {
         "title": "Start Selling in 3 Simple Steps",
         "subtitle": "Set up your business with us and start selling",
@@ -1536,24 +1481,6 @@
         "titleAccent": "3 Simple Steps",
         "stepLabel": "Step {{number}}"
       },
-      "fulfillment": {
-        "title": "Flexible Fulfillment Options",
-        "desc": "Integrate your preferred delivery partners or use your own team. Configure experiences to match your operations.",
-        "items": {
-          "partnerIntegrations": {
-            "title": "Partner Integrations",
-            "desc": "Connect third-party providers"
-          },
-          "realtimeTracking": {
-            "title": "Real-time Tracking",
-            "desc": "Track order status"
-          },
-          "policies": {
-            "title": "Configurable Policies",
-            "desc": "Set fees, SLA, and rules"
-          }
-        }
-      },
       "testimonials": {
         "title": "What Our Sellers Say",
         "subtitle": "See how businesses like yours are growing with HyperCommerce",
@@ -1575,11 +1502,6 @@
           }
         },
         "verifiedBuyer": "Verified buyer"
-      },
-      "cta": {
-        "title": "Ready to Start Your Success Story?",
-        "desc": "Get started by submitting your business details below.",
-        "registerLabel": "📋 Register Your Business Below"
       }
     },
     "notifications": {

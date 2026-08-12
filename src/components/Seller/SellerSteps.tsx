@@ -22,9 +22,9 @@ interface Step {
 
 // One frame per step — point these at the per-step art when it lands.
 const STEP_IMAGES = [
-  "/seller-landing/simple-steps.png",
-  "/seller-landing/simple-steps.png",
-  "/seller-landing/simple-steps.png",
+  "/seller-landing/simple-step1.png",
+  "/seller-landing/simple-step2.png",
+  "/seller-landing/simple-step3.png",
 ];
 
 export default function SellerSteps() {
@@ -84,7 +84,7 @@ export default function SellerSteps() {
   });
 
   const heading = (
-    <Reveal className="text-center mb-8">
+    <Reveal className="text-center mb-6">
       <h2 className="text-2xl md:text-3xl font-bold mb-2">
         {t("pages.enhancedSellerMarketing.how.titleMain")}{" "}
         <span className="text-primary">
@@ -153,7 +153,7 @@ export default function SellerSteps() {
           {heading}
 
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
-            <div className="relative h-full min-h-96 overflow-hidden rounded-large">
+            <div className="relative h-[62vh] min-h-96 max-h-[600px] overflow-hidden rounded-large">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={active}
@@ -179,9 +179,9 @@ export default function SellerSteps() {
               </AnimatePresence>
             </div>
 
-            <div className="flex gap-5 self-center">
+            <div className="flex items-center gap-5 self-center">
               {/* Progress rail */}
-              <ol className="flex flex-col items-center gap-2 pt-2">
+              <ol className="flex flex-col items-center gap-2">
                 {steps.map((item, idx) => (
                   <li key={idx} className="flex flex-col items-center gap-2">
                     <span

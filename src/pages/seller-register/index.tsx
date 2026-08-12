@@ -2,7 +2,6 @@ import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import PageHeader from "@/components/custom/PageHeader";
 import { getSettings } from "@/routes/api";
 import { isSSR } from "@/helpers/getters";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
@@ -17,7 +16,7 @@ import SellerTestimonials from "@/components/Seller/SellerTestimonials";
 
 export default function SellerRegistration() {
   const { t } = useTranslation();
-  const { webSettings, isSingleVendor } = useSettings();
+  const { isSingleVendor } = useSettings();
   const router = useRouter();
 
   useEffect(() => {
@@ -42,14 +41,6 @@ export default function SellerRegistration() {
           ]}
         />
 
-        <PageHeader
-          title={t("pages.sellerRegister.pageTitle")}
-          subtitle={t("pages.sellerRegister.pageSubtitle")}
-          highlightText={webSettings?.siteName || ""}
-        />
-
-        {/* Marketing content comes first */}
-        {/* <SellerMarketingContent /> */}
         <EnhancedSellerMarketing />
 
         <SellerSteps />

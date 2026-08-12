@@ -45,7 +45,7 @@ export default function SellerTestimonials() {
   ];
 
   return (
-    <div className="relative w-full px-4 overflow-hidden">
+    <div className="relative w-full px-4 overflow-hidden mb-4">
       <Quote
         className="absolute -top-4 start-4 w-40 h-40 text-primary-200 -scale-x-100 pointer-events-none"
         strokeWidth={1}

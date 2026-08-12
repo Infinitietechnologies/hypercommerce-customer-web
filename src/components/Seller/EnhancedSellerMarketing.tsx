@@ -62,7 +62,7 @@ export default function EnhancedSellerMarketing() {
 
           <div className="relative grid md:grid-cols-2 gap-8 items-center">
             <Reveal className="space-y-5">
-              <div className="inline-flex items-center gap-2 bg-primary-50 border border-primary-200 px-3.5 py-2 text-primary-700 rounded-full text-xs font-semibold">
+              <div className="inline-flex items-center gap-2 bg-primary-50/70 px-3.5 py-2 text-primary rounded-full text-xs font-semibold">
                 <TrendingUp className="w-3.5 h-3.5 text-primary" />
                 {t("pages.enhancedSellerMarketing.hero.badge")}
               </div>
