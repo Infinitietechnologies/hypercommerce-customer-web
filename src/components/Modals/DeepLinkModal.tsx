@@ -206,7 +206,7 @@ const DeepLinkModal: FC = () => {
   if (!isMobile) return null;
 
   // Get first letter of site name for the icon
-  const siteName = webSettings?.siteName || "HyperLocal";
+  const siteName = webSettings?.siteName || "HyperCommerce";
   const iconLetter = siteName.charAt(0).toUpperCase();
 
   return (

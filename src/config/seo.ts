@@ -44,10 +44,10 @@ export const pageSEOConfigs: Record<string, PageSEOConfig> = {
 
   // Store Pages
   stores: {
-    title: "Stores Near You",
+    title: "Browse Stores",
     description:
-      "Find local stores offering products with fast delivery in your area.",
-    keywords: "stores, local stores, nearby stores, shop local",
+      "Browse verified stores on the marketplace and shop their full catalog.",
+    keywords: "stores, marketplace stores, verified sellers, shop by store",
     ogType: "website",
     canonical: "/stores",
   },
@@ -80,7 +80,8 @@ export const pageSEOConfigs: Record<string, PageSEOConfig> = {
 
   shippingPolicy: {
     title: "Shipping Policy",
-    description: "Learn about our shipping methods, delivery times, and costs.",
+    description:
+      "Learn how sellers on HyperCommerce ship orders, delivery times, and costs.",
     keywords: "shipping, delivery, shipping policy, delivery policy",
     ogType: "article",
     canonical: "/shipping-policy",
@@ -114,7 +115,7 @@ export const pageSEOConfigs: Record<string, PageSEOConfig> = {
   sellerRegister: {
     title: "Become a Seller",
     description:
-      "Join our platform as a seller and reach thousands of customers.",
+      "Sell on HyperCommerce and reach thousands of buyers. Simple onboarding, secure payouts.",
     keywords:
       "become a seller, register, seller registration, sell online, vendor",
     ogType: "website",

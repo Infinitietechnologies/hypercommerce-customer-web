@@ -22,7 +22,7 @@ const WebForceUpdate: NextPageWithLayout<WebForceUpdateProps> = ({
   return (
     <>
       <Head>
-        <title>Updating HyperLocal</title>
+        <title>Updating HyperCommerce</title>
         <meta
           name="description"
           content="We are upgrading your experience with new features and optimizations."

@@ -1,12 +1,13 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Hyper Local 222",
-  description: "Make beautiful websites regardless of your design experience.",
+  name: "HyperCommerce",
+  description:
+    "HyperCommerce is a multivendor marketplace for groceries, food, pharmacy and everyday essentials.",
   metaKeywords:
-    "local delivery, ecommerce, hyperlocal services, online shopping, delivery app, nearby stores, fast delivery, next-day delivery, local groceries, quick commerce",
+    "hypercommerce, multivendor marketplace, online shopping, ecommerce, groceries, food, pharmacy, verified sellers, secure payments, fast delivery",
   metaDescription:
-    "Hyper Local is your go-to platform for fast and reliable local delivery services. Shop from nearby stores and get your items delivered quickly and hassle-free.",
+    "Shop groceries, food, pharmacy and everyday essentials from thousands of verified sellers on HyperCommerce. Secure payments, reliable delivery, one marketplace.",
   navItems: [
     {
       label: "Home",
