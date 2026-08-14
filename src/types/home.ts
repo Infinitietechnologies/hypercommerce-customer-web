@@ -7,7 +7,8 @@ export type HomeSectionType =
   | "banners"
   | "products"
   | "categories"
-  | "brands";
+  | "brands"
+  | "play_image";
 
 export interface HomeSectionItem {
   id: number;
@@ -21,6 +22,7 @@ export interface HomeSectionItem {
   link_url?: string;
   target_id: number | string | null;
   slug: string;
+  config?: Record<string, any>;
 }
 
 // Hero items use `type`; banner items use `link_type` (+ optional link_url).
@@ -51,6 +53,10 @@ export interface HomeSection {
     categories?: Category[];
     brands?: Brand[];
     items?: HomeSectionItem[];
+    rows?: {
+      row_index: number;
+      items: HomeSectionItem[];
+    }[];
   };
 }
 

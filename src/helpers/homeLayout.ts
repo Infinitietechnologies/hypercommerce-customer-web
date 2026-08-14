@@ -45,3 +45,74 @@ export const homeItemImage = (item: HomeItem): string => {
   if ("default_image" in item && item.default_image) return item.default_image;
   return "";
 };
+
+/** Parse boolean value from various configurations */
+export const parseBoolSetting = (val: any, defaultVal: boolean): boolean => {
+  if (val === undefined || val === null) return defaultVal;
+  if (typeof val === "boolean") return val;
+  if (typeof val === "number") return val !== 0;
+  if (typeof val === "string") {
+    const s = val.toLowerCase().trim();
+    return s === "true" || s === "1" || s === "yes" || s === "on";
+  }
+  return !!val;
+};
+
+/** Get standard CSS spacing value (appending px if raw number) */
+export const getSpacingValueSetting = (val: any, defaultVal: string): string => {
+  if (val === undefined || val === null) return defaultVal;
+  if (typeof val === "number") return `${val}px`;
+  if (typeof val === "string" && !isNaN(Number(val))) return `${val}px`;
+  return String(val);
+};
+
+/** Resolve custom 4-side padding values or fallback spacing */
+export const getPaddingValueSetting = (outerPaddingCustom: any, outerPadding: any, defaultVal = "16px"): string => {
+  if (outerPaddingCustom) {
+    return String(outerPaddingCustom)
+      .split("/")
+      .map((v) => {
+        const trimmed = v.trim();
+        if (!trimmed) return "0px";
+        if (trimmed.endsWith("px") || trimmed.endsWith("%") || trimmed.endsWith("rem")) {
+          return trimmed;
+        }
+        return `${trimmed}px`;
+      })
+      .join(" ");
+  }
+  return getSpacingValueSetting(outerPadding, defaultVal);
+};
+
+/** Resolve dynamic breakout wrapper classes and content alignment classes based on container width settings */
+export const getContainerWidthClasses = (containerWidthSetting: string) => {
+  const width = containerWidthSetting || "container";
+  let wrapperClass = "w-full";
+  let innerClass = "w-full";
+
+  if (width === "fluid") {
+    wrapperClass = "w-screen relative left-1/2 -translate-x-1/2 max-w-none";
+    innerClass = "w-full max-w-[1440px] mx-auto px-4 sm:px-8";
+  } else if (width === "full") {
+    wrapperClass = "w-screen relative left-1/2 -translate-x-1/2 max-w-none";
+    innerClass = "w-full px-0";
+  } else {
+    wrapperClass = "w-full max-w-site mx-auto";
+    innerClass = "w-full";
+  }
+
+  return { wrapperClass, innerClass };
+};
+
+/** Resolve element card hover CSS animation classes */
+export const getHoverEffectClasses = (hoverEffectSetting: string): string => {
+  const effect = hoverEffectSetting || "none";
+  if (effect === "zoom") {
+    return "hover:scale-[1.03] transition-transform duration-300";
+  } else if (effect === "lift") {
+    return "hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300";
+  } else if (effect === "opacity") {
+    return "hover:opacity-85 transition-opacity duration-300";
+  }
+  return "";
+};

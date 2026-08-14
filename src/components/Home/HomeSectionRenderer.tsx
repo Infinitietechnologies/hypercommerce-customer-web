@@ -10,6 +10,7 @@ import ProductCard from "@/components/Cards/ProductCard";
 import CardSlider from "@/components/Home/CardSlider";
 import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
 import HomeHeroSlider from "@/components/Home/HomeHeroSlider";
+import HomePlayImageGrid from "@/components/Home/HomePlayImageGrid";
 import { HomeSection } from "@/types/ApiResponse";
 
 type BgType = "none" | "color" | "image";
@@ -84,7 +85,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
 
   return (
     <section className="mb-6 sm:mb-9 rd-fade">
-      {title ? (
+      {title && title.trim() ? (
         <HomeSectionHeader
           title={title}
           seeAllHref={type === "banners" || type === "hero" ? undefined : seeAllHref}
@@ -171,6 +172,8 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
       ) : null}
 
       {type === "hero" ? <HomeHeroSlider items={items} /> : null}
+
+      {type === "play_image" ? <HomePlayImageGrid section={section} /> : null}
     </section>
   );
 };

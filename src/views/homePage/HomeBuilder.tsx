@@ -99,7 +99,7 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   }, [fetchPage, loading, page, lastPage]);
 
   return (
-    <section className="w-full max-w-site mx-auto px-3 sm:px-6 py-4 sm:py-6" id="home-builder">
+    <section className="w-full max-w-site mx-auto" id="home-builder">
       {/* Driven by onHomeCategoryChange / onLocationChange (helpers/events). */}
       <button className="hidden" id="home-sections-refetch" onClick={refetch} />
 
