@@ -1,5 +1,6 @@
 import { FC, memo } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Button } from "@heroui/react";
@@ -56,6 +57,12 @@ const getDesktopColSpan = (span: number) => {
     default:
       return "sm:col-span-12";
   }
+};
+
+const getLottieSize = (val: any, defaultVal: string): string => {
+  if (!val) return defaultVal;
+  if (!isNaN(Number(val))) return `${val}px`;
+  return String(val);
 };
 
 interface SpanLayout {
@@ -210,6 +217,10 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
 
   return (
     <div className="w-full flex flex-col">
+      <Script
+        src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"
+        strategy="lazyOnload"
+      />
       {resolvedRows.map((row, rIdx) => {
         const rowConfig = row.config;
         const isScroll = row.style === "scroll";
@@ -219,7 +230,6 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
         const rawRadius = getSpacingValueSetting(rowConfig.border_radius, "8px");
         const borderRadius = rawRadius === "full" ? "9999px" : rawRadius;
         
-        // Reusable Hover Effects & Breakout Width Classes
         const hoverClasses = getHoverEffectClasses(rowConfig.hover_effect);
         const { wrapperClass, innerClass } = getContainerWidthClasses(rowConfig.container_width);
 
@@ -295,7 +305,21 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                     }
                     const isOriginal = aspectRatio === "original";
 
-                    const slideContent = (
+                    const isLottie = item.config?.media_type === "lottie";
+
+                    const slideContent = isLottie ? (
+                      <div
+                        className={`w-full overflow-hidden flex justify-center items-center ${hoverClasses}`}
+                        style={{
+                          borderRadius,
+                          width: getLottieSize(item.config?.lottie_width, "100%"),
+                          height: getLottieSize(item.config?.lottie_height, "150px"),
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: `<lottie-player src="${desktopSrc}" background="transparent" speed="1" style="width: 100%; height: 100%; display: block; margin: 0 auto;" loop autoplay></lottie-player>`
+                        }}
+                      />
+                    ) : (
                       <div
                         className={`w-full overflow-hidden block relative ${isOriginal ? "" : "h-full"} ${hoverClasses}`}
                         style={{
@@ -382,8 +406,21 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                 const hasLink = linkHref && linkHref !== "#";
 
                 const isOriginal = item.config?.aspect_ratio === "original" || !item.config?.aspect_ratio;
+                const isLottie = item.config?.media_type === "lottie";
 
-                const cardContent = (
+                const cardContent = isLottie ? (
+                  <div
+                    className="w-full flex justify-center items-center"
+                    style={{
+                      borderRadius,
+                      width: getLottieSize(item.config?.lottie_width, "100%"),
+                      height: getLottieSize(item.config?.lottie_height, "150px"),
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: `<lottie-player src="${desktopSrc}" background="transparent" speed="1" style="width: 100%; height: 100%; display: block; margin: 0 auto;" loop autoplay></lottie-player>`
+                    }}
+                  />
+                ) : (
                   <div
                     className={`w-full relative ${isOriginal ? "" : "h-full"}`}
                     style={{
