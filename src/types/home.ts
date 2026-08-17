@@ -4,7 +4,6 @@ import type { SEOMetadata } from "./common";
 // Home Layout — the server-driven home page builder
 export type HomeSectionType =
   | "hero"
-  | "banners"
   | "products"
   | "categories"
   | "brands"
@@ -14,7 +13,7 @@ export interface HomeSectionItem {
   id: number;
   title?: string;
   image: string;
-  /** Optional mobile-specific banner image; falls back to `image`. */
+  /** Optional mobile-specific image; falls back to `image`. */
   mobile_image?: string | null;
   default_image?: string;
   type?: string;
@@ -25,18 +24,9 @@ export interface HomeSectionItem {
   config?: Record<string, any>;
 }
 
-// Hero items use `type`; banner items use `link_type` (+ optional link_url).
-// Both share the common image/slug fields of HomeSectionItem.
-
-// Hero items use `type`; banner items use `link_type` (+ optional link_url).
-// Both share the common image/slug fields of HomeSectionItem.
+// Hero items use `type`; play-image items use `link_type` (+ optional link_url).
 export interface HomeHeroItem extends HomeSectionItem {
   type?: string;
-}
-
-export interface HomeBannerItem extends HomeSectionItem {
-  link_type?: string;
-  link_url?: string;
 }
 
 export interface HomeSection {

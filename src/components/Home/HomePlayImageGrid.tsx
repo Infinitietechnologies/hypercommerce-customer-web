@@ -225,19 +225,28 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
         const rowConfig = row.config;
         const isScroll = row.style === "scroll";
 
-        const gap = getSpacingValueSetting(rowConfig.grid_gap, "12px");
-        const padding = getPaddingValueSetting(rowConfig.outer_padding_custom, rowConfig.outer_padding, "16px");
-        const rawRadius = getSpacingValueSetting(rowConfig.border_radius, "8px");
+        const gap = getSpacingValueSetting(rowConfig.grid_gap, "0px");
+        const padding = getPaddingValueSetting(rowConfig.outer_padding_custom, rowConfig.outer_padding, "0px");
+        const rawRadius = getSpacingValueSetting(rowConfig.border_radius, "0px");
         const borderRadius = rawRadius === "full" ? "9999px" : rawRadius;
+        const rowBackgroundStyle = rowConfig.background_type === "color"
+          ? { backgroundColor: rowConfig.background_color || "#ffffff" }
+          : rowConfig.background_type === "image" && rowConfig.background_image
+            ? {
+                backgroundImage: `url(${rowConfig.background_image})`,
+                backgroundPosition: "center",
+                backgroundSize: "cover",
+              }
+            : {};
         
         const hoverClasses = getHoverEffectClasses(rowConfig.hover_effect);
         const { wrapperClass, innerClass } = getContainerWidthClasses(rowConfig.container_width);
 
         if (isScroll) {
-          const itemsToShow = Number(rowConfig.items_to_show ?? 2.3);
-          const itemsToShowMobile = Number(rowConfig.items_to_show_mobile ?? 1.2);
-          const gapVal = rowConfig.grid_gap !== undefined ? Number(rowConfig.grid_gap) : 12;
-          const showBullets = parseBoolSetting(rowConfig.show_bullets, true);
+          const itemsToShow = Number(rowConfig.items_to_show ?? 1);
+          const itemsToShowMobile = Number(rowConfig.items_to_show_mobile ?? 1);
+          const gapVal = rowConfig.grid_gap !== undefined ? Number(rowConfig.grid_gap) : 0;
+          const showBullets = parseBoolSetting(rowConfig.show_bullets, false);
           const showScrollButtons = parseBoolSetting(rowConfig.show_scroll_buttons, true);
           const autoScroll = parseBoolSetting(rowConfig.auto_scroll, false);
           const autoScrollTime = Number(rowConfig.auto_scroll_time ?? 3);
@@ -248,6 +257,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                 className={`relative group ${innerClass}`}
                 style={{
                   padding,
+                  ...rowBackgroundStyle,
                 }}
               >
                 {showScrollButtons && (
@@ -396,6 +406,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
               style={{
                 padding,
                 gap,
+                ...rowBackgroundStyle,
               }}
             >
               {itemStylesMap.map(({ item, className, cssAspectRatio }, index) => {

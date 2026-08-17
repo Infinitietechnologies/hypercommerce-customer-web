@@ -5,7 +5,6 @@ import CategoryCard from "@/components/Cards/CategoryCard";
 import CategoryFullImageCard from "@/components/Cards/CategoryFullImageCard";
 import CategoryHorizontalCard from "@/components/Cards/CategoryHorizontalCard";
 import CategoryOverlayCard from "@/components/Cards/CategoryOverlayCard";
-import HomeBannerCard from "@/components/Cards/HomeBannerCard";
 import ProductCard from "@/components/Cards/ProductCard";
 import CardSlider from "@/components/Home/CardSlider";
 import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
@@ -39,7 +38,7 @@ interface HomeSectionRendererProps {
 /**
  * Renders one home-builder section by type × style × config, wired to the live
  * `/home-layout` payload. Pixel + logic source: `HomeSection` in the
- * `src/redesign/` sandbox. Horizontal rails and banners are Swiper sliders.
+ * `src/redesign/` sandbox. Horizontal rails use Swiper sliders.
  */
 const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
   const { type, title, style, config, content, background_image } = section;
@@ -130,7 +129,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
     (type === "products" && !products.length) ||
     (type === "categories" && !categories.length) ||
     (type === "brands" && !brands.length) ||
-    ((type === "banners" || type === "hero") && !items.length)
+    (type === "hero" && !items.length)
   ) {
     return null;
   }
@@ -140,9 +139,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
       {title && title.trim() ? (
         <HomeSectionHeader
           title={title}
-          seeAllHref={
-            type === "banners" || type === "hero" ? undefined : seeAllHref
-          }
+          seeAllHref={type === "hero" || type === "play_image" ? undefined : seeAllHref}
         />
       ) : null}
 
@@ -220,25 +217,6 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
             </div>,
           )
         : null}
-
-      {type === "banners" ? (
-        <CardSlider
-          autoplay
-          loop
-          slidesPerView={1}
-          spaceBetween={14}
-          breakpoints={
-            style === "peek" ? { 640: { slidesPerView: 2 } } : undefined
-          }
-          slides={items.map((bn) => (
-            <HomeBannerCard
-              key={bn.id}
-              item={bn}
-              variant={style === "peek" ? "peek" : "full"}
-            />
-          ))}
-        />
-      ) : null}
 
       {type === "hero" ? <HomeHeroSlider items={items} /> : null}
 

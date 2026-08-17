@@ -8,7 +8,6 @@ import CategoryCard from "@/components/Cards/CategoryCard";
 import CategoryFullImageCard from "@/components/Cards/CategoryFullImageCard";
 import CategoryHorizontalCard from "@/components/Cards/CategoryHorizontalCard";
 import CategoryOverlayCard from "@/components/Cards/CategoryOverlayCard";
-import HomeBannerCard from "@/components/Cards/HomeBannerCard";
 import ProductCard from "@/components/Cards/ProductCard";
 import ProductCardSkeleton from "@/components/Skeletons/ProductCardSkeleton";
 import ProductFilter, {
@@ -24,13 +23,12 @@ import { getHomeLayoutSection } from "@/routes/api";
 import {
   Brand,
   Category,
-  HomeBannerItem,
   HomeSectionType,
   Product,
   SidebarFilters,
 } from "@/types/ApiResponse";
 
-type Row = Product | Category | Brand | HomeBannerItem;
+type Row = Product | Category | Brand;
 
 export interface HomeSectionDetailData {
   sectionId: number;
@@ -249,13 +247,7 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({
         </div>
       );
     }
-    return (
-      <div className="flex flex-col gap-4">
-        {(items as HomeBannerItem[]).map((bn) => (
-          <HomeBannerCard key={bn.id} item={bn} variant="full" />
-        ))}
-      </div>
-    );
+    return null;
   };
 
   return (
