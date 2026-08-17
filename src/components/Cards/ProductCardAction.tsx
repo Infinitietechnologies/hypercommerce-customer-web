@@ -25,7 +25,7 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
     return (
       <Button
         aria-label={label}
-        className="h-10 w-full px-3 text-xs font-semibold"
+        className="h-9 w-full !shadow-none px-3 text-xs font-semibold"
         color="primary"
         isDisabled={isOutOfStock}
         isLoading={isLoading}
@@ -34,7 +34,6 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
             <Icon icon="solar:add-circle-linear" className="text-lg" />
           )
         }
-        variant="flat"
         onPress={onPress}
       >
         {shortLabel}
@@ -46,11 +45,15 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
     return (
       <Button
         aria-label={label}
-        className="h-9 w-full bg-content2 px-3 text-xs font-semibold"
+        className="h-9 w-full px-3 text-xs font-semibold !shadow-none"
         color="primary"
         isDisabled={isOutOfStock}
         isLoading={isLoading}
-        variant="light"
+        startContent={
+          isLoading ? undefined : (
+            <Icon icon="solar:add-circle-linear" className="text-lg" />
+          )
+        }
         onPress={onPress}
       >
         {shortLabel}
@@ -62,7 +65,7 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
     return (
       <Button
         aria-label={label}
-        className="h-10 w-full text-xs font-semibold"
+        className="h-10 w-full !shadow-none text-xs font-semibold"
         color="primary"
         isDisabled={isOutOfStock}
         isLoading={isLoading}
@@ -71,7 +74,6 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
             <Icon icon="solar:cart-plus-linear" className="text-lg" />
           )
         }
-        variant="bordered"
         onPress={onPress}
       >
         {label}

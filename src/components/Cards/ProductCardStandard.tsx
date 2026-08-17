@@ -92,6 +92,17 @@ const ProductCardStandard: FC<ProductCardLayoutProps> = (props) => {
 
         <div className="mt-auto flex flex-col gap-2 pt-1">
           <ProductCardPrice pricing={pricing} />
+          {hasRating ? (
+            <div className="flex min-h-5 items-center gap-1 text-xs text-default-500">
+              <Icon icon="solar:star-bold" className="text-rating-star" />
+              <strong className="font-semibold text-foreground">
+                {rating.toFixed(1)}
+              </strong>
+              {product.rating_count > 0 ? (
+                <span>({product.rating_count})</span>
+              ) : null}
+            </div>
+          ) : null}
           {showAddToCart ? (
             <ProductCardAction
               appearance="standard"
@@ -101,18 +112,6 @@ const ProductCardStandard: FC<ProductCardLayoutProps> = (props) => {
             />
           ) : null}
         </div>
-
-        {hasRating ? (
-          <div className="flex min-h-5 items-center gap-1 border-t border-divider pt-2 text-xs text-default-500">
-            <Icon icon="solar:star-bold" className="text-rating-star" />
-            <strong className="font-semibold text-foreground">
-              {rating.toFixed(1)}
-            </strong>
-            {product.rating_count > 0 ? (
-              <span>({product.rating_count})</span>
-            ) : null}
-          </div>
-        ) : null}
       </CardFooter>
     </Card>
   );
