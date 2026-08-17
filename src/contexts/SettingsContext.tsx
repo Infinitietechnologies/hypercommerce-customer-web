@@ -12,6 +12,7 @@ import {
   MarketsSetting,
   MarketFormat,
 } from "@/types/ApiResponse";
+import type { HeaderSettings } from "@/types/header";
 import { getSpecificSettings, getWebSettings } from "@/helpers/getters";
 import { formatCurrency } from "@/helpers/currency";
 import { staticLat, staticLng } from "@/config/constants";
@@ -27,6 +28,7 @@ type SettingsContextType = {
   paymentSettings: PaymentSettings | null;
   authSettings: AuthenticationSettings | null;
   homeGeneralSettings: HomeGeneralSettings | null;
+  headerSettings: HeaderSettings | null;
   systemSettings: SystemSettings | null;
   appSettings: AppSettings | null;
   advertisementSettings: AdvertisementSettings | null;
@@ -50,6 +52,7 @@ const SettingsContext = createContext<SettingsContextType>({
   paymentSettings: null,
   authSettings: null,
   homeGeneralSettings: null,
+  headerSettings: null,
   systemSettings: null,
   appSettings: null,
   advertisementSettings: null,
@@ -98,6 +101,12 @@ export const SettingsProvider = ({
           settings,
           "home_general_settings",
         ) as HomeGeneralSettings)
+      : null;
+
+    const headerSettings = settings
+      ? (((settings as unknown as { variable: string; value: unknown }[]).find(
+          (item) => item.variable === "header",
+        )?.value as HeaderSettings | undefined) ?? null)
       : null;
 
     const appSettings = settings
@@ -156,6 +165,7 @@ export const SettingsProvider = ({
       paymentSettings,
       authSettings,
       homeGeneralSettings,
+      headerSettings,
       systemSettings,
       appSettings,
       advertisementSettings,

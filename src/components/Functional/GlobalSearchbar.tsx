@@ -12,11 +12,12 @@ import { useTranslation } from "react-i18next";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
+import clsx from "clsx";
 
 const DEBOUNCE_DELAY = 300;
 
 const searchFetcher = async (
-  key: string
+  key: string,
 ): Promise<PaginatedResponse<Product[]> | null> => {
   const [, query] = key.split(":");
   if (!query || query.trim().length < 2) return null;
@@ -31,7 +32,15 @@ const searchFetcher = async (
   return response;
 };
 
-const GlobalSearchBar: React.FC = () => {
+interface GlobalSearchBarProps {
+  tone?: "light" | "dark";
+  size?: "default" | "large";
+}
+
+const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
+  tone = "light",
+  size = "default",
+}) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
@@ -39,7 +48,9 @@ const GlobalSearchBar: React.FC = () => {
   const { homeGeneralSettings } = useSettings();
   const router = useRouter();
 
-  const currentSearchLabels = useSelector((state: RootState) => state.search.currentSearchLabels);
+  const currentSearchLabels = useSelector(
+    (state: RootState) => state.search.currentSearchLabels,
+  );
 
   const placeholders = useMemo<string[]>(() => {
     // Priority 1: Dynamic labels from category response
@@ -103,7 +114,7 @@ const GlobalSearchBar: React.FC = () => {
         setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
         setAnimationState("enter");
       },
-      enterDuration + stayDuration + exitDuration
+      enterDuration + stayDuration + exitDuration,
     );
 
     return () => {
@@ -220,7 +231,7 @@ const GlobalSearchBar: React.FC = () => {
       onClose();
       handleClearSearch();
     },
-    [onClose, router, handleClearSearch]
+    [onClose, router, handleClearSearch],
   );
 
   const handleChipClick = useCallback(
@@ -228,7 +239,7 @@ const GlobalSearchBar: React.FC = () => {
       setSearchQuery(searchTerm);
       handleSearchSubmit(searchTerm);
     },
-    [handleSearchSubmit]
+    [handleSearchSubmit],
   );
 
   const handleRemoveSearch = useCallback(
@@ -236,7 +247,7 @@ const GlobalSearchBar: React.FC = () => {
       e.stopPropagation();
       removeSearch(searchTerm);
     },
-    [removeSearch]
+    [removeSearch],
   );
 
   const formatDeliveryTime = useCallback((time: number | null) => {
@@ -250,19 +261,38 @@ const GlobalSearchBar: React.FC = () => {
   return (
     <>
       <div
+        role="button"
+        tabIndex={0}
         onClick={onOpen}
-        className="relative flex w-full cursor-pointer items-center h-10 px-4 rounded-full bg-white/10 border border-white/10 hover:border-primary/60 transition-colors gap-2"
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onOpen();
+          }
+        }}
+        className={clsx(
+          "relative flex w-full cursor-pointer items-center gap-2 border px-4 transition-colors",
+          size === "large" ? "h-12 rounded-medium" : "h-10 rounded-full",
+          tone === "light"
+            ? "border-white/10 bg-white/10 hover:border-primary/60"
+            : "border-divider bg-content1/90 hover:border-primary/60",
+        )}
       >
         <Icon
           icon="solar:magnifer-linear"
-          className="text-white/70 text-lg shrink-0"
+          className={clsx(
+            "shrink-0 text-lg",
+            tone === "light" ? "text-white/70" : "text-default-500",
+          )}
         />
 
         <div className="relative flex-1 min-w-0 h-5 overflow-hidden pointer-events-none">
           <span
             key={placeholderIndex}
-            className="absolute inset-0 truncate text-white/60 text-sm font-medium leading-5
-              transition-all duration-600 ease-in-out"
+            className={clsx(
+              "absolute inset-0 truncate text-sm font-medium leading-5 transition-all duration-600 ease-in-out",
+              tone === "light" ? "text-white/60" : "text-default-500",
+            )}
             style={{
               transform: `translateY(${animationState === "enter" ? "20px" : animationState === "exit" ? "-20px" : "0px"})`,
               opacity: getOpacity(),
@@ -281,12 +311,14 @@ const GlobalSearchBar: React.FC = () => {
             router.push("/shopping-list");
           }}
           aria-label={t("userLayout.shoppingList")}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className={clsx(
+            "flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-transparent transition-colors",
+            tone === "light"
+              ? "text-white/70 hover:bg-white/10 hover:text-white"
+              : "text-default-500 hover:bg-content2 hover:text-foreground",
+          )}
         >
-          <Icon
-            icon="solar:clipboard-text-linear"
-            className="text-xl"
-          />
+          <Icon icon="solar:clipboard-text-linear" className="text-xl" />
         </button>
       </div>
 

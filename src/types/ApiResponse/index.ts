@@ -14,6 +14,7 @@ export type * from "../content";
 export type * from "../delivery";
 export type * from "../geo";
 export type * from "../home";
+export type * from "../header";
 export type * from "../market";
 export type * from "../order";
 export type * from "../payments";

@@ -21,6 +21,7 @@ import { useRouter } from "next/router";
 import { RootState } from "@/lib/redux/store";
 import { Address } from "@/types/ApiResponse";
 import { MapPin } from "lucide-react";
+import clsx from "clsx";
 
 type SelectedLocation = {
   placeName: string;
@@ -28,7 +29,17 @@ type SelectedLocation = {
   placeDescription: string;
 };
 
-const LocationSelector = ({ variant = "desktop" }: { variant?: "desktop" | "mobile" }) => {
+interface LocationSelectorProps {
+  variant?: "desktop" | "mobile" | "showcase";
+  tone?: "light" | "dark";
+  showLabel?: boolean;
+}
+
+const LocationSelector = ({
+  variant = "desktop",
+  tone = "light",
+  showLabel = false,
+}: LocationSelectorProps) => {
   const { defaultLocation, demoMode } = useSettings();
   const { t } = useTranslation();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
@@ -424,12 +435,43 @@ const LocationSelector = ({ variant = "desktop" }: { variant?: "desktop" | "mobi
 
   return (
     <div>
-      {variant === "desktop" ? (
+      {variant === "showcase" ? (
         <button
           type="button"
           onClick={isCheckoutLocked ? undefined : onOpen}
           disabled={!isInitialized || isCheckoutLocked}
-          className="hidden min-w-0 items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-xs whitespace-nowrap transition-colors hover:border-primary/60 min-[1024px]:flex text-ink-foreground cursor-pointer"
+          className={clsx(
+            "hidden min-w-0 cursor-pointer items-center gap-2 ps-2 text-start min-[1024px]:flex",
+            tone === "light" ? "text-white" : "text-foreground",
+          )}
+        >
+          <MapPin className="h-5 w-5 shrink-0 text-primary" />
+          <span className="flex min-w-0 flex-col">
+            {showLabel ? (
+              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60">
+                {t("nav.deliverTo", "Deliver to")}
+              </span>
+            ) : null}
+            <span className="max-w-48 truncate text-sm font-bold">
+              {getButtonText()}
+            </span>
+          </span>
+          <Icon
+            icon="solar:alt-arrow-down-linear"
+            className="shrink-0 text-sm opacity-60"
+          />
+        </button>
+      ) : variant === "desktop" ? (
+        <button
+          type="button"
+          onClick={isCheckoutLocked ? undefined : onOpen}
+          disabled={!isInitialized || isCheckoutLocked}
+          className={clsx(
+            "hidden min-w-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs transition-colors hover:border-primary/60 min-[1024px]:flex",
+            tone === "light"
+              ? "border-white/15 text-ink-foreground"
+              : "border-divider bg-content1/90 text-foreground",
+          )}
         >
           <MapPin className="h-4 w-4 shrink-0 text-primary" />
           <span className="truncate opacity-80">{getButtonText()}</span>
@@ -439,13 +481,28 @@ const LocationSelector = ({ variant = "desktop" }: { variant?: "desktop" | "mobi
           type="button"
           onClick={isCheckoutLocked ? undefined : onOpen}
           disabled={!isInitialized || isCheckoutLocked}
-          className="flex items-center justify-between w-full rounded-full bg-white/10 px-4 py-2 text-[13px] text-white hover:bg-white/15 transition-all cursor-pointer border border-white/5"
+          className={clsx(
+            "flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-medium px-1 py-1.5 text-start transition-colors",
+            tone === "light"
+              ? "text-white hover:bg-white/10"
+              : "text-foreground hover:bg-content1/60",
+          )}
         >
-          <div className="flex items-center gap-2 min-w-0">
-            <MapPin className="h-4 w-4 shrink-0 text-primary" />
-            <span className="truncate opacity-90">{getButtonText()}</span>
-          </div>
-          <Icon icon="solar:alt-arrow-down-linear" className="text-sm shrink-0 opacity-70" />
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10">
+            <MapPin className="h-4 w-4 text-primary" />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-[9px] font-semibold uppercase leading-none tracking-wide opacity-60">
+              {t("nav.deliverTo", "Deliver to")}
+            </span>
+            <span className="truncate text-xs font-bold leading-5">
+              {getButtonText()}
+            </span>
+          </span>
+          <Icon
+            icon="solar:alt-arrow-down-linear"
+            className="shrink-0 text-sm opacity-60"
+          />
         </button>
       )}
 
