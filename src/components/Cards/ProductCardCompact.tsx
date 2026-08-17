@@ -57,7 +57,7 @@ const ProductCardCompact: FC<ProductCardLayoutProps> = (props) => {
 
         <Link
           href={productHref}
-          className="line-clamp-2 min-h-10 text-base font-bold leading-snug text-foreground"
+          className="truncate text-base font-bold leading-snug text-foreground"
           title={product.title}
           onClick={onProductClick}
         >
