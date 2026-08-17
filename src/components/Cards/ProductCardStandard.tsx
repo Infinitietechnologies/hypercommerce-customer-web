@@ -53,7 +53,7 @@ const ProductCardStandard: FC<ProductCardLayoutProps> = (props) => {
 
         <Link
           href={productHref}
-          className="line-clamp-2 min-h-10 text-sm font-bold leading-snug text-foreground"
+          className="line-clamp-2 text-sm font-bold leading-snug text-foreground"
           title={product.title}
           onClick={onProductClick}
         >
