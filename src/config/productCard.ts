@@ -7,7 +7,7 @@ export const PRODUCT_CARD_STYLES = [
 
 export type ProductCardStyle = (typeof PRODUCT_CARD_STYLES)[number];
 
-export const DEFAULT_PRODUCT_CARD_STYLE: ProductCardStyle = "compact";
+export const DEFAULT_PRODUCT_CARD_STYLE: ProductCardStyle = "showcase";
 
 export const PRODUCT_CARD_GRID_CLASSES: Record<ProductCardStyle, string> = {
   standard: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
