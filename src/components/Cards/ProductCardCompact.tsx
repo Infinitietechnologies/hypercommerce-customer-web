@@ -64,8 +64,10 @@ const ProductCardCompact: FC<ProductCardLayoutProps> = (props) => {
           {product.title}
         </Link>
 
-        <div className="mt-auto flex items-end justify-between gap-3 border-t border-divider pt-3">
-          <ProductCardPrice pricing={pricing} />
+        <div className="mt-auto flex items-start justify-between gap-3 border-t border-divider pt-3">
+          <div className="min-w-0 flex-1">
+            <ProductCardPrice pricing={pricing} stacked />
+          </div>
           {showAddToCart ? (
             <ProductCardAction
               appearance="compact"

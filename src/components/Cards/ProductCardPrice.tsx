@@ -44,7 +44,12 @@ const ProductCardPrice: FC<ProductCardPriceProps> = ({
       ) : null}
 
       {showDiscount && pricing.discountPercentage > 0 ? (
-        <span className="text-xs font-bold text-success">
+        <span
+          className={clsx(
+            "whitespace-nowrap font-bold leading-normal text-success",
+            size === "compact" ? "text-xs" : "text-sm",
+          )}
+        >
           {t("discount", { percent: pricing.discountPercentage })}
         </span>
       ) : null}

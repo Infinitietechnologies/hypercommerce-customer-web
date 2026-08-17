@@ -27,8 +27,7 @@ const ProductCardSkeleton: FC<ProductCardSkeletonProps> = ({ cardStyle }) => {
     >
       <Skeleton
         className={clsx(
-          "w-full",
-          isStandard ? "aspect-video" : "aspect-square",
+          "aspect-square w-full",
           isInset ? "rounded-medium" : "rounded-none",
         )}
       />

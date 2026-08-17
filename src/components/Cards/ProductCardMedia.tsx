@@ -52,9 +52,10 @@ const ProductCardMedia: FC<ProductCardMediaProps> = ({
 
   const imageClass = clsx(
     "absolute inset-0 h-full w-full",
-    product.image_fit === "cover"
+    cardStyle !== "standard" && product.image_fit === "cover"
       ? "object-cover object-top"
       : "object-contain",
+    cardStyle === "standard" && "p-3",
     cardStyle === "compact" && "p-2",
     cardStyle === "showcase" && "p-3",
   );
@@ -80,8 +81,7 @@ const ProductCardMedia: FC<ProductCardMediaProps> = ({
   return (
     <div
       className={clsx(
-        "relative w-full overflow-hidden bg-content2",
-        cardStyle === "standard" ? "aspect-video" : "aspect-square",
+        "relative aspect-square w-full overflow-hidden bg-content2",
         (cardStyle === "compact" || cardStyle === "showcase") &&
           "rounded-medium",
       )}
