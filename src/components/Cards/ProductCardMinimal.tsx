@@ -43,36 +43,37 @@ const ProductCardMinimal: FC<ProductCardLayoutProps> = (props) => {
       </CardBody>
 
       <CardFooter className="grow flex-col items-stretch gap-1.5 px-3 pb-3 pt-2.5">
-        <span className="truncate text-xxs font-medium uppercase tracking-wide text-default-500">
-          {product.category_name || product.brand_name}
-        </span>
+        <div className="flex min-h-5 items-center justify-between gap-2">
+          <span className="min-w-0 flex-1 truncate text-xxs font-medium uppercase tracking-wide text-default-500">
+            {product.category_name || product.brand_name}
+          </span>
+          {hasRating ? (
+            <span className="flex shrink-0 items-center gap-1 text-xs text-default-500">
+              <Icon icon="solar:star-bold" className="text-rating-star" />
+              <strong className="font-semibold text-foreground">
+                {rating.toFixed(1)}
+              </strong>
+              {product.rating_count > 0 ? (
+                <span>({product.rating_count})</span>
+              ) : null}
+            </span>
+          ) : null}
+        </div>
 
         <Link
           href={productHref}
-          className="line-clamp-2 h-10 text-sm font-medium leading-snug text-foreground"
+          className="truncate text-sm font-medium leading-snug text-foreground"
           title={product.title}
           onClick={onProductClick}
         >
           {product.title}
         </Link>
 
-        {hasRating ? (
-          <span className="flex items-center gap-1 text-xs text-default-500">
-            <Icon icon="solar:star-bold" className="text-rating-star" />
-            <strong className="font-semibold text-foreground">
-              {rating.toFixed(1)}
-            </strong>
-            {product.rating_count > 0 ? (
-              <span>({product.rating_count})</span>
-            ) : null}
-          </span>
-        ) : null}
-
-        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
+        <div className="mt-auto flex flex-col gap-2 pt-1">
           <ProductCardPrice pricing={pricing} size="compact" />
           {showAddToCart ? (
             <ProductCardAction
-              appearance="small"
+              appearance="minimal"
               isLoading={isAddingToCart}
               isOutOfStock={isOutOfStock}
               onPress={onAddToCart}

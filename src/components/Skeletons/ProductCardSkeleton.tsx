@@ -54,18 +54,13 @@ const ProductCardSkeleton: FC<ProductCardSkeletonProps> = ({ cardStyle }) => {
             </div>
           </>
         ) : null}
-        <div className="mt-auto flex items-end justify-between gap-3 pt-1">
+        <div className="mt-auto pt-1">
           <Skeleton className="h-5 w-24 rounded-medium" />
-          {isCompact || isMinimal ? (
-            <Skeleton
-              className={clsx(
-                "h-9",
-                isCompact ? "w-20 rounded-small" : "w-16 rounded-small",
-              )}
-            />
-          ) : null}
         </div>
-        {isShowcase ? <Skeleton className="h-10 w-full rounded-small" /> : null}
+        {isCompact || isStandard || isShowcase ? (
+          <Skeleton className="h-10 w-full rounded-small" />
+        ) : null}
+        {isMinimal ? <Skeleton className="h-9 w-full rounded-small" /> : null}
         {isStandard ? (
           <div className="flex justify-between border-t border-divider pt-2">
             <Skeleton className="h-3 w-16 rounded-medium" />

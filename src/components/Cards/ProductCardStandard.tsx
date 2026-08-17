@@ -90,11 +90,11 @@ const ProductCardStandard: FC<ProductCardLayoutProps> = (props) => {
           </div>
         ) : null}
 
-        <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mt-auto flex flex-col gap-2 pt-1">
           <ProductCardPrice pricing={pricing} />
           {showAddToCart ? (
             <ProductCardAction
-              appearance="compact"
+              appearance="standard"
               isLoading={isAddingToCart}
               isOutOfStock={isOutOfStock}
               onPress={onAddToCart}

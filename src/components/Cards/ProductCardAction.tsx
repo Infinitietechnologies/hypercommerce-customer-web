@@ -5,14 +5,14 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui";
 
 interface ProductCardActionProps {
-  appearance?: "full" | "compact" | "small";
+  appearance?: "showcase" | "standard" | "compact" | "minimal";
   isLoading: boolean;
   isOutOfStock: boolean;
   onPress: () => void;
 }
 
 const ProductCardAction: FC<ProductCardActionProps> = ({
-  appearance = "full",
+  appearance = "showcase",
   isLoading,
   isOutOfStock,
   onPress,
@@ -25,7 +25,7 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
     return (
       <Button
         aria-label={label}
-        className="h-10 min-w-20 shrink-0 px-3 text-xs font-semibold"
+        className="h-10 w-full px-3 text-xs font-semibold"
         color="primary"
         isDisabled={isOutOfStock}
         isLoading={isLoading}
@@ -42,18 +42,39 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
     );
   }
 
-  if (appearance === "small") {
+  if (appearance === "minimal") {
     return (
       <Button
         aria-label={label}
-        className="h-9 min-w-16 px-3 text-xs"
+        className="h-9 w-full bg-content2 px-3 text-xs font-semibold"
         color="primary"
         isDisabled={isOutOfStock}
         isLoading={isLoading}
-        variant="flat"
+        variant="light"
         onPress={onPress}
       >
         {shortLabel}
+      </Button>
+    );
+  }
+
+  if (appearance === "standard") {
+    return (
+      <Button
+        aria-label={label}
+        className="h-10 w-full text-xs font-semibold"
+        color="primary"
+        isDisabled={isOutOfStock}
+        isLoading={isLoading}
+        startContent={
+          isLoading ? undefined : (
+            <Icon icon="solar:cart-plus-linear" className="text-lg" />
+          )
+        }
+        variant="bordered"
+        onPress={onPress}
+      >
+        {label}
       </Button>
     );
   }
