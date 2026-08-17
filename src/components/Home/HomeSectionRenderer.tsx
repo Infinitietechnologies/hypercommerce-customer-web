@@ -11,17 +11,24 @@ import CardSlider from "@/components/Home/CardSlider";
 import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
 import HomeHeroSlider from "@/components/Home/HomeHeroSlider";
 import HomePlayImageGrid from "@/components/Home/HomePlayImageGrid";
+import {
+  PRODUCT_CARD_GRID_CLASSES,
+  resolveProductCardStyle,
+} from "@/config/productCard";
 import { HomeSection } from "@/types/ApiResponse";
 
 type BgType = "none" | "color" | "image";
 
 /** Fluid card grids — smaller minimums so cards stay compact. */
 const GRID = {
-  product: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
-  categoryDefault: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(140px,1fr))]",
-  categoryCard: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
-  categoryOverlay: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
-  categoryFull: "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]",
+  categoryDefault:
+    "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(140px,1fr))]",
+  categoryCard:
+    "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]",
+  categoryOverlay:
+    "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
+  categoryFull:
+    "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]",
   brand: "grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]",
 } as const;
 
@@ -48,7 +55,11 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
 
   // Only dynamic API-supplied hex/URL values live inline (Tailwind can't tokenise them).
   const panelStyle: CSSProperties = isImageBg
-    ? { backgroundImage: `url(${background_image})`, backgroundSize: "cover", backgroundPosition: "center" }
+    ? {
+        backgroundImage: `url(${background_image})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
     : isColorBg
       ? { backgroundColor: bgColor }
       : {};
@@ -70,6 +81,47 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
   );
 
   const products = content?.products ?? [];
+  const productCardStyle = resolveProductCardStyle(style);
+  const productSlider =
+    productCardStyle === "compact"
+      ? {
+          slidesPerView: 1.25,
+          breakpoints: {
+            430: { slidesPerView: 1.7, spaceBetween: 12 },
+            640: { slidesPerView: 2.4, spaceBetween: 14 },
+            1024: { slidesPerView: 3.2, spaceBetween: 16 },
+            1280: { slidesPerView: 4, spaceBetween: 16 },
+          },
+        }
+      : productCardStyle === "showcase"
+        ? {
+            slidesPerView: 1.15,
+            breakpoints: {
+              430: { slidesPerView: 1.5, spaceBetween: 12 },
+              640: { slidesPerView: 2.1, spaceBetween: 14 },
+              1024: { slidesPerView: 2.8, spaceBetween: 16 },
+              1280: { slidesPerView: 3.4, spaceBetween: 16 },
+            },
+          }
+        : productCardStyle === "minimal"
+          ? {
+              slidesPerView: 1.8,
+              breakpoints: {
+                430: { slidesPerView: 2.3, spaceBetween: 10 },
+                640: { slidesPerView: 3.3, spaceBetween: 14 },
+                1024: { slidesPerView: 4, spaceBetween: 16 },
+                1280: { slidesPerView: 4.8, spaceBetween: 16 },
+              },
+            }
+          : {
+              slidesPerView: 1.35,
+              breakpoints: {
+                430: { slidesPerView: 1.8, spaceBetween: 12 },
+                640: { slidesPerView: 2.5, spaceBetween: 14 },
+                1024: { slidesPerView: 3.3, spaceBetween: 16 },
+                1280: { slidesPerView: 4.1, spaceBetween: 16 },
+              },
+            };
   const categories = content?.categories ?? [];
   const brands = content?.brands ?? [];
   const items = content?.items ?? [];
@@ -88,7 +140,9 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
       {title && title.trim() ? (
         <HomeSectionHeader
           title={title}
-          seeAllHref={type === "banners" || type === "hero" ? undefined : seeAllHref}
+          seeAllHref={
+            type === "banners" || type === "hero" ? undefined : seeAllHref
+          }
         />
       ) : null}
 
@@ -96,22 +150,27 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
         ? wrap(
             config?.orientation === "horizontal" ? (
               <CardSlider
-                slidesPerView={1.8}
+                slidesPerView={productSlider.slidesPerView}
                 spaceBetween={10}
-                breakpoints={{
-                  430: { slidesPerView: 2.3, spaceBetween: 10 },
-                  640: { slidesPerView: 3.3, spaceBetween: 14 },
-                  1024: { slidesPerView: 3.8, spaceBetween: 16 },
-                  1280: { slidesPerView: 4.3, spaceBetween: 16 },
-                }}
+                breakpoints={productSlider.breakpoints}
                 slides={products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                  <ProductCard
+                    key={p.id}
+                    cardStyle={productCardStyle}
+                    product={p}
+                  />
                 ))}
               />
             ) : (
-              <div className={`grid gap-2.5 sm:gap-4 rd-stagger ${GRID.product}`}>
+              <div
+                className={`grid gap-2.5 sm:gap-4 rd-stagger ${PRODUCT_CARD_GRID_CLASSES[productCardStyle]}`}
+              >
                 {products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+                  <ProductCard
+                    key={p.id}
+                    cardStyle={productCardStyle}
+                    product={p}
+                  />
                 ))}
               </div>
             ),
@@ -152,7 +211,11 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
         ? wrap(
             <div className={`grid gap-2.5 sm:gap-4 rd-stagger ${GRID.brand}`}>
               {brands.map((b) => (
-                <BrandCard key={b.id} brand={b} showName={style === "image_title"} />
+                <BrandCard
+                  key={b.id}
+                  brand={b}
+                  showName={style === "image_title"}
+                />
               ))}
             </div>,
           )
@@ -164,9 +227,15 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
           loop
           slidesPerView={1}
           spaceBetween={14}
-          breakpoints={style === "peek" ? { 640: { slidesPerView: 2 } } : undefined}
+          breakpoints={
+            style === "peek" ? { 640: { slidesPerView: 2 } } : undefined
+          }
           slides={items.map((bn) => (
-            <HomeBannerCard key={bn.id} item={bn} variant={style === "peek" ? "peek" : "full"} />
+            <HomeBannerCard
+              key={bn.id}
+              item={bn}
+              variant={style === "peek" ? "peek" : "full"}
+            />
           ))}
         />
       ) : null}

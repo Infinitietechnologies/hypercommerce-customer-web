@@ -16,6 +16,10 @@ import ProductFilter, {
 } from "@/components/Products/ProductFilter";
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import PageHead from "@/SEO/PageHead";
+import {
+  PRODUCT_CARD_GRID_CLASSES,
+  resolveProductCardStyle,
+} from "@/config/productCard";
 import { getHomeLayoutSection } from "@/routes/api";
 import {
   Brand,
@@ -61,7 +65,9 @@ const productPrice = (p: Product) => {
  * client-side over the loaded rows since the section endpoint takes only
  * page/per_page.
  */
-const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) => {
+const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({
+  data,
+}) => {
   const { t } = useTranslation();
   const { query, isReady } = useRouter();
 
@@ -70,6 +76,7 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
   const type = data?.type ?? ((query.type as HomeSectionType) || "products");
   const style = data?.style ?? ((query.style as string) || "");
   const title = data?.title ?? ((query.title as string) || "");
+  const productCardStyle = resolveProductCardStyle(style);
 
   const [items, setItems] = useState<Row[]>(data?.items ?? []);
   const [page, setPage] = useState(data?.currentPage ?? 1);
@@ -106,9 +113,16 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
   const loadMore = useCallback(async () => {
     if (loading || page >= lastPage) return;
     setLoading(true);
-    const res = await getHomeLayoutSection({ sectionId, page: page + 1, per_page: 20 });
+    const res = await getHomeLayoutSection({
+      sectionId,
+      page: page + 1,
+      per_page: 20,
+    });
     if (res.success && res.data) {
-      setItems((prev) => [...prev, ...((res.data?.data as unknown as Row[]) ?? [])]);
+      setItems((prev) => [
+        ...prev,
+        ...((res.data?.data as unknown as Row[]) ?? []),
+      ]);
       setPage(res.data.current_page);
       setLastPage(res.data.last_page ?? lastPage);
     }
@@ -120,8 +134,10 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
   const visibleProducts = useMemo(() => {
     if (!isProducts) return [];
     let list = [...(items as Product[])];
-    if (filters.categories.length) list = list.filter((p) => filters.categories.includes(p.category));
-    if (filters.brands.length) list = list.filter((p) => filters.brands.includes(p.brand));
+    if (filters.categories.length)
+      list = list.filter((p) => filters.categories.includes(p.category));
+    if (filters.brands.length)
+      list = list.filter((p) => filters.brands.includes(p.brand));
     if (filters.search?.trim()) {
       const q = filters.search.trim().toLowerCase();
       list = list.filter((p) => p.title?.toLowerCase().includes(q));
@@ -150,8 +166,16 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
       if (p.brand) brands.set(p.brand, p.brand_name || p.brand);
     });
     return {
-      categories: [...cats].map(([slug, title]) => ({ slug, title, enabled: true })),
-      brands: [...brands].map(([slug, title]) => ({ slug, title, enabled: true })),
+      categories: [...cats].map(([slug, title]) => ({
+        slug,
+        title,
+        enabled: true,
+      })),
+      brands: [...brands].map(([slug, title]) => ({
+        slug,
+        title,
+        enabled: true,
+      })),
       attributes: [],
       categories_count: cats.size,
       brands_count: brands.size,
@@ -161,14 +185,19 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
     } as unknown as SidebarFilters;
   }, [items, isProducts]);
 
-  const applyFilters = useCallback((next: SelectedFilters) => setFilters(next), []);
+  const applyFilters = useCallback(
+    (next: SelectedFilters) => setFilters(next),
+    [],
+  );
 
   const renderCards = () => {
     if (isProducts) {
       return (
-        <div className="grid gap-2.5 sm:gap-4 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))]">
+        <div
+          className={`grid gap-2.5 sm:gap-4 ${PRODUCT_CARD_GRID_CLASSES[productCardStyle]}`}
+        >
           {visibleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} cardStyle={productCardStyle} product={p} />
           ))}
         </div>
       );
@@ -177,7 +206,11 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
       return (
         <div className="grid gap-3 grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))]">
           {(items as Brand[]).map((b) => (
-            <BrandCard key={b.id} brand={b} showName={style === "image_title"} />
+            <BrandCard
+              key={b.id}
+              brand={b}
+              showName={style === "image_title"}
+            />
           ))}
         </div>
       );
@@ -229,10 +262,15 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
     <div className="w-full max-w-site mx-auto px-4 sm:px-6 py-6">
       <PageHead pageTitle={title || t("see_all")} />
 
-      <h1 className="mb-4 text-xl font-bold text-foreground sm:text-2xl">{title}</h1>
+      <h1 className="mb-4 text-xl font-bold text-foreground sm:text-2xl">
+        {title}
+      </h1>
 
       {items.length === 0 && !loading ? (
-        <EmptyState icon={null} title={t("home.empty.title", "Nothing here yet")} />
+        <EmptyState
+          icon={null}
+          title={t("home.empty.title", "Nothing here yet")}
+        />
       ) : (
         <div className="flex w-full gap-4 flex-col md:flex-row">
           {isProducts ? (
@@ -249,11 +287,17 @@ const HomeSectionDetailView: FC<{ data?: HomeSectionDetailData }> = ({ data }) =
 
           <div className="min-w-0 flex-1 pb-28 md:pb-0">
             {renderCards()}
-            <InfiniteSentinel hasMore={page < lastPage} isLoading={loading} onLoadMore={loadMore} />
+            <InfiniteSentinel
+              hasMore={page < lastPage}
+              isLoading={loading}
+              onLoadMore={loadMore}
+            />
             {loading ? (
-              <div className="mt-3 grid gap-2.5 sm:gap-4 grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))]">
+              <div
+                className={`mt-3 grid gap-2.5 sm:gap-4 ${PRODUCT_CARD_GRID_CLASSES[productCardStyle]}`}
+              >
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <ProductCardSkeleton key={i} />
+                  <ProductCardSkeleton key={i} cardStyle={productCardStyle} />
                 ))}
               </div>
             ) : null}
