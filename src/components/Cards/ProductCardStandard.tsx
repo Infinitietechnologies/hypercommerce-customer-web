@@ -47,9 +47,20 @@ const ProductCardStandard: FC<ProductCardLayoutProps> = (props) => {
       </CardBody>
 
       <CardFooter className="grow flex-col items-stretch gap-2.5 px-3 pb-3 pt-3">
-        <span className="truncate text-xxs font-semibold uppercase tracking-wide text-default-500">
-          {product.brand_name || product.category_name}
-        </span>
+        <div className="flex min-h-5 items-center justify-between gap-2">
+          <span className="truncate text-xxs font-semibold uppercase tracking-wide text-default-500">
+            {product.brand_name || product.category_name}
+          </span>
+          <span
+            className={`flex shrink-0 items-center gap-1.5 text-xs font-medium ${isOutOfStock ? "text-danger" : "text-success"}`}
+          >
+            <span
+              aria-hidden="true"
+              className={`h-1.5 w-1.5 rounded-full ${isOutOfStock ? "bg-danger" : "bg-success"}`}
+            />
+            {isOutOfStock ? t("out_of_stock") : t("in_stock")}
+          </span>
+        </div>
 
         <Link
           href={productHref}
@@ -91,24 +102,17 @@ const ProductCardStandard: FC<ProductCardLayoutProps> = (props) => {
           ) : null}
         </div>
 
-        <div className="flex min-h-5 items-center justify-between gap-2 border-t border-divider pt-2 text-xs">
-          {hasRating ? (
-            <span className="flex items-center gap-1 text-default-500">
-              <Icon icon="solar:star-bold" className="text-rating-star" />
-              <strong className="font-semibold text-foreground">
-                {rating.toFixed(1)}
-              </strong>
-              {product.rating_count > 0 ? (
-                <span>({product.rating_count})</span>
-              ) : null}
-            </span>
-          ) : (
-            <span />
-          )}
-          <span className={isOutOfStock ? "text-danger" : "text-success"}>
-            {isOutOfStock ? t("out_of_stock") : t("in_stock")}
-          </span>
-        </div>
+        {hasRating ? (
+          <div className="flex min-h-5 items-center gap-1 border-t border-divider pt-2 text-xs text-default-500">
+            <Icon icon="solar:star-bold" className="text-rating-star" />
+            <strong className="font-semibold text-foreground">
+              {rating.toFixed(1)}
+            </strong>
+            {product.rating_count > 0 ? (
+              <span>({product.rating_count})</span>
+            ) : null}
+          </div>
+        ) : null}
       </CardFooter>
     </Card>
   );
