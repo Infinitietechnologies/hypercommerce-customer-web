@@ -7,7 +7,7 @@ import {
   DropdownItem,
   Button,
   Image,
-} from "@heroui/react";
+} from "@/components/ui";
 import { getFlagEmoji } from "@/helpers/getters";
 import { ChevronDown } from "lucide-react";
 import { changeLanguage } from "../../../i18n";
@@ -52,7 +52,10 @@ const LanguageSwitcher = () => {
       }}
     >
       <DropdownTrigger className="w-fit sm:w-4">
-        <Button variant="light" className="flex items-center gap-2 p-0">
+        <Button
+          variant="light"
+          className="flex items-center gap-2 p-0 text-inherit"
+        >
           <div className="flex gap-1 items-end">
             <Image
               src={getFlagEmoji(getCurrentLanguage().countryCode)}
