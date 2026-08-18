@@ -17,7 +17,7 @@ const ProfileBtn: FC<ProfileBtnProps> = ({ showLabel = true }) => {
     <Link
       href="/my-account"
       title={t("nav.account", "Account")}
-      className="hidden flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
+      className="hidden flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
     >
       <User className="h-5 w-5" />
       {showLabel ? <span>{t("nav.account", "Account")}</span> : null}

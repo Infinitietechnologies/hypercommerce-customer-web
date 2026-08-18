@@ -52,7 +52,7 @@ const HeaderAction = ({
     href={href ?? "#"}
     title={label}
     onClick={onClick}
-    className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
+    className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
   >
     {icon}
     {showLabel ? <span>{label}</span> : null}
@@ -357,7 +357,7 @@ export const Navbar: FC = () => {
         id="login-btn"
         aria-label={t("nav.account", "Account")}
         onClick={() => authSheetStore.open()}
-        className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
+        className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
       >
         <User className="h-5 w-5" />
         {header.showActionLabels ? (
@@ -390,7 +390,7 @@ export const Navbar: FC = () => {
     <button
       onClick={openCart}
       aria-label={t("nav.cart", "Cart")}
-      className="relative flex cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-current opacity-90 transition hover:text-primary hover:opacity-100"
+      className="relative flex cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-primary hover:opacity-100"
     >
       <ShoppingCart className="h-5 w-5" />
       {header.showActionLabels ? (
@@ -518,19 +518,30 @@ export const Navbar: FC = () => {
       icon: "logos:youtube-icon",
     },
     { label: "X", url: webSettings?.xLink, icon: "ri:twitter-x-fill" },
-  ].filter((item) => Boolean(item.url));
+  ].filter(
+    (item): item is { label: string; url: string; icon: string } =>
+      typeof item.url === "string" && item.url.trim().length > 0,
+  );
+
+  const utilityText = header.utilityText?.trim();
+  const supportNumber = webSettings?.supportNumber?.trim();
+  const showSocialLinks = header.showSocialLinks && socialLinks.length > 0;
+  const showSupportPhone = header.showSupportPhone && Boolean(supportNumber);
+  const showLeftUtility = showSupportPhone || header.showLanguage;
+  const showRightUtility = Boolean(utilityText) || showSocialLinks;
+  const showUtilityContent =
+    header.showUtilityBar && (showLeftUtility || showRightUtility);
 
   const utilityIsHidden =
     header.sticky && isHeaderScrolled && header.hideUtilityOnScroll;
-
-  const utilityBar = header.showUtilityBar ? (
+  const utilityBar = showUtilityContent ? (
     <div
       aria-hidden={utilityIsHidden}
       inert={utilityIsHidden ? true : undefined}
       className={`relative z-10 hidden overflow-hidden transition-[max-height,opacity,transform] duration-700 ease-in-out motion-reduce:transition-none min-[1024px]:block ${
         utilityIsHidden
           ? "pointer-events-none max-h-0 -translate-y-full opacity-0"
-          : "max-h-8 translate-y-0 opacity-100"
+          : "max-h-10 translate-y-0 opacity-100"
       }`}
       style={{
         ...(!usesHomeAppearance && header.utilityBackgroundColor
@@ -542,43 +553,40 @@ export const Navbar: FC = () => {
       }}
     >
       <div
-        className={`mx-auto flex min-h-8 items-center justify-between gap-6 px-4 text-xs ${containerClass}`}
+        className={`mx-auto flex min-h-10 items-center justify-between gap-6 px-4 text-xs font-semibold ${containerClass}`}
       >
         <div className="flex min-w-0 items-center gap-3">
-          {header.utilityText ? (
-            <span className="truncate font-medium">{header.utilityText}</span>
+          {header.showLanguage ? <LanguageSwitcher /> : null}
+          {showSupportPhone ? (
+            <a
+              href={`tel:${supportNumber}`}
+              className="inline-flex h-8 items-center gap-1.5 rounded-small px-2 text-xs font-semibold transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+            >
+              <Icon icon="solar:phone-calling-linear" className="h-4 w-4" />
+              {supportNumber}
+            </a>
           ) : null}
-          {header.showSocialLinks && socialLinks.length > 0 ? (
-            <div className="flex items-center gap-2.5">
-              <span className="font-medium opacity-70">
-                {t("nav.followUs", "Follow us")}
-              </span>
-              {socialLinks.map((item) => (
+        </div>
+        <div className="flex min-w-0 items-center justify-end gap-2.5">
+          {showRightUtility ? (
+            <span className="truncate text-xs font-semibold opacity-90">
+              {utilityText || t("nav.followUs", "Follow us")}
+            </span>
+          ) : null}
+          {showSocialLinks
+            ? socialLinks.map((item) => (
                 <Link
                   key={item.label}
-                  href={item.url ?? "#"}
+                  href={item.url}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="inline-flex h-5 w-5 items-center justify-center"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-small transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
                 >
-                  <Icon icon={item.icon} className="text-sm" />
+                  <Icon icon={item.icon} className="h-4 w-4" />
                 </Link>
-              ))}
-            </div>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 items-center gap-5">
-          {header.showSupportPhone && webSettings?.supportNumber ? (
-            <a
-              href={`tel:${webSettings.supportNumber}`}
-              className="inline-flex items-center gap-1.5 font-semibold"
-            >
-              <Icon icon="solar:phone-calling-linear" className="text-sm" />
-              {webSettings.supportNumber}
-            </a>
-          ) : null}
-          {header.showLanguage ? <LanguageSwitcher /> : null}
+              ))
+            : null}
         </div>
       </div>
     </div>
@@ -600,7 +608,7 @@ export const Navbar: FC = () => {
     ? "links"
     : header.navigationStyle;
   const navigationItemClass = (isActive: boolean) =>
-    `shrink-0 cursor-pointer whitespace-nowrap text-xs font-medium transition-all duration-500 ease-in-out motion-reduce:transition-none min-[640px]:text-sm ${
+    `shrink-0 cursor-pointer whitespace-nowrap text-xs font-semibold transition-all duration-500 ease-in-out motion-reduce:transition-none min-[640px]:text-sm ${
       navigationUsesIcons
         ? `flex flex-col items-center border-b-2 ${
             navigationIsCompact
@@ -609,7 +617,7 @@ export const Navbar: FC = () => {
           } ${
             isActive
               ? "border-primary font-bold text-primary"
-              : "border-transparent text-current opacity-75"
+              : "border-transparent text-current opacity-85"
           }`
         : `px-4 py-1.5 ${
             navigationStyle === "pills"
@@ -625,8 +633,7 @@ export const Navbar: FC = () => {
     }`;
   const navigationActiveStyle = (isActive: boolean): CSSProperties => ({
     ...(isActive &&
-    (activeDesktopAppearance?.active_font_color ||
-      header.navigationActiveColor)
+    (activeDesktopAppearance?.active_font_color || header.navigationActiveColor)
       ? navigationStyle === "pills"
         ? {
             backgroundColor:
@@ -659,7 +666,7 @@ export const Navbar: FC = () => {
         navigationIsHidden
           ? "pointer-events-none max-h-0 -translate-y-full opacity-0"
           : navigationIsCompact
-            ? "max-h-12 -translate-y-1 opacity-100"
+            ? "max-h-12 translate-y-0 opacity-100"
             : "max-h-24 translate-y-0 opacity-100"
       } ${
         header.layout === "showcase" || usesHomeAppearance
@@ -676,7 +683,7 @@ export const Navbar: FC = () => {
             }
           : header.navigationTextColor
             ? { color: header.navigationTextColor }
-          : {}),
+            : {}),
       }}
     >
       <div
@@ -985,6 +992,7 @@ export const Navbar: FC = () => {
           style={surfaceStyle}
         >
           {renderSurfaceBackground()}
+          {utilityBar}
           {mobileHeaderRow}
           <div
             className={`relative z-10 mx-auto grid min-h-16 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 py-2 min-[640px]:gap-3 min-[1024px]:hidden ${containerClass}`}
@@ -992,10 +1000,9 @@ export const Navbar: FC = () => {
             <div className="max-w-24 min-[640px]:max-w-32">{SiteLogo}</div>
             {mobileSearch ?? <span />}
           </div>
-          {header.layout === "showcase" ? utilityBar : null}
           {header.layout === "stacked" ? (
             <div
-              className={`relative z-10 mx-auto hidden flex-col gap-2 px-4 min-[1024px]:flex ${densityClass} ${containerClass}`}
+              className={`relative z-10 mx-auto hidden flex-col gap-2 px-4 pb-2 min-[1024px]:flex ${densityClass} ${containerClass}`}
             >
               <div className="flex items-center justify-between gap-4">
                 {SiteLogo}

@@ -46,17 +46,18 @@ const LanguageSwitcher = () => {
     <Dropdown
       size="sm"
       classNames={{
-        trigger: "p-0 min-w-9 data-[hover=true]:bg-inherit",
-        base: "text-xs",
+        trigger: "h-8 min-w-0 p-0 data-[hover=true]:bg-inherit",
+        base: "text-xs font-semibold",
         content: "min-w-4 text-xs",
       }}
     >
-      <DropdownTrigger className="w-fit sm:w-4">
+      <DropdownTrigger className="w-fit">
         <Button
+          size="sm"
           variant="light"
-          className="flex items-center gap-2 p-0 text-inherit"
+          className="flex h-8 min-w-0 items-center gap-1 px-2 text-xs font-semibold text-inherit"
         >
-          <div className="flex gap-1 items-end">
+          <div className="flex items-center gap-1">
             <Image
               src={getFlagEmoji(getCurrentLanguage().countryCode)}
               alt={`flag`}
@@ -66,7 +67,7 @@ const LanguageSwitcher = () => {
               {getCurrentLanguage().code.charAt(0).toUpperCase() +
                 getCurrentLanguage().code.slice(1)}
             </span>
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="h-4 w-4 shrink-0" />
           </div>
         </Button>
       </DropdownTrigger>
