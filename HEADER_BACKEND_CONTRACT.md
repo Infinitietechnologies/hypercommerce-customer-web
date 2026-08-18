@@ -1,6 +1,6 @@
 # Header backend contract
 
-Return one optional settings entry with `variable: "header"`. Every property is optional; the storefront validates the values and falls back to the showcase defaults when a property is missing or invalid.
+Return one optional settings entry with `variable: "header"`. Every property is optional; the storefront validates the values and falls back to neutral showcase defaults when a property is missing or invalid. It does not supply a bundled fallback background image.
 
 ```json
 {
@@ -95,7 +95,7 @@ Return one optional settings entry with `variable: "header"`. Every property is 
 - Navigation: live categories or custom items, `pills`, `links`, or `icons`, home-only or all-page scope, active/background/text colours, category count, and scroll behavior.
 - Announcement: text, URL, background/text colours, visibility, and dismissibility.
 
-For custom navigation, send `navigationSource: "custom"` and fill `navigationItems`. An item accepts `id`, `label`, `url`, `openInNewTab`, optional `icon` such as `solar:shop-linear`, and optional `imageUrl`. Only relative URLs and `http`/`https` URLs are accepted. Category navigation reads the existing category `icon` or `image` returned by the catalog API.
+For custom navigation, send `navigationSource: "custom"` and fill `navigationItems`. An item accepts `id`, `label`, `url`, `openInNewTab`, optional `icon` such as `solar:shop-linear`, and optional `imageUrl`. Only relative URLs and `http`/`https` URLs are accepted. Category navigation calls `/categories?home=true`; each category's `image` is its navigation icon and `banner` is its selected desktop-header background image.
 
 `navigationScrollBehavior` controls the sticky category row:
 
@@ -107,6 +107,6 @@ Set `hideUtilityOnScroll: true` to slide the utility row upward with the categor
 
 Set `sticky: false` for a normal non-sticky header. When it is false, scroll behavior is not applied.
 
-The main desktop/mobile logos come from `logoUrl` and `mobileLogoUrl`. If those fields are omitted, the storefront uses the existing backend `web.siteHeaderDarkLogo`. Category images come from the catalog category `icon` or `image`; custom navigation images come from `navigationItems[].imageUrl`. The storefront only owns the presentation and safe fallback icons.
+The main desktop/mobile logos come from `logoUrl` and `mobileLogoUrl`. If those fields are omitted, the storefront uses the existing backend `web.siteHeaderDarkLogo`. A selected category's header surface follows `home_appearance.desktop`; `image` supplies its navigation icon and `banner` supplies an image background. The All-category icon comes from `home_general_settings.icon`/`activeIcon`. Custom navigation images come from `navigationItems[].imageUrl`. The storefront only owns presentation and a safe Iconify fallback when the backend provides no icon.
 
 The backend should return data only. It must not send HTML, CSS, scripts, Tailwind classes, or component names.

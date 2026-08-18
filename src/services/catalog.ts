@@ -3,6 +3,7 @@ import {
   ApiResponse,
   Brand,
   Category,
+  HomeCategory,
   KeywordSearch,
   PaginatedResponse,
   Product,
@@ -30,6 +31,24 @@ export const getCategories = async (
 ): Promise<PaginatedResponse<Category[]>> => {
   try {
     const response = await api.get("/categories", { params });
+    return response.data;
+  } catch (error) {
+    console.warn("API error:", error instanceof Error ? error.message : error);
+    return fallbackPaginateRes;
+  }
+};
+
+export const getHomeCategories = async (
+  params: {
+    page?: string | number;
+    per_page?: string | number;
+    market?: string;
+  } = {},
+): Promise<PaginatedResponse<HomeCategory[]>> => {
+  try {
+    const response = await api.get("/categories", {
+      params: { ...params, home: true },
+    });
     return response.data;
   } catch (error) {
     console.warn("API error:", error instanceof Error ? error.message : error);

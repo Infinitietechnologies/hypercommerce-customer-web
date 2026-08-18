@@ -1,5 +1,36 @@
 import type { SEOMetadata } from "./common";
 
+export type CategoryHomeAppearance = {
+  background_type: "none" | "color" | "gradient" | "image";
+  gradient_start: string;
+  gradient_end: string;
+  gradient_angle: string | number;
+  font_color: string;
+  active_font_color: string;
+};
+
+export type HomeCategory = {
+  id: number;
+  title: string;
+  slug: string;
+  image: string;
+  banner: string;
+  home_appearance: {
+    app: CategoryHomeAppearance;
+    desktop: CategoryHomeAppearance;
+  };
+  search_labels: string[];
+  parent_id: number | null;
+  parent_slug: string | null;
+  description: string | null;
+  status: "active" | "inactive";
+  requires_approval: boolean;
+  metadata: SEOMetadata | string | null;
+  subcategory_count: number;
+  product_count: number;
+  enabled: boolean;
+};
+
 export type Category = {
   id: number;
   title: string;

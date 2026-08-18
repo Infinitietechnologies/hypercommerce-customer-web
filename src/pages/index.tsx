@@ -8,7 +8,6 @@ import { getHomeLayout, getSettings } from "@/routes/api";
 
 import { HomeLayout, Settings } from "@/types/ApiResponse";
 import HomeBuilder from "@/views/homePage/HomeBuilder";
-import TemporaryHomeHero from "@/components/Home/TemporaryHomeHero";
 import { NextPageWithLayout } from "@/types";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { getAccessTokenFromContext } from "@/helpers/auth";
@@ -66,8 +65,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
         ogImage={siteLogo}
         jsonLd={[organizationSchema, websiteSchema]}
       />
-      <TemporaryHomeHero />
-      <HomeBuilder initialLayout={initialLayout} omitFirstSection />
+      <HomeBuilder initialLayout={initialLayout} />
     </>
   );
 };

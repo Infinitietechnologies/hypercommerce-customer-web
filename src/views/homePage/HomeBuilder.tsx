@@ -13,7 +13,6 @@ import { HomeLayout, HomeSection } from "@/types/ApiResponse";
 
 interface HomeBuilderProps {
   initialLayout: HomeLayout | null;
-  omitFirstSection?: boolean;
 }
 
 const SECTIONS_PER_PAGE = 6;
@@ -25,10 +24,7 @@ const SECTIONS_PER_PAGE = 6;
  * category and re-fetches on the shared category/location change events (hidden
  * `home-sections-refetch` button).
  */
-const HomeBuilder: FC<HomeBuilderProps> = ({
-  initialLayout,
-  omitFirstSection = false,
-}) => {
+const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -127,11 +123,9 @@ const HomeBuilder: FC<HomeBuilderProps> = ({
         />
       ) : (
         <>
-          {sections
-            .filter((_, index) => !omitFirstSection || index > 0)
-            .map((section) => (
-              <HomeSectionRenderer key={section.id} section={section} />
-            ))}
+          {sections.map((section) => (
+            <HomeSectionRenderer key={section.id} section={section} />
+          ))}
           <InfiniteSentinel hasMore={page < lastPage} isLoading={loading} onLoadMore={loadMore} />
           {loading ? <HomeSectionSkeleton /> : null}
         </>

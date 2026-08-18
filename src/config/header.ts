@@ -84,12 +84,12 @@ export const DEFAULT_HEADER_SETTINGS: ResolvedHeaderSettings = {
   sticky: true,
   containerWidth: "site",
   contentTone: "dark",
-  backgroundType: "image",
+  backgroundType: "color",
   backgroundColor: null,
   gradientFrom: null,
   gradientTo: null,
   gradientDirection: "to-right",
-  backgroundImage: "/images/home/electronics-header.png",
+  backgroundImage: null,
   mobileBackgroundImage: null,
   backgroundPosition: "top",
   backgroundFit: "fill",
@@ -233,7 +233,7 @@ export const resolveHeaderSettings = (
     backgroundType: pick(
       settings.backgroundType,
       ["color", "gradient", "image"],
-      "image",
+      "color",
     ),
     backgroundColor: optionalText(settings.backgroundColor),
     gradientFrom: optionalText(settings.gradientFrom),
@@ -243,9 +243,7 @@ export const resolveHeaderSettings = (
       ["to-right", "to-left", "to-bottom", "to-bottom-right"],
       "to-right",
     ),
-    backgroundImage:
-      safeUrl(settings.backgroundImage) ??
-      "/images/home/electronics-header.png",
+    backgroundImage: safeUrl(settings.backgroundImage),
     mobileBackgroundImage: safeUrl(settings.mobileBackgroundImage),
     backgroundPosition: pick(
       settings.backgroundPosition,
