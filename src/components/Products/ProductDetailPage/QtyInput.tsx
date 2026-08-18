@@ -1,5 +1,4 @@
 import { Button, toast } from "@/components/ui";
-import { Icon } from "@iconify/react";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -68,33 +67,37 @@ const QtyInput: FC<QtyInputProps> = ({
   return (
     <div
       id="qty-input"
-      className="inline-flex items-center gap-1 rounded-xl border border-divider bg-content1 p-1"
+      className="inline-flex h-10 items-center overflow-hidden rounded-medium border border-divider bg-content1"
     >
       <Button
-        radius="lg"
         isIconOnly
+        color="default"
         variant="light"
         onPress={decrement}
         size="sm"
         aria-label={t("decrease_quantity", "Decrease quantity")}
         isDisabled={quantity <= min}
-        className="text-primary-600"
+        className="h-full min-w-10 rounded-none bg-transparent p-0 text-foreground shadow-none hover:bg-content2 disabled:text-foreground/30"
       >
-        <Icon icon="solar:minus-square-linear" className="text-xl" />
+        <span aria-hidden="true" className="text-lg font-semibold leading-none">
+          −
+        </span>
       </Button>
-      <span className="min-w-9 text-center text-base font-bold tabular-nums">
+      <span className="min-w-9 text-center text-sm font-bold tabular-nums text-foreground">
         {quantity}
       </span>
       <Button
-        radius="lg"
         isIconOnly
+        color="default"
         variant="light"
         onPress={increment}
         size="sm"
         aria-label={t("increase_quantity", "Increase quantity")}
-        className="text-primary-600"
+        className="h-full min-w-10 rounded-none bg-transparent p-0 text-foreground shadow-none hover:bg-content2"
       >
-        <Icon icon="solar:add-square-linear" className="text-xl" />
+        <span aria-hidden="true" className="text-lg font-semibold leading-none">
+          +
+        </span>
       </Button>
     </div>
   );

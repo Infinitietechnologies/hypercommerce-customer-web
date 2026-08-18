@@ -8,7 +8,6 @@ import {
   makeTabClick,
   handleOfflineAddToCart,
 } from "@/helpers/functionalHelpers";
-import { toggleFavorite } from "@/routes/api";
 import { useSettings } from "@/contexts/SettingsContext";
 import AttributeSelector from "@/components/Functional/AttributeSelector";
 import { useRouter } from "next/router";
@@ -19,6 +18,7 @@ import ProductIndicator from "@/components/Functional/ProductIndicator";
 import RatingStars from "@/components/RatingStars";
 import { formatDeliveryByDate } from "@/helpers/delivery";
 import { getDiscountPercent } from "@/helpers/getters";
+import clsx from "clsx";
 
 interface ProductDetailSectionProps {
   initialProduct: Product;
@@ -47,11 +47,6 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null,
   );
-
-  const [isFavorited, setIsFavorited] = useState(
-    Array.isArray(initialProduct.favorite) && initialProduct.favorite.length > 0,
-  );
-  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
   const cartCount = Number(initialProduct.item_count_in_cart) || 0;
 
@@ -84,6 +79,8 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const special = Number(selectedVariant?.special_price) || 0;
   const hasDiscount = special > 0 && special < price;
   const offPct = getDiscountPercent(price, special);
+  const hasVariantOptions =
+    variants?.length > 1 && Boolean(initialProduct.attributes?.length);
 
   // Stock is surfaced ONLY when it drops to/below the system low-stock limit
   // (Settings → lowStockLimit), shown as an urgency warning rather than the
@@ -132,54 +129,6 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       ...prev,
       [attributeSlug]: value,
     }));
-  };
-
-  const handleShare = () => {
-    const baseUrl = window.location.origin;
-    const shareUrl = `${baseUrl}/share/products/${initialProduct.slug}`;
-
-    if (navigator.share) {
-      navigator
-        .share({
-          title: title,
-          text: t("share_product_text", { title }),
-          url: shareUrl,
-        })
-        .catch(console.error);
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      toast({ title: t("link_copied"), color: "success" });
-    }
-  };
-
-  const handleToggleFavorite = async () => {
-    if (!isLoggedIn) {
-      document.getElementById("login-btn")?.click();
-      toast({ title: t("please_login"), color: "warning" });
-      return;
-    }
-    if (!selectedVariant) return;
-
-    setIsTogglingFavorite(true);
-    try {
-      const res = await toggleFavorite({
-        product_id: initialProduct.id,
-        product_variant_id: selectedVariant.id ?? null,
-        store_id: selectedVariant.store_id,
-      });
-      if (res.success && res.data) {
-        setIsFavorited(res.data.is_favorited);
-      } else {
-        toast({
-          title: res.message || t("something_went_wrong"),
-          color: "danger",
-        });
-      }
-    } catch {
-      toast({ title: t("something_went_wrong"), color: "danger" });
-    } finally {
-      setIsTogglingFavorite(false);
-    }
   };
 
   const AddToCart = async (buyNow = false) => {
@@ -242,7 +191,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   };
 
   return (
-    <div className="flex w-full flex-col gap-3 md:ps-4">
+    <div className="flex w-full flex-col gap-4 md:ps-4">
       {/* Category eyebrow + featured (design shows the category, e.g. "Electronics") */}
       <div className="flex flex-wrap items-center gap-2">
         {category_name ? (
@@ -288,6 +237,12 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         <p className="text-sm text-foreground/60">{short_description}</p>
       )}
 
+      {variants?.length === 1 && variants[0]?.sku && (
+        <span className="hidden text-xs font-medium text-foreground/50 md:inline">
+          {t("sku")}: {variants[0].sku}
+        </span>
+      )}
+
       {/* Rating stars + count */}
       {rating_count > 0 && (
         <div className="flex items-center gap-2">
@@ -307,18 +262,15 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       )}
 
       {cartCount > 0 && (
-        <Chip
-          size="sm"
-          radius="sm"
-          variant="flat"
-          color="primary"
-          startContent={
-            <Icon icon="solar:cart-check-linear" className="text-sm" />
-          }
-          classNames={{ content: "text-xs font-semibold px-1" }}
-        >
-          {cartCount > 99 ? "99+" : cartCount} {t("product_modal.in_cart")}
-        </Chip>
+        <span className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-primary-600">
+          <Icon icon="solar:cart-check-linear" className="text-sm" />
+          {t(
+            cartCount === 1
+              ? "product_modal.cart_social_proof_single"
+              : "product_modal.cart_social_proof_multiple",
+            { count: cartCount > 99 ? "99+" : cartCount },
+          )}
+        </span>
       )}
 
       {/* Price */}
@@ -341,16 +293,25 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         <span className="text-xs text-foreground/50">{t("inclusiveTax")}</span>
       )}
 
-      <Divider className="my-2" />
+      <Divider className="my-1" />
 
       {/* Variant / attribute selection */}
       {variants && variants.length > 1 && initialProduct.attributes && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">
-            {t("selectOptions")}
-          </h3>
-          <div className="flex items-center justify-between text-xxs sm:text-xs">
-            <div className="flex flex-col">
+        <div className="space-y-4 py-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-foreground">
+              {t("selectOptions")}
+            </h3>
+            {selectedVariant?.sku && (
+              <span className="text-xs font-medium text-default-500">
+                {t("sku")}: {selectedVariant.sku}
+              </span>
+            )}
+          </div>
+          {isLowStock ||
+          quantity_step_size > 1 ||
+          minimum_order_quantity > 1 ? (
+            <div className="flex flex-col gap-1">
               {isLowStock && (
                 <span className="text-xs font-semibold text-danger">
                   {t("lowStockWarning", {
@@ -371,27 +332,28 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
                 )
               )}
             </div>
-            {selectedVariant?.sku && (
-              <span className="text-foreground/50">
-                {t("sku")}: {selectedVariant.sku}
-              </span>
-            )}
+          ) : null}
+          <div className="space-y-3">
+            {initialProduct.attributes.map((attribute) => (
+              <AttributeSelector
+                key={attribute.slug}
+                attribute={attribute}
+                selectedAttributes={selectedAttributes}
+                onChange={handleAttributeChange}
+              />
+            ))}
           </div>
-          {initialProduct.attributes.map((attribute) => (
-            <AttributeSelector
-              key={attribute.slug}
-              attribute={attribute}
-              selectedAttributes={selectedAttributes}
-              onChange={handleAttributeChange}
-            />
-          ))}
         </div>
       )}
 
-      {/* Stock and SKU info for single variant products */}
-      {variants && variants.length === 1 && selectedVariant && (
-        <div className="mb-1 flex items-center justify-between text-xxs sm:text-xs">
-          <div className="flex flex-col">
+      {/* Stock and order info for single variant products */}
+      {variants &&
+        variants.length === 1 &&
+        selectedVariant &&
+        (isLowStock ||
+          quantity_step_size > 1 ||
+          minimum_order_quantity > 1) && (
+          <div className="flex flex-col gap-1 py-1">
             {isLowStock && (
               <span className="text-xs font-semibold text-danger">
                 {t("lowStockWarning", {
@@ -412,39 +374,37 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
               )
             )}
           </div>
-          {selectedVariant.sku && (
-            <span className="text-foreground/50">
-              {t("sku")}: {selectedVariant.sku}
-            </span>
-          )}
-        </div>
-      )}
+        )}
 
       {/* Quantity */}
       {!isOutOfStock && (
-        <div className="flex items-center gap-3">
-          <label htmlFor="qty-input" className="text-sm font-medium">
-            {t("quantity")}
-          </label>
-          <QtyInput
-            quantity={quantity}
-            setQuantity={setQuantity}
-            min={
-              initialProduct.quantity_step_size > 1
-                ? initialProduct.quantity_step_size
-                : initialProduct.minimum_order_quantity || 1
-            }
-            step={initialProduct.quantity_step_size || 1}
-            max={initialProduct.total_allowed_quantity || 9999}
-            stock={selectedVariant?.stock}
-          />
+        <div
+          className={clsx(
+            "flex flex-wrap items-center gap-3 pt-4",
+            hasVariantOptions && "border-t border-divider",
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <label htmlFor="qty-input" className="text-sm font-semibold">
+              {t("quantity")}
+            </label>
+            <QtyInput
+              quantity={quantity}
+              setQuantity={setQuantity}
+              min={
+                initialProduct.quantity_step_size > 1
+                  ? initialProduct.quantity_step_size
+                  : initialProduct.minimum_order_quantity || 1
+              }
+              step={initialProduct.quantity_step_size || 1}
+              max={initialProduct.total_allowed_quantity || 9999}
+              stock={selectedVariant?.stock}
+            />
+          </div>
         </div>
       )}
 
-      {/* Delivery estimate pill (black) — sits directly above the CTAs, matching
-          the design. Only shown when the product carries a real estimated
-          delivery time (minutes); no calendar date exists in the data, so we
-          surface the minutes estimate rather than a fabricated "by <date>". */}
+      {/* Delivery estimate is shown only when the API provides a real value. */}
       {(() => {
         // Prefer the backend's country/zone-based window, shown as a concrete
         // "Delivery by <date>" (worst-case max day). Fall back to the
@@ -452,7 +412,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         const byDate = formatDeliveryByDate(delivery_eta);
         if (byDate) {
           return (
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/30 bg-primary-100 px-3 py-1.5 text-xs font-semibold text-primary-600">
               <Icon icon="solar:delivery-bold" className="text-sm" />
               {t("deliveryBy", "Delivery by")} {byDate}
             </span>
@@ -460,7 +420,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         }
         if (estimated_delivery_time) {
           return (
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/30 bg-primary-100 px-3 py-1.5 text-xs font-semibold text-primary-600">
               <Icon icon="solar:delivery-bold" className="text-sm" />
               {t("deliveredIn", "Delivered in")} {estimated_delivery_time}{" "}
               {t("mins")}
@@ -472,10 +432,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
 
       {/* Actions */}
       {isOutOfStock ? (
-        <Card
-          shadow="none"
-          className="border border-divider p-3"
-        >
+        <Card shadow="none" className="border border-divider p-3">
           <div className="flex items-start gap-3">
             <Icon
               icon="solar:bag-cross-linear"
@@ -492,10 +449,11 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
           </div>
         </Card>
       ) : (
-        <div className="flex items-center gap-2.5">
-          {/* Add To Cart — black (design), Buy Now — amber */}
+        <div className="grid grid-cols-1 gap-2 xs:grid-cols-2">
           <Button
-            className="flex-1 bg-foreground font-semibold text-background"
+            variant="bordered"
+            color="default"
+            className="w-full border-divider bg-content1 font-semibold text-foreground shadow-none hover:bg-content2"
             startContent={
               !loading.add && (
                 <Icon icon="solar:bag-4-linear" className="text-lg" />
@@ -508,44 +466,24 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
             {t("addToBucket")}
           </Button>
           <Button
-            color="primary"
-            className="flex-1 font-semibold"
+            color="default"
+            className="w-full bg-primary font-semibold text-primary-foreground shadow-none hover:bg-primary-600"
             isLoading={loading.buyNow}
             isDisabled={loading.add}
             onPress={() => AddToCart(true)}
           >
             {t("buyNow")}
           </Button>
-          <Button
-            isIconOnly
-            variant="bordered"
-            aria-label={t("share")}
-            onPress={handleShare}
-          >
-            <Icon icon="solar:share-linear" className="text-xl" />
-          </Button>
-          <Button
-            isIconOnly
-            variant="bordered"
-            aria-label={t("add_to_wishlist", "Add to wishlist")}
-            isLoading={isTogglingFavorite}
-            onPress={handleToggleFavorite}
-          >
-            <Icon
-              icon={isFavorited ? "solar:heart-bold" : "solar:heart-linear"}
-              className={isFavorited ? "text-xl text-danger" : "text-xl"}
-            />
-          </Button>
         </div>
       )}
 
-      {/* Trust row — Returns · Cash on Delivery · Safe & Secure (design) */}
+      {/* Trust row */}
       {!isOutOfStock && (
-        <div className="mt-1 grid grid-cols-3 divide-x divide-divider">
-          <div className="flex flex-col items-center gap-1 px-1 text-center">
+        <div className="mt-1 grid grid-cols-3 gap-2 border-t border-divider pt-4">
+          <div className="flex flex-col items-center gap-1 text-center">
             <Icon
               icon="solar:refresh-square-linear"
-              className="text-xl text-primary-600"
+              className="text-xl text-primary"
             />
             <span className="text-xxs font-medium text-foreground/70 sm:text-xs">
               {returnable_days
@@ -556,19 +494,19 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
                 : t("easyReturns", "Easy Returns")}
             </span>
           </div>
-          <div className="flex flex-col items-center gap-1 px-1 text-center">
+          <div className="flex flex-col items-center gap-1 text-center">
             <Icon
               icon="solar:wallet-money-linear"
-              className="text-xl text-primary-600"
+              className="text-xl text-primary"
             />
             <span className="text-xxs font-medium text-foreground/70 sm:text-xs">
               {t("cashOnDelivery", "Cash On Delivery")}
             </span>
           </div>
-          <div className="flex flex-col items-center gap-1 px-1 text-center">
+          <div className="flex flex-col items-center gap-1 text-center">
             <Icon
               icon="solar:shield-check-linear"
-              className="text-xl text-primary-600"
+              className="text-xl text-primary"
             />
             <span className="text-xxs font-medium text-foreground/70 sm:text-xs">
               {t("safeSecure", "Safe & Secure")}
@@ -576,7 +514,6 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
           </div>
         </div>
       )}
-
     </div>
   );
 };

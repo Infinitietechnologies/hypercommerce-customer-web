@@ -63,7 +63,7 @@ const SimilarProductsSection: FC<SimilarProductProps> = ({
         slidesPerView={1}
         spaceBetween={16}
         breakpoints={{
-          431: { slidesPerView: 2 },
+          375: { slidesPerView: 2 },
           640: { slidesPerView: cartPage ? 4 : 3 },
           1024: { slidesPerView: cartPage ? 3 : 4 },
           1280: { slidesPerView: cartPage ? 3 : 5 },

@@ -30,6 +30,12 @@ const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
 });
 
+const authInputClassNames = {
+  label: "text-sm font-semibold text-foreground",
+  input: "text-sm",
+  inputWrapper: "h-12 min-h-12 bg-content1",
+};
+
 export interface LoginFormProps {
   /** Called once the session is established. */
   onSuccess: () => void;
@@ -70,7 +76,10 @@ const LoginForm = ({
   const [password, setPassword] = useState(demoMode ? "12345678" : "");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{
+    identifier?: string;
+    password?: string;
+  }>({});
 
   const otp = useOtpLogin({ onSuccess });
 
@@ -89,7 +98,8 @@ const LoginForm = ({
       event.preventDefault();
 
       const found: typeof errors = {};
-      if (!identifier.trim()) found.identifier = t("auth.errors.identifier_required");
+      if (!identifier.trim())
+        found.identifier = t("auth.errors.identifier_required");
       if (!password) found.password = t("auth.errors.password_required");
       setErrors(found);
       if (Object.keys(found).length) return;
@@ -119,7 +129,9 @@ const LoginForm = ({
 
   const onOtpSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const code = String(Object.fromEntries(new FormData(event.currentTarget)).otp ?? "");
+    const code = String(
+      Object.fromEntries(new FormData(event.currentTarget)).otp ?? "",
+    );
     otp.verify(code);
   };
 
@@ -127,18 +139,38 @@ const LoginForm = ({
     <div className="flex flex-col">
       <Tabs
         aria-label={t("auth.sign_in_method")}
-        classNames={{ tabList: "w-full", base: compact ? "mb-4" : "mb-5" }}
-        variant="bordered"
+        classNames={{
+          base: compact ? "mb-4" : "mb-5",
+          tabList:
+            "w-full gap-1 rounded-small border border-divider bg-content2 p-1",
+          cursor: "rounded-small bg-content1 shadow-sm",
+          tab: "h-10 text-sm font-semibold",
+          tabContent:
+            "text-default-500 group-data-[selected=true]:text-foreground",
+          panel: "px-0 pt-5",
+        }}
+        variant="light"
       >
         <Tab key="password" title={t("login_modal.password_label")}>
-          <form className="flex flex-col gap-4" noValidate onSubmit={onPasswordSubmit}>
+          <form
+            className="flex flex-col gap-4"
+            noValidate
+            onSubmit={onPasswordSubmit}
+          >
             <Input
               autoComplete="username"
+              classNames={authInputClassNames}
               errorMessage={errors.identifier}
               isInvalid={Boolean(errors.identifier)}
               label={t("login_modal.email_label")}
               placeholder={t("login_modal.email_placeholder")}
-              startContent={<Icon aria-hidden="true" className="text-lg" icon="solar:letter-linear" />}
+              startContent={
+                <Icon
+                  aria-hidden="true"
+                  className="text-lg"
+                  icon="solar:letter-linear"
+                />
+              }
               value={identifier}
               onValueChange={(v) => {
                 setIdentifier(v);
@@ -148,6 +180,7 @@ const LoginForm = ({
 
             <Input
               autoComplete="current-password"
+              classNames={authInputClassNames}
               errorMessage={errors.password}
               isInvalid={Boolean(errors.password)}
               label={t("login_modal.password_label")}
@@ -156,14 +189,20 @@ const LoginForm = ({
               value={password}
               endContent={
                 <button
-                  aria-label={t(showPassword ? "auth.hide_password" : "auth.show_password")}
+                  aria-label={t(
+                    showPassword ? "auth.hide_password" : "auth.show_password",
+                  )}
                   className="text-default-400 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                 >
                   <Icon
                     className="text-lg"
-                    icon={showPassword ? "solar:eye-closed-linear" : "solar:eye-linear"}
+                    icon={
+                      showPassword
+                        ? "solar:eye-closed-linear"
+                        : "solar:eye-linear"
+                    }
                   />
                 </button>
               }
@@ -175,14 +214,19 @@ const LoginForm = ({
 
             <div className="flex justify-end">
               <Link
-                className="cursor-pointer text-small"
+                className="cursor-pointer text-sm font-semibold text-primary"
                 onPress={onForgotPassword}
               >
                 {t("login_modal.forgot_password")}
               </Link>
             </div>
 
-            <Button className="w-full" color="primary" isLoading={isLoading} type="submit">
+            <Button
+              className="h-12 min-h-12 w-full font-bold"
+              color="primary"
+              isLoading={isLoading}
+              type="submit"
+            >
               {t("login_modal.sign_in")}
             </Button>
           </form>
@@ -202,7 +246,7 @@ const LoginForm = ({
                 }
               />
               <Button
-                className="w-full"
+                className="h-12 min-h-12 w-full font-bold"
                 color="primary"
                 isLoading={otp.isSending}
                 onPress={otp.send}
@@ -217,11 +261,16 @@ const LoginForm = ({
               </p>
 
               <div className="flex justify-center">
-                <InputOtp autoFocus aria-label={t("auth.otp_input_label")} length={6} name="otp" />
+                <InputOtp
+                  autoFocus
+                  aria-label={t("auth.otp_input_label")}
+                  length={6}
+                  name="otp"
+                />
               </div>
 
               <Button
-                className="w-full"
+                className="h-12 min-h-12 w-full font-bold"
                 color="primary"
                 isLoading={otp.isVerifying}
                 type="submit"
@@ -256,9 +305,11 @@ const LoginForm = ({
         </Tab>
       </Tabs>
 
-      <div className={`flex items-center gap-3 ${compact ? "my-4" : "my-6"}`}>
+      <div className={`flex items-center gap-4 ${compact ? "my-5" : "my-6"}`}>
         <Divider className="flex-1" />
-        <span className="text-xs text-default-500">{t("login_modal.or")}</span>
+        <span className="text-tiny font-semibold uppercase tracking-widest text-default-400">
+          {t("login_modal.or")}
+        </span>
         <Divider className="flex-1" />
       </div>
 
@@ -277,10 +328,12 @@ const LoginForm = ({
         />
       </div>
 
-      <p className={`text-center text-small text-default-500 ${compact ? "mt-4" : "mt-6"}`}>
+      <p
+        className={`text-center text-sm text-default-500 ${compact ? "mt-5" : "mt-6"}`}
+      >
         {t("login_modal.no_account")}{" "}
         <Link
-          className="cursor-pointer text-small font-semibold"
+          className="cursor-pointer text-sm font-bold text-primary"
           onPress={onSwitchToRegister}
         >
           {t("login_modal.create_account")}

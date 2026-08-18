@@ -326,7 +326,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
               isLoading={isLoadingMore}
               onLoadMore={loadMore}
             >
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {isLoading && products.length === 0
                   ? Array.from({ length: PER_PAGE }).map((_, i) => (
                       <ProductCardSkeleton key={i} />
@@ -340,7 +340,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
               </div>
 
               {isLoadingMore && (
-                <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="mt-6 grid grid-cols-1 gap-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {Array.from({ length: PER_PAGE }).map((_, i) => (
                     <ProductCardSkeleton key={`loading-${i}`} />
                   ))}

@@ -240,6 +240,9 @@
     "fetch_failed_description": "आइटम जोड़ने के बाद कार्ट अपडेट नहीं हो सका",
     "fetch_failed_title": "कार्ट प्राप्त करने में विफल",
     "login_required": "कृपया जारी रखने के लिए लॉगिन करें",
+    "signIn": "साइन इन करें",
+    "signInCheckout": "चेकआउट के लिए साइन इन करें",
+    "subtotal": "उप-योग",
     "selectAddressToCheckRushDelivery": "रश डिलीवरी उपलब्ध है या नहीं देखने के लिए एक पता चुनें",
     "sync_success_title": "कार्ट सिंक हो गया",
     "sync_success_desc": "आपके कार्ट आइटम सफलतापूर्वक सिंक हो गए हैं",
@@ -1639,6 +1642,8 @@
   "product_modal": {
     "add_to_cart_title": "कार्ट में जोड़ें",
     "cancel": "रद्द करें",
+    "cart_social_proof_single": "1 खरीदार ने इसे जोड़ा",
+    "cart_social_proof_multiple": "{{count}} खरीदारों ने इसे जोड़ा",
     "constraints": "न्यूनतम: {{min}}, चरण: {{step}}",
     "discount_percent": "{{percent}}% छूट",
     "in_cart": "कार्ट में",

@@ -86,7 +86,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
       ? {
           slidesPerView: 1,
           breakpoints: {
-            431: { slidesPerView: 1.7, spaceBetween: 12 },
+            375: { slidesPerView: 2, spaceBetween: 10 },
             640: { slidesPerView: 2.4, spaceBetween: 14 },
             1024: { slidesPerView: 3.2, spaceBetween: 16 },
             1280: { slidesPerView: 4, spaceBetween: 16 },
@@ -96,7 +96,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
         ? {
             slidesPerView: 1,
             breakpoints: {
-              431: { slidesPerView: 1.5, spaceBetween: 12 },
+              375: { slidesPerView: 2, spaceBetween: 10 },
               640: { slidesPerView: 2.1, spaceBetween: 14 },
               1024: { slidesPerView: 2.8, spaceBetween: 16 },
               1280: { slidesPerView: 3.4, spaceBetween: 16 },
@@ -106,7 +106,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
           ? {
               slidesPerView: 1,
               breakpoints: {
-                431: { slidesPerView: 2.3, spaceBetween: 10 },
+                375: { slidesPerView: 2.3, spaceBetween: 10 },
                 640: { slidesPerView: 3.3, spaceBetween: 14 },
                 1024: { slidesPerView: 4, spaceBetween: 16 },
                 1280: { slidesPerView: 4.8, spaceBetween: 16 },
@@ -115,7 +115,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
           : {
               slidesPerView: 1,
               breakpoints: {
-                431: { slidesPerView: 1.8, spaceBetween: 12 },
+                375: { slidesPerView: 2, spaceBetween: 10 },
                 640: { slidesPerView: 2.5, spaceBetween: 14 },
                 1024: { slidesPerView: 3.3, spaceBetween: 16 },
                 1280: { slidesPerView: 4.1, spaceBetween: 16 },

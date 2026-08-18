@@ -35,9 +35,15 @@ import {
 import { updateCartData } from "./updators";
 import {
   addOfflineCartItem,
+  type OfflineCartItem,
   updateOfflineCartItem,
 } from "@/lib/redux/slices/offlineCartSlice";
 import { trackPurchase } from "@/lib/analytics";
+
+type OfflineCartItemWithVariant = OfflineCartItem & {
+  variantTitle?: string;
+  variantAttributes?: Record<string, string>;
+};
 
 export const makeTabClick = (dataKey: string): void => {
   // Select the button using the data-key attribute
@@ -347,8 +353,10 @@ export const handleOfflineAddToCart = (params: {
       stock: stock,
       product_variant_id: variant.id,
       store_id: variant.store_id,
+      variantTitle: variant.title,
+      variantAttributes: variant.attributes,
       addons: addons,
-    }),
+    } as OfflineCartItemWithVariant),
   );
 
   if (renderToast) {
@@ -429,8 +437,10 @@ export const handleUpdateOfflineCartItem = (params: {
         stock: stock,
         product_variant_id: variant.id,
         store_id: variant.store_id,
+        variantTitle: variant.title,
+        variantAttributes: variant.attributes,
         addons: addons,
-      },
+      } as OfflineCartItemWithVariant,
     }),
   );
 

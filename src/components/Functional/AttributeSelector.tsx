@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Image } from "@heroui/react";
+import { Image } from "@/components/ui";
 import { ProductAttribute, SwatchValue } from "@/types/ApiResponse";
 
 interface AttributeSelectorProps {
@@ -17,9 +17,9 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
 
   return (
     <div key={slug} className="space-y-2">
-      <h4 className="text-xxs sm:text-xs font-medium text-gray-700 dark:text-gray-300">
+      <h4 className="text-xs font-medium text-default-600">
         {name}:{" "}
-        <span className="text-gray-900 dark:text-white">
+        <span className="font-semibold text-foreground">
           {selectedAttributes[slug]}
         </span>
       </h4>
@@ -33,10 +33,10 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
               <button
                 key={swatch.value}
                 onClick={() => onChange(slug, swatch.value)}
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg border-2 overflow-hidden transition-all ${
+                className={`h-9 w-9 overflow-hidden rounded-small border transition-colors ${
                   isSelected
-                    ? "border-primary-500 ring-2 ring-primary-200"
-                    : "border-gray-300 hover:border-gray-400"
+                    ? "border-primary"
+                    : "border-divider hover:border-default-400"
                 }`}
               >
                 <Image
@@ -52,15 +52,15 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
               <button
                 key={swatch.value}
                 onClick={() => onChange(slug, swatch.value)}
-                className={`flex items-center gap-2 p-0 sm:text-xs font-medium rounded-lg  border-2 transition-all ${
+                className={`flex items-center rounded-small border p-0 transition-colors ${
                   isSelected
-                    ? "border-primary-500 border-2"
-                    : "border-gray-200 dark:border-default-200"
+                    ? "border-primary"
+                    : "border-divider hover:border-default-400"
                 }`}
               >
                 {/* Color box */}
                 <span
-                  className="w-7 h-7 rounded-lg"
+                  className="h-8 w-8 rounded-small"
                   style={{ backgroundColor: swatch.value }}
                 />
               </button>
@@ -70,10 +70,10 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
               <button
                 key={swatch.value}
                 onClick={() => onChange(slug, swatch.value)}
-                className={`px-2 py-1 text-[10px] sm:text-xs font-medium rounded-lg border transition-all ${
+                className={`rounded-small border px-3 py-2 text-xs font-semibold transition-colors ${
                   isSelected
-                    ? "bg-primary-500 text-white border-primary-500"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-primary-300"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-divider bg-content1 text-foreground hover:bg-content2"
                 }`}
               >
                 {swatch.value}

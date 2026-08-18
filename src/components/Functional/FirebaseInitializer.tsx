@@ -8,9 +8,9 @@ import {
   NotificationSettings,
   Settings,
 } from "@/types/ApiResponse";
-import { addToast, Avatar, closeToast } from "@heroui/react";
+import { Avatar, closeToast, toast } from "@/components/ui";
 import { getFirebaseConfig, getSpecificSettings } from "@/helpers/getters";
-import { getMessaging, getToken } from "firebase/messaging";
+import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { Bell } from "lucide-react";
 import {
   getNotificationRedirectUrl,
@@ -29,9 +29,19 @@ declare global {
 }
 
 type NotificationPayload = {
-  notification?: { title?: string; body?: string; image?: string; icon?: string };
+  notification?: {
+    title?: string;
+    body?: string;
+    image?: string;
+    icon?: string;
+  };
   data?: NotificationData;
 };
+
+const FIREBASE_MESSAGING_SW_PATH = "/firebase-messaging-sw.js";
+const FIREBASE_MESSAGING_SW_SCOPE = "/firebase-cloud-messaging-push-scope";
+
+let messagingInitialization: Promise<void> | null = null;
 
 const playNotificationSound = () => {
   try {
@@ -43,7 +53,10 @@ const playNotificationSound = () => {
   }
 };
 
-const showNotification = (payload: NotificationPayload, router?: NextRouter) => {
+const showNotification = (
+  payload: NotificationPayload,
+  router?: NextRouter,
+) => {
   if (!payload.notification) return;
 
   playNotificationSound();
@@ -54,7 +67,7 @@ const showNotification = (payload: NotificationPayload, router?: NextRouter) => 
   const toastClass = `toast-clickable-${Date.now()}`;
 
   // Create the toast and capture its key
-  const toastKey = addToast({
+  const toastKey = toast({
     title: title || "New Notification",
     description: body || "You have a new message",
     color: "default",
@@ -69,15 +82,17 @@ const showNotification = (payload: NotificationPayload, router?: NextRouter) => 
 
   // Attach click listener after slight delay to ensure DOM mounting
   setTimeout(() => {
-    const toastEl = document.querySelector(`.${toastClass}`) as HTMLElement | null;
+    const toastEl = document.querySelector(
+      `.${toastClass}`,
+    ) as HTMLElement | null;
     if (toastEl && url) {
       toastEl.style.cursor = "pointer";
       const handleClick = () => {
-    if (/^https?:\/\//i.test(url)) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else if (router) {
-      router.push(url);
-    }
+        if (/^https?:\/\//i.test(url)) {
+          window.open(url, "_blank", "noopener,noreferrer");
+        } else if (router) {
+          router.push(url);
+        }
         if (toastKey) closeToast(toastKey);
       };
       toastEl.addEventListener("click", handleClick, { once: true });
@@ -85,31 +100,92 @@ const showNotification = (payload: NotificationPayload, router?: NextRouter) => 
   }, 100);
 };
 
+const waitForActiveServiceWorker = (
+  registration: ServiceWorkerRegistration,
+): Promise<ServiceWorker> => {
+  if (registration.active) return Promise.resolve(registration.active);
+
+  const worker = registration.installing ?? registration.waiting;
+  if (!worker) {
+    return Promise.reject(new Error("Firebase service worker is unavailable"));
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      worker.removeEventListener("statechange", handleStateChange);
+      reject(new Error("Firebase service worker activation timed out"));
+    }, 10000);
+
+    const cleanup = () => {
+      window.clearTimeout(timeoutId);
+      worker.removeEventListener("statechange", handleStateChange);
+    };
+
+    const handleStateChange = () => {
+      if (worker.state === "activated") {
+        cleanup();
+        resolve(worker);
+      } else if (worker.state === "redundant") {
+        cleanup();
+        reject(new Error("Firebase service worker became redundant"));
+      }
+    };
+
+    worker.addEventListener("statechange", handleStateChange);
+    handleStateChange();
+  });
+};
+
+const setupMessaging = async (
+  firebaseInstance: FirebaseInstance,
+  vapIdKey: string,
+  firebaseConfig: firebaseConfigType,
+) => {
+  if (!(await isSupported())) return;
+
+  const serviceWorkerRegistration = await navigator.serviceWorker.register(
+    FIREBASE_MESSAGING_SW_PATH,
+    { scope: FIREBASE_MESSAGING_SW_SCOPE },
+  );
+  const activeWorker = await waitForActiveServiceWorker(
+    serviceWorkerRegistration,
+  );
+  activeWorker.postMessage({
+    type: "INIT_FIREBASE",
+    config: firebaseConfig,
+  });
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") return;
+
+  const messaging = getMessaging(firebaseInstance.app);
+  const token = await getToken(messaging, {
+    vapidKey: vapIdKey,
+    serviceWorkerRegistration,
+  });
+  if (token) {
+    localStorage.setItem("fcm-token", token);
+  }
+};
+
 const initializeMessaging = async (
   firebaseInstance: FirebaseInstance,
   vapIdKey: string,
   firebaseConfig: firebaseConfigType,
 ) => {
-  try {
-    await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-    const readyReg = await navigator.serviceWorker.ready;
-    readyReg.active?.postMessage({
-      type: "INIT_FIREBASE",
-      config: firebaseConfig,
+  if (!messagingInitialization) {
+    messagingInitialization = setupMessaging(
+      firebaseInstance,
+      vapIdKey,
+      firebaseConfig,
+    ).catch((error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Unknown messaging error";
+      console.warn("Push notifications are unavailable:", message);
     });
-
-    const messaging = getMessaging(firebaseInstance.app);
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      const token = await getToken(messaging, { vapidKey: vapIdKey });
-      if (token) {
-        console.log("FCM Token:", token);
-        localStorage.setItem("fcm-token", token);
-      }
-    }
-  } catch (error) {
-    console.error("Failed to initialize messaging:", error);
   }
+
+  return messagingInitialization;
 };
 
 export default function FirebaseInitializer({
@@ -134,7 +210,7 @@ export default function FirebaseInitializer({
         if (!firebaseInstance) {
           const errorMsg = "Failed to initialize Firebase instance";
           console.error(errorMsg);
-          addToast({
+          toast({
             title: "Firebase Error",
             description: errorMsg,
             color: "danger",
@@ -169,7 +245,7 @@ export default function FirebaseInitializer({
               authError instanceof Error ? authError.message : "Unknown error"
             }`;
             console.error(errorMsg);
-            addToast({
+            toast({
               title: "Firebase Auth Error",
               description: errorMsg,
               color: "danger",
@@ -182,7 +258,7 @@ export default function FirebaseInitializer({
         error instanceof Error ? error.message : "Unknown error"
       }`;
       console.error(errorMsg);
-      addToast({
+      toast({
         title: "Firebase Initialization Error",
         description: errorMsg,
         color: "danger",

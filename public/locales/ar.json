@@ -240,6 +240,9 @@
     "fetch_failed_description": "تعذر تحديث السلة بعد إضافة العنصر",
     "fetch_failed_title": "فشل تحديث السلة",
     "login_required": "يرجى تسجيل الدخول للمتابعة",
+    "signIn": "تسجيل الدخول",
+    "signInCheckout": "سجّل الدخول لإتمام الشراء",
+    "subtotal": "المجموع الفرعي",
     "selectAddressToCheckRushDelivery": "اختر عنوانًا لمعرفة ما إذا كانت خدمة التوصيل السريع متاحة",
     "sync_success_title": "تمت مزامنة السلة",
     "sync_success_desc": "تمت مزامنة عناصر سلتك بنجاح",
@@ -1639,6 +1642,8 @@
   "product_modal": {
     "add_to_cart_title": "أضف إلى السلة",
     "cancel": "إلغاء",
+    "cart_social_proof_single": "أضافه متسوق واحد",
+    "cart_social_proof_multiple": "أضافه {{count}} متسوقين",
     "constraints": "الحد الأدنى: {{min}}، الخطوة: {{step}}",
     "discount_percent": "{{percent}}٪ خصم",
     "in_cart": "في السلة",

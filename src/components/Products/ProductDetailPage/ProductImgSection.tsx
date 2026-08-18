@@ -3,11 +3,14 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 
 import { Navigation, Pagination, Mousewheel } from "swiper/modules";
-import { Image } from "@/components/ui";
+import { Button, Image } from "@/components/ui";
+import { Icon } from "@iconify/react";
 import ProductImgSectionSkeleton from "@/components/Skeletons/ProductImgSectionSkeleton";
 import Lightbox from "yet-another-react-lightbox";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import { ProductVariant } from "@/types/ApiResponse";
+import { useScreenType } from "@/hooks/useScreenType";
+import { useTranslation } from "react-i18next";
 
 interface ProductImgSectionProps {
   allImages: string[];
@@ -22,6 +25,10 @@ interface ProductImgSectionProps {
   variants?: ProductVariant[];
   selectedVariant?: ProductVariant | null;
   variantImagesStartIndex?: number;
+  isFavorited?: boolean;
+  isTogglingFavorite?: boolean;
+  onShare?: () => void;
+  onToggleFavorite?: () => void;
 }
 
 const ProductImgSection: FC<ProductImgSectionProps> = memo(
@@ -34,7 +41,13 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
     variants = [],
     selectedVariant = null,
     variantImagesStartIndex = 0,
+    isFavorited = false,
+    isTogglingFavorite = false,
+    onShare,
+    onToggleFavorite,
   }) => {
+    const isMobile = useScreenType() === "mobile";
+    const { t } = useTranslation();
     const [activeIndex, setActiveIndex] = useState(0);
     const mainSwiperRef = useRef<SwiperType | null>(null);
     const thumbnailSwiperRef = useRef<SwiperType | null>(null);
@@ -88,16 +101,49 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
         className={`w-full h-full flex gap-4 ${isVertical ? "" : "flex-col"}`}
       >
         <div
-          className={`w-full cursor-zoom-in ${isVertical ? "order-2" : "order-1"} relative`}
+          className={`relative w-full ${isMobile ? "cursor-default" : "cursor-zoom-in"} ${isVertical ? "order-2" : "order-1"}`}
           onMouseMove={(e) => {
+            if (isMobile) return;
             const rect = e.currentTarget.getBoundingClientRect();
             const x = ((e.clientX - rect.left) / rect.width) * 100;
             const y = ((e.clientY - rect.top) / rect.height) * 100;
             setZoomPosition({ x, y });
           }}
-          onMouseEnter={() => setIsHover(true)}
+          onMouseEnter={() => {
+            if (!isMobile) setIsHover(true);
+          }}
           onMouseLeave={() => setIsHover(false)}
         >
+          <div className="absolute end-3 top-3 z-20 flex items-center gap-2">
+            <Button
+              isIconOnly
+              size="sm"
+              radius="full"
+              color="default"
+              variant="flat"
+              className="h-10 min-w-10 bg-content1/90 text-foreground shadow-sm backdrop-blur-sm"
+              aria-label={t("share")}
+              onPress={onShare}
+            >
+              <Icon icon="solar:share-linear" className="text-lg" />
+            </Button>
+            <Button
+              isIconOnly
+              size="sm"
+              radius="full"
+              color="default"
+              variant="flat"
+              className="h-10 min-w-10 bg-content1/90 text-foreground shadow-sm backdrop-blur-sm"
+              aria-label={t("add_to_wishlist", "Add to wishlist")}
+              isLoading={isTogglingFavorite}
+              onPress={onToggleFavorite}
+            >
+              <Icon
+                icon={isFavorited ? "solar:heart-bold" : "solar:heart-linear"}
+                className={isFavorited ? "text-lg text-danger" : "text-lg"}
+              />
+            </Button>
+          </div>
           {/* Swiper for Main Image */}
           <Swiper
             spaceBetween={10}
@@ -150,7 +196,7 @@ const ProductImgSection: FC<ProductImgSectionProps> = memo(
           </Swiper>
 
           {/* Zoom Window Outside the Main Image */}
-          {isHover && activeIndex < allImages.length && (
+          {!isMobile && isHover && activeIndex < allImages.length && (
             <div className="absolute top-0 -right-[10vw] md:-right-[20vw] w-[20vw] h-[20vw] border border-divider rounded-2xl overflow-hidden bg-content2 z-50 shadow-md">
               <Image
                 disableSkeleton

@@ -1,5 +1,5 @@
 import { handleGoogleLogin } from "@/helpers/auth";
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui";
 import Image from "next/image";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,10 +23,10 @@ const GoogleLoginBtn: FC<GoogleLoginBtnProps> = ({
     <Button
       isDisabled={isLoading}
       variant="bordered"
-      className="w-full font-medium h-11"
+      className="h-12 min-h-12 w-full border-divider bg-content1 px-4 text-sm font-semibold text-foreground hover:bg-content2"
       onPress={() => handleGoogleLogin({ setIsLoading, onOpenChange, context })}
       startContent={
-        <div className="w-6 h-6 object-cover">
+        <div className="h-5 w-5 shrink-0 object-cover">
           <Image
             src="/logos/google-logo.png"
             className="w-full h-full"

@@ -18,7 +18,7 @@ const HomeSectionSkeleton: FC<HomeSectionSkeletonProps> = ({ count = 4 }) => (
       <Skeleton className="h-5 w-40 rounded-md" />
       <Skeleton className="h-4 w-16 rounded-md" />
     </div>
-    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-4">
+    <div className="grid grid-cols-1 gap-2.5 xs:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-4">
       {Array.from({ length: count }).map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}

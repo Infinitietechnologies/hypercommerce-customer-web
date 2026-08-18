@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useAdTracking } from "@/hooks/useAdTracking";
 import {
   BottomSection,
@@ -9,8 +9,12 @@ import {
 } from "@/components/Products/ProductDetailPage";
 import { Product, ProductVariant } from "@/types/ApiResponse";
 import ProductDetailSectionSkeleton from "@/components/Skeletons/ProductDetailSectionSkeleton";
-import { useDisclosure } from "@/components/ui";
+import { toast, useDisclosure } from "@/components/ui";
 import dynamic from "next/dynamic";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
+import { toggleFavorite } from "@/routes/api";
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
   ssr: false,
@@ -44,6 +48,20 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     getInitialVariant()
   );
+  const [isFavorited, setIsFavorited] = useState(
+    Array.isArray(initialProduct?.favorite) &&
+      initialProduct.favorite.length > 0,
+  );
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    setIsFavorited(
+      Array.isArray(initialProduct?.favorite) &&
+        initialProduct.favorite.length > 0,
+    );
+  }, [initialProduct?.favorite]);
 
   const { elementRef: adImpressionRef } = useAdTracking(initialProduct);
 
@@ -82,6 +100,53 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
     setSelectedVariant(variant);
   };
 
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}/share/products/${initialProduct.slug}`;
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title: initialProduct.title,
+          text: t("share_product_text", { title: initialProduct.title }),
+          url: shareUrl,
+        })
+        .catch(console.error);
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      toast({ title: t("link_copied"), color: "success" });
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!isLoggedIn) {
+      document.getElementById("login-btn")?.click();
+      toast({ title: t("please_login"), color: "warning" });
+      return;
+    }
+    if (!selectedVariant) return;
+
+    setIsTogglingFavorite(true);
+    try {
+      const res = await toggleFavorite({
+        product_id: initialProduct.id,
+        product_variant_id: selectedVariant.id ?? null,
+        store_id: selectedVariant.store_id,
+      });
+      if (res.success && res.data) {
+        setIsFavorited(res.data.is_favorited);
+      } else {
+        toast({
+          title: res.message || t("something_went_wrong"),
+          color: "danger",
+        });
+      }
+    } catch {
+      toast({ title: t("something_went_wrong"), color: "danger" });
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col gap-6 sm:gap-10">
       <section
@@ -98,6 +163,10 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
             variants={initialProduct?.variants || []}
             selectedVariant={selectedVariant}
             variantImagesStartIndex={variantImagesStartIndex}
+            isFavorited={isFavorited}
+            isTogglingFavorite={isTogglingFavorite}
+            onShare={handleShare}
+            onToggleFavorite={handleToggleFavorite}
           />
         </div>
         <div className="w-full flex justify-end">

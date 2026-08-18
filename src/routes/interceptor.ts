@@ -86,7 +86,7 @@ export const setupInterceptors = (instance: AxiosInstance): void => {
             console.error("Forbidden access");
             break;
           case 500:
-            console.error("Server error");
+            console.warn("Server request failed with status 500");
             break;
           case 503:
             // Check for maintenance mode in 503 response

@@ -1,14 +1,12 @@
 import React, { FC } from "react";
 import {
   Button,
-  Divider,
   Drawer,
   DrawerBody,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
   Image,
-  ScrollShadow,
   toast,
   useDisclosure,
 } from "@/components/ui";
@@ -19,6 +17,7 @@ import { RootState } from "@/lib/redux/store";
 import { useSettings } from "@/contexts/SettingsContext";
 import {
   removeOfflineCartItem,
+  type OfflineCartItem,
   updateOfflineCartItemQuantity,
 } from "@/lib/redux/slices/offlineCartSlice";
 import Link from "next/link";
@@ -38,14 +37,20 @@ type OfflineCartDrawerProps = {
   onClose: () => void;
 };
 
+type OfflineCartItemWithVariant = OfflineCartItem & {
+  variantTitle?: string;
+  variantAttributes?: Record<string, string>;
+};
+
 const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { formatPrice } = useSettings();
+  const { formatPrice, systemSettings } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const dispatch = useDispatch();
   const offlineCart = useSelector((state: RootState) => state.offlineCart);
   const hasItems = offlineCart.items.length > 0;
+  const lowStockLimit = Number(systemSettings?.lowStockLimit) || 0;
 
   const {
     isOpen: isProductModalOpen,
@@ -176,7 +181,9 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleCustomize = async (item: any) => {
+  const handleCustomize = async (item: OfflineCartItem) => {
+    if (!item.slug) return;
+
     setIsCustomizing(true);
     try {
       const res = await getProductBySlug({
@@ -191,14 +198,11 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
 
         // Convert cart addons back to modal format
         const addonsMap =
-          item.addons?.reduce(
-            (acc: any, addon: any) => {
-              if (!acc[addon.addon_group_id]) acc[addon.addon_group_id] = [];
-              acc[addon.addon_group_id].push(addon.addon_item_id);
-              return acc;
-            },
-            {} as Record<number, number[]>,
-          ) || {};
+          item.addons?.reduce<Record<number, number[]>>((acc, addon) => {
+            if (!acc[addon.addon_group_id]) acc[addon.addon_group_id] = [];
+            acc[addon.addon_group_id].push(addon.addon_item_id);
+            return acc;
+          }, {}) || {};
 
         setInitialAddons(addonsMap);
         setEditingCartItemId(item.id);
@@ -220,208 +224,282 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
   return (
     <>
       <Drawer placement="right" isOpen={isOpen} onClose={onClose} size="sm">
-        <DrawerContent className="max-w-md">
-          <DrawerHeader className="flex flex-col gap-1">
-            <p className="text-lg font-semibold">{t("cart_title")}</p>
-            <p className="text-sm text-foreground/60">
-              {t("cart.login_required") || "Please login to continue"}
-            </p>
+        <DrawerContent className="max-w-md bg-content1">
+          <DrawerHeader className="pe-12 pb-4 pt-5">
+            <h2 className="text-xl font-bold text-foreground">
+              {t("cart_title")}
+            </h2>
           </DrawerHeader>
 
-          <DrawerBody className="flex flex-col gap-4">
+          <DrawerBody className="flex min-h-0 flex-col px-4 pb-4">
             {hasItems ? (
-              <>
-                <ScrollShadow className="flex flex-col gap-3 max-h-[50vh] pe-1">
-                  {offlineCart.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex gap-3 rounded-2xl border border-divider bg-content1 p-3"
-                    >
-                      {item.image ? (
-                        <Image
-                          alt={item.name}
-                          src={item.image}
-                          removeWrapper
-                          className="h-16 w-16 rounded-xl object-contain bg-content2"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 rounded-xl bg-content2 text-foreground/50 flex items-center justify-center text-sm font-semibold uppercase">
-                          {item.name?.slice(0, 2)}
-                        </div>
-                      )}
-                      <div className="flex flex-1 flex-col sm:gap-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <Link
-                            href={`/products/${item.slug}`}
-                            className="text-xs sm:text-sm font-semibold block truncate overflow-hidden text-ellipsis max-w-[120px] sm:max-w-[220px] min-w-0"
-                          >
-                            {item.name}
-                          </Link>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
+                  {offlineCart.items.map((item) => {
+                    const itemWithVariant = item as OfflineCartItemWithVariant;
+                    const addonsTotal =
+                      item.addons?.reduce(
+                        (sum, addon) => sum + (addon.price || 0),
+                        0,
+                      ) || 0;
+                    const lineTotal =
+                      (item.price + addonsTotal) * item.quantity;
+                    const isLowStock =
+                      lowStockLimit > 0 &&
+                      item.stock > 0 &&
+                      item.stock <= lowStockLimit;
+                    const variantOptions = Object.entries(
+                      itemWithVariant.variantAttributes || {},
+                    ).filter(([, value]) => String(value).trim());
+                    const fallbackVariant =
+                      variantOptions.length === 0 &&
+                      itemWithVariant.variantTitle &&
+                      itemWithVariant.variantTitle !== item.name
+                        ? itemWithVariant.variantTitle
+                            .replace(item.name, "")
+                            .replace(/^[\s|,/·\-–—:]+/, "")
+                            .trim()
+                        : "";
 
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            color="danger"
-                            variant="light"
-                            aria-label={t("cartItems.removeItemModal.title")}
-                            onPress={() => setSelectedItemId(item.id)}
-                          >
-                            <Icon
-                              icon="solar:trash-bin-trash-linear"
-                              className="text-base"
+                    return (
+                      <article
+                        key={item.id}
+                        className="overflow-hidden rounded-large border border-divider bg-content1 p-3 shadow-sm"
+                      >
+                        <div className="flex gap-3">
+                          {item.image ? (
+                            <Image
+                              alt={item.name}
+                              src={item.image}
+                              removeWrapper
+                              className="h-20 w-20 shrink-0 rounded-medium bg-content2 p-1 object-contain"
                             />
-                          </Button>
-                        </div>
-                        {item.storeName && (
-                          <Link
-                            href={`/stores/${item.storeSlug}`}
-                            className="text-xxs sm:text-xs text-foreground/60"
-                          >
-                            {item.storeName}
-                          </Link>
-                        )}
-                        <div className="flex flex-col gap-2">
-                          <div className="flex sm:items-center flex-col sm:flex-row justify-between text-xs text-foreground/60">
-                            <div className="flex gap-2">
-                              <span>
-                                {t("product_modal.qty") + ":"} {item.quantity}
-                              </span>
-                              <span>
-                                {t("product_modal.stock", {
+                          ) : (
+                            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-medium bg-content2 text-sm font-semibold uppercase text-foreground/50">
+                              {item.name?.slice(0, 2)}
+                            </div>
+                          )}
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start gap-2">
+                              <div className="min-w-0 flex-1">
+                                <Link
+                                  href={`/products/${item.slug}`}
+                                  className="line-clamp-2 text-sm font-semibold leading-snug text-foreground"
+                                >
+                                  {item.name}
+                                </Link>
+
+                                {item.storeName && item.storeSlug && (
+                                  <Link
+                                    href={`/stores/${item.storeSlug}`}
+                                    className="mt-1 flex max-w-full items-center gap-1 text-xs text-foreground/50"
+                                  >
+                                    <Icon
+                                      icon="solar:shop-2-linear"
+                                      className="shrink-0 text-sm"
+                                    />
+                                    <span className="truncate">
+                                      {item.storeName}
+                                    </span>
+                                  </Link>
+                                )}
+                              </div>
+
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                color="danger"
+                                variant="light"
+                                aria-label={t(
+                                  "cartItems.removeItemModal.title",
+                                )}
+                                className="h-8 min-w-8 rounded-full p-0"
+                                onPress={() => setSelectedItemId(item.id)}
+                              >
+                                <Icon
+                                  icon="solar:trash-bin-trash-linear"
+                                  className="text-base"
+                                />
+                              </Button>
+                            </div>
+
+                            {(variantOptions.length > 0 || fallbackVariant) && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {variantOptions.map(([key, value]) => (
+                                  <span
+                                    key={key}
+                                    className="inline-flex max-w-full items-center gap-1 rounded-small bg-content2 px-2 py-1 text-xs leading-none text-foreground/60"
+                                  >
+                                    <span className="capitalize">
+                                      {key.replace(/[_-]+/g, " ")}:
+                                    </span>
+                                    <span className="truncate font-semibold text-foreground/80">
+                                      {value}
+                                    </span>
+                                  </span>
+                                ))}
+                                {fallbackVariant && (
+                                  <span className="inline-flex max-w-full truncate rounded-small bg-content2 px-2 py-1 text-xs font-semibold leading-none text-foreground/80">
+                                    {fallbackVariant}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {isLowStock && (
+                              <p className="mt-1 text-xs font-semibold text-warning-600">
+                                {t("product_modal.low_stock_alert", {
                                   stock: item.stock,
                                 })}
-                              </span>
-                            </div>
-                            <span>
-                              {formatPrice(item.price)} /{" "}
-                              {t("item") || "item"}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center gap-1 rounded-xl border border-divider p-1">
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="light"
-                                aria-label={t("decrease_quantity", "Decrease quantity")}
-                                className="w-7 h-7 min-w-7 text-primary-600"
-                                onPress={() =>
-                                  handleQuantityChange(
-                                    item.id,
-                                    item.quantity,
-                                    getStepSize(item.stepSize),
-                                    "dec",
-                                    item.minQuantity,
-                                    item.maxQuantity,
-                                    item.stock,
-                                  )
-                                }
-                              >
-                                <Icon icon="solar:minus-square-linear" className="text-lg" />
-                              </Button>
-                              <span className="w-8 text-center text-sm font-bold tabular-nums">
-                                {item.quantity}
-                              </span>
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="light"
-                                aria-label={t("increase_quantity", "Increase quantity")}
-                                className="w-7 h-7 min-w-7 text-primary-600"
-                                onPress={() =>
-                                  handleQuantityChange(
-                                    item.id,
-                                    item.quantity,
-                                    getStepSize(item.stepSize),
-                                    "inc",
-                                    item.minQuantity,
-                                    item.maxQuantity,
-                                    item.stock,
-                                  )
-                                }
-                              >
-                                <Icon icon="solar:add-square-linear" className="text-lg" />
-                              </Button>
-                            </div>
-                            <p className="text-sm font-bold text-foreground whitespace-nowrap">
-                              {formatPrice(
-                                (item.price +
-                                  (item.addons?.reduce(
-                                    (sum, a) => sum + (a.price || 0),
-                                    0,
-                                  ) || 0)) *
-                                  item.quantity,
-                              )}
+                              </p>
+                            )}
+
+                            <p className="mt-2 text-base font-bold text-foreground">
+                              {formatPrice(lineTotal)}
                             </p>
                           </div>
-                          {/* CUSTOMIZE BUTTON */}
-                          <button
-                            onClick={() => handleCustomize(item)}
-                            disabled={isCustomizing}
-                            className="text-xxs font-semibold mt-1 flex items-center gap-0.5 text-primary-600 hover:opacity-80 transition-opacity"
-                          >
-                            <span className="cursor-pointer">
-                              {isCustomizing &&
-                              customizingProduct?.slug === item.slug
-                                ? t("loading")
-                                : t("cartItems.customize") || "Customize"}
-                            </span>
-                            <Icon icon="solar:alt-arrow-right-linear" className="text-sm" />
-                          </button>
-
-                          {item.addons && item.addons.length > 0 && (
-                            <CartAddonList
-                              addons={item.addons}
-                              className="mt-1"
-                            />
-                          )}
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </ScrollShadow>
 
-                <Divider />
+                        {item.addons && item.addons.length > 0 && (
+                          <CartAddonList
+                            addons={item.addons}
+                            className="mt-3 border-t border-divider pt-3"
+                          />
+                        )}
 
-                <div className="flex flex-col gap-2 rounded-2xl border border-divider bg-content2 p-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/60">
-                      {t("checkout.itemsTotal")}
+                        <div className="mt-3 flex items-center justify-between gap-2 border-t border-divider pt-3">
+                          <div className="inline-flex h-9 items-center overflow-hidden rounded-medium border border-divider bg-content1">
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              aria-label={t(
+                                "decrease_quantity",
+                                "Decrease quantity",
+                              )}
+                              className="h-full min-w-9 rounded-none bg-transparent p-0 text-foreground"
+                              onPress={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  item.quantity,
+                                  getStepSize(item.stepSize),
+                                  "dec",
+                                  item.minQuantity,
+                                  item.maxQuantity,
+                                  item.stock,
+                                )
+                              }
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="text-lg font-semibold leading-none"
+                              >
+                                −
+                              </span>
+                            </Button>
+                            <span className="min-w-8 text-center text-sm font-bold tabular-nums">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="light"
+                              aria-label={t(
+                                "increase_quantity",
+                                "Increase quantity",
+                              )}
+                              className="h-full min-w-9 rounded-none bg-transparent p-0 text-foreground"
+                              onPress={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  item.quantity,
+                                  getStepSize(item.stepSize),
+                                  "inc",
+                                  item.minQuantity,
+                                  item.maxQuantity,
+                                  item.stock,
+                                )
+                              }
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="text-lg font-semibold leading-none"
+                              >
+                                +
+                              </span>
+                            </Button>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            variant="light"
+                            color="primary"
+                            isDisabled={isCustomizing}
+                            className="h-9 min-w-0 gap-1 px-2 text-xs font-semibold"
+                            endContent={
+                              <Icon
+                                icon="solar:alt-arrow-right-linear"
+                                className="text-sm"
+                              />
+                            }
+                            onPress={() => handleCustomize(item)}
+                          >
+                            {isCustomizing &&
+                            customizingProduct?.slug === item.slug
+                              ? t("loading")
+                              : t("cartItems.customize")}
+                          </Button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                <div className="border-t border-divider pt-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground/60">
+                      {t("cart.subtotal")}
                     </span>
-                    <span className="font-bold text-foreground">
+                    <span className="text-lg font-bold text-foreground">
                       {formatPrice(offlineCart.subtotal)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-foreground/60">
-                    <span>{t("items") || "items"}</span>
-                    <span>{offlineCart.totalQuantity}</span>
-                  </div>
+                  <Button
+                    color="primary"
+                    className="mt-3 w-full font-semibold"
+                    onPress={handleLogin}
+                  >
+                    {t("cart.signInCheckout")}
+                  </Button>
                 </div>
-              </>
+              </div>
             ) : (
-              <div className="flex flex-col items-center gap-3 py-10 text-center">
-                <Image
-                  alt="Empty cart"
-                  src="/empty/noOrder.png"
-                  width={180}
-                  height={140}
-                  className="w-44 h-auto object-contain"
-                />
-                <p className="text-base font-semibold">
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 py-10 text-center">
+                <div className="grid h-24 w-24 place-items-center rounded-full bg-primary-50 text-primary-600">
+                  <Icon icon="solar:cart-large-2-linear" className="text-5xl" />
+                </div>
+                <p className="text-lg font-bold text-foreground">
                   {t("cart.cartEmptyTitle")}
                 </p>
-                <p className="text-sm text-foreground/60">
+                <p className="max-w-xs text-sm leading-relaxed text-foreground/60">
                   {t("cart.cartEmptyDescription")}
                 </p>
               </div>
             )}
           </DrawerBody>
 
-          <DrawerFooter className="flex flex-col gap-2">
-            <Button color="primary" className="w-full" onPress={handleLogin}>
-              {t("cart.login_required") || "Please login to continue"}
-            </Button>
-          </DrawerFooter>
+          {!hasItems && (
+            <DrawerFooter className="border-t border-divider bg-content1 px-4 py-4">
+              <Button
+                color="primary"
+                className="w-full font-semibold"
+                onPress={handleLogin}
+              >
+                {t("cart.signIn")}
+              </Button>
+            </DrawerFooter>
+          )}
         </DrawerContent>
       </Drawer>
       <ConfirmationModal
@@ -429,7 +507,9 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
         onClose={() => setSelectedItemId(null)}
         onConfirm={handleRemoveItem}
         title={t("cartItems.removeItemModal.title")}
-        icon={<Icon icon="solar:trash-bin-trash-linear" className="text-base" />}
+        icon={
+          <Icon icon="solar:trash-bin-trash-linear" className="text-base" />
+        }
         description={t("cartItems.removeItemModal.description")}
         confirmText={t("cartItems.removeItemModal.confirmText")}
         cancelText={t("cartItems.removeItemModal.cancelText")}

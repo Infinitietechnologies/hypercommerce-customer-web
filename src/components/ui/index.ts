@@ -40,6 +40,7 @@ export {
   CardFooter,
   CardHeader,
   Checkbox,
+  closeToast,
   Divider,
   Drawer,
   DrawerBody,

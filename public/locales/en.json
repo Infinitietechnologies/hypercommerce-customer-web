@@ -240,6 +240,9 @@
     "fetch_failed_description": "Could not update cart after adding item",
     "fetch_failed_title": "Cart Fetch Failed",
     "login_required": "Please login to continue",
+    "signIn": "Sign in",
+    "signInCheckout": "Sign in to checkout",
+    "subtotal": "Subtotal",
     "selectAddressToCheckRushDelivery": "Select an address to see if Rush Delivery is available",
     "sync_success_title": "Cart Synced",
     "sync_success_desc": "Your cart items have been synced successfully",
@@ -1639,6 +1642,8 @@
   "product_modal": {
     "add_to_cart_title": "Add to Cart",
     "cancel": "Cancel",
+    "cart_social_proof_single": "Added by 1 shopper",
+    "cart_social_proof_multiple": "Added by {{count}} shoppers",
     "constraints": "Min: {{min}}, Step: {{step}}",
     "discount_percent": "{{percent}}% OFF",
     "in_cart": "in cart",

@@ -134,8 +134,9 @@ const SaveForLaterItems: FC<{ moreProductsInline: boolean }> = ({
         modules={[Scrollbar]}
         scrollbar={{ draggable: true }}
         spaceBetween={16}
-        slidesPerView={2}
+        slidesPerView={1}
         breakpoints={{
+          375: { slidesPerView: 2, spaceBetween: 10 },
           640: { slidesPerView: moreProductsInline ? 4 : 3 },
           768: { slidesPerView: moreProductsInline ? 5 : 4 },
           1024: { slidesPerView: moreProductsInline ? 6 : 5 },

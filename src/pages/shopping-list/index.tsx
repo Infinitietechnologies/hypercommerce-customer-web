@@ -460,8 +460,9 @@ const LoadingCarousel = () => {
             modules={[Navigation]}
             navigation={true}
             spaceBetween={10}
-            slidesPerView={2}
+            slidesPerView={1}
             breakpoints={{
+              375: { slidesPerView: 2 },
               576: { slidesPerView: 3 },
               768: { slidesPerView: 4 },
               1024: { slidesPerView: 5 },
@@ -552,9 +553,10 @@ const KeywordCarousel = ({
             <Swiper
               key={rtl ? "rtl-sl" : "ltr-sl"}
               dir={rtl ? "rtl" : "ltr"}
-              slidesPerView={2}
+              slidesPerView={1}
               spaceBetween={12}
               breakpoints={{
+                375: { slidesPerView: 2, spaceBetween: 10 },
                 640: { slidesPerView: 3, spaceBetween: 12 },
                 1024: { slidesPerView: 4, spaceBetween: 12 },
                 1280: { slidesPerView: 5, spaceBetween: 12 },

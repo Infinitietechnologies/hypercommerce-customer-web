@@ -58,7 +58,7 @@ const HomeRecentlyViewed: FC = () => {
             slidesPerView={1}
             spaceBetween={1}
             breakpoints={{
-              431: { slidesPerView: 2, spaceBetween: 10 },
+              375: { slidesPerView: 2, spaceBetween: 10 },
               640: { slidesPerView: 3, spaceBetween: 12 },
               1024: { slidesPerView: 4, spaceBetween: 12 },
               1280: { slidesPerView: 5, spaceBetween: 12 },
