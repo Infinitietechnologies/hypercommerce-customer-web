@@ -368,23 +368,6 @@ export const Navbar: FC = () => {
 
   const showAccountLinks = mounted && isLoggedIn;
 
-  const MobileAccountAction = (
-    <button
-      type="button"
-      aria-label={t("nav.account", "Account")}
-      onClick={() => {
-        if (showAccountLinks) {
-          router.push("/my-account");
-        } else {
-          authSheetStore.open();
-        }
-      }}
-      className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-current opacity-90 transition-colors hover:bg-content1/60 hover:opacity-100"
-    >
-      <User className="h-5 w-5" />
-    </button>
-  );
-
   const WishlistAction = showAccountLinks ? (
     <HeaderAction
       icon={<Heart className="h-5 w-5" />}
@@ -479,14 +462,6 @@ export const Navbar: FC = () => {
       {header.showCart ? CartAction : null}
     </nav>
   );
-
-  const mobileHeaderActions =
-    header.showAccount || header.showCart ? (
-      <nav className="flex shrink-0 items-center gap-0.5">
-        {header.showAccount ? MobileAccountAction : null}
-        {header.showCart ? CartAction : null}
-      </nav>
-    ) : null;
 
   const announcementContent = header.announcementText ? (
     <span className="text-center text-xs font-semibold sm:text-sm">
@@ -1012,11 +987,10 @@ export const Navbar: FC = () => {
           {renderSurfaceBackground()}
           {mobileHeaderRow}
           <div
-            className={`relative z-10 mx-auto grid min-h-16 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 min-[640px]:gap-3 min-[1024px]:hidden ${containerClass}`}
+            className={`relative z-10 mx-auto grid min-h-16 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 py-2 min-[640px]:gap-3 min-[1024px]:hidden ${containerClass}`}
           >
             <div className="max-w-24 min-[640px]:max-w-32">{SiteLogo}</div>
             {mobileSearch ?? <span />}
-            {mobileHeaderActions ?? <span />}
           </div>
           {header.layout === "showcase" ? utilityBar : null}
           {header.layout === "stacked" ? (

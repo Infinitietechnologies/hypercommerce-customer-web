@@ -36,7 +36,7 @@ const WishListPageView: React.FC<WishListPageViewProps> = ({
       />
 
       {loading ? (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="rounded-large">
               <div className="aspect-square w-full bg-default-200" />
@@ -64,7 +64,7 @@ const WishListPageView: React.FC<WishListPageViewProps> = ({
           onAction={() => router.push("/")}
         />
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {items.map((item) => (
             <WishlistProductCard
               key={item.id}

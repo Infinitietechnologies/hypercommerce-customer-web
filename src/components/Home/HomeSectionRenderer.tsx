@@ -84,9 +84,9 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
   const productSlider =
     productCardStyle === "compact"
       ? {
-          slidesPerView: 1.25,
+          slidesPerView: 1,
           breakpoints: {
-            430: { slidesPerView: 1.7, spaceBetween: 12 },
+            431: { slidesPerView: 1.7, spaceBetween: 12 },
             640: { slidesPerView: 2.4, spaceBetween: 14 },
             1024: { slidesPerView: 3.2, spaceBetween: 16 },
             1280: { slidesPerView: 4, spaceBetween: 16 },
@@ -94,9 +94,9 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
         }
       : productCardStyle === "showcase"
         ? {
-            slidesPerView: 1.15,
+            slidesPerView: 1,
             breakpoints: {
-              430: { slidesPerView: 1.5, spaceBetween: 12 },
+              431: { slidesPerView: 1.5, spaceBetween: 12 },
               640: { slidesPerView: 2.1, spaceBetween: 14 },
               1024: { slidesPerView: 2.8, spaceBetween: 16 },
               1280: { slidesPerView: 3.4, spaceBetween: 16 },
@@ -104,18 +104,18 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
           }
         : productCardStyle === "minimal"
           ? {
-              slidesPerView: 1.8,
+              slidesPerView: 1,
               breakpoints: {
-                430: { slidesPerView: 2.3, spaceBetween: 10 },
+                431: { slidesPerView: 2.3, spaceBetween: 10 },
                 640: { slidesPerView: 3.3, spaceBetween: 14 },
                 1024: { slidesPerView: 4, spaceBetween: 16 },
                 1280: { slidesPerView: 4.8, spaceBetween: 16 },
               },
             }
           : {
-              slidesPerView: 1.35,
+              slidesPerView: 1,
               breakpoints: {
-                430: { slidesPerView: 1.8, spaceBetween: 12 },
+                431: { slidesPerView: 1.8, spaceBetween: 12 },
                 640: { slidesPerView: 2.5, spaceBetween: 14 },
                 1024: { slidesPerView: 3.3, spaceBetween: 16 },
                 1280: { slidesPerView: 4.1, spaceBetween: 16 },
