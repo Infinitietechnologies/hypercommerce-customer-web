@@ -95,7 +95,7 @@ Return one optional settings entry with `variable: "header"`. Every property is 
 - Navigation: live categories or custom items, `pills`, `links`, or `icons`, home-only or all-page scope, active/background/text colours, category count, and scroll behavior.
 - Announcement: text, URL, background/text colours, visibility, and dismissibility.
 
-For custom navigation, send `navigationSource: "custom"` and fill `navigationItems`. An item accepts `id`, `label`, `url`, `openInNewTab`, optional `icon` such as `solar:shop-linear`, and optional `imageUrl`. Only relative URLs and `http`/`https` URLs are accepted. Category navigation calls `/categories?home=true`; each category's `image` is its navigation icon and `banner` is its selected desktop-header background image.
+For custom navigation, send `navigationSource: "custom"` and fill `navigationItems`. An item accepts `id`, `label`, `url`, `openInNewTab`, optional `icon` such as `solar:shop-linear`, and optional `imageUrl`. Only relative URLs and `http`/`https` URLs are accepted. Category navigation calls `/categories?home=true`; each category's desktop navigation assets come from `home_appearance.desktop.icon`, `home_appearance.desktop.active_icon`, and `home_appearance.desktop.background_image`. The top-level `image` and `banner` remain compatibility fallbacks.
 
 `navigationScrollBehavior` controls the sticky category row:
 
@@ -107,6 +107,6 @@ Set `hideUtilityOnScroll: true` to slide the utility row upward with the categor
 
 Set `sticky: false` for a normal non-sticky header. When it is false, scroll behavior is not applied.
 
-The main desktop/mobile logos come from `logoUrl` and `mobileLogoUrl`. If those fields are omitted, the storefront uses the existing backend `web.siteHeaderDarkLogo`. A selected category's header surface follows `home_appearance.desktop`; `image` supplies its navigation icon and `banner` supplies an image background. The All-category icon comes from `home_general_settings.icon`/`activeIcon`. Custom navigation images come from `navigationItems[].imageUrl`. The storefront only owns presentation and a safe Iconify fallback when the backend provides no icon.
+The main desktop/mobile logos come from `logoUrl` and `mobileLogoUrl`. If those fields are omitted, the storefront uses the existing backend `web.siteHeaderDarkLogo`. A selected category's header surface follows `home_appearance.desktop`; its nested `icon`, `active_icon`, and `background_image` fields supply the desktop assets. The All-category icon comes from the desktop fields in `home_general_settings`, with its app fields as fallbacks. Custom navigation images come from `navigationItems[].imageUrl`. The storefront only owns presentation and a safe Iconify fallback when the backend provides no icon.
 
 The backend should return data only. It must not send HTML, CSS, scripts, Tailwind classes, or component names.

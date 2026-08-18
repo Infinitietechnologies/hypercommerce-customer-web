@@ -119,18 +119,22 @@ export const Navbar: FC = () => {
     ? selectedHeaderCategory.search_labels
     : homeGeneralSettings?.searchLabels;
   const usesHomeAppearance = Boolean(activeDesktopAppearance);
-  const effectiveBackgroundType = usesHomeAppearance
+  const configuredBackgroundType = usesHomeAppearance
     ? activeDesktopAppearance?.background_type
     : header.backgroundType;
   const effectiveBackgroundImage = selectedHeaderCategory
-    ? selectedHeaderCategory.desktop_background_image ||
-      selectedHeaderCategory.background_image ||
+    ? activeDesktopAppearance?.background_image ||
+      selectedHeaderCategory.banner ||
       null
     : usesHomeAppearance
       ? homeGeneralSettings?.desktopBackgroundImage ||
         homeGeneralSettings?.backgroundImage ||
         null
-    : header.backgroundImage;
+      : header.backgroundImage;
+  const effectiveBackgroundType =
+    configuredBackgroundType === "image" && !effectiveBackgroundImage
+      ? "color"
+      : configuredBackgroundType;
   const containerClass =
     header.containerWidth === "full"
       ? "max-w-none"
@@ -734,15 +738,12 @@ export const Navbar: FC = () => {
                 slug: category.slug,
                 title: category.title,
                 image:
-                  category.desktop_icon ||
-                  category.icon ||
+                  category.home_appearance.desktop.icon ||
                   category.image ||
                   null,
                 activeImage:
-                  category.desktop_active_icon ||
-                  category.desktop_icon ||
-                  category.active_icon ||
-                  category.icon ||
+                  category.home_appearance.desktop.active_icon ||
+                  category.home_appearance.desktop.icon ||
                   category.image ||
                   null,
                 icon: null,
@@ -789,6 +790,7 @@ export const Navbar: FC = () => {
                           disableAnimation
                           src={itemImage}
                           alt=""
+                          radius="none"
                           className="h-6 w-6 object-contain"
                         />
                       ) : (
@@ -822,6 +824,7 @@ export const Navbar: FC = () => {
                           disableAnimation
                           src={item.imageUrl}
                           alt=""
+                          radius="none"
                           className="h-6 w-6 object-contain"
                         />
                       ) : (

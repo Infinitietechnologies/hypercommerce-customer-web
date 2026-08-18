@@ -7,6 +7,9 @@ export type CategoryHomeAppearance = {
   gradient_angle: string | number;
   font_color: string;
   active_font_color: string;
+  icon: string;
+  active_icon: string;
+  background_image: string;
 };
 
 export type HomeCategory = {
@@ -15,18 +18,13 @@ export type HomeCategory = {
   slug: string;
   image: string;
   banner: string;
-  icon?: string;
-  active_icon?: string;
-  desktop_icon?: string;
-  desktop_active_icon?: string;
-  background_image?: string;
-  desktop_background_image?: string;
   home_appearance: {
     app: CategoryHomeAppearance;
     desktop: CategoryHomeAppearance;
   };
   search_labels: string[];
   parent_id: number | null;
+  commission: string;
   parent_slug: string | null;
   description: string | null;
   status: "active" | "inactive";
