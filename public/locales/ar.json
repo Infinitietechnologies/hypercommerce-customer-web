@@ -676,8 +676,10 @@
     "checking": "جارٍ الفحص...",
     "confirmLocation": "تأكيد الموقع",
     "currentLocation": "الموقع الحالي",
+    "defaultArea": "الموقع الافتراضي",
     "deliverTo": "التوصيل إلى",
     "deliveryAvailable": "التوصيل متاح",
+    "deliveryAreaHint": "تحقق من توفر التوصيل في منطقتك",
     "deliveryNotAvailable": "التوصيل غير متاح",
     "deliveryNotAvailableDescription": "يمكنك متابعة التصفح أو اختيار موقع آخر",
     "detecting": "جارٍ التحديد…",
@@ -685,10 +687,14 @@
     "errorConfirming": "حدث خطأ أثناء تأكيد الموقع",
     "errorProcessing": "حدث خطأ أثناء معالجة الموقع",
     "getting": "جارٍ الحصول...",
+    "loginPrompt": "سجّل الدخول لعرض عناوينك المحفوظة",
     "modalSubtitle": "اختر عنواناً محفوظاً أو استخدم موقعك الحالي.",
-    "modalTitle": "محدد الموقع",
+    "modalTitle": "اختر موقع التوصيل",
+    "noSavedAddresses": "لا توجد عناوين محفوظة بعد",
     "pleaseConfirm": "يرجى تأكيد الموقع للمتابعة!",
-    "selectLocation": "اختر الموقع"
+    "savedAddresses": "العناوين المحفوظة",
+    "selectLocation": "اختر الموقع",
+    "useCurrentLocation": "استخدام الموقع الحالي"
   },
   "login_modal": {
     "aria": {

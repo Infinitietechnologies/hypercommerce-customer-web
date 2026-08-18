@@ -6,7 +6,7 @@ import React, {
   useImperativeHandle,
   useMemo,
 } from "react";
-import { Autocomplete, AutocompleteItem } from "@heroui/react";
+import { Autocomplete, AutocompleteItem } from "@/components/ui";
 import { MapPin, Loader2, LocateFixed } from "lucide-react";
 import type { Key } from "react";
 import { useSettings } from "@/contexts/SettingsContext";

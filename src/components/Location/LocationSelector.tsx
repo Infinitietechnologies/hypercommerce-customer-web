@@ -114,7 +114,9 @@ const LocationSelector = ({
           lat: defaultLocation?.lat || staticLat,
           lng: defaultLocation?.lng || staticLng,
         },
-        demoMode ? "Bhuj ,Gujrat ,India" : t("locationSelector.defaultArea", "Default location"),
+        demoMode
+          ? "Bhuj ,Gujrat ,India"
+          : t("locationSelector.defaultArea", "Default location"),
         undefined,
         "",
         { silent: true },
@@ -390,20 +392,23 @@ const LocationSelector = ({
     switch (type?.toLowerCase()) {
       case "home":
         return (
-          <Icon icon="solar:home-2-linear" className="text-lg text-primary" />
+          <Icon
+            icon="solar:home-2-linear"
+            className="text-xl text-default-500"
+          />
         );
       case "work":
         return (
           <Icon
             icon="solar:buildings-2-linear"
-            className="text-lg text-primary"
+            className="text-xl text-default-500"
           />
         );
       default:
         return (
           <Icon
             icon="solar:map-point-linear"
-            className="text-lg text-primary"
+            className="text-xl text-default-500"
           />
         );
     }
@@ -412,11 +417,13 @@ const LocationSelector = ({
   // Header button label
   const getButtonText = () => {
     if (isCheckoutLocked && checkoutSelectedAddress) {
-      const parts = [checkoutSelectedAddress.city, checkoutSelectedAddress.state]
+      const parts = [
+        checkoutSelectedAddress.city,
+        checkoutSelectedAddress.state,
+      ]
         .filter(Boolean)
         .join(", ");
-      const text =
-        parts || checkoutSelectedAddress.address_line1 || "";
+      const text = parts || checkoutSelectedAddress.address_line1 || "";
       return text.length > 30 ? `${text.substring(0, 30)}...` : text;
     }
     if (!isInitialized) return t("locationSelector.getting");
@@ -488,28 +495,21 @@ const LocationSelector = ({
           onClick={isCheckoutLocked ? undefined : onOpen}
           disabled={!isInitialized || isCheckoutLocked}
           className={clsx(
-            "flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-medium px-1 py-1.5 text-start transition-colors",
+            "flex h-8 w-fit max-w-full min-w-0 cursor-pointer items-center gap-1.5 rounded-small px-2.5 text-start text-xs font-semibold transition-colors",
             tone === "light"
-              ? "text-white hover:bg-white/10"
+              ? "bg-white/20 text-white hover:bg-white/30"
               : tone === "inherit"
-                ? "text-current hover:bg-white/20"
-                : "text-foreground hover:bg-content1/60",
+                ? "bg-foreground/10 text-current hover:bg-foreground/15"
+                : "bg-content2/80 text-foreground hover:bg-content2",
           )}
         >
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10">
-            <MapPin className="h-4 w-4 text-primary" />
-          </span>
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[9px] font-semibold uppercase leading-none tracking-wide opacity-60">
-              {t("nav.deliverTo", "Deliver to")}
-            </span>
-            <span className="truncate text-xs font-bold leading-5">
-              {getButtonText()}
-            </span>
+          <MapPin className="h-4 w-4 shrink-0" />
+          <span className="max-w-44 truncate leading-none">
+            {getButtonText()}
           </span>
           <Icon
             icon="solar:alt-arrow-down-linear"
-            className="shrink-0 text-sm opacity-60"
+            className="h-3.5 w-3.5 shrink-0 opacity-70"
           />
         </button>
       )}
@@ -519,138 +519,169 @@ const LocationSelector = ({
         onClose={handleCloseModal}
         isDismissable
         classNames={{
-          base: "w-full overflow-hidden",
-          body: "px-2 md:px-4 pb-6 flex flex-col gap-4",
-          header: "flex flex-col gap-1 items-start p-3 sm:p-4",
+          base: "w-full overflow-hidden bg-content1",
+          body: "px-4 pb-6 pt-2 flex flex-col gap-3",
+          header: "items-start border-b border-divider px-4 pb-4 pt-3 sm:px-5",
         }}
         size="lg"
         backdrop="blur"
         title={
-          <>
-            <span className="text-lg font-extrabold">
-              {t("locationSelector.modalTitle", "Select delivery address")}
-            </span>
-            <span className="text-sm font-normal text-default-500">
-              {t("locationSelector.modalSubtitle")}
-            </span>
-          </>
+          <span className="text-xl font-extrabold text-foreground">
+            {t("locationSelector.modalTitle", "Select delivery location")}
+          </span>
         }
       >
         <>
-            {/* Use my current location */}
-            <Button
-              onPress={handleUseCurrentLocation}
-              isDisabled={isBusy}
-              isLoading={locatingId === "current"}
-              variant="flat"
-              color="primary"
-              startContent={
-                locatingId !== "current" && (
-                  <Icon icon="solar:gps-linear" className="text-xl" />
-                )
-              }
-              className="justify-start font-bold h-12"
-            >
-              {locatingId === "current"
-                ? t("locationSelector.detecting")
-                : t(
-                    "locationSelector.useCurrentLocation",
-                    "Use my current location",
-                  )}
-            </Button>
-
-            {/* Saved addresses */}
-            <div className="flex items-center gap-3">
-              <Divider className="flex-1" />
-              <span className="text-xs font-bold uppercase tracking-wider text-default-400">
-                {t("locationSelector.savedAddresses", "Saved addresses")}
-              </span>
-              <Divider className="flex-1" />
-            </div>
-
-            {!isLoggedIn ? (
-              <div className="text-center py-6">
-                <div className="w-16 h-16 rounded-large bg-primary-100/60 grid place-items-center mx-auto mb-3">
-                  <Icon
-                    icon="solar:map-point-linear"
-                    className="text-3xl text-primary-600"
-                  />
-                </div>
-                <p className="text-sm text-default-500 mb-4">
-                  {t(
-                    "locationSelector.loginPrompt",
-                    "Log in to see your saved addresses",
-                  )}
-                </p>
-                <Button
-                  className="font-bold"
-                  color="primary"
-                  variant="flat"
-                  onPress={openLogin}
-                >
-                  {t("login_modal.sign_in")}
-                </Button>
-              </div>
-            ) : isAddressesLoading ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <Spinner size="lg" color="primary" />
-              </div>
-            ) : addresses.length === 0 ? (
-              <div className="text-center py-6">
-                <div className="w-16 h-16 rounded-large bg-primary-100/60 grid place-items-center mx-auto mb-3">
-                  <Icon
-                    icon="solar:map-point-linear"
-                    className="text-3xl text-primary-600"
-                  />
-                </div>
-                <p className="text-sm text-default-500">
-                  {t(
-                    "locationSelector.noSavedAddresses",
-                    "No saved addresses yet",
-                  )}
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {addresses.map((address) => {
-                  const isSelected =
-                    selectedLatLng?.lat === address.latitude &&
-                    selectedLatLng?.lng === address.longitude;
-                  return (
-                    <button
-                      key={address.id}
-                      type="button"
-                      onClick={() => handleSelectAddress(address)}
-                      disabled={isBusy}
-                      className={`flex items-start gap-3 w-full text-start rounded-xl px-3 py-3 border bg-content2 transition-colors disabled:opacity-60 ${
-                        isSelected
-                          ? "border-primary"
-                          : "border-divider hover:border-primary/60"
-                      }`}
-                    >
-                      <div className="mt-0.5 shrink-0">
-                        {locatingId === address.id.toString() ? (
-                          <Spinner size="sm" color="primary" />
-                        ) : (
-                          getAddressTypeIcon(address.address_type)
-                        )}
-                      </div>
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <span className="text-sm font-bold capitalize">
-                          {address.address_type}
-                        </span>
-                        <span className="text-xs text-default-500 mt-0.5 line-clamp-2">
-                          {address.address_line1}
-                          {address.address_line2 &&
-                            `, ${address.address_line2}`}
-                          , {address.city}, {address.state} {address.zipcode}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+          <p className="text-sm leading-5 text-default-500">
+            {t(
+              "locationSelector.modalSubtitle",
+              "Choose a saved address or use your current location.",
             )}
+          </p>
+
+          <Button
+            onPress={handleUseCurrentLocation}
+            isDisabled={isBusy}
+            isLoading={locatingId === "current"}
+            variant="light"
+            color="default"
+            startContent={
+              locatingId !== "current" && (
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-medium bg-content2">
+                  <Icon
+                    icon="solar:gps-linear"
+                    className="text-xl text-foreground"
+                  />
+                </span>
+              )
+            }
+            endContent={
+              locatingId !== "current" && (
+                <Icon
+                  icon="solar:alt-arrow-right-linear"
+                  className="ms-auto text-lg text-default-400 rtl:rotate-180"
+                />
+              )
+            }
+            className="h-auto min-h-16 w-full justify-start rounded-large px-2 py-2 text-start text-foreground hover:bg-content2"
+          >
+            <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+              <span className="text-sm font-bold">
+                {locatingId === "current"
+                  ? t("locationSelector.detecting")
+                  : t(
+                      "locationSelector.useCurrentLocation",
+                      "Use current location",
+                    )}
+              </span>
+              <span className="text-xs font-normal text-default-500">
+                {t(
+                  "locationSelector.deliveryAreaHint",
+                  "See delivery availability for your area",
+                )}
+              </span>
+            </span>
+          </Button>
+
+          <Divider className="my-1" />
+          <h3 className="text-sm font-bold text-default-500">
+            {t("locationSelector.savedAddresses", "Saved addresses")}
+          </h3>
+
+          {!isLoggedIn ? (
+            <div className="rounded-large border border-divider bg-content2/50 px-4 py-6 text-center">
+              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-large bg-content1">
+                <Icon
+                  icon="solar:map-point-linear"
+                  className="text-2xl text-default-500"
+                />
+              </div>
+              <p className="mb-4 text-sm text-default-500">
+                {t(
+                  "locationSelector.loginPrompt",
+                  "Log in to see your saved addresses",
+                )}
+              </p>
+              <Button
+                className="mx-auto font-bold"
+                color="primary"
+                variant="solid"
+                onPress={openLogin}
+              >
+                {t("login_modal.sign_in")}
+              </Button>
+            </div>
+          ) : isAddressesLoading ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <Spinner size="lg" color="current" />
+            </div>
+          ) : addresses.length === 0 ? (
+            <div className="rounded-large border border-divider bg-content2/50 px-4 py-6 text-center">
+              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-large bg-content1">
+                <Icon
+                  icon="solar:map-point-linear"
+                  className="text-2xl text-default-500"
+                />
+              </div>
+              <p className="text-sm text-default-500">
+                {t(
+                  "locationSelector.noSavedAddresses",
+                  "No saved addresses yet",
+                )}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {addresses.map((address) => {
+                const isSelected =
+                  selectedLatLng?.lat === address.latitude &&
+                  selectedLatLng?.lng === address.longitude;
+                return (
+                  <button
+                    key={address.id}
+                    type="button"
+                    onClick={() => handleSelectAddress(address)}
+                    disabled={isBusy}
+                    className={`flex w-full items-center gap-3 rounded-large border bg-content1 p-3 text-start shadow-sm transition-colors disabled:opacity-60 ${
+                      isSelected
+                        ? "border-primary bg-primary-50"
+                        : "border-divider hover:border-default-400"
+                    }`}
+                  >
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-medium bg-content2">
+                      {locatingId === address.id.toString() ? (
+                        <Spinner size="sm" color="current" />
+                      ) : (
+                        getAddressTypeIcon(address.address_type)
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="text-sm font-bold capitalize">
+                        {address.address_type}
+                      </span>
+                      <span className="mt-1 line-clamp-2 text-xs leading-5 text-default-500">
+                        {address.address_line1}
+                        {address.address_line2 &&
+                          `, ${address.address_line2}`}, {address.city},{" "}
+                        {address.state} {address.zipcode}
+                      </span>
+                    </div>
+                    <Icon
+                      icon={
+                        isSelected
+                          ? "solar:check-circle-bold"
+                          : "solar:alt-arrow-right-linear"
+                      }
+                      className={clsx(
+                        "shrink-0 text-lg rtl:rotate-180",
+                        isSelected ? "text-primary" : "text-default-400",
+                      )}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </>
       </Sheet>
     </div>

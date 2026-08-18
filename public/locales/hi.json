@@ -676,8 +676,10 @@
     "checking": "जांच हो रही है...",
     "confirmLocation": "स्थान की पुष्टि करें",
     "currentLocation": "वर्तमान स्थान",
+    "defaultArea": "डिफ़ॉल्ट स्थान",
     "deliverTo": "यहाँ डिलीवर करें",
     "deliveryAvailable": "डिलीवरी उपलब्ध है",
+    "deliveryAreaHint": "अपने क्षेत्र में डिलीवरी की उपलब्धता देखें",
     "deliveryNotAvailable": "डिलीवरी उपलब्ध नहीं है",
     "deliveryNotAvailableDescription": "आप ब्राउज़िंग जारी रख सकते हैं या कोई अन्य स्थान चुन सकते हैं",
     "detecting": "पता लगाया जा रहा है…",
@@ -685,10 +687,14 @@
     "errorConfirming": "स्थान की पुष्टि में त्रुटि",
     "errorProcessing": "स्थान संसाधित करने में त्रुटि",
     "getting": "प्राप्त किया जा रहा है...",
-    "modalSubtitle": "सहेजा गया पता चुनें या अपना वर्तमान स्थान उपयोग करें।",
-    "modalTitle": "स्थान चयनकर्ता",
+    "loginPrompt": "अपने सहेजे गए पते देखने के लिए लॉग इन करें",
+    "modalSubtitle": "सहेजा गया पता चुनें या अपने वर्तमान स्थान का उपयोग करें।",
+    "modalTitle": "डिलीवरी स्थान चुनें",
+    "noSavedAddresses": "अभी कोई सहेजा गया पता नहीं है",
     "pleaseConfirm": "कृपया जारी रखने के लिए स्थान की पुष्टि करें!",
-    "selectLocation": "स्थान चुनें"
+    "savedAddresses": "सहेजे गए पते",
+    "selectLocation": "स्थान चुनें",
+    "useCurrentLocation": "वर्तमान स्थान का उपयोग करें"
   },
   "login_modal": {
     "aria": {

@@ -676,8 +676,10 @@
     "checking": "Checking...",
     "confirmLocation": "Confirm Location",
     "currentLocation": "Current Location",
+    "defaultArea": "Default location",
     "deliverTo": "Deliver to",
     "deliveryAvailable": "Delivery Available",
+    "deliveryAreaHint": "See delivery availability for your area",
     "deliveryNotAvailable": "Delivery Not Available",
     "deliveryNotAvailableDescription": "You can continue browsing or select a different location",
     "detecting": "Detecting…",
@@ -685,10 +687,14 @@
     "errorConfirming": "Error confirming location",
     "errorProcessing": "Error processing location",
     "getting": "Getting...",
+    "loginPrompt": "Log in to see your saved addresses",
     "modalSubtitle": "Choose a saved address or use your current location.",
-    "modalTitle": "Location Selector",
+    "modalTitle": "Select delivery location",
+    "noSavedAddresses": "No saved addresses yet",
     "pleaseConfirm": "Please Confirm Location to Continue !",
-    "selectLocation": "Select Location"
+    "savedAddresses": "Saved addresses",
+    "selectLocation": "Select Location",
+    "useCurrentLocation": "Use current location"
   },
   "login_modal": {
     "aria": {
