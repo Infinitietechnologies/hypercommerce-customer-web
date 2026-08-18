@@ -112,14 +112,24 @@ export const Navbar: FC = () => {
   const selectedHeaderCategory = navCategories.find(
     (category) => category.slug === selectedCategorySlug,
   );
-  const categoryDesktopAppearance =
-    selectedHeaderCategory?.home_appearance.desktop;
-  const usesCategoryAppearance = Boolean(categoryDesktopAppearance);
-  const effectiveBackgroundType = usesCategoryAppearance
-    ? categoryDesktopAppearance?.background_type
+  const globalDesktopAppearance = homeGeneralSettings?.homeAppearance?.desktop;
+  const activeDesktopAppearance =
+    selectedHeaderCategory?.home_appearance?.desktop ?? globalDesktopAppearance;
+  const activeSearchLabels = selectedHeaderCategory?.search_labels?.length
+    ? selectedHeaderCategory.search_labels
+    : homeGeneralSettings?.searchLabels;
+  const usesHomeAppearance = Boolean(activeDesktopAppearance);
+  const effectiveBackgroundType = usesHomeAppearance
+    ? activeDesktopAppearance?.background_type
     : header.backgroundType;
-  const effectiveBackgroundImage = usesCategoryAppearance
-    ? selectedHeaderCategory?.banner || null
+  const effectiveBackgroundImage = selectedHeaderCategory
+    ? selectedHeaderCategory.desktop_background_image ||
+      selectedHeaderCategory.background_image ||
+      null
+    : usesHomeAppearance
+      ? homeGeneralSettings?.desktopBackgroundImage ||
+        homeGeneralSettings?.backgroundImage ||
+        null
     : header.backgroundImage;
   const containerClass =
     header.containerWidth === "full"
@@ -132,30 +142,33 @@ export const Navbar: FC = () => {
     header.contentTone === "light"
       ? "bg-ink text-ink-foreground"
       : "bg-content1 text-foreground";
+  const effectiveControlTone = usesHomeAppearance
+    ? ("inherit" as const)
+    : header.contentTone;
   const gradientDirection = {
     "to-right": "to right",
     "to-left": "to left",
     "to-bottom": "to bottom",
     "to-bottom-right": "to bottom right",
   }[header.gradientDirection];
-  const categoryGradientAngle = Number(
-    categoryDesktopAppearance?.gradient_angle ?? 90,
+  const activeGradientAngle = Number(
+    activeDesktopAppearance?.gradient_angle ?? 90,
   );
-  const surfaceStyle: CSSProperties = usesCategoryAppearance
+  const surfaceStyle: CSSProperties = usesHomeAppearance
     ? {
         ...(effectiveBackgroundType === "color" &&
-        categoryDesktopAppearance?.gradient_start
-          ? { backgroundColor: categoryDesktopAppearance.gradient_start }
+        activeDesktopAppearance?.gradient_start
+          ? { backgroundColor: activeDesktopAppearance.gradient_start }
           : {}),
         ...(effectiveBackgroundType === "gradient" &&
-        categoryDesktopAppearance?.gradient_start &&
-        categoryDesktopAppearance.gradient_end
+        activeDesktopAppearance?.gradient_start &&
+        activeDesktopAppearance.gradient_end
           ? {
-              backgroundImage: `linear-gradient(${Number.isFinite(categoryGradientAngle) ? categoryGradientAngle : 90}deg, ${categoryDesktopAppearance.gradient_start}, ${categoryDesktopAppearance.gradient_end})`,
+              backgroundImage: `linear-gradient(${Number.isFinite(activeGradientAngle) ? activeGradientAngle : 90}deg, ${activeDesktopAppearance.gradient_start}, ${activeDesktopAppearance.gradient_end})`,
             }
           : {}),
-        ...(categoryDesktopAppearance?.font_color
-          ? { color: categoryDesktopAppearance.font_color }
+        ...(activeDesktopAppearance?.font_color
+          ? { color: activeDesktopAppearance.font_color }
           : {}),
       }
     : {
@@ -180,7 +193,7 @@ export const Navbar: FC = () => {
             header.backgroundFit === "fill" ? "100% 100%" : "cover",
         }
       : undefined;
-  const mobileBackgroundUrl = usesCategoryAppearance
+  const mobileBackgroundUrl = usesHomeAppearance
     ? effectiveBackgroundImage
     : (header.mobileBackgroundImage ?? header.backgroundImage);
   const mobileBackgroundStyle: CSSProperties | undefined =
@@ -228,7 +241,7 @@ export const Navbar: FC = () => {
   }, [isLoggedIn, isOfflineCartOpen, closeOfflineCart]);
 
   useEffect(() => {
-    if (!header.sticky || header.navigationScrollBehavior === "keep") {
+    if (!header.sticky) {
       return;
     }
 
@@ -412,14 +425,15 @@ export const Navbar: FC = () => {
         {header.showLocation ? (
           <LocationSelector
             variant={header.layout === "showcase" ? "showcase" : "desktop"}
-            tone={header.contentTone}
+            tone={effectiveControlTone}
             showLabel={header.showLocationLabel}
           />
         ) : null}
         {header.showSearch ? (
           <GlobalSearchbar
-            tone={header.contentTone}
+            tone={effectiveControlTone}
             size={header.layout === "showcase" ? "large" : "default"}
+            searchLabels={activeSearchLabels}
           />
         ) : null}
       </div>
@@ -427,7 +441,11 @@ export const Navbar: FC = () => {
 
   const mobileSearch = header.showSearch ? (
     <div className="min-w-0 flex-1">
-      <GlobalSearchbar tone={header.contentTone} size="default" />
+      <GlobalSearchbar
+        tone={effectiveControlTone}
+        size="default"
+        searchLabels={activeSearchLabels}
+      />
     </div>
   ) : null;
 
@@ -475,7 +493,7 @@ export const Navbar: FC = () => {
   const renderSurfaceBackground = () => {
     if (effectiveBackgroundType !== "image") return null;
     const hasDifferentMobileBackground =
-      !usesCategoryAppearance &&
+      !usesHomeAppearance &&
       Boolean(header.mobileBackgroundImage) &&
       header.mobileBackgroundImage !== header.backgroundImage;
 
@@ -524,7 +542,7 @@ export const Navbar: FC = () => {
   ].filter((item) => Boolean(item.url));
 
   const utilityIsHidden =
-    isHeaderScrolled && header.hideUtilityOnScroll;
+    header.sticky && isHeaderScrolled && header.hideUtilityOnScroll;
 
   const utilityBar = header.showUtilityBar ? (
     <div
@@ -536,10 +554,10 @@ export const Navbar: FC = () => {
           : "max-h-8 translate-y-0 opacity-100"
       }`}
       style={{
-        ...(header.utilityBackgroundColor
+        ...(!usesHomeAppearance && header.utilityBackgroundColor
           ? { backgroundColor: header.utilityBackgroundColor }
           : {}),
-        ...(header.utilityTextColor
+        ...(!usesHomeAppearance && header.utilityTextColor
           ? { color: header.utilityTextColor }
           : {}),
       }}
@@ -591,9 +609,13 @@ export const Navbar: FC = () => {
     header.showCategoryNavigation &&
     (header.navigationScope === "all" || router.pathname === "/");
   const navigationIsCompact =
-    isHeaderScrolled && header.navigationScrollBehavior === "compact";
+    header.sticky &&
+    isHeaderScrolled &&
+    header.navigationScrollBehavior !== "hide";
   const navigationIsHidden =
-    isHeaderScrolled && header.navigationScrollBehavior === "hide";
+    header.sticky &&
+    isHeaderScrolled &&
+    header.navigationScrollBehavior === "hide";
   const navigationUsesIcons = header.navigationStyle === "icons";
   const navigationStyle = navigationIsCompact
     ? "links"
@@ -624,22 +646,22 @@ export const Navbar: FC = () => {
     }`;
   const navigationActiveStyle = (isActive: boolean): CSSProperties => ({
     ...(isActive &&
-    (categoryDesktopAppearance?.active_font_color ||
+    (activeDesktopAppearance?.active_font_color ||
       header.navigationActiveColor)
       ? navigationStyle === "pills"
         ? {
             backgroundColor:
-              categoryDesktopAppearance?.active_font_color ||
+              activeDesktopAppearance?.active_font_color ||
               header.navigationActiveColor ||
               undefined,
           }
         : {
             borderColor:
-              categoryDesktopAppearance?.active_font_color ||
+              activeDesktopAppearance?.active_font_color ||
               header.navigationActiveColor ||
               undefined,
             color:
-              categoryDesktopAppearance?.active_font_color ||
+              activeDesktopAppearance?.active_font_color ||
               header.navigationActiveColor ||
               undefined,
           }
@@ -661,22 +683,20 @@ export const Navbar: FC = () => {
             ? "max-h-12 -translate-y-1 opacity-100"
             : "max-h-24 translate-y-0 opacity-100"
       } ${
-        header.layout === "showcase"
+        header.layout === "showcase" || usesHomeAppearance
           ? "bg-transparent"
           : "bg-content1/90 backdrop-blur-md"
       }`}
       style={{
-        ...(header.navigationBackgroundColor
+        ...(!usesHomeAppearance && header.navigationBackgroundColor
           ? { backgroundColor: header.navigationBackgroundColor }
           : {}),
-        ...(header.navigationTextColor
+        ...(activeDesktopAppearance?.font_color
           ? {
-              color:
-                categoryDesktopAppearance?.font_color ||
-                header.navigationTextColor,
+              color: activeDesktopAppearance.font_color,
             }
-          : categoryDesktopAppearance?.font_color
-            ? { color: categoryDesktopAppearance.font_color }
+          : header.navigationTextColor
+            ? { color: header.navigationTextColor }
           : {}),
       }}
     >
@@ -696,8 +716,13 @@ export const Navbar: FC = () => {
                     {
                       slug: "all",
                       title: homeGeneralSettings?.title || t("filters.all"),
-                      image: homeGeneralSettings?.icon || null,
+                      image:
+                        homeGeneralSettings?.desktopIcon ||
+                        homeGeneralSettings?.icon ||
+                        null,
                       activeImage:
+                        homeGeneralSettings?.desktopActiveIcon ||
+                        homeGeneralSettings?.desktopIcon ||
                         homeGeneralSettings?.activeIcon ||
                         homeGeneralSettings?.icon ||
                         null,
@@ -708,8 +733,18 @@ export const Navbar: FC = () => {
               ...navCategories.map((category) => ({
                 slug: category.slug,
                 title: category.title,
-                image: category.image || null,
-                activeImage: category.image || null,
+                image:
+                  category.desktop_icon ||
+                  category.icon ||
+                  category.image ||
+                  null,
+                activeImage:
+                  category.desktop_active_icon ||
+                  category.desktop_icon ||
+                  category.active_icon ||
+                  category.icon ||
+                  category.image ||
+                  null,
                 icon: null,
               })),
             ].map((item) => {
@@ -815,7 +850,7 @@ export const Navbar: FC = () => {
         >
           {header.showLocation ? (
             <div className="min-w-0 flex-1">
-              <LocationSelector variant="mobile" tone={header.contentTone} />
+              <LocationSelector variant="mobile" tone={effectiveControlTone} />
             </div>
           ) : null}
           {header.showNotifications && showAccountLinks ? (
@@ -825,7 +860,7 @@ export const Navbar: FC = () => {
               onClick={() => {
                 router.push("/my-account/notifications");
               }}
-              className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${header.contentTone === "light" ? "bg-white/10 text-white hover:bg-white/20" : "bg-content1 text-foreground hover:bg-content2"}`}
+              className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${usesHomeAppearance ? "bg-white/20 text-current hover:bg-white/30" : header.contentTone === "light" ? "bg-white/10 text-white hover:bg-white/20" : "bg-content1 text-foreground hover:bg-content2"}`}
             >
               <Icon icon="solar:bell-bing-linear" className="text-lg" />
             </button>
@@ -1008,9 +1043,8 @@ export const Navbar: FC = () => {
               {headerActions}
             </div>
           )}
-          {header.layout === "showcase" ? navigationBar : null}
+          {navigationBar}
         </div>
-        {header.layout === "showcase" ? null : navigationBar}
       </header>
 
       <OfflineCartDrawer

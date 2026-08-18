@@ -31,7 +31,7 @@ type SelectedLocation = {
 
 interface LocationSelectorProps {
   variant?: "desktop" | "mobile" | "showcase";
-  tone?: "light" | "dark";
+  tone?: "light" | "dark" | "inherit";
   showLabel?: boolean;
 }
 
@@ -442,7 +442,11 @@ const LocationSelector = ({
           disabled={!isInitialized || isCheckoutLocked}
           className={clsx(
             "hidden min-w-0 cursor-pointer items-center gap-2 ps-2 text-start min-[1024px]:flex",
-            tone === "light" ? "text-white" : "text-foreground",
+            tone === "light"
+              ? "text-white"
+              : tone === "inherit"
+                ? "text-current"
+                : "text-foreground",
           )}
         >
           <MapPin className="h-5 w-5 shrink-0 text-primary" />
@@ -470,7 +474,9 @@ const LocationSelector = ({
             "hidden min-w-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs transition-colors hover:border-primary/60 min-[1024px]:flex",
             tone === "light"
               ? "border-white/15 text-ink-foreground"
-              : "border-divider bg-content1/90 text-foreground",
+              : tone === "inherit"
+                ? "border-divider bg-white/90 text-current"
+                : "border-divider bg-content1/90 text-foreground",
           )}
         >
           <MapPin className="h-4 w-4 shrink-0 text-primary" />
@@ -485,7 +491,9 @@ const LocationSelector = ({
             "flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-medium px-1 py-1.5 text-start transition-colors",
             tone === "light"
               ? "text-white hover:bg-white/10"
-              : "text-foreground hover:bg-content1/60",
+              : tone === "inherit"
+                ? "text-current hover:bg-white/20"
+                : "text-foreground hover:bg-content1/60",
           )}
         >
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10">

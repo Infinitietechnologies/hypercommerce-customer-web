@@ -32,12 +32,12 @@ export interface HomeHeroItem extends HomeSectionItem {
 export interface HomeSection {
   id: number;
   type: HomeSectionType;
-  title: string;
-  style: string | null;
+  title: string | null;
+  style?: string | null;
   config: Record<string, unknown> | null;
-  background_image: string | null;
-  hero_media: string | null;
-  card_background_image: string | null;
+  background_image?: string | null;
+  hero_media?: string | null;
+  card_background_image?: string | null;
   content: {
     products?: Product[];
     categories?: Category[];

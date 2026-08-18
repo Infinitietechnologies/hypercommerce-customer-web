@@ -15,6 +15,12 @@ export type HomeCategory = {
   slug: string;
   image: string;
   banner: string;
+  icon?: string;
+  active_icon?: string;
+  desktop_icon?: string;
+  desktop_active_icon?: string;
+  background_image?: string;
+  desktop_background_image?: string;
   home_appearance: {
     app: CategoryHomeAppearance;
     desktop: CategoryHomeAppearance;

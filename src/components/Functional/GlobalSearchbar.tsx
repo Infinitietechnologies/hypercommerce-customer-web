@@ -33,13 +33,15 @@ const searchFetcher = async (
 };
 
 interface GlobalSearchBarProps {
-  tone?: "light" | "dark";
+  tone?: "light" | "dark" | "inherit";
   size?: "default" | "large";
+  searchLabels?: string[];
 }
 
 const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
   tone = "light",
   size = "default",
+  searchLabels,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -53,20 +55,25 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
   );
 
   const placeholders = useMemo<string[]>(() => {
-    // Priority 1: Dynamic labels from category response
+    // Priority 1: Header-selected home category labels.
+    if (Array.isArray(searchLabels) && searchLabels.length > 0) {
+      return searchLabels;
+    }
+
+    // Priority 2: Dynamic labels from other category views.
     if (Array.isArray(currentSearchLabels) && currentSearchLabels.length > 0) {
       return currentSearchLabels;
     }
 
-    // Priority 2: Global settings labels
+    // Priority 3: Global settings labels.
     const SearchPlaceHolders = homeGeneralSettings?.searchLabels || [];
     if (Array.isArray(SearchPlaceHolders) && SearchPlaceHolders.length > 0) {
       return SearchPlaceHolders;
     }
 
-    // Priority 3: Translation fallback
+    // Priority 4: Translation fallback.
     return [t("search_placeholder")];
-  }, [currentSearchLabels, homeGeneralSettings?.searchLabels, t]);
+  }, [currentSearchLabels, homeGeneralSettings?.searchLabels, searchLabels, t]);
 
   // === Animated placeholder state ===
   const [placeholderIndex, setPlaceholderIndex] = useState<number>(0);
@@ -275,14 +282,20 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
           size === "large" ? "h-12 rounded-medium" : "h-10 rounded-full",
           tone === "light"
             ? "border-white/10 bg-white/10 hover:border-primary/60"
-            : "border-divider bg-content1/90 hover:border-primary/60",
+            : tone === "inherit"
+              ? "border-divider bg-white/90 text-current hover:border-primary/60"
+              : "border-divider bg-content1/90 hover:border-primary/60",
         )}
       >
         <Icon
           icon="solar:magnifer-linear"
           className={clsx(
             "shrink-0 text-lg",
-            tone === "light" ? "text-white/70" : "text-default-500",
+            tone === "light"
+              ? "text-white/70"
+              : tone === "inherit"
+                ? "text-current opacity-55"
+                : "text-default-500",
           )}
         />
 
@@ -291,7 +304,11 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             key={placeholderIndex}
             className={clsx(
               "absolute inset-0 truncate text-sm font-medium leading-5 transition-all duration-600 ease-in-out",
-              tone === "light" ? "text-white/60" : "text-default-500",
+              tone === "light"
+                ? "text-white/60"
+                : tone === "inherit"
+                  ? "text-current opacity-55"
+                  : "text-default-500",
             )}
             style={{
               transform: `translateY(${animationState === "enter" ? "20px" : animationState === "exit" ? "-20px" : "0px"})`,
@@ -315,7 +332,9 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             "flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-transparent transition-colors",
             tone === "light"
               ? "text-white/70 hover:bg-white/10 hover:text-white"
-              : "text-default-500 hover:bg-content2 hover:text-foreground",
+              : tone === "inherit"
+                ? "text-current opacity-60 hover:bg-content2 hover:opacity-100"
+                : "text-default-500 hover:bg-content2 hover:text-foreground",
           )}
         >
           <Icon icon="solar:clipboard-text-linear" className="text-xl" />

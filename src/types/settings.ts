@@ -1,3 +1,4 @@
+import type { CategoryHomeAppearance } from "./catalog";
 
 export type VersionCheckData = {
   update_available: boolean;
@@ -259,7 +260,14 @@ export type HomeGeneralSettings = {
   backgroundImage?: string;
   icon?: string;
   activeIcon?: string;
+  desktopIcon?: string;
+  desktopActiveIcon?: string;
+  desktopBackgroundImage?: string;
   fontColor: string;
+  homeAppearance?: {
+    app: CategoryHomeAppearance;
+    desktop: CategoryHomeAppearance;
+  };
 };
 
 export type AdvertisementSettings = {
