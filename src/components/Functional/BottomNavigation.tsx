@@ -119,49 +119,54 @@ const BottomNavigation = () => {
   };
 
   return (
-    <div className="w-full border-t border-divider bg-content1 min-[1024px]:hidden">
-      <nav
-        aria-label={t("nav.mobileNavigation")}
-        className="flex w-full items-center justify-around gap-2 px-1 py-2"
-      >
-        {navItems.map((item) => {
-          const isActive =
-            item.path === "/"
-              ? router.pathname === "/"
-              : router.pathname.startsWith(item.path);
-          return (
-            <button
-              type="button"
-              key={item.id}
-              aria-current={isActive ? "page" : undefined}
-              onClick={() => handleTabClick(item.id, item.path, item.protected)}
-              className={`relative flex min-w-0 flex-1 flex-col items-center justify-center px-3 py-1 transition-colors duration-200 ${
-                isActive
-                  ? "text-foreground"
-                  : "text-default-500 hover:text-foreground"
-              }`}
-            >
-              {renderIcon(item.id, isActive)}
-              {item.id === "cart" &&
-              (isLoggedIn ? cartCount : offLineCartCount) ? (
-                <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
-                  {isLoggedIn ? cartCount : offLineCartCount}
-                </span>
-              ) : null}
-              <span
-                className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}
+    <>
+      <div aria-hidden="true" className="h-20 min-[1024px]:hidden" />
+      <div className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-divider bg-content1 min-[1024px]:hidden">
+        <nav
+          aria-label={t("nav.mobileNavigation")}
+          className="flex w-full items-center justify-around gap-2 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+        >
+          {navItems.map((item) => {
+            const isActive =
+              item.path === "/"
+                ? router.pathname === "/"
+                : router.pathname.startsWith(item.path);
+            return (
+              <button
+                type="button"
+                key={item.id}
+                aria-current={isActive ? "page" : undefined}
+                onClick={() =>
+                  handleTabClick(item.id, item.path, item.protected)
+                }
+                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center px-3 py-1 transition-colors duration-200 ${
+                  isActive
+                    ? "text-foreground"
+                    : "text-default-500 hover:text-foreground"
+                }`}
               >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-      <OfflineCartDrawer
-        isOpen={isOfflineCartOpen}
-        onClose={closeOfflineCart}
-      />
-    </div>
+                {renderIcon(item.id, isActive)}
+                {item.id === "cart" &&
+                (isLoggedIn ? cartCount : offLineCartCount) ? (
+                  <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
+                    {isLoggedIn ? cartCount : offLineCartCount}
+                  </span>
+                ) : null}
+                <span
+                  className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+        <OfflineCartDrawer
+          isOpen={isOfflineCartOpen}
+          onClose={closeOfflineCart}
+        />
+      </div>
+    </>
   );
 };
 
