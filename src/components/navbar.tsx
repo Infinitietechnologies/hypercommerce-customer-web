@@ -1063,7 +1063,9 @@ export const Navbar: FC = () => {
 
   const mobileSearchRow = mobileSearch ? (
     <div
-      className={`relative z-10 mx-auto px-3 pb-2 pt-1 min-[1024px]:hidden ${containerClass}`}
+      className={`relative z-10 mx-auto px-3 pb-2 transition-all duration-300 ease-out motion-reduce:transition-none min-[1024px]:hidden ${
+        isMobileHeaderExpanded ? "pt-1" : "pt-2.5"
+      } ${containerClass}`}
     >
       {mobileSearch}
     </div>
@@ -1200,7 +1202,11 @@ export const Navbar: FC = () => {
       ) : null}
 
       <header
-        className={`${header.sticky ? "sticky" : "relative"} top-0 z-40 w-full border-0`}
+        className={`${header.sticky ? "sticky" : "relative"} top-0 z-40 w-full border-b transition-[border-color,box-shadow] duration-300 motion-reduce:transition-none min-[1024px]:border-0 min-[1024px]:shadow-none ${
+          hasScrolledMobileSurface
+            ? "border-divider shadow-sm"
+            : "border-transparent shadow-none"
+        }`}
       >
         <div
           className={`relative isolate overflow-hidden border-0 ${surfaceToneClass}`}
