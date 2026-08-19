@@ -882,7 +882,7 @@ export const Navbar: FC = () => {
         ? `relative flex flex-col items-center ${
             navigationIsCompact
               ? "min-w-16 gap-0 px-2 py-1.5 min-[640px]:min-w-20 min-[640px]:px-3"
-              : "min-w-16 gap-0.5 px-2 pb-1 min-[640px]:min-w-20 min-[640px]:px-3"
+              : "min-w-16 gap-0.5 px-2 pb-0.5 min-[640px]:min-w-20 min-[640px]:px-3"
           } ${
             isActive
               ? "font-bold text-(--header-navigation-active-color)"
@@ -900,7 +900,7 @@ export const Navbar: FC = () => {
     isActive && navigationStyle !== "pills" ? (
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-(--header-navigation-active-color)"
+        className="pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-16 -translate-x-1/2 rounded-full bg-(--header-navigation-active-color)"
       />
     ) : null;
   const navigationIconClass = `flex w-8 shrink-0 items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${

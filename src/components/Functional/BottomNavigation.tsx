@@ -168,7 +168,7 @@ const BottomNavigation = () => {
           color="currentColor"
           strokeWidth={isActive ? 2 : 1.5}
           fill="none"
-          className={`mb-1 ${isActive ? "[&>path:first-child]:fill-current [&>path:nth-child(2)]:fill-content1 [&>path:nth-child(2)]:stroke-content1" : ""}`}
+          className={`mb-1 ${isActive ? "[&>path:first-child]:fill-current [&>path:nth-child(2)]:opacity-0" : ""}`}
         />
       );
     }
