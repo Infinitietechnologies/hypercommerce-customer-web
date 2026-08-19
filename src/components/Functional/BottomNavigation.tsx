@@ -15,13 +15,15 @@ const OfflineCartDrawer = dynamic(() => import("../Cart/OfflineCartDrawer"), {
 });
 
 const TOP_VISIBLE_OFFSET = 24;
-const SCROLL_DIRECTION_THRESHOLD = 16;
+const SCROLL_HIDE_THRESHOLD = 10;
+const SCROLL_REVEAL_THRESHOLD = 48;
+const SCROLL_REVEAL_DELAY = 350;
 
 const BottomNavigation = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
-  const scrollDistance = useRef(0);
-  const scrollDirection = useRef<"up" | "down" | null>(null);
+  const isVisibleRef = useRef(true);
+  const scrollAnchorY = useRef(0);
+  const lastHiddenAt = useRef(0);
   const scrollFrame = useRef<number | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
@@ -47,45 +49,56 @@ const BottomNavigation = () => {
   }, [isLoggedIn, isOfflineCartOpen, closeOfflineCart]);
 
   useEffect(() => {
-    lastScrollY.current = Math.max(0, window.scrollY);
-    scrollDistance.current = 0;
-    scrollDirection.current = null;
+    scrollAnchorY.current = Math.max(0, window.scrollY);
+    isVisibleRef.current = true;
+    lastHiddenAt.current = 0;
     const frame = window.requestAnimationFrame(() => setIsVisible(true));
 
     return () => window.cancelAnimationFrame(frame);
   }, [router.asPath]);
 
   useEffect(() => {
-    lastScrollY.current = window.scrollY;
+    scrollAnchorY.current = Math.max(0, window.scrollY);
 
     const updateVisibility = () => {
       if (scrollFrame.current !== null) return;
 
       scrollFrame.current = window.requestAnimationFrame(() => {
         const currentScrollY = Math.max(0, window.scrollY);
-        const delta = currentScrollY - lastScrollY.current;
+        const setNavigationVisible = (nextVisible: boolean) => {
+          if (isVisibleRef.current === nextVisible) return;
+          isVisibleRef.current = nextVisible;
+          if (!nextVisible) {
+            lastHiddenAt.current = performance.now();
+          }
+          setIsVisible(nextVisible);
+        };
 
         if (currentScrollY <= TOP_VISIBLE_OFFSET) {
-          setIsVisible(true);
-          scrollDistance.current = 0;
-          scrollDirection.current = null;
-        } else if (delta !== 0) {
-          const nextDirection = delta > 0 ? "down" : "up";
-
-          if (nextDirection !== scrollDirection.current) {
-            scrollDirection.current = nextDirection;
-            scrollDistance.current = 0;
+          setNavigationVisible(true);
+          scrollAnchorY.current = currentScrollY;
+        } else if (isVisibleRef.current) {
+          if (currentScrollY < scrollAnchorY.current) {
+            scrollAnchorY.current = currentScrollY;
+          } else if (
+            currentScrollY - scrollAnchorY.current >=
+            SCROLL_HIDE_THRESHOLD
+          ) {
+            setNavigationVisible(false);
+            scrollAnchorY.current = currentScrollY;
           }
-
-          scrollDistance.current += Math.abs(delta);
-
-          if (scrollDistance.current >= SCROLL_DIRECTION_THRESHOLD) {
-            setIsVisible(nextDirection === "up");
-            scrollDistance.current = 0;
+        } else {
+          if (currentScrollY > scrollAnchorY.current) {
+            scrollAnchorY.current = currentScrollY;
+          } else if (
+            scrollAnchorY.current - currentScrollY >= SCROLL_REVEAL_THRESHOLD &&
+            performance.now() - lastHiddenAt.current >= SCROLL_REVEAL_DELAY
+          ) {
+            setNavigationVisible(true);
+            scrollAnchorY.current = currentScrollY;
           }
         }
 
-        lastScrollY.current = currentScrollY;
         scrollFrame.current = null;
       });
     };
@@ -185,7 +198,7 @@ const BottomNavigation = () => {
     <>
       <div aria-hidden="true" className="h-24 min-[1024px]:hidden" />
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 w-full border-t border-divider bg-content1 transition-transform duration-300 ease-in-out min-[1024px]:hidden ${
+        className={`fixed inset-x-0 bottom-0 z-50 w-full border-t border-divider bg-content1 transition-transform duration-200 ease-out will-change-transform motion-reduce:transition-none min-[1024px]:hidden ${
           isVisible ? "translate-y-0" : "translate-y-full"
         }`}
       >
