@@ -106,6 +106,8 @@ export const Navbar: FC = () => {
     [headerSettings],
   );
   const router = useRouter();
+  const isCategoryNavigationRoute =
+    router.pathname === "/" || router.pathname.startsWith("/categories");
   const cartCount =
     useSelector((state: RootState) => state.cart.cartData?.items_count) || 0;
 
@@ -117,7 +119,7 @@ export const Navbar: FC = () => {
   const { data: homeNavbarRes } = useSWR(
     header.enabled &&
       header.showCategoryNavigation &&
-      (header.navigationScope === "all" || router.pathname === "/") &&
+      isCategoryNavigationRoute &&
       header.navigationSource === "categories"
       ? "home-tab:web"
       : null,
@@ -882,8 +884,7 @@ export const Navbar: FC = () => {
   ) : null;
 
   const showNavigation =
-    header.showCategoryNavigation &&
-    (header.navigationScope === "all" || router.pathname === "/");
+    header.showCategoryNavigation && isCategoryNavigationRoute;
   const navigationIsCompact =
     isDesktopViewport &&
     header.sticky &&
