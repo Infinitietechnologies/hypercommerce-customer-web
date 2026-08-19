@@ -27,6 +27,11 @@ import { getHomeNavbar } from "@/services/home";
 import { STALE_TIME } from "@/hooks/useInfiniteData";
 import { resolveHeaderSettings } from "@/config/header";
 
+type NavigationPaletteStyle = CSSProperties & {
+  "--header-navigation-font-color": string;
+  "--header-navigation-active-color": string;
+};
+
 const ProfileBtn = dynamic(() => import("./ProfileBtn"), { ssr: false });
 const LanguageSwitcher = dynamic(
   () => import("./Functional/LanguageSwitcher"),
@@ -188,6 +193,21 @@ export const Navbar: FC = () => {
     ? ("inherit" as const)
     : header.contentTone;
   const hasScrolledMobileSurface = isMobileSurfaceWhite && !isDesktopViewport;
+  const activeNavigationAppearance = isDesktopViewport
+    ? activeDesktopAppearance
+    : activeMobileAppearance || activeDesktopAppearance;
+  const navigationFontColor =
+    activeNavigationAppearance?.font_color ||
+    header.navigationTextColor ||
+    "currentColor";
+  const navigationActiveColor =
+    activeNavigationAppearance?.active_font_color ||
+    header.navigationActiveColor ||
+    navigationFontColor;
+  const navigationPaletteStyle: NavigationPaletteStyle = {
+    "--header-navigation-font-color": navigationFontColor,
+    "--header-navigation-active-color": navigationActiveColor,
+  };
   const gradientDirection = {
     "to-right": "to right",
     "to-left": "to left",
@@ -826,12 +846,8 @@ export const Navbar: FC = () => {
               : "min-w-16 gap-0.5 px-2 py-0 min-[640px]:min-w-20 min-[640px]:px-3"
           } ${
             isActive
-              ? isDesktopViewport
-                ? "border-primary font-bold text-primary"
-                : "border-foreground font-bold text-foreground"
-              : isDesktopViewport
-                ? "border-transparent text-current opacity-85"
-                : "border-transparent text-foreground opacity-85"
+              ? "border-(--header-navigation-active-color) font-bold text-(--header-navigation-active-color)"
+              : "border-transparent text-(--header-navigation-font-color) opacity-85 hover:text-(--header-navigation-active-color) hover:opacity-100"
           }`
         : `px-4 py-1.5 ${
             navigationStyle === "pills"
@@ -840,37 +856,11 @@ export const Navbar: FC = () => {
           } ${
             isActive
               ? navigationStyle === "pills"
-                ? "bg-primary font-bold text-primary-foreground"
-                : "border-primary font-bold text-foreground"
-              : "text-current opacity-70"
+                ? "bg-primary font-bold text-(--header-navigation-active-color)"
+                : "border-(--header-navigation-active-color) font-bold text-(--header-navigation-active-color)"
+              : "text-(--header-navigation-font-color) opacity-70 hover:text-(--header-navigation-active-color) hover:opacity-100"
           }`
     }`;
-  const navigationActiveStyle = (isActive: boolean): CSSProperties =>
-    navigationUsesIcons && !isDesktopViewport
-      ? {}
-      : {
-          ...(isActive &&
-          (activeDesktopAppearance?.active_font_color ||
-            header.navigationActiveColor)
-            ? navigationStyle === "pills"
-              ? {
-                  backgroundColor:
-                    activeDesktopAppearance?.active_font_color ||
-                    header.navigationActiveColor ||
-                    undefined,
-                }
-              : {
-                  borderColor:
-                    activeDesktopAppearance?.active_font_color ||
-                    header.navigationActiveColor ||
-                    undefined,
-                  color:
-                    activeDesktopAppearance?.active_font_color ||
-                    header.navigationActiveColor ||
-                    undefined,
-                }
-            : {}),
-        };
   const navigationIconClass = `flex w-8 shrink-0 items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${
     navigationIsCompact
       ? "h-0 -translate-y-6 opacity-0"
@@ -892,14 +882,15 @@ export const Navbar: FC = () => {
           : "bg-content1/90 backdrop-blur-md"
       }`}
       style={{
+        ...navigationPaletteStyle,
         ...(!hasScrolledMobileSurface &&
         !usesHomeAppearance &&
         header.navigationBackgroundColor
           ? { backgroundColor: header.navigationBackgroundColor }
           : {}),
-        ...(!hasScrolledMobileSurface && activeDesktopAppearance?.font_color
+        ...(!hasScrolledMobileSurface && activeNavigationAppearance?.font_color
           ? {
-              color: activeDesktopAppearance.font_color,
+              color: activeNavigationAppearance.font_color,
             }
           : !hasScrolledMobileSurface && header.navigationTextColor
             ? { color: header.navigationTextColor }
@@ -929,9 +920,13 @@ export const Navbar: FC = () => {
                   ? item.desktop_active_icon || item.appearance.active_icon
                   : desktopDefaultItemImage) || null;
               const mobileItemImage =
-                (isAll
-                  ? homeGeneralSettings?.icon
-                  : item.icon || item.home_appearance?.app.icon) ||
+                (isActive
+                  ? isAll
+                    ? homeGeneralSettings?.activeIcon
+                    : item.active_icon || item.home_appearance?.app.active_icon
+                  : isAll
+                    ? homeGeneralSettings?.icon
+                    : item.icon || item.home_appearance?.app.icon) ||
                 desktopDefaultItemImage ||
                 desktopItemImage;
               return (
@@ -958,7 +953,6 @@ export const Navbar: FC = () => {
                     }
                   }}
                   className={navigationItemClass(isActive)}
-                  style={navigationActiveStyle(isActive)}
                 >
                   {navigationUsesIcons ? (
                     <span className={navigationIconClass} aria-hidden="true">
@@ -996,7 +990,6 @@ export const Navbar: FC = () => {
                   rel={item.openInNewTab ? "noreferrer" : undefined}
                   aria-current={isActive ? "page" : undefined}
                   className={navigationItemClass(isActive)}
-                  style={navigationActiveStyle(isActive)}
                 >
                   {navigationUsesIcons ? (
                     <span className={navigationIconClass} aria-hidden="true">
