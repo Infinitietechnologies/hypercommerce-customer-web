@@ -141,7 +141,9 @@ export const Navbar: FC = () => {
   const globalDesktopAppearance = homeGeneralSettings?.homeAppearance?.desktop;
   const globalMobileAppearance = homeGeneralSettings?.homeAppearance?.app;
   const activeDesktopAppearance =
-    selectedNavbarItem?.appearance ?? globalDesktopAppearance;
+    selectedNavbarItem?.home_appearance?.desktop ??
+    selectedNavbarItem?.appearance ??
+    globalDesktopAppearance;
   const activeMobileAppearance =
     selectedNavbarItem?.home_appearance?.app ?? globalMobileAppearance;
   const activeSearchLabels = selectedNavbarItem?.search_labels?.length
@@ -199,24 +201,23 @@ export const Navbar: FC = () => {
   const hasScrolledMobileSurface = isMobileSurfaceWhite && !isDesktopViewport;
   const hasMobileHeaderSeparation =
     isMobileHeaderSeparated && !isDesktopViewport;
-  const activeNavigationAppearance = isDesktopViewport
-    ? activeDesktopAppearance
-    : activeMobileAppearance || activeDesktopAppearance;
+  const activePaletteAppearance =
+    activeMobileAppearance || activeDesktopAppearance;
   const headerFontColor =
-    activeNavigationAppearance?.font_color ||
+    activePaletteAppearance?.font_color ||
     header.textColor ||
     header.navigationTextColor ||
     "currentColor";
   const headerActiveColor =
-    activeNavigationAppearance?.active_font_color ||
+    activePaletteAppearance?.active_font_color ||
     header.navigationActiveColor ||
     headerFontColor;
   const navigationFontColor =
-    activeNavigationAppearance?.font_color ||
+    activePaletteAppearance?.font_color ||
     header.navigationTextColor ||
     headerFontColor;
   const navigationActiveColor =
-    activeNavigationAppearance?.active_font_color ||
+    activePaletteAppearance?.active_font_color ||
     header.navigationActiveColor ||
     headerActiveColor;
   const headerPaletteStyle: HeaderPaletteStyle = {
@@ -247,8 +248,8 @@ export const Navbar: FC = () => {
               backgroundImage: `linear-gradient(${Number.isFinite(activeGradientAngle) ? activeGradientAngle : 90}deg, ${activeDesktopAppearance.gradient_start}, ${activeDesktopAppearance.gradient_end})`,
             }
           : {}),
-        ...(activeNavigationAppearance?.font_color
-          ? { color: activeNavigationAppearance.font_color }
+        ...(activePaletteAppearance?.font_color
+          ? { color: activePaletteAppearance.font_color }
           : {}),
       }
     : {
@@ -926,9 +927,9 @@ export const Navbar: FC = () => {
         header.navigationBackgroundColor
           ? { backgroundColor: header.navigationBackgroundColor }
           : {}),
-        ...(!hasScrolledMobileSurface && activeNavigationAppearance?.font_color
+        ...(!hasScrolledMobileSurface && activePaletteAppearance?.font_color
           ? {
-              color: activeNavigationAppearance.font_color,
+              color: activePaletteAppearance.font_color,
             }
           : !hasScrolledMobileSurface && header.navigationTextColor
             ? { color: header.navigationTextColor }
