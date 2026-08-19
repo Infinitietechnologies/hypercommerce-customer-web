@@ -1,5 +1,7 @@
 import { useEffect } from "react";
-import { Icon } from "@iconify/react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { HandbagIcon, Home03Icon } from "@hugeicons/core-free-icons";
+import { Package, User } from "lucide-react";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
@@ -40,26 +42,22 @@ const BottomNavigation = () => {
     {
       id: "home",
       label: t("home_title"),
-      icon: "hugeicons:home-03",
       path: "/",
     },
     {
       id: "categories",
       label: t("categories"),
-      icon: "hugeicons:package-02",
       path: "/categories",
     },
     {
       id: "cart",
       label: t("cart_title"),
-      icon: "hugeicons:handbag",
       path: "/cart",
       protected: true,
     },
     {
       id: "profile",
       label: t("profile"),
-      icon: "hugeicons:user",
       path: "/my-account",
       protected: true,
     },
@@ -82,59 +80,88 @@ const BottomNavigation = () => {
     if (path) router.push(path);
   };
 
-  return (
-    <>
-      <div aria-hidden="true" className="h-20 min-[1024px]:hidden" />
-      <div className="fixed inset-x-0 bottom-0 z-50 min-[1024px]:hidden">
-        <div className="shadow-[0_-2px_16px_-12px_rgba(28,26,23,0.25)] bg-content1 border-t border-divider">
-          <div className="max-w-md mx-auto">
-            <nav
-              aria-label={t("nav.mobileNavigation")}
-              className="flex items-center justify-around gap-2 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
-            >
-              {navItems.map((item) => {
-                const isActive =
-                  item.path === "/"
-                    ? router.pathname === "/"
-                    : router.pathname.startsWith(item.path);
-                return (
-                  <button
-                    type="button"
-                    key={item.id}
-                    aria-current={isActive ? "page" : undefined}
-                    onClick={() =>
-                      handleTabClick(item.id, item.path, item.protected)
-                    }
-                    className={`relative flex min-w-0 flex-1 flex-col items-center justify-center px-3 py-1 transition-colors duration-200 ${
-                      isActive
-                        ? "text-foreground"
-                        : "text-default-500 hover:text-foreground"
-                    }`}
-                  >
-                    <Icon icon={item.icon} className="mb-1 text-2xl" />
-                    {item.id === "cart" &&
-                    (isLoggedIn ? cartCount : offLineCartCount) ? (
-                      <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
-                        {isLoggedIn ? cartCount : offLineCartCount}
-                      </span>
-                    ) : null}
-                    <span
-                      className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}
-                    >
-                      {item.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-        <OfflineCartDrawer
-          isOpen={isOfflineCartOpen}
-          onClose={closeOfflineCart}
+  const renderIcon = (itemId: string, isActive: boolean) => {
+    if (itemId === "home") {
+      return (
+        <HugeiconsIcon
+          icon={Home03Icon}
+          size={24}
+          color="currentColor"
+          strokeWidth={1.5}
+          fill={isActive ? "currentColor" : "none"}
+          className="mb-1"
         />
-      </div>
-    </>
+      );
+    }
+
+    if (itemId === "cart") {
+      return (
+        <HugeiconsIcon
+          icon={HandbagIcon}
+          size={24}
+          color="currentColor"
+          strokeWidth={1.5}
+          fill={isActive ? "currentColor" : "none"}
+          className="mb-1"
+        />
+      );
+    }
+
+    const NavIcon = itemId === "categories" ? Package : User;
+    return (
+      <NavIcon
+        aria-hidden="true"
+        size={24}
+        strokeWidth={isActive ? 2 : 1.5}
+        className="mb-1"
+      />
+    );
+  };
+
+  return (
+    <div className="w-full border-t border-divider bg-content1 min-[1024px]:hidden">
+      <nav
+        aria-label={t("nav.mobileNavigation")}
+        className="flex w-full items-center justify-around gap-2 px-1 py-2"
+      >
+        {navItems.map((item) => {
+          const isActive =
+            item.path === "/"
+              ? router.pathname === "/"
+              : router.pathname.startsWith(item.path);
+          return (
+            <button
+              type="button"
+              key={item.id}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => handleTabClick(item.id, item.path, item.protected)}
+              className={`relative flex min-w-0 flex-1 flex-col items-center justify-center px-3 py-1 transition-colors duration-200 ${
+                isActive
+                  ? "text-foreground"
+                  : "text-default-500 hover:text-foreground"
+              }`}
+            >
+              {renderIcon(item.id, isActive)}
+              {item.id === "cart" &&
+              (isLoggedIn ? cartCount : offLineCartCount) ? (
+                <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
+                  {isLoggedIn ? cartCount : offLineCartCount}
+                </span>
+              ) : null}
+              <span
+                className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}
+              >
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+      <OfflineCartDrawer
+        isOpen={isOfflineCartOpen}
+        onClose={closeOfflineCart}
+      />
+    </div>
   );
 };
 
