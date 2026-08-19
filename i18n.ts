@@ -46,11 +46,8 @@ export const changeLanguage = (lng: string) => {
 
   // Ensure this code runs only in the browser
   if (typeof document !== "undefined") {
-    if (lng === "ar") {
-      document.documentElement.setAttribute("dir", "rtl");
-    } else {
-      document.documentElement.setAttribute("dir", "ltr");
-    }
+    document.documentElement.setAttribute("dir", lng === "ar" ? "rtl" : "ltr");
+    document.documentElement.setAttribute("lang", lng);
   }
 };
 

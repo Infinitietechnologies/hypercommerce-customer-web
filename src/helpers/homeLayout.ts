@@ -91,10 +91,10 @@ export const getContainerWidthClasses = (containerWidthSetting: string) => {
   let innerClass = "w-full";
 
   if (width === "fluid") {
-    wrapperClass = "relative left-1/2 w-page max-w-none -translate-x-1/2";
+    wrapperClass = "w-page max-w-none self-center";
     innerClass = "w-full max-w-[1440px] mx-auto px-4 sm:px-8";
   } else if (width === "full") {
-    wrapperClass = "relative left-1/2 w-page max-w-none -translate-x-1/2";
+    wrapperClass = "w-page max-w-none self-center";
     innerClass = "w-full px-0";
   } else {
     wrapperClass = "w-full max-w-site mx-auto";
