@@ -139,7 +139,9 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
       {title && title.trim() ? (
         <HomeSectionHeader
           title={title}
-          seeAllHref={type === "hero" || type === "play_image" ? undefined : seeAllHref}
+          seeAllHref={
+            type === "hero" || type === "play_image" ? undefined : seeAllHref
+          }
         />
       ) : null}
 

@@ -3,6 +3,7 @@ import React, {
   FC,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -35,6 +36,12 @@ const OfflineCartDrawer = dynamic(() => import("./Cart/OfflineCartDrawer"), {
   ssr: false,
 });
 
+const MOBILE_HEADER_HIDE_DISTANCE = 12;
+const MOBILE_HEADER_REVEAL_DISTANCE = 10;
+const MOBILE_HEADER_COLLAPSE_OFFSET = 56;
+const MOBILE_HEADER_SCROLL_LOCK_MS = 500;
+const MOBILE_SCROLL_INTENT_WINDOW_MS = 220;
+
 const HeaderAction = ({
   icon,
   label,
@@ -64,6 +71,13 @@ export const Navbar: FC = () => {
   const [showDemoWarning, setShowDemoWarning] = useState(true);
   const [showHeaderAnnouncement, setShowHeaderAnnouncement] = useState(true);
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  const [isMobileSurfaceWhite, setIsMobileSurfaceWhite] = useState(false);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(true);
+  const [isMobileHeaderExpanded, setIsMobileHeaderExpanded] = useState(true);
+  const isMobileHeaderExpandedRef = useRef(true);
+  const mobileScrollAnchorY = useRef(0);
+  const mobileTransitionLockUntil = useRef(0);
+  const mobileScrollIntentAt = useRef(0);
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -172,6 +186,7 @@ export const Navbar: FC = () => {
   const effectiveControlTone = usesHomeAppearance
     ? ("inherit" as const)
     : header.contentTone;
+  const hasScrolledMobileSurface = isMobileSurfaceWhite && !isDesktopViewport;
   const gradientDirection = {
     "to-right": "to right",
     "to-left": "to left",
@@ -264,33 +279,193 @@ export const Navbar: FC = () => {
   }, [isLoggedIn, isOfflineCartOpen, closeOfflineCart]);
 
   useEffect(() => {
+    const desktopMedia = window.matchMedia("(min-width: 1024px)");
+    const updateViewport = () => {
+      setIsDesktopViewport(desktopMedia.matches);
+      if (desktopMedia.matches) {
+        isMobileHeaderExpandedRef.current = true;
+        setIsMobileHeaderExpanded(true);
+      }
+      mobileScrollAnchorY.current = Math.max(0, window.scrollY);
+    };
+
+    updateViewport();
+    desktopMedia.addEventListener("change", updateViewport);
+    return () => desktopMedia.removeEventListener("change", updateViewport);
+  }, []);
+
+  useEffect(() => {
     if (!header.sticky) {
-      return;
+      const resetFrame = window.requestAnimationFrame(() => {
+        setIsHeaderScrolled(false);
+        setIsMobileSurfaceWhite(false);
+        isMobileHeaderExpandedRef.current = true;
+        setIsMobileHeaderExpanded(true);
+      });
+      return () => window.cancelAnimationFrame(resetFrame);
     }
 
+    mobileScrollAnchorY.current = Math.max(0, window.scrollY);
+    let scrollFrame: number | null = null;
+    let lastTouchY: number | null = null;
+
+    const recordScrollIntent = (deltaY: number) => {
+      if (Math.abs(deltaY) < 1) return;
+      mobileScrollIntentAt.current = performance.now();
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      recordScrollIntent(event.deltaY);
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      lastTouchY = event.touches[0]?.clientY ?? null;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const currentTouchY = event.touches[0]?.clientY;
+      if (currentTouchY === undefined || lastTouchY === null) return;
+      recordScrollIntent(lastTouchY - currentTouchY);
+      lastTouchY = currentTouchY;
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(
+          event.key,
+        )
+      ) {
+        recordScrollIntent(1);
+      }
+    };
+
+    const setMobileHeaderExpanded = (nextExpanded: boolean) => {
+      if (isMobileHeaderExpandedRef.current === nextExpanded) return;
+      isMobileHeaderExpandedRef.current = nextExpanded;
+      mobileTransitionLockUntil.current =
+        performance.now() + MOBILE_HEADER_SCROLL_LOCK_MS;
+      setIsMobileHeaderExpanded(nextExpanded);
+    };
+
     const updateScrolledState = () => {
+      scrollFrame = null;
+      const currentScrollY = Math.max(0, window.scrollY);
       setIsHeaderScrolled((current) => {
         const openThreshold = Math.max(
           0,
           header.navigationScrollThreshold - 24,
         );
         return current
-          ? window.scrollY > openThreshold
-          : window.scrollY > header.navigationScrollThreshold;
+          ? currentScrollY > openThreshold
+          : currentScrollY > header.navigationScrollThreshold;
       });
+
+      const heroSection =
+        router.pathname === "/"
+          ? document.querySelector<HTMLElement>(
+              "#home-builder > section:first-of-type",
+            )
+          : null;
+      const stickyHeader = document.querySelector<HTMLElement>("header");
+      const heroBounds = heroSection?.getBoundingClientRect();
+      const mobileSurfaceThreshold = heroBounds
+        ? Math.max(
+            header.navigationScrollThreshold,
+            currentScrollY +
+              heroBounds.top +
+              heroBounds.height -
+              (stickyHeader?.getBoundingClientRect().height ?? 0),
+          )
+        : router.pathname === "/"
+          ? Math.max(
+              header.navigationScrollThreshold,
+              window.innerHeight * 0.25,
+            )
+          : header.navigationScrollThreshold;
+      setIsMobileSurfaceWhite((current) => {
+        const closeThreshold = Math.max(0, mobileSurfaceThreshold - 24);
+        return current
+          ? currentScrollY > closeThreshold
+          : currentScrollY > mobileSurfaceThreshold;
+      });
+
+      if (window.matchMedia("(min-width: 1024px)").matches) {
+        setMobileHeaderExpanded(true);
+        mobileScrollAnchorY.current = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY <= header.navigationScrollThreshold) {
+        setMobileHeaderExpanded(true);
+        mobileScrollAnchorY.current = currentScrollY;
+        return;
+      }
+
+      if (
+        isMobileHeaderExpandedRef.current &&
+        currentScrollY <=
+          header.navigationScrollThreshold + MOBILE_HEADER_COLLAPSE_OFFSET
+      ) {
+        mobileScrollAnchorY.current = currentScrollY;
+        return;
+      }
+
+      if (performance.now() < mobileTransitionLockUntil.current) {
+        mobileScrollAnchorY.current = currentScrollY;
+        return;
+      }
+
+      if (
+        performance.now() - mobileScrollIntentAt.current >
+        MOBILE_SCROLL_INTENT_WINDOW_MS
+      ) {
+        mobileScrollAnchorY.current = currentScrollY;
+        return;
+      }
+
+      if (isMobileHeaderExpandedRef.current) {
+        if (currentScrollY < mobileScrollAnchorY.current) {
+          mobileScrollAnchorY.current = currentScrollY;
+        } else if (
+          currentScrollY - mobileScrollAnchorY.current >=
+          MOBILE_HEADER_HIDE_DISTANCE
+        ) {
+          setMobileHeaderExpanded(false);
+          mobileScrollAnchorY.current = currentScrollY;
+        }
+      } else if (currentScrollY > mobileScrollAnchorY.current) {
+        mobileScrollAnchorY.current = currentScrollY;
+      } else if (
+        mobileScrollAnchorY.current - currentScrollY >=
+        MOBILE_HEADER_REVEAL_DISTANCE
+      ) {
+        setMobileHeaderExpanded(true);
+        mobileScrollAnchorY.current = currentScrollY;
+      }
     };
 
-    const frame = window.requestAnimationFrame(updateScrolledState);
-    window.addEventListener("scroll", updateScrolledState, { passive: true });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", updateScrolledState);
+    const requestScrollUpdate = () => {
+      if (scrollFrame !== null) return;
+      scrollFrame = window.requestAnimationFrame(updateScrolledState);
     };
-  }, [
-    header.navigationScrollBehavior,
-    header.navigationScrollThreshold,
-    header.sticky,
-  ]);
+
+    requestScrollUpdate();
+    window.addEventListener("wheel", handleWheel, { passive: true });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", requestScrollUpdate, { passive: true });
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", requestScrollUpdate);
+      if (scrollFrame !== null) {
+        window.cancelAnimationFrame(scrollFrame);
+      }
+    };
+  }, [header.navigationScrollThreshold, header.sticky, router.pathname]);
 
   const openCart = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -302,11 +477,15 @@ export const Navbar: FC = () => {
   };
 
   const {
+    siteHeaderLogo,
     siteHeaderDarkLogo = "https://placehold.co/160x40?text=Logo",
     siteName = "Site Logo",
   } = webSettings || {};
   const desktopLogo = header.logoUrl ?? siteHeaderDarkLogo;
   const mobileLogo = header.mobileLogoUrl ?? desktopLogo;
+  const displayedMobileLogo = hasScrolledMobileSurface
+    ? siteHeaderLogo || mobileLogo
+    : mobileLogo;
   const logoHeightClass =
     header.density === "compact"
       ? "h-9"
@@ -325,7 +504,7 @@ export const Navbar: FC = () => {
         router.push("/");
       }}
     >
-      {mobileLogo !== desktopLogo ? (
+      {displayedMobileLogo !== desktopLogo ? (
         <>
           <span className="min-[640px]:hidden">
             <Image
@@ -333,7 +512,7 @@ export const Navbar: FC = () => {
               loading="eager"
               disableSkeleton
               disableAnimation
-              src={mobileLogo}
+              src={displayedMobileLogo}
               alt={siteName}
               radius="none"
               className={`${logoHeightClass} w-auto max-w-full object-contain`}
@@ -446,10 +625,11 @@ export const Navbar: FC = () => {
     ) : null;
 
   const mobileSearch = header.showSearch ? (
-    <div className="min-w-0 flex-1">
+    <div className="w-full min-w-0">
       <GlobalSearchbar
-        tone={effectiveControlTone}
+        tone={hasScrolledMobileSurface ? "dark" : effectiveControlTone}
         size="default"
+        shape="rounded"
         searchLabels={activeSearchLabels}
       />
     </div>
@@ -614,10 +794,12 @@ export const Navbar: FC = () => {
     header.showCategoryNavigation &&
     (header.navigationScope === "all" || router.pathname === "/");
   const navigationIsCompact =
+    isDesktopViewport &&
     header.sticky &&
     isHeaderScrolled &&
     header.navigationScrollBehavior !== "hide";
   const navigationIsHidden =
+    isDesktopViewport &&
     header.sticky &&
     isHeaderScrolled &&
     header.navigationScrollBehavior === "hide";
@@ -634,8 +816,12 @@ export const Navbar: FC = () => {
               : "min-w-16 gap-0.5 px-2 py-0 min-[640px]:min-w-20 min-[640px]:px-3"
           } ${
             isActive
-              ? "border-primary font-bold text-primary"
-              : "border-transparent text-current opacity-85"
+              ? isDesktopViewport
+                ? "border-primary font-bold text-primary"
+                : "border-foreground font-bold text-foreground"
+              : isDesktopViewport
+                ? "border-transparent text-current opacity-85"
+                : "border-transparent text-foreground opacity-85"
           }`
         : `px-4 py-1.5 ${
             navigationStyle === "pills"
@@ -649,28 +835,32 @@ export const Navbar: FC = () => {
               : "text-current opacity-70"
           }`
     }`;
-  const navigationActiveStyle = (isActive: boolean): CSSProperties => ({
-    ...(isActive &&
-    (activeDesktopAppearance?.active_font_color || header.navigationActiveColor)
-      ? navigationStyle === "pills"
-        ? {
-            backgroundColor:
-              activeDesktopAppearance?.active_font_color ||
-              header.navigationActiveColor ||
-              undefined,
-          }
-        : {
-            borderColor:
-              activeDesktopAppearance?.active_font_color ||
-              header.navigationActiveColor ||
-              undefined,
-            color:
-              activeDesktopAppearance?.active_font_color ||
-              header.navigationActiveColor ||
-              undefined,
-          }
-      : {}),
-  });
+  const navigationActiveStyle = (isActive: boolean): CSSProperties =>
+    navigationUsesIcons && !isDesktopViewport
+      ? {}
+      : {
+          ...(isActive &&
+          (activeDesktopAppearance?.active_font_color ||
+            header.navigationActiveColor)
+            ? navigationStyle === "pills"
+              ? {
+                  backgroundColor:
+                    activeDesktopAppearance?.active_font_color ||
+                    header.navigationActiveColor ||
+                    undefined,
+                }
+              : {
+                  borderColor:
+                    activeDesktopAppearance?.active_font_color ||
+                    header.navigationActiveColor ||
+                    undefined,
+                  color:
+                    activeDesktopAppearance?.active_font_color ||
+                    header.navigationActiveColor ||
+                    undefined,
+                }
+            : {}),
+        };
   const navigationIconClass = `flex w-8 shrink-0 items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${
     navigationIsCompact
       ? "h-0 -translate-y-6 opacity-0"
@@ -692,14 +882,16 @@ export const Navbar: FC = () => {
           : "bg-content1/90 backdrop-blur-md"
       }`}
       style={{
-        ...(!usesHomeAppearance && header.navigationBackgroundColor
+        ...(!hasScrolledMobileSurface &&
+        !usesHomeAppearance &&
+        header.navigationBackgroundColor
           ? { backgroundColor: header.navigationBackgroundColor }
           : {}),
-        ...(activeDesktopAppearance?.font_color
+        ...(!hasScrolledMobileSurface && activeDesktopAppearance?.font_color
           ? {
               color: activeDesktopAppearance.font_color,
             }
-          : header.navigationTextColor
+          : !hasScrolledMobileSurface && header.navigationTextColor
             ? { color: header.navigationTextColor }
             : {}),
       }}
@@ -707,7 +899,7 @@ export const Navbar: FC = () => {
       <div
         className={`mx-auto flex items-center overflow-x-auto px-4 transition-transform duration-500 ease-in-out motion-reduce:transition-none no-scrollbar ${
           navigationUsesIcons
-            ? "gap-3 pb-1 pt-3.75"
+            ? "gap-3 pb-0 pt-3.75"
             : navigationIsCompact
               ? "gap-2 py-1"
               : "gap-2 py-2"
@@ -717,26 +909,26 @@ export const Navbar: FC = () => {
           ? homeNavbarItems.map((item) => {
               const isAll = item.is_default === true || !item.slug;
               const isActive = isAll
-                ? !selectedNavbarSlug && !legacyCategorySlug
+                ? (!selectedNavbarSlug || selectedNavbarSlug === "all") &&
+                  !legacyCategorySlug
                 : item.id === selectedNavbarItem?.id;
+              const desktopDefaultItemImage =
+                item.desktop_icon || item.appearance.icon || null;
               const desktopItemImage =
                 (isActive
                   ? item.desktop_active_icon || item.appearance.active_icon
-                  : item.desktop_icon || item.appearance.icon) || null;
+                  : desktopDefaultItemImage) || null;
               const mobileItemImage =
                 (isAll
-                  ? isActive
-                    ? homeGeneralSettings?.activeIcon
-                    : homeGeneralSettings?.icon
-                  : isActive
-                    ? item.active_icon ||
-                      item.home_appearance?.app.active_icon
-                    : item.icon || item.home_appearance?.app.icon) ||
+                  ? homeGeneralSettings?.icon
+                  : item.icon || item.home_appearance?.app.icon) ||
+                desktopDefaultItemImage ||
                 desktopItemImage;
               return (
                 <button
                   key={item.id ?? "all"}
                   type="button"
+                  aria-current={isActive ? "page" : undefined}
                   onClick={async () => {
                     const slug = item.slug || "all";
                     setCookie("homeNavbar", slug);
@@ -776,10 +968,7 @@ export const Navbar: FC = () => {
                           />
                         </picture>
                       ) : (
-                        <Icon
-                          icon="solar:widget-2-linear"
-                          className="size-8"
-                        />
+                        <Icon icon="solar:widget-2-linear" className="size-8" />
                       )}
                     </span>
                   ) : null}
@@ -795,6 +984,7 @@ export const Navbar: FC = () => {
                   href={item.url}
                   target={item.openInNewTab ? "_blank" : undefined}
                   rel={item.openInNewTab ? "noreferrer" : undefined}
+                  aria-current={isActive ? "page" : undefined}
                   className={navigationItemClass(isActive)}
                   style={navigationActiveStyle(isActive)}
                 >
@@ -825,34 +1015,56 @@ export const Navbar: FC = () => {
     </div>
   ) : null;
 
-  const mobileHeaderRow =
-    header.showLocation || (header.showNotifications && showAccountLinks) ? (
-      <div
-        className={`relative z-10 px-3 min-[1024px]:hidden ${header.density === "compact" ? "py-1" : "py-1.5"}`}
-      >
-        <div
-          className={`mx-auto flex items-center justify-between gap-3 ${containerClass}`}
-        >
-          {header.showLocation ? (
-            <div className="min-w-0 flex-1">
-              <LocationSelector variant="mobile" tone={effectiveControlTone} />
-            </div>
-          ) : null}
-          {header.showNotifications && showAccountLinks ? (
-            <button
-              type="button"
-              aria-label={t("profileBtn.notifications")}
-              onClick={() => {
-                router.push("/my-account/notifications");
-              }}
-              className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${usesHomeAppearance ? "bg-white/20 text-current hover:bg-white/30" : header.contentTone === "light" ? "bg-white/10 text-white hover:bg-white/20" : "bg-content1 text-foreground hover:bg-content2"}`}
-            >
-              <Icon icon="solar:bell-bing-linear" className="text-lg" />
-            </button>
-          ) : null}
+  const mobileTopRow = (
+    <div
+      aria-hidden={!isMobileHeaderExpanded}
+      inert={!isMobileHeaderExpanded ? true : undefined}
+      className={`relative z-10 overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-out motion-reduce:transition-none min-[1024px]:hidden ${
+        isMobileHeaderExpanded
+          ? "max-h-16 translate-y-0 opacity-100"
+          : "pointer-events-none max-h-0 -translate-y-3 opacity-0"
+      } ${hasScrolledMobileSurface ? "text-foreground" : "text-current"}`}
+    >
+      <div className={`mx-auto px-3 pt-1.5 ${containerClass}`}>
+        <div className="flex min-h-11 min-w-0 items-center gap-2">
+          <div className="max-w-28 shrink-0">{SiteLogo}</div>
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
+            {header.showLocation ? (
+              <div className="min-w-0 flex-1">
+                <LocationSelector
+                  variant="mobile"
+                  tone={
+                    hasScrolledMobileSurface ? "dark" : effectiveControlTone
+                  }
+                />
+              </div>
+            ) : null}
+            {header.showLanguage ? <LanguageSwitcher variant="mobile" /> : null}
+            {header.showNotifications && showAccountLinks ? (
+              <button
+                type="button"
+                aria-label={t("profileBtn.notifications")}
+                onClick={() => {
+                  router.push("/my-account/notifications");
+                }}
+                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-current transition-colors hover:bg-content2/70"
+              >
+                <Icon icon="solar:bell-bing-linear" className="text-lg" />
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
-    ) : null;
+    </div>
+  );
+
+  const mobileSearchRow = mobileSearch ? (
+    <div
+      className={`relative z-10 mx-auto px-3 pb-2 pt-1 min-[1024px]:hidden ${containerClass}`}
+    >
+      {mobileSearch}
+    </div>
+  ) : null;
 
   const isCheckoutOrPayment =
     router.pathname === "/cart/checkout" ||
@@ -992,14 +1204,15 @@ export const Navbar: FC = () => {
           style={surfaceStyle}
         >
           {renderSurfaceBackground()}
-          {utilityBar}
-          {mobileHeaderRow}
           <div
-            className={`relative z-10 mx-auto grid min-h-16 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 py-2 min-[640px]:gap-3 min-[1024px]:hidden ${containerClass}`}
-          >
-            <div className="max-w-28 min-[640px]:max-w-32">{SiteLogo}</div>
-            {mobileSearch ?? <span />}
-          </div>
+            aria-hidden="true"
+            className={`pointer-events-none absolute inset-0 z-0 bg-content1 transition-opacity duration-300 motion-reduce:transition-none min-[1024px]:hidden ${
+              hasScrolledMobileSurface ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          {utilityBar}
+          {mobileTopRow}
+          {mobileSearchRow}
           {header.layout === "stacked" ? (
             <div
               className={`relative z-10 mx-auto hidden flex-col gap-2 px-4 pb-2 min-[1024px]:flex ${densityClass} ${containerClass}`}

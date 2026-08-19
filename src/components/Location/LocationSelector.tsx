@@ -501,12 +501,12 @@ const LocationSelector = ({
           onClick={isCheckoutLocked ? undefined : onOpen}
           disabled={!isInitialized || isCheckoutLocked}
           className={clsx(
-            "flex h-8 w-fit max-w-full min-w-0 cursor-pointer items-center gap-1.5 rounded-small px-2.5 text-start text-xs font-semibold transition-colors",
+            "flex h-8 w-full max-w-full min-w-0 cursor-pointer items-center gap-1.5 px-0 text-start text-xs font-semibold transition-opacity hover:opacity-75",
             tone === "light"
-              ? "bg-white/20 text-white hover:bg-white/30"
+              ? "text-white"
               : tone === "inherit"
-                ? "bg-foreground/10 text-current hover:bg-foreground/15"
-                : "bg-content2/80 text-foreground hover:bg-content2",
+                ? "text-current"
+                : "text-foreground",
           )}
         >
           <MapPin className="h-4 w-4 shrink-0" />

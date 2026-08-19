@@ -33,7 +33,11 @@ const languages = [
   },
 ];
 
-const LanguageSwitcher = () => {
+interface LanguageSwitcherProps {
+  variant?: "desktop" | "mobile";
+}
+
+const LanguageSwitcher = ({ variant = "desktop" }: LanguageSwitcherProps) => {
   const { i18n } = useTranslation();
 
   const getCurrentLanguage = () => {
@@ -55,14 +59,16 @@ const LanguageSwitcher = () => {
         <Button
           size="sm"
           variant="light"
-          className="flex h-8 min-w-0 items-center gap-1 px-2 text-xs font-semibold text-inherit"
+          className={`flex h-8 min-w-0 items-center gap-1 text-xs font-semibold text-inherit ${variant === "mobile" ? "px-1" : "px-2"}`}
         >
           <div className="flex items-center gap-1">
-            <Image
-              src={getFlagEmoji(getCurrentLanguage().countryCode)}
-              alt={`flag`}
-              className="h-4 w-5 rounded-sm sm:hidden"
-            />
+            {variant === "desktop" ? (
+              <Image
+                src={getFlagEmoji(getCurrentLanguage().countryCode)}
+                alt=""
+                className="h-4 w-5 rounded-sm sm:hidden"
+              />
+            ) : null}
             <span className="inline">
               {getCurrentLanguage().code.charAt(0).toUpperCase() +
                 getCurrentLanguage().code.slice(1)}

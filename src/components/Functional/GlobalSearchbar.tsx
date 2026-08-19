@@ -35,12 +35,14 @@ const searchFetcher = async (
 interface GlobalSearchBarProps {
   tone?: "light" | "dark" | "inherit";
   size?: "default" | "large";
+  shape?: "pill" | "rounded";
   searchLabels?: string[];
 }
 
 const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
   tone = "light",
   size = "default",
+  shape = "pill",
   searchLabels,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -279,7 +281,12 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
         }}
         className={clsx(
           "relative flex w-full cursor-pointer items-center gap-2 border px-4 transition-colors",
-          size === "large" ? "h-12 rounded-medium" : "h-10 rounded-full",
+          size === "large" ? "h-12" : "h-10",
+          shape === "rounded"
+            ? "rounded-small"
+            : size === "large"
+              ? "rounded-medium"
+              : "rounded-full",
           tone === "light"
             ? "border-white/10 bg-white/10 hover:border-primary/60"
             : tone === "inherit"
