@@ -86,7 +86,7 @@ const BottomNavigation = () => {
     },
     {
       id: "cart",
-      label: t("cart_title"),
+      label: t("bag_title"),
       path: "/cart",
       protected: true,
     },
@@ -163,7 +163,7 @@ const BottomNavigation = () => {
       >
         <nav
           aria-label={t("nav.mobileNavigation")}
-          className="flex w-full items-center justify-around gap-2 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+          className="flex w-full -translate-y-1 items-center justify-around gap-2 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         >
           {navItems.map((item) => {
             const isActive =

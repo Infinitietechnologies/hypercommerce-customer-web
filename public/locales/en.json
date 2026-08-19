@@ -309,6 +309,7 @@
     "customize": "Customize"
   },
   "cart_title": "Cart",
+  "bag_title": "Bag",
   "cart_updated_description": "Your cart has been successfully updated.",
   "cart_updated_title": "Cart Updated",
   "cashbackAmount": "Cashback Amount",
