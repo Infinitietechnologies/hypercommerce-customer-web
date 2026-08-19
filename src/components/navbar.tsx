@@ -900,7 +900,9 @@ export const Navbar: FC = () => {
     isActive && navigationStyle !== "pills" ? (
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.75 rounded-full bg-(--header-navigation-active-color)"
+        className={`pointer-events-none absolute inset-x-0 h-0.75 rounded-full bg-(--header-navigation-active-color) ${
+          navigationIsCompact ? "-bottom-1.5" : "-bottom-0.5"
+        }`}
       />
     ) : null;
   const navigationIconClass = `flex w-8 shrink-0 items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${
