@@ -40,7 +40,7 @@ const MOBILE_HEADER_HIDE_DISTANCE = 12;
 const MOBILE_HEADER_REVEAL_DISTANCE = 10;
 const MOBILE_HEADER_COLLAPSE_OFFSET = 56;
 const MOBILE_HEADER_SCROLL_LOCK_MS = 500;
-const MOBILE_SCROLL_INTENT_WINDOW_MS = 220;
+const MOBILE_SCROLL_INTENT_WINDOW_MS = 1200;
 
 const HeaderAction = ({
   icon,
@@ -78,6 +78,7 @@ export const Navbar: FC = () => {
   const mobileScrollAnchorY = useRef(0);
   const mobileTransitionLockUntil = useRef(0);
   const mobileScrollIntentAt = useRef(0);
+  const mobileScrollIntentDirection = useRef<"up" | "down" | null>(null);
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -312,6 +313,7 @@ export const Navbar: FC = () => {
     const recordScrollIntent = (deltaY: number) => {
       if (Math.abs(deltaY) < 1) return;
       mobileScrollIntentAt.current = performance.now();
+      mobileScrollIntentDirection.current = deltaY > 0 ? "down" : "up";
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -335,7 +337,9 @@ export const Navbar: FC = () => {
           event.key,
         )
       ) {
-        recordScrollIntent(1);
+        recordScrollIntent(
+          ["ArrowUp", "PageUp", "Home"].includes(event.key) ? -1 : 1,
+        );
       }
     };
 
@@ -424,6 +428,10 @@ export const Navbar: FC = () => {
       }
 
       if (isMobileHeaderExpandedRef.current) {
+        if (mobileScrollIntentDirection.current !== "down") {
+          mobileScrollAnchorY.current = currentScrollY;
+          return;
+        }
         if (currentScrollY < mobileScrollAnchorY.current) {
           mobileScrollAnchorY.current = currentScrollY;
         } else if (
@@ -433,6 +441,8 @@ export const Navbar: FC = () => {
           setMobileHeaderExpanded(false);
           mobileScrollAnchorY.current = currentScrollY;
         }
+      } else if (mobileScrollIntentDirection.current !== "up") {
+        mobileScrollAnchorY.current = currentScrollY;
       } else if (currentScrollY > mobileScrollAnchorY.current) {
         mobileScrollAnchorY.current = currentScrollY;
       } else if (
