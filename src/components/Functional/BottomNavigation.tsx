@@ -14,9 +14,14 @@ const OfflineCartDrawer = dynamic(() => import("../Cart/OfflineCartDrawer"), {
   ssr: false,
 });
 
+const TOP_VISIBLE_OFFSET = 24;
+const SCROLL_DIRECTION_THRESHOLD = 16;
+
 const BottomNavigation = () => {
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const scrollDistance = useRef(0);
+  const scrollDirection = useRef<"up" | "down" | null>(null);
   const scrollFrame = useRef<number | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
@@ -42,20 +47,42 @@ const BottomNavigation = () => {
   }, [isLoggedIn, isOfflineCartOpen, closeOfflineCart]);
 
   useEffect(() => {
+    lastScrollY.current = Math.max(0, window.scrollY);
+    scrollDistance.current = 0;
+    scrollDirection.current = null;
+    const frame = window.requestAnimationFrame(() => setIsVisible(true));
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [router.asPath]);
+
+  useEffect(() => {
     lastScrollY.current = window.scrollY;
 
     const updateVisibility = () => {
       if (scrollFrame.current !== null) return;
 
       scrollFrame.current = window.requestAnimationFrame(() => {
-        const currentScrollY = window.scrollY;
+        const currentScrollY = Math.max(0, window.scrollY);
+        const delta = currentScrollY - lastScrollY.current;
 
-        if (currentScrollY < 10) {
+        if (currentScrollY <= TOP_VISIBLE_OFFSET) {
           setIsVisible(true);
-        } else if (currentScrollY < lastScrollY.current) {
-          setIsVisible(false);
-        } else if (currentScrollY > lastScrollY.current) {
-          setIsVisible(true);
+          scrollDistance.current = 0;
+          scrollDirection.current = null;
+        } else if (delta !== 0) {
+          const nextDirection = delta > 0 ? "down" : "up";
+
+          if (nextDirection !== scrollDirection.current) {
+            scrollDirection.current = nextDirection;
+            scrollDistance.current = 0;
+          }
+
+          scrollDistance.current += Math.abs(delta);
+
+          if (scrollDistance.current >= SCROLL_DIRECTION_THRESHOLD) {
+            setIsVisible(nextDirection === "up");
+            scrollDistance.current = 0;
+          }
         }
 
         lastScrollY.current = currentScrollY;
@@ -123,7 +150,8 @@ const BottomNavigation = () => {
           size={24}
           color="currentColor"
           strokeWidth={isActive ? 2 : 1.5}
-          fill="none"
+          fill={isActive ? "currentColor" : "none"}
+          fillOpacity={isActive ? 0.16 : 0}
           className="mb-1"
         />
       );
@@ -155,7 +183,7 @@ const BottomNavigation = () => {
 
   return (
     <>
-      <div aria-hidden="true" className="h-20 min-[1024px]:hidden" />
+      <div aria-hidden="true" className="h-24 min-[1024px]:hidden" />
       <div
         className={`fixed inset-x-0 bottom-0 z-50 w-full border-t border-divider bg-content1 transition-transform duration-300 ease-in-out min-[1024px]:hidden ${
           isVisible ? "translate-y-0" : "translate-y-full"
@@ -163,7 +191,7 @@ const BottomNavigation = () => {
       >
         <nav
           aria-label={t("nav.mobileNavigation")}
-          className="flex w-full -translate-y-1 items-center justify-around gap-2 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+          className="flex w-full items-center justify-around gap-2 px-1 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)]"
         >
           {navItems.map((item) => {
             const isActive =

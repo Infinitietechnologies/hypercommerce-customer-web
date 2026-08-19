@@ -49,7 +49,6 @@ export const SEOHead = ({ settings }: HeadProps) => {
       />
       <meta name="copyright" content={webSettings.siteCopyright} />
       <meta name="author" content={webSettings.supportEmail} />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" key="viewport" />
       <meta name="robots" content="index, follow" key="robots" />
       <meta property="og:title" content={webSettings.siteName} key="og:title" />
       <meta

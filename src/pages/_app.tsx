@@ -117,6 +117,11 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <HeroUIProvider navigate={router.push}>
       <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+          key="viewport"
+        />
         <style>{`:root{--font-sans:${fontSans.style.fontFamily};--font-display:${fontDisplay.style.fontFamily};}`}</style>
         {isSandboxRoute && (
           <meta name="robots" content="noindex, nofollow" key="robots" />
