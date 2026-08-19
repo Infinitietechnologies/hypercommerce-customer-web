@@ -82,6 +82,16 @@ export interface HomeNavbarItem {
   platforms: Array<"app" | "web">;
   layout_query: { navbar_slug?: string };
   appearance: HomeNavbarAppearance;
+  home_appearance?: {
+    app: HomeNavbarAppearance;
+    desktop: HomeNavbarAppearance;
+  };
+  icon?: string | null;
+  active_icon?: string | null;
+  background_image?: string | null;
+  desktop_icon?: string | null;
+  desktop_active_icon?: string | null;
+  desktop_background_image?: string | null;
   search_labels: string[];
 }
 

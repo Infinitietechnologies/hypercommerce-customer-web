@@ -338,7 +338,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                         }}
                       >
                         <picture className="block w-full h-full">
-                          {desktopSrc && <source media="(min-width: 640px)" srcSet={desktopSrc} />}
+                          {desktopSrc && <source media="(min-width: 769px)" srcSet={desktopSrc} />}
                           <img
                             alt={altText}
                             src={mobileSrc || desktopSrc}
@@ -396,6 +396,8 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
             item,
             className: `${mobileColSpanClass} ${desktopColSpanClass} overflow-hidden block relative w-full ${hoverClasses}`,
             cssAspectRatio,
+            isMobileBanner:
+              mSpan === 12 && row.items.length === 1 && aspectRatio === "original",
           };
         });
 
@@ -409,7 +411,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                 ...rowBackgroundStyle,
               }}
             >
-              {itemStylesMap.map(({ item, className, cssAspectRatio }, index) => {
+              {itemStylesMap.map(({ item, className, cssAspectRatio, isMobileBanner }, index) => {
                 const desktopSrc = homeItemImage(item);
                 const mobileSrc = item.mobile_image || desktopSrc;
                 const altText = item.config?.alt || item.title || "";
@@ -440,14 +442,18 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                     }}
                   >
                     <picture className="block w-full h-full">
-                      {desktopSrc && <source media="(min-width: 640px)" srcSet={desktopSrc} />}
+                      {desktopSrc && <source media="(min-width: 769px)" srcSet={desktopSrc} />}
                       <img
                         alt={altText}
                         src={mobileSrc || desktopSrc}
-                        className="w-full object-cover"
+                        className={`w-full ${isMobileBanner ? "h-auto min-w-full object-contain" : "h-auto object-cover"}`}
                         style={{
                           borderRadius,
-                          height: isOriginal ? "auto" : "100%",
+                          height: isMobileBanner
+                            ? undefined
+                            : isOriginal
+                              ? "auto"
+                              : "100%",
                         }}
                         loading="lazy"
                       />

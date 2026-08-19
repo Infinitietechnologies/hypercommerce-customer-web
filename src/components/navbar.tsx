@@ -115,26 +115,49 @@ export const Navbar: FC = () => {
       (!selectedNavbarSlug && item.slug === legacyCategorySlug),
   );
   const globalDesktopAppearance = homeGeneralSettings?.homeAppearance?.desktop;
+  const globalMobileAppearance = homeGeneralSettings?.homeAppearance?.app;
   const activeDesktopAppearance =
     selectedNavbarItem?.appearance ?? globalDesktopAppearance;
+  const activeMobileAppearance =
+    selectedNavbarItem?.home_appearance?.app ?? globalMobileAppearance;
   const activeSearchLabels = selectedNavbarItem?.search_labels?.length
     ? selectedNavbarItem.search_labels
     : homeGeneralSettings?.searchLabels;
   const usesHomeAppearance = Boolean(activeDesktopAppearance);
-  const configuredBackgroundType = usesHomeAppearance
+  const desktopBackgroundType = usesHomeAppearance
     ? activeDesktopAppearance?.background_type
     : header.backgroundType;
-  const effectiveBackgroundImage = selectedNavbarItem
-    ? activeDesktopAppearance?.background_image || null
+  const desktopBackgroundImage = selectedNavbarItem
+    ? selectedNavbarItem.desktop_background_image ||
+      selectedNavbarItem.home_appearance?.desktop.background_image ||
+      activeDesktopAppearance?.background_image ||
+      null
     : usesHomeAppearance
       ? homeGeneralSettings?.desktopBackgroundImage ||
+        globalDesktopAppearance?.background_image ||
         homeGeneralSettings?.backgroundImage ||
         null
       : header.backgroundImage;
-  const effectiveBackgroundType =
-    configuredBackgroundType === "image" && !effectiveBackgroundImage
+  const mobileBackgroundImage = selectedNavbarItem
+    ? selectedNavbarItem.background_image ||
+      activeMobileAppearance?.background_image ||
+      desktopBackgroundImage
+    : usesHomeAppearance
+      ? homeGeneralSettings?.backgroundImage ||
+        globalMobileAppearance?.background_image ||
+        desktopBackgroundImage
+      : header.mobileBackgroundImage || header.backgroundImage;
+  const mobileBackgroundType = usesHomeAppearance
+    ? activeMobileAppearance?.background_type || desktopBackgroundType
+    : header.backgroundType;
+  const effectiveDesktopBackgroundType =
+    desktopBackgroundType === "image" && !desktopBackgroundImage
       ? "color"
-      : configuredBackgroundType;
+      : desktopBackgroundType;
+  const effectiveMobileBackgroundType =
+    mobileBackgroundType === "image" && !mobileBackgroundImage
+      ? "color"
+      : mobileBackgroundType;
   const containerClass =
     header.containerWidth === "full"
       ? "max-w-none"
@@ -160,11 +183,11 @@ export const Navbar: FC = () => {
   );
   const surfaceStyle: CSSProperties = usesHomeAppearance
     ? {
-        ...(effectiveBackgroundType === "color" &&
+        ...(effectiveDesktopBackgroundType === "color" &&
         activeDesktopAppearance?.gradient_start
           ? { backgroundColor: activeDesktopAppearance.gradient_start }
           : {}),
-        ...(effectiveBackgroundType === "gradient" &&
+        ...(effectiveDesktopBackgroundType === "gradient" &&
         activeDesktopAppearance?.gradient_start &&
         activeDesktopAppearance.gradient_end
           ? {
@@ -189,24 +212,20 @@ export const Navbar: FC = () => {
         ...(header.textColor ? { color: header.textColor } : {}),
       };
   const desktopBackgroundStyle: CSSProperties | undefined =
-    effectiveBackgroundType === "image" && effectiveBackgroundImage
+    effectiveDesktopBackgroundType === "image" && desktopBackgroundImage
       ? {
-          backgroundImage: `url(${JSON.stringify(effectiveBackgroundImage)})`,
+          backgroundImage: `url(${JSON.stringify(desktopBackgroundImage)})`,
           backgroundPosition: header.backgroundPosition,
           backgroundSize:
             header.backgroundFit === "fill" ? "100% 100%" : "cover",
         }
       : undefined;
-  const mobileBackgroundUrl = usesHomeAppearance
-    ? effectiveBackgroundImage
-    : (header.mobileBackgroundImage ?? header.backgroundImage);
   const mobileBackgroundStyle: CSSProperties | undefined =
-    effectiveBackgroundType === "image" && mobileBackgroundUrl
+    effectiveMobileBackgroundType === "image" && mobileBackgroundImage
       ? {
-          backgroundImage: `url(${JSON.stringify(mobileBackgroundUrl)})`,
+          backgroundImage: `url(${JSON.stringify(mobileBackgroundImage)})`,
           backgroundPosition: header.backgroundPosition,
-          backgroundSize:
-            header.backgroundFit === "fill" ? "100% 100%" : "cover",
+          backgroundSize: "cover",
         }
       : undefined;
   const overlayStyle: CSSProperties = {
@@ -290,7 +309,7 @@ export const Navbar: FC = () => {
   const mobileLogo = header.mobileLogoUrl ?? desktopLogo;
   const logoHeightClass =
     header.density === "compact"
-      ? "h-8"
+      ? "h-9"
       : header.layout === "showcase"
         ? "h-10 min-[1024px]:h-12"
         : "h-10 min-[1024px]:h-11";
@@ -470,25 +489,24 @@ export const Navbar: FC = () => {
   ) : null;
 
   const renderSurfaceBackground = () => {
-    if (effectiveBackgroundType !== "image") return null;
-    const hasDifferentMobileBackground =
-      !usesHomeAppearance &&
-      Boolean(header.mobileBackgroundImage) &&
-      header.mobileBackgroundImage !== header.backgroundImage;
+    if (!desktopBackgroundStyle && !mobileBackgroundStyle) return null;
+    const hasResponsiveBackgrounds = Boolean(
+      desktopBackgroundStyle && mobileBackgroundStyle,
+    );
 
     return (
       <>
         {desktopBackgroundStyle ? (
           <div
             aria-hidden="true"
-            className={`absolute inset-0 ${hasDifferentMobileBackground ? "hidden min-[1024px]:block" : ""}`}
+            className={`absolute inset-0 ${hasResponsiveBackgrounds ? "hidden min-[1024px]:block" : ""}`}
             style={desktopBackgroundStyle}
           />
         ) : null}
-        {hasDifferentMobileBackground && mobileBackgroundStyle ? (
+        {mobileBackgroundStyle ? (
           <div
             aria-hidden="true"
-            className="absolute inset-0 min-[1024px]:hidden"
+            className={`absolute inset-0 ${hasResponsiveBackgrounds ? "min-[1024px]:hidden" : ""}`}
             style={mobileBackgroundStyle}
           />
         ) : null}
@@ -701,10 +719,20 @@ export const Navbar: FC = () => {
               const isActive = isAll
                 ? !selectedNavbarSlug && !legacyCategorySlug
                 : item.id === selectedNavbarItem?.id;
-              const itemImage =
+              const desktopItemImage =
                 (isActive
-                  ? item.appearance.active_icon
-                  : item.appearance.icon) || null;
+                  ? item.desktop_active_icon || item.appearance.active_icon
+                  : item.desktop_icon || item.appearance.icon) || null;
+              const mobileItemImage =
+                (isAll
+                  ? isActive
+                    ? homeGeneralSettings?.activeIcon
+                    : homeGeneralSettings?.icon
+                  : isActive
+                    ? item.active_icon ||
+                      item.home_appearance?.app.active_icon
+                    : item.icon || item.home_appearance?.app.icon) ||
+                desktopItemImage;
               return (
                 <button
                   key={item.id ?? "all"}
@@ -732,15 +760,21 @@ export const Navbar: FC = () => {
                 >
                   {navigationUsesIcons ? (
                     <span className={navigationIconClass} aria-hidden="true">
-                      {itemImage ? (
-                        <Image
-                          removeWrapper
-                          disableAnimation
-                          src={itemImage}
-                          alt=""
-                          radius="none"
-                          className="size-8 object-contain"
-                        />
+                      {mobileItemImage || desktopItemImage ? (
+                        <picture className="block size-8">
+                          {desktopItemImage ? (
+                            <source
+                              media="(min-width: 1024px)"
+                              srcSet={desktopItemImage}
+                            />
+                          ) : null}
+                          <img
+                            src={mobileItemImage || desktopItemImage || ""}
+                            alt=""
+                            loading="eager"
+                            className="size-8 object-contain"
+                          />
+                        </picture>
                       ) : (
                         <Icon
                           icon="solar:widget-2-linear"
@@ -963,7 +997,7 @@ export const Navbar: FC = () => {
           <div
             className={`relative z-10 mx-auto grid min-h-16 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-3 py-2 min-[640px]:gap-3 min-[1024px]:hidden ${containerClass}`}
           >
-            <div className="max-w-24 min-[640px]:max-w-32">{SiteLogo}</div>
+            <div className="max-w-28 min-[640px]:max-w-32">{SiteLogo}</div>
             {mobileSearch ?? <span />}
           </div>
           {header.layout === "stacked" ? (

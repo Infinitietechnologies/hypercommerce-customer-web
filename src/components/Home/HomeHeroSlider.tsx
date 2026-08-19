@@ -2,7 +2,7 @@ import { FC } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 
-import { Image, Link } from "@/components/ui";
+import { Link } from "@/components/ui";
 import { HomeSectionItem } from "@/types/ApiResponse";
 import { homeItemHref, homeItemImage } from "@/helpers/homeLayout";
 
@@ -25,31 +25,40 @@ const HomeHeroSlider: FC<HomeHeroSliderProps> = ({ items }) => {
       slidesPerView={1}
       spaceBetween={12}
     >
-      {items.map((item) => (
-        <SwiperSlide key={item.id}>
-          <Link
-            href={homeItemHref(item)}
-            title={item.title}
-            className="relative block aspect-[21/8] w-full overflow-hidden rounded-[22px] shadow-lg"
-          >
-            <Image
-              alt={item.title ?? ""}
-              src={homeItemImage(item)}
-              removeWrapper
-              loading="eager"
-              className="h-full w-full object-cover"
-            />
-            {item.title ? (
-              <>
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 to-transparent to-55%" />
-                <span className="absolute bottom-5 start-6 z-10 text-xl font-bold text-white sm:text-2xl">
-                  {item.title}
-                </span>
-              </>
-            ) : null}
-          </Link>
-        </SwiperSlide>
-      ))}
+      {items.map((item) => {
+        const desktopSrc = homeItemImage(item);
+        const mobileSrc = item.mobile_image || desktopSrc;
+
+        return (
+          <SwiperSlide key={item.id}>
+            <Link
+              href={homeItemHref(item)}
+              title={item.title}
+              className="relative block aspect-[21/8] w-full overflow-hidden rounded-[22px] shadow-lg"
+            >
+              <picture className="block h-full w-full">
+                {desktopSrc ? (
+                  <source media="(min-width: 769px)" srcSet={desktopSrc} />
+                ) : null}
+                <img
+                  alt={item.title ?? ""}
+                  src={mobileSrc}
+                  loading="eager"
+                  className="h-full w-full object-cover"
+                />
+              </picture>
+              {item.title ? (
+                <>
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 to-transparent to-55%" />
+                  <span className="absolute bottom-5 start-6 z-10 text-xl font-bold text-white sm:text-2xl">
+                    {item.title}
+                  </span>
+                </>
+              ) : null}
+            </Link>
+          </SwiperSlide>
+        );
+      })}
     </Swiper>
   );
 };
