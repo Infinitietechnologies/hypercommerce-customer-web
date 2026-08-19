@@ -68,11 +68,45 @@ const getItemAspectRatio = (config: HomeSectionItem["config"]): string | undefin
   const ratio = String(config?.aspect_ratio || "original");
   if (ratio === "original") return undefined;
   if (ratio === "custom") {
+    if (getItemCustomSize(config)) return undefined;
     const width = Math.max(0.1, Number(config?.aspect_width) || 1);
     const height = Math.max(0.1, Number(config?.aspect_height) || 1);
     return `${width} / ${height}`;
   }
   return ratio.replace(":", " / ");
+};
+
+const getItemCustomSize = (config: HomeSectionItem["config"]): { width: string; height: string } | undefined => {
+  if (String(config?.aspect_ratio || "original") !== "custom") return undefined;
+  const units = ["px", "%", "rem", "em", "vw", "vh"];
+  const widthUnit = units.includes(String(config?.aspect_width_unit)) ? String(config?.aspect_width_unit) : undefined;
+  const heightUnit = units.includes(String(config?.aspect_height_unit)) ? String(config?.aspect_height_unit) : undefined;
+  if (!widthUnit && !heightUnit) return undefined;
+
+  const width = Math.max(0.1, Number(config?.aspect_width) || 100);
+  const height = Math.max(0.1, Number(config?.aspect_height) || 300);
+  return {
+    width: `${width}${widthUnit || "%"}`,
+    height: `${height}${heightUnit || "px"}`,
+  };
+};
+
+const getImageFrameStyle = (config: HomeSectionItem["config"]): CSSProperties => {
+  const customSize = getItemCustomSize(config);
+  if (customSize) {
+    return {
+      width: `min(${customSize.width}, 100%)`,
+      maxWidth: "100%",
+      height: customSize.height,
+      marginInline: "auto",
+    };
+  }
+
+  const aspectRatio = getItemAspectRatio(config);
+  return {
+    width: "100%",
+    aspectRatio: aspectRatio || "auto",
+  };
 };
 
 const getImageFit = (config: HomeSectionItem["config"]): CSSProperties["objectFit"] => {
@@ -346,7 +380,8 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                     const hasLink = linkHref && linkHref !== "#";
 
                     const cssAspectRatio = getItemAspectRatio(item.config);
-                    const isOriginal = !cssAspectRatio;
+                    const customSize = getItemCustomSize(item.config);
+                    const isOriginal = !cssAspectRatio && !customSize;
                     const imageFit = getImageFit(item.config);
                     const imagePosition = getImagePosition(item.config);
 
@@ -368,7 +403,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                       <div
                         className={`w-full overflow-hidden block relative ${isOriginal ? "" : "h-full"} ${hoverClasses}`}
                         style={{
-                          aspectRatio: cssAspectRatio || "auto",
+                          ...getImageFrameStyle(item.config),
                           borderRadius,
                         }}
                       >
@@ -423,12 +458,9 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
           const desktopColSpanClass = getDesktopColSpan(dSpan);
           const mobileColSpanClass = getMobileColSpan(mSpan);
 
-          const cssAspectRatio = getItemAspectRatio(item.config) || "auto";
-
           return {
             item,
             className: `${mobileColSpanClass} ${desktopColSpanClass} overflow-hidden block relative w-full ${hoverClasses}`,
-            cssAspectRatio,
           };
         });
 
@@ -442,14 +474,15 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                 ...rowBackgroundStyle,
               }}
             >
-              {itemStylesMap.map(({ item, className, cssAspectRatio }, index) => {
+              {itemStylesMap.map(({ item, className }, index) => {
                 const desktopSrc = homeItemImage(item);
                 const mobileSrc = item.mobile_image || desktopSrc;
                 const altText = item.config?.alt || item.title || "";
                 const linkHref = homeItemHref(item as any);
                 const hasLink = linkHref && linkHref !== "#";
 
-                const isOriginal = !getItemAspectRatio(item.config);
+                const customSize = getItemCustomSize(item.config);
+                const isOriginal = !getItemAspectRatio(item.config) && !customSize;
                 const isLottie = item.config?.media_type === "lottie";
                 const imageFit = getImageFit(item.config);
                 const imagePosition = getImagePosition(item.config);
@@ -471,7 +504,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                   <div
                     className={`w-full relative ${isOriginal ? "" : "h-full"}`}
                     style={{
-                      aspectRatio: isOriginal ? "auto" : cssAspectRatio,
+                      ...getImageFrameStyle(item.config),
                       borderRadius,
                     }}
                   >
