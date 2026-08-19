@@ -101,7 +101,6 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
     perPage: PER_PAGE,
     dataKey: "categories-tab",
     forceFetchOnMount: true,
-    extraParams: {home: true},
   });
 
   const updateShadows = (swiper: SwiperType) => {

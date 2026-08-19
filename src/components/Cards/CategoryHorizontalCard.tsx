@@ -44,7 +44,7 @@ const CategoryHorizontalCard: FC<CategoryHorizontalCardProps> = ({ category }) =
     str.startsWith("http://") || str.startsWith("https://") || str.startsWith("/");
 
   const renderIcon = () => {
-    const iconStr = category.icon || "";
+    const iconStr = category.image || "";
     const imageStr = category.image || "";
 
     if (iconStr) {

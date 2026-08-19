@@ -1,4 +1,4 @@
-import type { CategoryHomeAppearance } from "./catalog";
+import type { HomeNavbarAppearance } from "./home";
 
 export type VersionCheckData = {
   update_available: boolean;
@@ -265,8 +265,8 @@ export type HomeGeneralSettings = {
   desktopBackgroundImage?: string;
   fontColor: string;
   homeAppearance?: {
-    app: CategoryHomeAppearance;
-    desktop: CategoryHomeAppearance;
+    app: HomeNavbarAppearance;
+    desktop: HomeNavbarAppearance;
   };
 };
 

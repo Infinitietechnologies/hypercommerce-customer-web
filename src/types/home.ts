@@ -79,8 +79,6 @@ export interface HomeNavbarItem {
   title: string;
   slug: string | null;
   is_default?: boolean;
-  category_id: number | null;
-  category?: { id: number; title: string; slug: string } | null;
   platforms: Array<"app" | "web">;
   layout_query: { navbar_slug?: string };
   appearance: HomeNavbarAppearance;

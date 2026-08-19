@@ -95,7 +95,7 @@ export const Navbar: FC = () => {
       header.showCategoryNavigation &&
       (header.navigationScope === "all" || router.pathname === "/") &&
       header.navigationSource === "categories"
-      ? "home-navbar:web"
+      ? "home-tab:web"
       : null,
     () => getHomeNavbar("web"),
     { revalidateOnFocus: false, dedupingInterval: STALE_TIME.reference },
@@ -112,7 +112,7 @@ export const Navbar: FC = () => {
   const selectedNavbarItem = homeNavbarItems.find(
     (item) =>
       item.slug === selectedNavbarSlug ||
-      (!selectedNavbarSlug && item.category?.slug === legacyCategorySlug),
+      (!selectedNavbarSlug && item.slug === legacyCategorySlug),
   );
   const globalDesktopAppearance = homeGeneralSettings?.homeAppearance?.desktop;
   const activeDesktopAppearance =

@@ -7,8 +7,8 @@ interface Category {
   title: string;
   slug: string;
   image: string;
-  icon: string;
-  active_icon: string;
+  icon?: string;
+  active_icon?: string;
   description: string | null;
   status: string;
 }

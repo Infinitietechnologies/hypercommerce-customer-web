@@ -39,7 +39,7 @@ export const getHomeNavbar = async (
 ): Promise<ApiResponse<HomeNavbarItem[]>> => {
   try {
     const response = await api.get<ApiResponse<HomeNavbarItem[]>>(
-      "/home-navbar",
+      "/home-tab",
       {
         params: { platform },
       },
