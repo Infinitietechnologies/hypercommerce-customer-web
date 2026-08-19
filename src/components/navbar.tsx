@@ -541,7 +541,7 @@ export const Navbar: FC = () => {
       className={`relative z-10 hidden overflow-hidden transition-[max-height,opacity,transform] duration-700 ease-in-out motion-reduce:transition-none min-[1024px]:block ${
         utilityIsHidden
           ? "pointer-events-none max-h-0 -translate-y-full opacity-0"
-          : "max-h-10 translate-y-0 opacity-100"
+          : "max-h-8 translate-y-0 opacity-100"
       }`}
       style={{
         ...(!usesHomeAppearance && header.utilityBackgroundColor
@@ -553,14 +553,14 @@ export const Navbar: FC = () => {
       }}
     >
       <div
-        className={`mx-auto flex min-h-10 items-center justify-between gap-6 px-4 text-xs font-semibold ${containerClass}`}
+        className={`mx-auto flex min-h-8 items-center justify-between gap-6 px-4 text-xs font-semibold ${containerClass}`}
       >
         <div className="flex min-w-0 items-center gap-3">
           {header.showLanguage ? <LanguageSwitcher /> : null}
           {showSupportPhone ? (
             <a
               href={`tel:${supportNumber}`}
-              className="inline-flex h-8 items-center gap-1.5 rounded-small px-2 text-xs font-semibold transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+              className="inline-flex h-7 items-center gap-1.5 rounded-small px-2 text-xs font-semibold transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
             >
               <Icon icon="solar:phone-calling-linear" className="h-4 w-4" />
               {supportNumber}
@@ -581,7 +581,7 @@ export const Navbar: FC = () => {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-small transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-small transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
                 >
                   <Icon icon={item.icon} className="h-4 w-4" />
                 </Link>
@@ -613,7 +613,7 @@ export const Navbar: FC = () => {
         ? `flex flex-col items-center border-b-2 ${
             navigationIsCompact
               ? "min-w-16 gap-0 px-2 py-1.5 min-[640px]:min-w-20 min-[640px]:px-3"
-              : "min-w-16 gap-1 px-2 py-2 min-[640px]:min-w-20 min-[640px]:px-3"
+              : "min-w-16 gap-0.5 px-2 py-0 min-[640px]:min-w-20 min-[640px]:px-3"
           } ${
             isActive
               ? "border-primary font-bold text-primary"
@@ -653,10 +653,10 @@ export const Navbar: FC = () => {
           }
       : {}),
   });
-  const navigationIconClass = `flex items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${
+  const navigationIconClass = `flex w-8 shrink-0 items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${
     navigationIsCompact
       ? "h-0 -translate-y-6 opacity-0"
-      : "h-6 translate-y-0 opacity-100"
+      : "h-8 translate-y-0 opacity-100"
   }`;
   const navigationBar = showNavigation ? (
     <div
@@ -689,7 +689,7 @@ export const Navbar: FC = () => {
       <div
         className={`mx-auto flex items-center overflow-x-auto px-4 transition-transform duration-500 ease-in-out motion-reduce:transition-none no-scrollbar ${
           navigationUsesIcons
-            ? "gap-3"
+            ? "gap-3 pb-1 pt-3.75"
             : navigationIsCompact
               ? "gap-2 py-1"
               : "gap-2 py-2"
@@ -739,12 +739,12 @@ export const Navbar: FC = () => {
                           src={itemImage}
                           alt=""
                           radius="none"
-                          className="h-6 w-6 object-contain"
+                          className="size-8 object-contain"
                         />
                       ) : (
                         <Icon
                           icon="solar:widget-2-linear"
-                          className="text-2xl"
+                          className="size-8"
                         />
                       )}
                     </span>
@@ -773,12 +773,12 @@ export const Navbar: FC = () => {
                           src={item.imageUrl}
                           alt=""
                           radius="none"
-                          className="h-6 w-6 object-contain"
+                          className="size-8 object-contain"
                         />
                       ) : (
                         <Icon
                           icon={item.icon ?? "solar:link-circle-linear"}
-                          className="text-2xl"
+                          className="size-8"
                         />
                       )}
                     </span>
@@ -978,7 +978,7 @@ export const Navbar: FC = () => {
             </div>
           ) : header.layout === "showcase" ? (
             <div
-              className={`relative z-10 mx-auto hidden min-h-20 grid-cols-[auto_1fr_auto] items-center gap-6 px-4 py-4 min-[1024px]:grid ${containerClass}`}
+              className={`relative z-10 mx-auto hidden min-h-16 grid-cols-[auto_1fr_auto] items-center gap-6 px-4 py-2 min-[1024px]:grid ${containerClass}`}
             >
               {SiteLogo}
               {headerTools ?? <span />}

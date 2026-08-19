@@ -172,11 +172,12 @@ export const radius = {
   xlarge: "20px",
 } as const;
 
-/** Fills the 6/10/14 gaps in Tailwind's 4px scale. */
+/** Fills spacing gaps outside Tailwind's 4px scale. */
 export const spacing = {
   1.5: "6px",
   2.5: "10px",
   3.5: "14px",
+  3.75: "15px",
 } as const;
 
 /**
