@@ -12,7 +12,6 @@ import { fallbackPaginateRes } from "@/config/constants";
 // Home Layout (replaces featured-sections builder)
 export const getHomeLayout = async (
   params: {
-    category_slug?: string;
     navbar_slug?: string;
     page?: string | number;
     per_page?: string | number;

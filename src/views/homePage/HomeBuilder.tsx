@@ -21,7 +21,7 @@ const SECTIONS_PER_PAGE = 6;
  * Server-driven home — renders the `/home-layout` builder sections in order,
  * each by type × style × config (HomeSectionRenderer). Sections stream in via
  * infinite scroll (first page server-rendered). Re-scopes to the active home
- * category and re-fetches on the shared category/location change events (hidden
+ * tab and re-fetches on the shared tab/location change events (hidden
  * `home-sections-refetch` button).
  */
 const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {

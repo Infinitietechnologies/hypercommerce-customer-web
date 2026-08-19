@@ -87,8 +87,6 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
             selectedNavbar && selectedNavbar !== "all"
               ? selectedNavbar
               : undefined;
-          const legacyCategory = context.query.category as string | undefined;
-
           // Fetch settings first so that, when the shopper has not picked a
           // location yet (no `market` cookie), we can fall back to the store's
           // default market instead of rendering an empty home behind a
@@ -99,7 +97,6 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
 
           const layoutRes = await getHomeLayout({
             navbar_slug,
-            category_slug: navbar_slug ? undefined : legacyCategory,
             page: 1,
             per_page: 6,
             market,
