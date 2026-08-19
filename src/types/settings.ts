@@ -258,11 +258,14 @@ export type HomeGeneralSettings = {
   backgroundType: "image" | "color";
   backgroundColor: string;
   backgroundImage?: string;
+  appTabletBackgroundImage?: string;
   icon?: string;
   activeIcon?: string;
   desktopIcon?: string;
   desktopActiveIcon?: string;
   desktopBackgroundImage?: string;
+  desktopTabletBackgroundImage?: string;
+  desktopMobileBackgroundImage?: string;
   fontColor: string;
   homeAppearance?: {
     app: HomeNavbarAppearance;
