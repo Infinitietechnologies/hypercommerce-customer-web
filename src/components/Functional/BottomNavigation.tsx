@@ -136,7 +136,7 @@ const BottomNavigation = () => {
     },
     {
       id: "profile",
-      label: t("profile"),
+      label: t("account"),
       path: "/my-account",
       protected: true,
     },
@@ -168,7 +168,7 @@ const BottomNavigation = () => {
           color="currentColor"
           strokeWidth={isActive ? 2 : 1.5}
           fill="none"
-          className={`mb-1 ${isActive ? "[&>path:first-child]:fill-current [&>path:nth-child(2)]:opacity-0" : ""}`}
+          className={`mb-1 ${isActive ? "[&>path:first-child]:fill-current [&>path:nth-child(2)]:fill-content1 [&>path:nth-child(2)]:stroke-content1" : ""}`}
         />
       );
     }
@@ -218,7 +218,7 @@ const BottomNavigation = () => {
       >
         <nav
           aria-label={t("nav.mobileNavigation")}
-          className="flex w-full items-center justify-around gap-2 px-1 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)]"
+          className="flex w-full items-center justify-around gap-2 px-1 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
         >
           {navItems.map((item) => {
             const isActive =
@@ -233,7 +233,7 @@ const BottomNavigation = () => {
                 onClick={() =>
                   handleTabClick(item.id, item.path, item.protected)
                 }
-                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center rounded-medium px-3 py-1 transition-colors duration-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center rounded-medium px-3 py-0.5 transition-colors duration-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                   isActive
                     ? "text-foreground"
                     : "text-default-500 hover:text-foreground"
@@ -247,18 +247,10 @@ const BottomNavigation = () => {
                   </span>
                 ) : null}
                 <span
-                  className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}
+                  className={`text-sm ${isActive ? "font-bold" : "font-medium"}`}
                 >
                   {item.label}
                 </span>
-                <span
-                  aria-hidden="true"
-                  className={`mt-1 h-1.5 w-12 rounded-full transition-[transform,opacity] duration-200 motion-reduce:transition-none ${
-                    isActive
-                      ? "scale-x-100 bg-current opacity-100"
-                      : "scale-x-0 bg-transparent opacity-0"
-                  }`}
-                />
               </button>
             );
           })}

@@ -879,27 +879,30 @@ export const Navbar: FC = () => {
   const navigationItemClass = (isActive: boolean) =>
     `shrink-0 cursor-pointer whitespace-nowrap text-xs font-semibold transition-all duration-500 ease-in-out motion-reduce:transition-none min-[640px]:text-sm ${
       navigationUsesIcons
-        ? `flex flex-col items-center border-b-2 ${
+        ? `relative flex flex-col items-center ${
             navigationIsCompact
               ? "min-w-16 gap-0 px-2 py-1.5 min-[640px]:min-w-20 min-[640px]:px-3"
-              : "min-w-16 gap-0.5 px-2 py-0 min-[640px]:min-w-20 min-[640px]:px-3"
+              : "min-w-16 gap-0.5 px-2 pb-1 min-[640px]:min-w-20 min-[640px]:px-3"
           } ${
             isActive
-              ? "border-(--header-navigation-active-color) font-bold text-(--header-navigation-active-color)"
-              : "border-transparent text-(--header-navigation-font-color) opacity-85 hover:text-(--header-navigation-active-color) hover:opacity-100"
+              ? "font-bold text-(--header-navigation-active-color)"
+              : "text-(--header-navigation-font-color) opacity-85 hover:text-(--header-navigation-active-color) hover:opacity-100"
           }`
-        : `px-4 py-1.5 ${
-            navigationStyle === "pills"
-              ? "rounded-full"
-              : "border-b-2 border-transparent"
-          } ${
+        : `relative px-4 py-1.5 ${navigationStyle === "pills" ? "rounded-full" : ""} ${
             isActive
               ? navigationStyle === "pills"
                 ? "bg-primary font-bold text-(--header-navigation-active-color)"
-                : "border-(--header-navigation-active-color) font-bold text-(--header-navigation-active-color)"
+                : "font-bold text-(--header-navigation-active-color)"
               : "text-(--header-navigation-font-color) opacity-70 hover:text-(--header-navigation-active-color) hover:opacity-100"
           }`
     }`;
+  const navigationIndicator = (isActive: boolean) =>
+    isActive && navigationStyle !== "pills" ? (
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-(--header-navigation-active-color)"
+      />
+    ) : null;
   const navigationIconClass = `flex w-8 shrink-0 items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${
     navigationIsCompact
       ? "h-0 -translate-y-6 opacity-0"
@@ -1016,6 +1019,7 @@ export const Navbar: FC = () => {
                     </span>
                   ) : null}
                   <span>{item.title}</span>
+                  {navigationIndicator(isActive)}
                 </button>
               );
             })
@@ -1050,6 +1054,7 @@ export const Navbar: FC = () => {
                     </span>
                   ) : null}
                   <span>{item.label}</span>
+                  {navigationIndicator(isActive)}
                 </Link>
               );
             })}
