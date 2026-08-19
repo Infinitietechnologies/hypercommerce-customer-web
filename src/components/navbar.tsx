@@ -153,9 +153,8 @@ export const Navbar: FC = () => {
   const desktopBackgroundType = usesHomeAppearance
     ? activeDesktopAppearance?.background_type
     : header.backgroundType;
-  const desktopBackgroundImage = selectedNavbarItem
-    ? selectedNavbarItem.desktop_background_image ||
-      selectedNavbarItem.home_appearance?.desktop.background_image ||
+  const effectiveDesktopBackgroundImage = selectedNavbarItem
+    ? activeDesktopAppearance?.desktop_background_image ||
       activeDesktopAppearance?.background_image ||
       null
     : usesHomeAppearance
@@ -164,20 +163,18 @@ export const Navbar: FC = () => {
         homeGeneralSettings?.backgroundImage ||
         null
       : header.backgroundImage;
-  const mobileBackgroundImage = selectedNavbarItem
-    ? selectedNavbarItem.background_image ||
-      activeMobileAppearance?.background_image ||
-      desktopBackgroundImage
-    : usesHomeAppearance
-      ? homeGeneralSettings?.backgroundImage ||
-        globalMobileAppearance?.background_image ||
-        desktopBackgroundImage
-      : header.mobileBackgroundImage || header.backgroundImage;
-  const mobileBackgroundType = usesHomeAppearance
-    ? activeMobileAppearance?.background_type || desktopBackgroundType
-    : header.backgroundType;
-  const effectiveDesktopBackgroundType =
-    desktopBackgroundType === "image" && !desktopBackgroundImage
+  const effectiveTabletBackgroundImage = usesHomeAppearance
+    ? activeDesktopAppearance?.tablet_background_image ||
+      effectiveDesktopBackgroundImage
+    : effectiveDesktopBackgroundImage;
+  const effectiveMobileBackgroundImage = usesHomeAppearance
+    ? activeDesktopAppearance?.mobile_background_image ||
+      activeDesktopAppearance?.app_background_image ||
+      effectiveTabletBackgroundImage ||
+      effectiveDesktopBackgroundImage
+    : (header.mobileBackgroundImage ?? header.backgroundImage);
+  const effectiveBackgroundType =
+    configuredBackgroundType === "image" && !effectiveDesktopBackgroundImage
       ? "color"
       : desktopBackgroundType;
   const effectiveMobileBackgroundType =
@@ -266,18 +263,27 @@ export const Navbar: FC = () => {
         ...(header.textColor ? { color: header.textColor } : {}),
       };
   const desktopBackgroundStyle: CSSProperties | undefined =
-    effectiveDesktopBackgroundType === "image" && desktopBackgroundImage
+    effectiveBackgroundType === "image" && effectiveDesktopBackgroundImage
       ? {
-          backgroundImage: `url(${JSON.stringify(desktopBackgroundImage)})`,
+          backgroundImage: `url(${JSON.stringify(effectiveDesktopBackgroundImage)})`,
+          backgroundPosition: header.backgroundPosition,
+          backgroundSize:
+            header.backgroundFit === "fill" ? "100% 100%" : "cover",
+        }
+      : undefined;
+  const tabletBackgroundStyle: CSSProperties | undefined =
+    effectiveBackgroundType === "image" && effectiveTabletBackgroundImage
+      ? {
+          backgroundImage: `url(${JSON.stringify(effectiveTabletBackgroundImage)})`,
           backgroundPosition: header.backgroundPosition,
           backgroundSize:
             header.backgroundFit === "fill" ? "100% 100%" : "cover",
         }
       : undefined;
   const mobileBackgroundStyle: CSSProperties | undefined =
-    effectiveMobileBackgroundType === "image" && mobileBackgroundImage
+    effectiveBackgroundType === "image" && effectiveMobileBackgroundImage
       ? {
-          backgroundImage: `url(${JSON.stringify(mobileBackgroundImage)})`,
+          backgroundImage: `url(${JSON.stringify(effectiveMobileBackgroundImage)})`,
           backgroundPosition: header.backgroundPosition,
           backgroundSize: "cover",
         }
@@ -738,24 +744,28 @@ export const Navbar: FC = () => {
   ) : null;
 
   const renderSurfaceBackground = () => {
-    if (!desktopBackgroundStyle && !mobileBackgroundStyle) return null;
-    const hasResponsiveBackgrounds = Boolean(
-      desktopBackgroundStyle && mobileBackgroundStyle,
-    );
+    if (effectiveBackgroundType !== "image") return null;
 
     return (
       <>
         {desktopBackgroundStyle ? (
           <div
             aria-hidden="true"
-            className={`absolute inset-0 ${hasResponsiveBackgrounds ? "hidden min-[1024px]:block" : ""}`}
+            className="absolute inset-0 hidden min-[1024px]:block"
             style={desktopBackgroundStyle}
+          />
+        ) : null}
+        {tabletBackgroundStyle ? (
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 hidden min-[640px]:block min-[1024px]:hidden"
+            style={tabletBackgroundStyle}
           />
         ) : null}
         {mobileBackgroundStyle ? (
           <div
             aria-hidden="true"
-            className={`absolute inset-0 ${hasResponsiveBackgrounds ? "min-[1024px]:hidden" : ""}`}
+            className="absolute inset-0 min-[640px]:hidden"
             style={mobileBackgroundStyle}
           />
         ) : null}

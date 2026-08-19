@@ -74,6 +74,10 @@ export interface HomeNavbarAppearance {
   icon: string;
   active_icon: string;
   background_image: string;
+  mobile_background_image?: string;
+  tablet_background_image?: string;
+  desktop_background_image?: string;
+  app_background_image?: string;
 }
 
 export interface HomeNavbarItem {
