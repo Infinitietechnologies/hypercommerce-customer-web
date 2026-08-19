@@ -173,12 +173,15 @@ export const Navbar: FC = () => {
       effectiveTabletBackgroundImage ||
       effectiveDesktopBackgroundImage
     : (header.mobileBackgroundImage ?? header.backgroundImage);
-  const effectiveBackgroundType =
-    configuredBackgroundType === "image" && !effectiveDesktopBackgroundImage
+  const mobileBackgroundType = usesHomeAppearance
+    ? activeMobileAppearance?.background_type || desktopBackgroundType
+    : header.backgroundType;
+  const effectiveDesktopBackgroundType =
+    desktopBackgroundType === "image" && !effectiveDesktopBackgroundImage
       ? "color"
       : desktopBackgroundType;
   const effectiveMobileBackgroundType =
-    mobileBackgroundType === "image" && !mobileBackgroundImage
+    mobileBackgroundType === "image" && !effectiveMobileBackgroundImage
       ? "color"
       : mobileBackgroundType;
   const containerClass =
@@ -263,7 +266,8 @@ export const Navbar: FC = () => {
         ...(header.textColor ? { color: header.textColor } : {}),
       };
   const desktopBackgroundStyle: CSSProperties | undefined =
-    effectiveBackgroundType === "image" && effectiveDesktopBackgroundImage
+    effectiveDesktopBackgroundType === "image" &&
+    effectiveDesktopBackgroundImage
       ? {
           backgroundImage: `url(${JSON.stringify(effectiveDesktopBackgroundImage)})`,
           backgroundPosition: header.backgroundPosition,
@@ -272,7 +276,8 @@ export const Navbar: FC = () => {
         }
       : undefined;
   const tabletBackgroundStyle: CSSProperties | undefined =
-    effectiveBackgroundType === "image" && effectiveTabletBackgroundImage
+    effectiveDesktopBackgroundType === "image" &&
+    effectiveTabletBackgroundImage
       ? {
           backgroundImage: `url(${JSON.stringify(effectiveTabletBackgroundImage)})`,
           backgroundPosition: header.backgroundPosition,
@@ -281,7 +286,8 @@ export const Navbar: FC = () => {
         }
       : undefined;
   const mobileBackgroundStyle: CSSProperties | undefined =
-    effectiveBackgroundType === "image" && effectiveMobileBackgroundImage
+    effectiveMobileBackgroundType === "image" &&
+    effectiveMobileBackgroundImage
       ? {
           backgroundImage: `url(${JSON.stringify(effectiveMobileBackgroundImage)})`,
           backgroundPosition: header.backgroundPosition,
@@ -744,7 +750,13 @@ export const Navbar: FC = () => {
   ) : null;
 
   const renderSurfaceBackground = () => {
-    if (effectiveBackgroundType !== "image") return null;
+    if (
+      !desktopBackgroundStyle &&
+      !tabletBackgroundStyle &&
+      !mobileBackgroundStyle
+    ) {
+      return null;
+    }
 
     return (
       <>
