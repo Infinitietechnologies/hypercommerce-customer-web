@@ -666,6 +666,7 @@ const clearLocalSession = () => {
   // device would inherit the previous one's precise location.
   deleteCookie("userLocation");
   deleteCookie("homeCategory");
+  deleteCookie("homeNavbar");
   // Shared device: the next visitor must not inherit the previous market.
   deleteCookie("market");
 

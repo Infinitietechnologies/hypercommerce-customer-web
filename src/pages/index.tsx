@@ -47,7 +47,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
   const organizationSchema = generateOrganizationSchema(
     siteName,
     siteDescription,
-    siteLogo
+    siteLogo,
   );
 
   const websiteSchema = generateWebsiteSchema(siteName);
@@ -79,13 +79,15 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
           const cookieMarket = getMarketFromContext(context);
           const access_token = (await getAccessTokenFromContext(context)) || "";
 
-          // Category from query if present, else the saved home-category cookie.
-          const queryCategory = context.query.category as string | undefined;
-          const cookieCategory =
-            (getCookieFromContext(context, "homeCategory") as string) || "";
-          const homeCategory = queryCategory || cookieCategory;
-          const category_slug =
-            homeCategory && homeCategory !== "all" ? homeCategory : undefined;
+          const queryNavbar = context.query.home as string | undefined;
+          const cookieNavbar =
+            (getCookieFromContext(context, "homeNavbar") as string) || "";
+          const selectedNavbar = queryNavbar || cookieNavbar;
+          const navbar_slug =
+            selectedNavbar && selectedNavbar !== "all"
+              ? selectedNavbar
+              : undefined;
+          const legacyCategory = context.query.category as string | undefined;
 
           // Fetch settings first so that, when the shopper has not picked a
           // location yet (no `market` cookie), we can fall back to the store's
@@ -96,7 +98,8 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> | undefined =
             cookieMarket || getDefaultMarketCode(settings.data) || undefined;
 
           const layoutRes = await getHomeLayout({
-            category_slug,
+            navbar_slug,
+            category_slug: navbar_slug ? undefined : legacyCategory,
             page: 1,
             per_page: 6,
             market,

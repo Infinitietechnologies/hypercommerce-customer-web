@@ -61,7 +61,9 @@ export const getFormattedDate = (
       // Safari/iOS returns Invalid Date, so normalise the space to "T".
       const normalized =
         typeof date === "string"
-          ? date.trim().replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/, "$1T$2")
+          ? date
+              .trim()
+              .replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/, "$1T$2")
           : date;
       parsedDate = new Date(normalized);
     } else if (date instanceof Date) {
@@ -187,7 +189,9 @@ export function getDefaultMarketCode(
   if (!Array.isArray(settings)) return undefined;
   const marketsEntry = (
     settings as unknown as { variable: string; value: unknown }[]
-  ).find((item) => item && typeof item === "object" && item.variable === "markets");
+  ).find(
+    (item) => item && typeof item === "object" && item.variable === "markets",
+  );
   const markets = marketsEntry?.value as
     | { current?: { code?: string } | null; default?: { code?: string } | null }
     | undefined;
@@ -329,6 +333,18 @@ export function getActiveCategory(): string | undefined {
   ) {
     return cookieCategory;
   }
+}
+
+export function getActiveHomeNavbar(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+
+  const query = new URLSearchParams(window.location.search).get("home");
+  if (query) return query !== "all" ? query : undefined;
+
+  const cookie = getCookie("homeNavbar");
+  return typeof cookie === "string" && cookie !== "all" && cookie.trim()
+    ? cookie
+    : undefined;
 }
 
 export const getUserDataFromRedux = () => {

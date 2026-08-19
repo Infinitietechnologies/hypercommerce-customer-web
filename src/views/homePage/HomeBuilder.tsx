@@ -7,7 +7,7 @@ import { EmptyState, ErrorState } from "@/components/ui";
 import HomeSectionRenderer from "@/components/Home/HomeSectionRenderer";
 import HomeSectionSkeleton from "@/components/Skeletons/HomeSectionSkeleton";
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
-import { getActiveCategory } from "@/helpers/getters";
+import { getActiveHomeNavbar } from "@/helpers/getters";
 import { getHomeLayout } from "@/routes/api";
 import { HomeLayout, HomeSection } from "@/types/ApiResponse";
 
@@ -28,16 +28,20 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const [sections, setSections] = useState<HomeSection[]>(initialLayout?.sections ?? []);
+  const [sections, setSections] = useState<HomeSection[]>(
+    initialLayout?.sections ?? [],
+  );
   const [page, setPage] = useState<number>(initialLayout?.current_page ?? 1);
-  const [lastPage, setLastPage] = useState<number>(initialLayout?.last_page ?? 1);
+  const [lastPage, setLastPage] = useState<number>(
+    initialLayout?.last_page ?? 1,
+  );
   const [loading, setLoading] = useState<boolean>(!initialLayout);
   const [failed, setFailed] = useState<boolean>(false);
 
   const fetchPage = useCallback(async (nextPage: number) => {
-    const category_slug = getActiveCategory();
+    const navbar_slug = getActiveHomeNavbar();
     const response = await getHomeLayout({
-      category_slug,
+      navbar_slug,
       page: nextPage,
       per_page: SECTIONS_PER_PAGE,
     });
@@ -106,7 +110,10 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
       {failed && sections.length === 0 && !loading ? (
         <ErrorState
           title={t("home.error.title", "We couldn't load the home page")}
-          description={t("home.error.description", "Please try again in a moment.")}
+          description={t(
+            "home.error.description",
+            "Please try again in a moment.",
+          )}
           retryLabel={t("common.retry", "Retry")}
           onRetry={refetch}
         />
@@ -117,7 +124,12 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
             "home.empty.description",
             "We're stocking this space with new products and offers. In the meantime, explore what's trending across the store.",
           )}
-          icon={<Icon icon="solar:bag-smile-linear" className="text-5xl text-primary-600" />}
+          icon={
+            <Icon
+              icon="solar:bag-smile-linear"
+              className="text-5xl text-primary-600"
+            />
+          }
           title={t("home.empty.title", "Fresh finds on the way")}
           onAction={() => router.push("/products/search")}
         />
@@ -126,7 +138,11 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
           {sections.map((section) => (
             <HomeSectionRenderer key={section.id} section={section} />
           ))}
-          <InfiniteSentinel hasMore={page < lastPage} isLoading={loading} onLoadMore={loadMore} />
+          <InfiniteSentinel
+            hasMore={page < lastPage}
+            isLoading={loading}
+            onLoadMore={loadMore}
+          />
           {loading ? <HomeSectionSkeleton /> : null}
         </>
       )}

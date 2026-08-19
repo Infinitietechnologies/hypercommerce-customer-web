@@ -19,10 +19,10 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation } from "react-i18next";
 import { authSheetStore } from "@/stores/authSheetStore";
 import { Heart, ShoppingCart, User, Package } from "lucide-react";
-import { setCookie } from "@/lib/cookies";
+import { getCookie, setCookie } from "@/lib/cookies";
 import { onHomeCategoryChange } from "@/helpers/events";
 import useSWR from "swr";
-import { getHomeCategories } from "@/services/catalog";
+import { getHomeNavbar } from "@/services/home";
 import { STALE_TIME } from "@/hooks/useInfiniteData";
 import { resolveHeaderSettings } from "@/config/header";
 
@@ -90,42 +90,42 @@ export const Navbar: FC = () => {
 
   const bagCount = isLoggedIn ? cartCount : offLineCartCount;
 
-  // The strip must carry real category slugs: `/home-layout` silently falls
-  // back to the global layout for a slug it can't resolve.
-  const { data: navCategoriesRes } = useSWR(
+  const { data: homeNavbarRes } = useSWR(
     header.enabled &&
       header.showCategoryNavigation &&
       (header.navigationScope === "all" || router.pathname === "/") &&
       header.navigationSource === "categories"
-      ? `home-nav-categories:${header.categoryLimit}`
+      ? "home-navbar:web"
       : null,
-    () =>
-      getHomeCategories({
-        page: 1,
-        per_page: header.categoryLimit,
-      }),
+    () => getHomeNavbar("web"),
     { revalidateOnFocus: false, dedupingInterval: STALE_TIME.reference },
   );
-  const navCategories = navCategoriesRes?.data?.data ?? [];
-  const selectedCategorySlug =
+  const homeNavbarItems = homeNavbarRes?.data ?? [];
+  const selectedNavbarSlug =
+    typeof router.query.home === "string"
+      ? router.query.home
+      : mounted && typeof getCookie("homeNavbar") === "string"
+        ? String(getCookie("homeNavbar"))
+        : "";
+  const legacyCategorySlug =
     typeof router.query.category === "string" ? router.query.category : "";
-  const selectedHeaderCategory = navCategories.find(
-    (category) => category.slug === selectedCategorySlug,
+  const selectedNavbarItem = homeNavbarItems.find(
+    (item) =>
+      item.slug === selectedNavbarSlug ||
+      (!selectedNavbarSlug && item.category?.slug === legacyCategorySlug),
   );
   const globalDesktopAppearance = homeGeneralSettings?.homeAppearance?.desktop;
   const activeDesktopAppearance =
-    selectedHeaderCategory?.home_appearance?.desktop ?? globalDesktopAppearance;
-  const activeSearchLabels = selectedHeaderCategory?.search_labels?.length
-    ? selectedHeaderCategory.search_labels
+    selectedNavbarItem?.appearance ?? globalDesktopAppearance;
+  const activeSearchLabels = selectedNavbarItem?.search_labels?.length
+    ? selectedNavbarItem.search_labels
     : homeGeneralSettings?.searchLabels;
   const usesHomeAppearance = Boolean(activeDesktopAppearance);
   const configuredBackgroundType = usesHomeAppearance
     ? activeDesktopAppearance?.background_type
     : header.backgroundType;
-  const effectiveBackgroundImage = selectedHeaderCategory
-    ? activeDesktopAppearance?.background_image ||
-      selectedHeaderCategory.banner ||
-      null
+  const effectiveBackgroundImage = selectedNavbarItem
+    ? activeDesktopAppearance?.background_image || null
     : usesHomeAppearance
       ? homeGeneralSettings?.desktopBackgroundImage ||
         homeGeneralSettings?.backgroundImage ||
@@ -696,69 +696,35 @@ export const Navbar: FC = () => {
         } ${containerClass}`}
       >
         {header.navigationSource === "categories"
-          ? [
-              ...(header.showAllCategory
-                ? [
-                    {
-                      slug: "all",
-                      title: homeGeneralSettings?.title || t("filters.all"),
-                      image:
-                        homeGeneralSettings?.desktopIcon ||
-                        homeGeneralSettings?.icon ||
-                        null,
-                      activeImage:
-                        homeGeneralSettings?.desktopActiveIcon ||
-                        homeGeneralSettings?.desktopIcon ||
-                        homeGeneralSettings?.activeIcon ||
-                        homeGeneralSettings?.icon ||
-                        null,
-                      icon: "solar:widget-2-bold-duotone",
-                    },
-                  ]
-                : []),
-              ...navCategories.map((category) => ({
-                slug: category.slug,
-                title: category.title,
-                image:
-                  category.home_appearance.desktop.icon ||
-                  category.image ||
-                  null,
-                activeImage:
-                  category.home_appearance.desktop.active_icon ||
-                  category.home_appearance.desktop.icon ||
-                  category.image ||
-                  null,
-                icon: null,
-              })),
-            ].map((item) => {
-              const currentCategory = (router.query.category as string) || "";
-              const isAll = item.slug === "all";
+          ? homeNavbarItems.map((item) => {
+              const isAll = item.is_default === true || !item.slug;
               const isActive = isAll
-                ? !currentCategory
-                : currentCategory === item.slug;
+                ? !selectedNavbarSlug && !legacyCategorySlug
+                : item.id === selectedNavbarItem?.id;
               const itemImage =
-                isActive && "activeImage" in item
-                  ? item.activeImage
-                  : item.image;
+                (isActive
+                  ? item.appearance.active_icon
+                  : item.appearance.icon) || null;
               return (
                 <button
-                  key={item.slug}
+                  key={item.id ?? "all"}
                   type="button"
                   onClick={async () => {
-                    const slug = item.slug;
-                    setCookie("homeCategory", slug);
+                    const slug = item.slug || "all";
+                    setCookie("homeNavbar", slug);
+                    setCookie("homeCategory", "all");
                     if (router.pathname === "/") {
                       await router.push(
                         {
                           pathname: "/",
-                          query: isAll ? {} : { category: slug },
+                          query: isAll ? {} : { home: slug },
                         },
                         undefined,
                         { shallow: true },
                       );
                       onHomeCategoryChange();
                     } else {
-                      router.push(isAll ? "/" : `/?category=${slug}`);
+                      router.push(isAll ? "/" : `/?home=${slug}`);
                     }
                   }}
                   className={navigationItemClass(isActive)}
@@ -777,7 +743,7 @@ export const Navbar: FC = () => {
                         />
                       ) : (
                         <Icon
-                          icon={item.icon ?? "solar:widget-2-linear"}
+                          icon="solar:widget-2-linear"
                           className="text-2xl"
                         />
                       )}

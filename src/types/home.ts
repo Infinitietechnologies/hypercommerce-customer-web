@@ -58,6 +58,33 @@ export interface HomeLayout {
   per_page: number;
   total: number;
   sections: HomeSection[];
+  navbar_slug?: string;
+  navbar_title?: string;
+}
+
+export interface HomeNavbarAppearance {
+  background_type: "none" | "color" | "gradient" | "image" | "lottie";
+  gradient_start: string;
+  gradient_end: string;
+  gradient_angle: string | number;
+  font_color: string;
+  active_font_color: string;
+  icon: string;
+  active_icon: string;
+  background_image: string;
+}
+
+export interface HomeNavbarItem {
+  id: number | null;
+  title: string;
+  slug: string | null;
+  is_default?: boolean;
+  category_id: number | null;
+  category?: { id: number; title: string; slug: string } | null;
+  platforms: Array<"app" | "web">;
+  layout_query: { navbar_slug?: string };
+  appearance: HomeNavbarAppearance;
+  search_labels: string[];
 }
 
 // Cart API Type
