@@ -162,14 +162,23 @@ const BottomNavigation = () => {
   const renderIcon = (itemId: string, isActive: boolean) => {
     if (itemId === "home") {
       return (
-        <HugeiconsIcon
-          icon={Home03Icon}
-          size={24}
-          color="currentColor"
-          strokeWidth={isActive ? 2 : 1.5}
-          fill="none"
-          className={`mb-1 ${isActive ? "[&>path:first-child]:fill-current [&>path:nth-child(2)]:fill-content1 [&>path:nth-child(2)]:stroke-content1" : ""}`}
-        />
+        <span className="relative mb-1 size-6" aria-hidden="true">
+          <HugeiconsIcon
+            icon={Home03Icon}
+            size={24}
+            color="currentColor"
+            strokeWidth={isActive ? 2 : 1.5}
+            fill="none"
+            className={
+              isActive
+                ? "[&>path:first-child]:fill-current [&>path:nth-child(2)]:opacity-0"
+                : ""
+            }
+          />
+          {isActive ? (
+            <span className="absolute bottom-0 left-1/2 h-2 w-1.5 -translate-x-1/2 rounded-t-sm bg-content1" />
+          ) : null}
+        </span>
       );
     }
 
