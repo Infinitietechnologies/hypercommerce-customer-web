@@ -196,7 +196,6 @@ const BottomNavigation = () => {
 
   return (
     <>
-      <div aria-hidden="true" className="h-24 min-[1024px]:hidden" />
       <div
         className={`fixed inset-x-0 bottom-0 z-50 w-full border-t border-divider bg-content1 transition-transform duration-200 ease-out will-change-transform motion-reduce:transition-none min-[1024px]:hidden ${
           isVisible ? "translate-y-0" : "translate-y-full"

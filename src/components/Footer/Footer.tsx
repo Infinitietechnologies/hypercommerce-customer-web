@@ -112,7 +112,7 @@ const Footer: FC = () => {
 
   return (
     <footer className="w-full bg-ink text-ink-foreground border-t border-white/10">
-      <div className="w-full max-w-site mx-auto px-4 sm:px-6 pt-12 pb-8">
+      <div className="w-full max-w-site mx-auto px-4 sm:px-6 pt-12 pb-24 min-[1024px]:pb-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Company */}
           <div className="col-span-2 md:col-span-1">
