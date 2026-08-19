@@ -454,15 +454,20 @@ const LocationSelector = ({
           onClick={isCheckoutLocked ? undefined : onOpen}
           disabled={!isInitialized || isCheckoutLocked}
           className={clsx(
-            "hidden min-w-0 cursor-pointer items-center gap-2 ps-2 text-start min-[1024px]:flex",
+            "hidden min-w-0 cursor-pointer items-center gap-2 ps-2 text-start transition-colors min-[1024px]:flex",
             tone === "light"
               ? "text-white"
               : tone === "inherit"
-                ? "text-current"
+                ? "text-current hover:text-(--header-active-color)"
                 : "text-foreground",
           )}
         >
-          <MapPin className="h-5 w-5 shrink-0 text-primary" />
+          <MapPin
+            className={clsx(
+              "h-5 w-5 shrink-0",
+              tone === "inherit" ? "text-current" : "text-primary",
+            )}
+          />
           <span className="flex min-w-0 flex-col">
             {showLabel ? (
               <span className="text-[10px] font-semibold uppercase tracking-wide opacity-60">
@@ -484,15 +489,20 @@ const LocationSelector = ({
           onClick={isCheckoutLocked ? undefined : onOpen}
           disabled={!isInitialized || isCheckoutLocked}
           className={clsx(
-            "hidden min-w-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs transition-colors hover:border-primary/60 min-[1024px]:flex",
+            "hidden min-w-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs transition-colors min-[1024px]:flex",
             tone === "light"
-              ? "border-white/15 text-ink-foreground"
+              ? "border-white/15 text-ink-foreground hover:border-primary/60"
               : tone === "inherit"
-                ? "border-divider bg-white/90 text-current"
-                : "border-divider bg-content1/90 text-foreground",
+                ? "border-divider bg-white/90 text-current hover:border-(--header-active-color) hover:text-(--header-active-color)"
+                : "border-divider bg-content1/90 text-foreground hover:border-primary/60",
           )}
         >
-          <MapPin className="h-4 w-4 shrink-0 text-primary" />
+          <MapPin
+            className={clsx(
+              "h-4 w-4 shrink-0",
+              tone === "inherit" ? "text-current" : "text-primary",
+            )}
+          />
           <span className="truncate opacity-80">{getButtonText()}</span>
         </button>
       ) : (
@@ -501,12 +511,12 @@ const LocationSelector = ({
           onClick={isCheckoutLocked ? undefined : onOpen}
           disabled={!isInitialized || isCheckoutLocked}
           className={clsx(
-            "flex h-8 w-full max-w-full min-w-0 cursor-pointer items-center gap-1.5 px-0 text-start text-xs font-semibold transition-opacity hover:opacity-75",
+            "flex h-8 w-full max-w-full min-w-0 cursor-pointer items-center gap-1.5 px-0 text-start text-xs font-semibold transition-colors",
             tone === "light"
-              ? "text-white"
+              ? "text-white hover:opacity-75"
               : tone === "inherit"
-                ? "text-current"
-                : "text-foreground",
+                ? "text-current hover:text-(--header-active-color)"
+                : "text-foreground hover:opacity-75",
           )}
         >
           <MapPin className="h-4 w-4 shrink-0" />

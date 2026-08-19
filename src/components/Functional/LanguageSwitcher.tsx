@@ -59,7 +59,7 @@ const LanguageSwitcher = ({ variant = "desktop" }: LanguageSwitcherProps) => {
         <Button
           size="sm"
           variant="light"
-          className={`flex h-8 min-w-0 items-center gap-1 text-xs font-semibold text-inherit ${variant === "mobile" ? "px-1" : "px-2"}`}
+          className={`flex h-8 min-w-0 items-center gap-1 text-xs font-semibold text-inherit transition-colors hover:text-(--header-active-color) ${variant === "mobile" ? "px-1" : "px-2"}`}
         >
           <div className="flex items-center gap-1">
             {variant === "desktop" ? (

@@ -290,7 +290,7 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
           tone === "light"
             ? "border-white/10 bg-white/10 hover:border-primary/60"
             : tone === "inherit"
-              ? "border-divider bg-white/90 text-current hover:border-primary/60"
+              ? "border-divider bg-white/90 text-current hover:border-(--header-active-color) hover:text-(--header-active-color)"
               : "border-divider bg-content1/90 hover:border-primary/60",
         )}
       >
@@ -340,7 +340,7 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             tone === "light"
               ? "text-white/70 hover:bg-white/10 hover:text-white"
               : tone === "inherit"
-                ? "text-current opacity-60 hover:bg-content2 hover:opacity-100"
+                ? "text-current opacity-60 hover:bg-content2 hover:text-(--header-active-color) hover:opacity-100"
                 : "text-default-500 hover:bg-content2 hover:text-foreground",
           )}
         >

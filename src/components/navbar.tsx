@@ -27,7 +27,9 @@ import { getHomeNavbar } from "@/services/home";
 import { STALE_TIME } from "@/hooks/useInfiniteData";
 import { resolveHeaderSettings } from "@/config/header";
 
-type NavigationPaletteStyle = CSSProperties & {
+type HeaderPaletteStyle = CSSProperties & {
+  "--header-font-color": string;
+  "--header-active-color": string;
   "--header-navigation-font-color": string;
   "--header-navigation-active-color": string;
 };
@@ -64,7 +66,7 @@ const HeaderAction = ({
     href={href ?? "#"}
     title={label}
     onClick={onClick}
-    className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
+    className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-(--header-active-color) hover:opacity-100 min-[640px]:flex"
   >
     {icon}
     {showLabel ? <span>{label}</span> : null}
@@ -196,15 +198,26 @@ export const Navbar: FC = () => {
   const activeNavigationAppearance = isDesktopViewport
     ? activeDesktopAppearance
     : activeMobileAppearance || activeDesktopAppearance;
+  const headerFontColor =
+    activeNavigationAppearance?.font_color ||
+    header.textColor ||
+    header.navigationTextColor ||
+    "currentColor";
+  const headerActiveColor =
+    activeNavigationAppearance?.active_font_color ||
+    header.navigationActiveColor ||
+    headerFontColor;
   const navigationFontColor =
     activeNavigationAppearance?.font_color ||
     header.navigationTextColor ||
-    "currentColor";
+    headerFontColor;
   const navigationActiveColor =
     activeNavigationAppearance?.active_font_color ||
     header.navigationActiveColor ||
-    navigationFontColor;
-  const navigationPaletteStyle: NavigationPaletteStyle = {
+    headerActiveColor;
+  const headerPaletteStyle: HeaderPaletteStyle = {
+    "--header-font-color": headerFontColor,
+    "--header-active-color": headerActiveColor,
     "--header-navigation-font-color": navigationFontColor,
     "--header-navigation-active-color": navigationActiveColor,
   };
@@ -230,8 +243,8 @@ export const Navbar: FC = () => {
               backgroundImage: `linear-gradient(${Number.isFinite(activeGradientAngle) ? activeGradientAngle : 90}deg, ${activeDesktopAppearance.gradient_start}, ${activeDesktopAppearance.gradient_end})`,
             }
           : {}),
-        ...(activeDesktopAppearance?.font_color
-          ? { color: activeDesktopAppearance.font_color }
+        ...(activeNavigationAppearance?.font_color
+          ? { color: activeNavigationAppearance.font_color }
           : {}),
       }
     : {
@@ -585,7 +598,7 @@ export const Navbar: FC = () => {
         id="login-btn"
         aria-label={t("nav.account", "Account")}
         onClick={() => authSheetStore.open()}
-        className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-primary hover:opacity-100 min-[640px]:flex"
+        className="hidden cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-(--header-active-color) hover:opacity-100 min-[640px]:flex"
       >
         <User className="h-5 w-5" />
         {header.showActionLabels ? (
@@ -618,7 +631,7 @@ export const Navbar: FC = () => {
     <button
       onClick={openCart}
       aria-label={t("nav.cart", "Cart")}
-      className="relative flex cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-primary hover:opacity-100"
+      className="relative flex cursor-pointer flex-col items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-current opacity-90 transition hover:text-(--header-active-color) hover:opacity-100"
     >
       <ShoppingCart className="h-5 w-5" />
       {header.showActionLabels ? (
@@ -657,7 +670,13 @@ export const Navbar: FC = () => {
   const mobileSearch = header.showSearch ? (
     <div className="w-full min-w-0">
       <GlobalSearchbar
-        tone={hasScrolledMobileSurface ? "dark" : effectiveControlTone}
+        tone={
+          usesHomeAppearance
+            ? "inherit"
+            : hasScrolledMobileSurface
+              ? "dark"
+              : effectiveControlTone
+        }
         size="default"
         shape="rounded"
         searchLabels={activeSearchLabels}
@@ -788,7 +807,7 @@ export const Navbar: FC = () => {
           {showSupportPhone ? (
             <a
               href={`tel:${supportNumber}`}
-              className="inline-flex h-7 items-center gap-1.5 rounded-small px-2 text-xs font-semibold transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+              className="inline-flex h-7 items-center gap-1.5 rounded-small px-2 text-xs font-semibold transition-colors hover:bg-content1/30 hover:text-(--header-active-color) focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
             >
               <Icon icon="solar:phone-calling-linear" className="h-4 w-4" />
               {supportNumber}
@@ -809,7 +828,7 @@ export const Navbar: FC = () => {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-small transition-colors hover:bg-content1/30 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-small transition-colors hover:bg-content1/30 hover:text-(--header-active-color) focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
                 >
                   <Icon icon={item.icon} className="h-4 w-4" />
                 </Link>
@@ -882,7 +901,7 @@ export const Navbar: FC = () => {
           : "bg-content1/90 backdrop-blur-md"
       }`}
       style={{
-        ...navigationPaletteStyle,
+        ...headerPaletteStyle,
         ...(!hasScrolledMobileSurface &&
         !usesHomeAppearance &&
         header.navigationBackgroundColor
@@ -1026,7 +1045,7 @@ export const Navbar: FC = () => {
         isMobileHeaderExpanded
           ? "max-h-16 translate-y-0 opacity-100"
           : "pointer-events-none max-h-0 -translate-y-3 opacity-0"
-      } ${hasScrolledMobileSurface ? "text-foreground" : "text-current"}`}
+      } ${usesHomeAppearance ? "text-(--header-font-color)" : hasScrolledMobileSurface ? "text-foreground" : "text-current"}`}
     >
       <div className={`mx-auto px-3 pt-1.5 ${containerClass}`}>
         <div className="flex min-h-11 min-w-0 items-center gap-2">
@@ -1037,7 +1056,11 @@ export const Navbar: FC = () => {
                 <LocationSelector
                   variant="mobile"
                   tone={
-                    hasScrolledMobileSurface ? "dark" : effectiveControlTone
+                    usesHomeAppearance
+                      ? "inherit"
+                      : hasScrolledMobileSurface
+                        ? "dark"
+                        : effectiveControlTone
                   }
                 />
               </div>
@@ -1050,7 +1073,7 @@ export const Navbar: FC = () => {
                 onClick={() => {
                   router.push("/my-account/notifications");
                 }}
-                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-current transition-colors hover:bg-content2/70"
+                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-current transition-colors hover:bg-content2/70 hover:text-(--header-active-color)"
               >
                 <Icon icon="solar:bell-bing-linear" className="text-lg" />
               </button>
@@ -1210,7 +1233,7 @@ export const Navbar: FC = () => {
       >
         <div
           className={`relative isolate overflow-hidden border-0 ${surfaceToneClass}`}
-          style={surfaceStyle}
+          style={{ ...surfaceStyle, ...headerPaletteStyle }}
         >
           {renderSurfaceBackground()}
           <div
