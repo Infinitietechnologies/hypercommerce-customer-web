@@ -45,6 +45,8 @@ export interface HomeSection {
     items?: HomeSectionItem[];
     rows?: {
       row_index: number;
+      style?: string;
+      config?: Record<string, unknown>;
       items: HomeSectionItem[];
     }[];
   };

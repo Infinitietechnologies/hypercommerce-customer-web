@@ -1,9 +1,9 @@
-import { FC, memo } from "react";
+import { CSSProperties, FC, memo } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { HomeSection, HomeSectionItem } from "@/types/ApiResponse";
@@ -12,7 +12,6 @@ import {
   homeItemImage,
   parseBoolSetting,
   getSpacingValueSetting,
-  getPaddingValueSetting,
   getContainerWidthClasses,
   getHoverEffectClasses
 } from "@/helpers/homeLayout";
@@ -63,6 +62,43 @@ const getLottieSize = (val: any, defaultVal: string): string => {
   if (!val) return defaultVal;
   if (!isNaN(Number(val))) return `${val}px`;
   return String(val);
+};
+
+const getItemAspectRatio = (config: HomeSectionItem["config"]): string | undefined => {
+  const ratio = String(config?.aspect_ratio || "original");
+  if (ratio === "original") return undefined;
+  if (ratio === "custom") {
+    const width = Math.max(0.1, Number(config?.aspect_width) || 1);
+    const height = Math.max(0.1, Number(config?.aspect_height) || 1);
+    return `${width} / ${height}`;
+  }
+  return ratio.replace(":", " / ");
+};
+
+const getImageFit = (config: HomeSectionItem["config"]): CSSProperties["objectFit"] => {
+  const value = String(config?.object_fit || "cover");
+  return ["cover", "contain", "fill", "none", "scale-down"].includes(value)
+    ? value as CSSProperties["objectFit"]
+    : "cover";
+};
+
+const getImagePosition = (config: HomeSectionItem["config"]): CSSProperties["objectPosition"] => {
+  const value = String(config?.object_position || "center");
+  return ["center", "top", "right", "bottom", "left"].includes(value) ? value : "center";
+};
+
+const getSignedRowSpacing = (rowConfig: Record<string, unknown>) => {
+  const fallback = Number(rowConfig.outer_padding) || 0;
+  const custom = String(rowConfig.outer_padding_custom || "").split("/");
+  const values = [0, 1, 2, 3].map((index) => {
+    const rawValue = String(custom[index] ?? "").replace(/[^0-9.-]/g, "");
+    const parsed = rawValue === "" ? fallback : Number(rawValue);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  });
+  return {
+    padding: values.map((value) => `${Math.max(0, value)}px`).join(" "),
+    margin: values.map((value) => `${Math.min(0, value)}px`).join(" "),
+  };
 };
 
 interface SpanLayout {
@@ -225,8 +261,9 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
         const rowConfig = row.config;
         const isScroll = row.style === "scroll";
 
-        const gap = getSpacingValueSetting(rowConfig.grid_gap, "0px");
-        const padding = getPaddingValueSetting(rowConfig.outer_padding_custom, rowConfig.outer_padding, "0px");
+        const signedGap = Number(rowConfig.grid_gap) || 0;
+        const gap = getSpacingValueSetting(Math.max(0, signedGap), "0px");
+        const rowSpacing = getSignedRowSpacing(rowConfig);
         const rawRadius = getSpacingValueSetting(rowConfig.border_radius, "0px");
         const borderRadius = rawRadius === "full" ? "9999px" : rawRadius;
         const rowBackgroundStyle = rowConfig.background_type === "color"
@@ -245,18 +282,18 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
         if (isScroll) {
           const itemsToShow = Number(rowConfig.items_to_show ?? 1);
           const itemsToShowMobile = Number(rowConfig.items_to_show_mobile ?? 1);
-          const gapVal = rowConfig.grid_gap !== undefined ? Number(rowConfig.grid_gap) : 0;
+          const gapVal = signedGap;
           const showBullets = parseBoolSetting(rowConfig.show_bullets, false);
           const showScrollButtons = parseBoolSetting(rowConfig.show_scroll_buttons, true);
           const autoScroll = parseBoolSetting(rowConfig.auto_scroll, false);
           const autoScrollTime = Number(rowConfig.auto_scroll_time ?? 3);
 
           return (
-            <div key={rIdx} className={wrapperClass}>
+            <div key={rIdx} className={wrapperClass} style={{ margin: rowSpacing.margin }}>
               <div
                 className={`relative group ${innerClass}`}
                 style={{
-                  padding,
+                  padding: rowSpacing.padding,
                   ...rowBackgroundStyle,
                 }}
               >
@@ -308,12 +345,10 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                     const linkHref = homeItemHref(item as any);
                     const hasLink = linkHref && linkHref !== "#";
 
-                    const aspectRatio = item.config?.aspect_ratio || "original";
-                    let cssAspectRatio = "auto";
-                    if (aspectRatio !== "original") {
-                      cssAspectRatio = aspectRatio.replace(":", " / ");
-                    }
-                    const isOriginal = aspectRatio === "original";
+                    const cssAspectRatio = getItemAspectRatio(item.config);
+                    const isOriginal = !cssAspectRatio;
+                    const imageFit = getImageFit(item.config);
+                    const imagePosition = getImagePosition(item.config);
 
                     const isLottie = item.config?.media_type === "lottie";
 
@@ -333,7 +368,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                       <div
                         className={`w-full overflow-hidden block relative ${isOriginal ? "" : "h-full"} ${hoverClasses}`}
                         style={{
-                          aspectRatio: isOriginal ? "auto" : cssAspectRatio,
+                          aspectRatio: cssAspectRatio || "auto",
                           borderRadius,
                         }}
                       >
@@ -342,10 +377,12 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                           <img
                             alt={altText}
                             src={mobileSrc || desktopSrc}
-                            className="w-full object-cover"
+                            className="w-full"
                             style={{
                               borderRadius,
                               height: isOriginal ? "auto" : "100%",
+                              objectFit: imageFit,
+                              objectPosition: imagePosition,
                             }}
                             loading="lazy"
                           />
@@ -386,11 +423,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
           const desktopColSpanClass = getDesktopColSpan(dSpan);
           const mobileColSpanClass = getMobileColSpan(mSpan);
 
-          const aspectRatio = item.config?.aspect_ratio || "original";
-          let cssAspectRatio = "auto";
-          if (aspectRatio !== "original") {
-            cssAspectRatio = aspectRatio.replace(":", " / ");
-          }
+          const cssAspectRatio = getItemAspectRatio(item.config) || "auto";
 
           return {
             item,
@@ -400,11 +433,11 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
         });
 
         return (
-          <div key={rIdx} className={wrapperClass}>
+          <div key={rIdx} className={wrapperClass} style={{ margin: rowSpacing.margin }}>
             <div
               className={`grid grid-cols-12 ${innerClass}`}
               style={{
-                padding,
+                padding: rowSpacing.padding,
                 gap,
                 ...rowBackgroundStyle,
               }}
@@ -416,8 +449,11 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                 const linkHref = homeItemHref(item as any);
                 const hasLink = linkHref && linkHref !== "#";
 
-                const isOriginal = item.config?.aspect_ratio === "original" || !item.config?.aspect_ratio;
+                const isOriginal = !getItemAspectRatio(item.config);
                 const isLottie = item.config?.media_type === "lottie";
+                const imageFit = getImageFit(item.config);
+                const imagePosition = getImagePosition(item.config);
+                const overlapStyle = signedGap < 0 ? { margin: `${signedGap / 2}px` } : undefined;
 
                 const cardContent = isLottie ? (
                   <div
@@ -444,10 +480,12 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                       <img
                         alt={altText}
                         src={mobileSrc || desktopSrc}
-                        className="w-full object-cover"
+                        className="w-full"
                         style={{
                           borderRadius,
                           height: isOriginal ? "auto" : "100%",
+                          objectFit: imageFit,
+                          objectPosition: imagePosition,
                         }}
                         loading="lazy"
                       />
@@ -460,12 +498,13 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                     key={item.id ?? index}
                     href={linkHref}
                     className={className}
+                    style={overlapStyle}
                     title={item.title ?? undefined}
                   >
                     {cardContent}
                   </Link>
                 ) : (
-                  <div key={item.id ?? index} className={className}>
+                  <div key={item.id ?? index} className={className} style={overlapStyle}>
                     {cardContent}
                   </div>
                 );
