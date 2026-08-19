@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
-import { Home, ShoppingCart, User, Package } from "lucide-react";
+import { useEffect } from "react";
+import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
-import { addToast, useDisclosure } from "@heroui/react";
+import { toast, useDisclosure } from "@/components/ui";
 import { useTranslation } from "react-i18next";
 import dynamic from "next/dynamic";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -13,8 +13,6 @@ const OfflineCartDrawer = dynamic(() => import("../Cart/OfflineCartDrawer"), {
 });
 
 const BottomNavigation = () => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const router = useRouter();
   const { t } = useTranslation();
   const { isSingleVendor } = useSettings();
@@ -32,37 +30,6 @@ const BottomNavigation = () => {
     onClose: closeOfflineCart,
   } = useDisclosure();
 
-  const activeTab = useMemo(() => {
-    const pathToTabMap: Record<string, string> = {
-      "/": "home",
-      "/cart": "cart",
-      "/categories": "categories",
-      "/my-account": "profile",
-    };
-    return pathToTabMap[router.pathname] || "";
-  }, [router.pathname]);
-
-  useEffect(() => {
-    const controlNavbar = () => {
-      if (typeof window !== "undefined") {
-        const currentScrollY = window.scrollY;
-
-        if (currentScrollY < lastScrollY || currentScrollY < 10) {
-          setIsVisible(true);
-        } else {
-          setIsVisible(false);
-        }
-
-        setLastScrollY(currentScrollY);
-      }
-    };
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("scroll", controlNavbar);
-      return () => window.removeEventListener("scroll", controlNavbar);
-    }
-  }, [lastScrollY]);
-
   useEffect(() => {
     if (isLoggedIn && isOfflineCartOpen) {
       closeOfflineCart();
@@ -70,24 +37,29 @@ const BottomNavigation = () => {
   }, [isLoggedIn, isOfflineCartOpen, closeOfflineCart]);
 
   const navItems = [
-    { id: "home", label: t("home_title"), icon: Home, path: "/" },
+    {
+      id: "home",
+      label: t("home_title"),
+      icon: "hugeicons:home-03",
+      path: "/",
+    },
     {
       id: "categories",
       label: t("categories"),
-      icon: Package,
+      icon: "hugeicons:package-02",
       path: "/categories",
     },
     {
       id: "cart",
       label: t("cart_title"),
-      icon: ShoppingCart,
+      icon: "hugeicons:handbag",
       path: "/cart",
       protected: true,
     },
     {
       id: "profile",
       label: t("profile"),
-      icon: User,
+      icon: "hugeicons:user",
       path: "/my-account",
       protected: true,
     },
@@ -104,66 +76,65 @@ const BottomNavigation = () => {
     }
     if (protectedTab && !isLoggedIn) {
       document.getElementById("login-btn")?.click();
-      addToast({ title: "Please Login to Continue !", color: "warning" });
+      toast({ title: t("cart.login_required"), color: "warning" });
       return;
     }
     if (path) router.push(path);
   };
 
   return (
-    <div
-      className={`min-[1024px]:hidden fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${
-        isVisible ? "translate-y-0" : "translate-y-full"
-      }`}
-    >
-      <div className="shadow-[0_-2px_16px_-12px_rgba(28,26,23,0.25)] bg-content1 border-t border-divider">
-        <div className="max-w-md mx-auto">
-          <nav className="flex justify-around items-center py-2 px-1 gap-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() =>
-                    handleTabClick(item.id, item.path, item.protected)
-                  }
-                  className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-0 flex-1 ${
-                    isActive
-                      ? "text-primary-600 bg-primary-50"
-                      : "text-default-500 hover:text-foreground"
-                  }`}
-                >
-                  <Icon
-                    size={20}
-                    className={`mb-1 transition-all duration-200 ${
-                      isActive ? "scale-110" : "scale-100"
-                    }`}
-                  />
-                  {item.id === "cart" &&
-                  (isLoggedIn ? cartCount : offLineCartCount) ? (
-                    <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
-                      {isLoggedIn ? cartCount : offLineCartCount}
-                    </span>
-                  ) : null}
-                  <span
-                    className={`text-xs font-medium transition-all duration-200 ${
-                      isActive ? "scale-105" : "scale-100"
+    <>
+      <div aria-hidden="true" className="h-20 min-[1024px]:hidden" />
+      <div className="fixed inset-x-0 bottom-0 z-50 min-[1024px]:hidden">
+        <div className="shadow-[0_-2px_16px_-12px_rgba(28,26,23,0.25)] bg-content1 border-t border-divider">
+          <div className="max-w-md mx-auto">
+            <nav
+              aria-label={t("nav.mobileNavigation")}
+              className="flex items-center justify-around gap-2 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+            >
+              {navItems.map((item) => {
+                const isActive =
+                  item.path === "/"
+                    ? router.pathname === "/"
+                    : router.pathname.startsWith(item.path);
+                return (
+                  <button
+                    type="button"
+                    key={item.id}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={() =>
+                      handleTabClick(item.id, item.path, item.protected)
+                    }
+                    className={`relative flex min-w-0 flex-1 flex-col items-center justify-center px-3 py-1 transition-colors duration-200 ${
+                      isActive
+                        ? "text-foreground"
+                        : "text-default-500 hover:text-foreground"
                     }`}
                   >
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
+                    <Icon icon={item.icon} className="mb-1 text-2xl" />
+                    {item.id === "cart" &&
+                    (isLoggedIn ? cartCount : offLineCartCount) ? (
+                      <span className="absolute top-0 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-primary-foreground bg-primary rounded-full">
+                        {isLoggedIn ? cartCount : offLineCartCount}
+                      </span>
+                    ) : null}
+                    <span
+                      className={`text-xs ${isActive ? "font-bold" : "font-medium"}`}
+                    >
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
+        <OfflineCartDrawer
+          isOpen={isOfflineCartOpen}
+          onClose={closeOfflineCart}
+        />
       </div>
-      <OfflineCartDrawer
-        isOpen={isOfflineCartOpen}
-        onClose={closeOfflineCart}
-      />
-    </div>
+    </>
   );
 };
 
