@@ -900,7 +900,7 @@ export const Navbar: FC = () => {
     isActive && navigationStyle !== "pills" ? (
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-10 -translate-x-1/2 rounded-full bg-(--header-navigation-active-color)"
+        className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.75 rounded-full bg-(--header-navigation-active-color)"
       />
     ) : null;
   const navigationIconClass = `flex w-8 shrink-0 items-center justify-center overflow-hidden transition-[height,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none ${
@@ -1018,8 +1018,10 @@ export const Navbar: FC = () => {
                       )}
                     </span>
                   ) : null}
-                  <span>{item.title}</span>
-                  {navigationIndicator(isActive)}
+                  <span className="relative">
+                    {item.title}
+                    {navigationIndicator(isActive)}
+                  </span>
                 </button>
               );
             })
@@ -1053,8 +1055,10 @@ export const Navbar: FC = () => {
                       )}
                     </span>
                   ) : null}
-                  <span>{item.label}</span>
-                  {navigationIndicator(isActive)}
+                  <span className="relative">
+                    {item.label}
+                    {navigationIndicator(isActive)}
+                  </span>
                 </Link>
               );
             })}
