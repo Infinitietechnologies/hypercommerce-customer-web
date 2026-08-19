@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { HandbagIcon, Home03Icon } from "@hugeicons/core-free-icons";
 import { Package, User } from "lucide-react";
@@ -15,6 +15,9 @@ const OfflineCartDrawer = dynamic(() => import("../Cart/OfflineCartDrawer"), {
 });
 
 const BottomNavigation = () => {
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const scrollFrame = useRef<number | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
   const { isSingleVendor } = useSettings();
@@ -37,6 +40,38 @@ const BottomNavigation = () => {
       closeOfflineCart();
     }
   }, [isLoggedIn, isOfflineCartOpen, closeOfflineCart]);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
+    const updateVisibility = () => {
+      if (scrollFrame.current !== null) return;
+
+      scrollFrame.current = window.requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+
+        if (currentScrollY < 10) {
+          setIsVisible(true);
+        } else if (currentScrollY < lastScrollY.current) {
+          setIsVisible(false);
+        } else if (currentScrollY > lastScrollY.current) {
+          setIsVisible(true);
+        }
+
+        lastScrollY.current = currentScrollY;
+        scrollFrame.current = null;
+      });
+    };
+
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", updateVisibility);
+      if (scrollFrame.current !== null) {
+        window.cancelAnimationFrame(scrollFrame.current);
+      }
+    };
+  }, []);
 
   const navItems = [
     {
@@ -87,8 +122,8 @@ const BottomNavigation = () => {
           icon={Home03Icon}
           size={24}
           color="currentColor"
-          strokeWidth={1.5}
-          fill={isActive ? "currentColor" : "none"}
+          strokeWidth={isActive ? 2 : 1.5}
+          fill="none"
           className="mb-1"
         />
       );
@@ -100,8 +135,8 @@ const BottomNavigation = () => {
           icon={HandbagIcon}
           size={24}
           color="currentColor"
-          strokeWidth={1.5}
-          fill={isActive ? "currentColor" : "none"}
+          strokeWidth={isActive ? 2 : 1.5}
+          fill="none"
           className="mb-1"
         />
       );
@@ -121,7 +156,11 @@ const BottomNavigation = () => {
   return (
     <>
       <div aria-hidden="true" className="h-20 min-[1024px]:hidden" />
-      <div className="fixed inset-x-0 bottom-0 z-50 w-full border-t border-divider bg-content1 min-[1024px]:hidden">
+      <div
+        className={`fixed inset-x-0 bottom-0 z-50 w-full border-t border-divider bg-content1 transition-transform duration-300 ease-in-out min-[1024px]:hidden ${
+          isVisible ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
         <nav
           aria-label={t("nav.mobileNavigation")}
           className="flex w-full items-center justify-around gap-2 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
