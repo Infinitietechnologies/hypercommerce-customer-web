@@ -37,6 +37,11 @@ const config: import("tailwindcss").Config = {
         // Matches the redesign sandbox's `layout.maxWidth` (1280px) exactly.
         site: "1280px",
       },
+      width: {
+        // Full-bleed sections use the page container's content width, which
+        // excludes classic scrollbars unlike 100vw.
+        page: "100cqw",
+      },
       borderRadius: {
         xlarge: radius.xlarge,
       },

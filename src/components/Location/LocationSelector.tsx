@@ -29,6 +29,10 @@ type SelectedLocation = {
   placeDescription: string;
 };
 
+type PersistedLocation = UserLocation & {
+  addressId?: number;
+};
+
 interface LocationSelectorProps {
   variant?: "desktop" | "mobile" | "showcase";
   tone?: "light" | "dark" | "inherit";
@@ -52,10 +56,9 @@ const LocationSelector = ({
   const isCheckoutLocked =
     router.pathname === "/cart/checkout" && !!checkoutSelectedAddress;
 
-  const [selectedLatLng, setSelectedLatLng] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(defaultLocation);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+    null,
+  );
   const [selectedLocation, setSelectedLocation] =
     useState<SelectedLocation | null>(null);
 
@@ -71,7 +74,7 @@ const LocationSelector = ({
   useEffect(() => {
     const initializeLocation = () => {
       try {
-        const userLocation = getCookie("userLocation") as UserLocation;
+        const userLocation = getCookie("userLocation") as PersistedLocation;
 
         if (userLocation && userLocation.lat && userLocation.lng) {
           const locationData: SelectedLocation = {
@@ -80,8 +83,8 @@ const LocationSelector = ({
             placeDescription: userLocation.placeDescription || "",
           };
 
-          setSelectedLatLng(locationData.latLng);
           setSelectedLocation(locationData);
+          setSelectedAddressId(userLocation.addressId ?? null);
         }
       } catch (error) {
         console.error("Error initializing location from cookie:", error);
@@ -260,7 +263,7 @@ const LocationSelector = ({
     placeName: string,
     countryCode?: string,
     placeDescription = "",
-    options: { silent?: boolean } = {},
+    options: { silent?: boolean; addressId?: number } = {},
   ) => {
     // In demo mode the location is always forced to the default.
     const finalLatLng = demoMode
@@ -278,18 +281,19 @@ const LocationSelector = ({
         }
       : { placeName, latLng: finalLatLng, placeDescription };
 
-    setSelectedLatLng(finalLatLng);
     setSelectedLocation(finalLocation);
+    setSelectedAddressId(options.addressId ?? null);
 
-    const userLocation: UserLocation = {
+    const userLocation: PersistedLocation = {
       lat: finalLatLng.lat,
       lng: finalLatLng.lng,
       placeName: finalLocation.placeName,
       placeDescription: finalLocation.placeDescription,
+      addressId: options.addressId,
       // ISO2 (e.g. "IN") — powers country-based product delivery ETA.
       countryCode: countryCode ? countryCode.toUpperCase() : undefined,
     };
-    setCookie<UserLocation>("userLocation", userLocation);
+    setCookie<PersistedLocation>("userLocation", userLocation);
 
     await resolveMarket(countryCode);
     onLocationChange();
@@ -373,6 +377,8 @@ const LocationSelector = ({
       { lat: address.latitude, lng: address.longitude },
       placeName,
       address.country_code,
+      "",
+      { addressId: address.id },
     );
     setLocatingId(null);
   };
@@ -633,9 +639,7 @@ const LocationSelector = ({
           ) : (
             <div className="flex flex-col gap-3">
               {addresses.map((address) => {
-                const isSelected =
-                  selectedLatLng?.lat === address.latitude &&
-                  selectedLatLng?.lng === address.longitude;
+                const isSelected = selectedAddressId === address.id;
                 return (
                   <button
                     key={address.id}

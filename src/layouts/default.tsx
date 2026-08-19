@@ -223,7 +223,7 @@ export default function DefaultLayout({
     "We're currently optimizing our platform to provide you with a smoother and more secure experience. Please refresh the page to access the latest enhancements.";
 
   return (
-    <div className="flex flex-col min-h-screen w-full items-center">
+    <div className="@container/page flex min-h-screen w-full flex-col items-center">
       {!isOnline ? (
         <OfflinePage />
       ) : isLoading && !isSSR() ? (
