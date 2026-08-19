@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { HandbagIcon, Home03Icon } from "@hugeicons/core-free-icons";
-import { Package, User } from "lucide-react";
+import {
+  DeliveryBox01Icon,
+  HandbagIcon,
+  Home03Icon,
+} from "@hugeicons/core-free-icons";
+import { User } from "lucide-react";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
@@ -163,9 +167,21 @@ const BottomNavigation = () => {
           size={24}
           color="currentColor"
           strokeWidth={isActive ? 2 : 1.5}
-          fill={isActive ? "currentColor" : "none"}
-          fillOpacity={isActive ? 0.16 : 0}
-          className="mb-1"
+          fill="none"
+          className={`mb-1 ${isActive ? "[&>path:first-child]:fill-current [&>path:nth-child(2)]:opacity-0" : ""}`}
+        />
+      );
+    }
+
+    if (itemId === "categories") {
+      return (
+        <HugeiconsIcon
+          icon={DeliveryBox01Icon}
+          size={24}
+          color="currentColor"
+          strokeWidth={isActive ? 2 : 1.5}
+          fill="none"
+          className={`mb-1 ${isActive ? "[&>path:first-child]:fill-current [&>path:nth-child(4)]:stroke-content1" : ""}`}
         />
       );
     }
@@ -183,9 +199,8 @@ const BottomNavigation = () => {
       );
     }
 
-    const NavIcon = itemId === "categories" ? Package : User;
     return (
-      <NavIcon
+      <User
         aria-hidden="true"
         size={24}
         strokeWidth={isActive ? 2 : 1.5}
@@ -218,7 +233,7 @@ const BottomNavigation = () => {
                 onClick={() =>
                   handleTabClick(item.id, item.path, item.protected)
                 }
-                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center px-3 py-1 transition-colors duration-200 ${
+                className={`relative flex min-w-0 flex-1 flex-col items-center justify-center rounded-medium px-3 py-1 transition-colors duration-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
                   isActive
                     ? "text-foreground"
                     : "text-default-500 hover:text-foreground"
@@ -236,6 +251,14 @@ const BottomNavigation = () => {
                 >
                   {item.label}
                 </span>
+                <span
+                  aria-hidden="true"
+                  className={`mt-1 h-1.5 w-12 rounded-full transition-[transform,opacity] duration-200 motion-reduce:transition-none ${
+                    isActive
+                      ? "scale-x-100 bg-current opacity-100"
+                      : "scale-x-0 bg-transparent opacity-0"
+                  }`}
+                />
               </button>
             );
           })}
