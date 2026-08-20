@@ -48,7 +48,6 @@ const MOBILE_HEADER_REVEAL_DISTANCE = 10;
 const MOBILE_HEADER_COLLAPSE_OFFSET = 56;
 const MOBILE_HEADER_SCROLL_LOCK_MS = 500;
 const MOBILE_SCROLL_INTENT_WINDOW_MS = 1200;
-const MOBILE_HEADER_SEPARATOR_CLOSE_GAP = 24;
 
 const HeaderAction = ({
   icon,
@@ -80,7 +79,6 @@ export const Navbar: FC = () => {
   const [showHeaderAnnouncement, setShowHeaderAnnouncement] = useState(true);
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
   const [isMobileSurfaceWhite, setIsMobileSurfaceWhite] = useState(false);
-  const [isMobileHeaderSeparated, setIsMobileHeaderSeparated] = useState(false);
   const [isDesktopViewport, setIsDesktopViewport] = useState(true);
   const [isMobileHeaderExpanded, setIsMobileHeaderExpanded] = useState(true);
   const isMobileHeaderExpandedRef = useRef(true);
@@ -201,8 +199,6 @@ export const Navbar: FC = () => {
     ? ("inherit" as const)
     : header.contentTone;
   const hasScrolledMobileSurface = isMobileSurfaceWhite && !isDesktopViewport;
-  const hasMobileHeaderSeparation =
-    isMobileHeaderSeparated && !isDesktopViewport;
   const activePaletteAppearance =
     activeMobileAppearance || activeDesktopAppearance;
   const headerFontColor =
@@ -352,7 +348,6 @@ export const Navbar: FC = () => {
       const resetFrame = window.requestAnimationFrame(() => {
         setIsHeaderScrolled(false);
         setIsMobileSurfaceWhite(false);
-        setIsMobileHeaderSeparated(false);
         isMobileHeaderExpandedRef.current = true;
         setIsMobileHeaderExpanded(true);
       });
@@ -425,7 +420,6 @@ export const Navbar: FC = () => {
           : null;
       const stickyHeader = document.querySelector<HTMLElement>("header");
       const heroBounds = heroSection?.getBoundingClientRect();
-      const stickyHeaderBounds = stickyHeader?.getBoundingClientRect();
       const mobileSurfaceThreshold = heroBounds
         ? Math.max(
             header.navigationScrollThreshold,
@@ -449,22 +443,10 @@ export const Navbar: FC = () => {
 
       const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
       if (isDesktop) {
-        setIsMobileHeaderSeparated(false);
         setMobileHeaderExpanded(true);
         mobileScrollAnchorY.current = currentScrollY;
         return;
       }
-
-      setIsMobileHeaderSeparated((current) => {
-        if (router.pathname === "/") {
-          if (!heroBounds || !stickyHeaderBounds) return false;
-          const separationGap = current
-            ? MOBILE_HEADER_SEPARATOR_CLOSE_GAP
-            : 0;
-          return heroBounds.bottom <= stickyHeaderBounds.bottom + separationGap;
-        }
-        return currentScrollY > header.navigationScrollThreshold;
-      });
 
       if (currentScrollY <= header.navigationScrollThreshold) {
         setMobileHeaderExpanded(true);
@@ -1279,11 +1261,7 @@ export const Navbar: FC = () => {
       ) : null}
 
       <header
-        className={`${header.sticky ? "sticky" : "relative"} top-0 z-40 w-full transition-[border-color,box-shadow] duration-300 motion-reduce:transition-none min-[1024px]:border-0 min-[1024px]:shadow-none ${
-          hasMobileHeaderSeparation
-            ? "border-b border-divider shadow-sm"
-            : "border-b-0 border-transparent shadow-none"
-        }`}
+        className={`${header.sticky ? "sticky" : "relative"} top-0 z-40 w-full border-0 shadow-none`}
       >
         <div
           className={`relative isolate overflow-hidden border-0 ${surfaceToneClass}`}
