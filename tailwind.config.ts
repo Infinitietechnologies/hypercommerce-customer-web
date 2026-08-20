@@ -1,7 +1,16 @@
 import { heroui } from "@heroui/theme";
 
 import { heroLayout, heroThemes } from "./src/theme/heroui";
-import { accent, dark, light, radius, shadow, shell, spacing } from "./src/theme/tokens";
+import {
+  accent,
+  aspectRatio,
+  dark,
+  light,
+  radius,
+  shadow,
+  shell,
+  spacing,
+} from "./src/theme/tokens";
 
 /** @type {import('tailwindcss').Config} */
 const config: import("tailwindcss").Config = {
@@ -32,6 +41,7 @@ const config: import("tailwindcss").Config = {
         large: "1.125rem", // 18px
       },
       spacing,
+      aspectRatio,
       maxWidth: {
         // Shared storefront page width — header, content and footer align on it.
         // Matches the redesign sandbox's `layout.maxWidth` (1280px) exactly.

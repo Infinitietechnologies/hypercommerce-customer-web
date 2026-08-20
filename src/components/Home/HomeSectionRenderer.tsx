@@ -32,6 +32,7 @@ const GRID = {
 } as const;
 
 interface HomeSectionRendererProps {
+  priority?: boolean;
   section: HomeSection;
 }
 
@@ -40,7 +41,10 @@ interface HomeSectionRendererProps {
  * `/home-layout` payload. Pixel + logic source: `HomeSection` in the
  * `src/redesign/` sandbox. Horizontal rails use Swiper sliders.
  */
-const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
+const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({
+  priority = false,
+  section,
+}) => {
   const { type, title, style, config, content, background_image } = section;
   const bg = (config?.background_type as BgType) ?? "none";
   const bgColor = config?.background_color as string | undefined;
@@ -220,9 +224,13 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({ section }) => {
           )
         : null}
 
-      {type === "hero" ? <HomeHeroSlider items={items} /> : null}
+      {type === "hero" ? (
+        <HomeHeroSlider items={items} priority={priority} />
+      ) : null}
 
-      {type === "play_image" ? <HomePlayImageGrid section={section} /> : null}
+      {type === "play_image" ? (
+        <HomePlayImageGrid priority={priority} section={section} />
+      ) : null}
     </section>
   );
 };

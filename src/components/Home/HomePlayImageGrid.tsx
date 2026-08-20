@@ -4,7 +4,8 @@ import Script from "next/script";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import { Button } from "@/components/ui";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Icon } from "@iconify/react";
+import HomeResponsiveImage from "@/components/Home/HomeResponsiveImage";
 
 import { HomeSection, HomeSectionItem } from "@/types/ApiResponse";
 import {
@@ -17,6 +18,7 @@ import {
 } from "@/helpers/homeLayout";
 
 interface HomePlayImageGridProps {
+  priority?: boolean;
   section: HomeSection;
 }
 
@@ -220,7 +222,10 @@ const RowSwiperNavigation: FC<{ rIdx: number }> = ({ rIdx }) => {
         bg-background border border-default-300 shadow-lg disabled:opacity-50
         transition-all duration-200 opacity-0 group-hover:opacity-100 hover:scale-110`}
       >
-        <ChevronLeft size={20} className="text-default-700" />
+        <Icon
+          icon="solar:alt-arrow-left-linear"
+          className="text-xl text-default-700"
+        />
       </Button>
 
       <Button
@@ -233,7 +238,10 @@ const RowSwiperNavigation: FC<{ rIdx: number }> = ({ rIdx }) => {
         bg-background border border-default-300 shadow-lg disabled:opacity-50
         transition-all duration-200 opacity-0 group-hover:opacity-100 hover:scale-110`}
       >
-        <ChevronRight size={20} className="text-default-700" />
+        <Icon
+          icon="solar:alt-arrow-right-linear"
+          className="text-xl text-default-700"
+        />
       </Button>
     </>
   );
@@ -246,7 +254,10 @@ interface StorefrontRow {
   items: HomeSectionItem[];
 }
 
-const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
+const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({
+  priority = false,
+  section,
+}) => {
   const rowsData = section.content?.rows;
   const resolvedRows: StorefrontRow[] = [];
 
@@ -301,7 +312,7 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
         const rawRadius = getSpacingValueSetting(rowConfig.border_radius, "0px");
         const borderRadius = rawRadius === "full" ? "9999px" : rawRadius;
         const rowBackgroundStyle = rowConfig.background_type === "color"
-          ? { backgroundColor: rowConfig.background_color || "#ffffff" }
+          ? { backgroundColor: rowConfig.background_color || "hsl(var(--heroui-content1))" }
           : rowConfig.background_type === "image" && rowConfig.background_image
             ? {
                 backgroundImage: `url(${rowConfig.background_image})`,
@@ -382,6 +393,10 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                     const cssAspectRatio = getItemAspectRatio(item.config);
                     const customSize = getItemCustomSize(item.config);
                     const isOriginal = !cssAspectRatio && !customSize;
+                    const isBanner =
+                      isOriginal &&
+                      itemsToShowMobile === 1 &&
+                      itemsToShow === 1;
                     const imageFit = getImageFit(item.config);
                     const imagePosition = getImagePosition(item.config);
 
@@ -407,21 +422,24 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                           borderRadius,
                         }}
                       >
-                        <picture className="block w-full h-full">
-                          {desktopSrc && <source media="(min-width: 769px)" srcSet={desktopSrc} />}
-                          <img
-                            alt={altText}
-                            src={mobileSrc || desktopSrc}
-                            className="w-full"
-                            style={{
-                              borderRadius,
-                              height: isOriginal ? "auto" : "100%",
-                              objectFit: imageFit,
-                              objectPosition: imagePosition,
-                            }}
-                            loading="lazy"
-                          />
-                        </picture>
+                        <HomeResponsiveImage
+                          alt={altText}
+                          className="w-full"
+                          desktopSrc={desktopSrc}
+                          imageStyle={{
+                            borderRadius,
+                            height: isOriginal ? "auto" : "100%",
+                            objectFit: imageFit,
+                            objectPosition: imagePosition,
+                          }}
+                          loading={
+                            priority && rIdx === 0 && index === 0
+                              ? "eager"
+                              : "lazy"
+                          }
+                          mobileSrc={mobileSrc}
+                          reserveBannerSpace={isBanner}
+                        />
                       </div>
                     );
 
@@ -512,25 +530,28 @@ const HomePlayImageGrid: FC<HomePlayImageGridProps> = ({ section }) => {
                       borderRadius,
                     }}
                   >
-                    <picture className="block w-full h-full">
-                      {desktopSrc && <source media="(min-width: 769px)" srcSet={desktopSrc} />}
-                      <img
-                        alt={altText}
-                        src={mobileSrc || desktopSrc}
-                        className="w-full"
-                        style={{
-                          borderRadius,
-                          height: isMobileBanner
-                            ? undefined
-                            : isOriginal
-                              ? "auto"
-                              : "100%",
-                          objectFit: isMobileBanner ? "contain" : imageFit,
-                          objectPosition: imagePosition,
-                        }}
-                        loading="lazy"
-                      />
-                    </picture>
+                    <HomeResponsiveImage
+                      alt={altText}
+                      className="w-full"
+                      desktopSrc={desktopSrc}
+                      imageStyle={{
+                        borderRadius,
+                        height: isMobileBanner
+                          ? undefined
+                          : isOriginal
+                            ? "auto"
+                            : "100%",
+                        objectFit: isMobileBanner ? "contain" : imageFit,
+                        objectPosition: imagePosition,
+                      }}
+                      loading={
+                        priority && rIdx === 0 && index === 0
+                          ? "eager"
+                          : "lazy"
+                      }
+                      mobileSrc={mobileSrc}
+                      reserveBannerSpace={isMobileBanner}
+                    />
                   </div>
                 );
 

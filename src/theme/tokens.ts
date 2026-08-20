@@ -180,6 +180,12 @@ export const spacing = {
   3.75: "15px",
 } as const;
 
+/** Stable placeholder geometry for full-width home banners. */
+export const aspectRatio = {
+  "home-banner": "21 / 8",
+  "home-banner-mobile": "4 / 3",
+} as const;
+
 /**
  * Redesign elevation ramp — soft, tinted with the warm ink. Cards carry `sm`;
  * hover lifts to `md`; banners/overlays use `lg`/`overlay`.

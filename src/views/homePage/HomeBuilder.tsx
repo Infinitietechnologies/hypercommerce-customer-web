@@ -135,15 +135,23 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
         />
       ) : (
         <>
-          {sections.map((section) => (
-            <HomeSectionRenderer key={section.id} section={section} />
+          {sections.map((section, index) => (
+            <HomeSectionRenderer
+              key={section.id}
+              priority={index === 0}
+              section={section}
+            />
           ))}
           <InfiniteSentinel
             hasMore={page < lastPage}
             isLoading={loading}
             onLoadMore={loadMore}
           />
-          {loading ? <HomeSectionSkeleton /> : null}
+          {loading ? (
+            <HomeSectionSkeleton
+              variant={sections.length === 0 ? "banner" : "cards"}
+            />
+          ) : null}
         </>
       )}
     </section>
