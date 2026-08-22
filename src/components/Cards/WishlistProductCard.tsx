@@ -20,6 +20,7 @@ const toProduct = (item: WishlistItem): Product =>
     id: item.product.id,
     slug: item.product.slug,
     title: item.product.title,
+    short_description: item.product.short_description ?? "",
     main_image: item.product.image,
     additional_images: [],
     brand_name: null,

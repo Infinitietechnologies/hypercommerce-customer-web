@@ -32,9 +32,14 @@ function generateHtaccess() {
   const outputPath = path.join(__dirname, "out", ".htaccess");
 
   // Construct the .htaccess content
-  const htaccessContent = `<IfModule mod_rewrite.c>
+  const htaccessContent = `ErrorDocument 404 /404.html
+
+  <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
+
+    # The dynamic product export creates this directory without an index route.
+    RewriteRule ^products/?$ - [R=404,L]
      
     # Dynamic routes (Index pages)
     RewriteRule ^brands/?$ brands/index.html [L]

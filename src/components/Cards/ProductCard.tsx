@@ -76,7 +76,7 @@ const ProductCard: FC<ProductCardProps> = ({
   const discountPercentage = getDiscountPercent(price, specialPrice);
   const rating = Number(product.ratings) || 0;
   const hasRating = (product.rating_count ?? 0) > 0 && rating > 0;
-  const shortDescription = product.short_description
+  const shortDescription = (product.short_description ?? "")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
