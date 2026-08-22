@@ -37,9 +37,6 @@ function generateHtaccess() {
   <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
-
-    # The dynamic product export creates this directory without an index route.
-    RewriteRule ^products/?$ - [R=404,L]
      
     # Dynamic routes (Index pages)
     RewriteRule ^brands/?$ brands/index.html [L]

@@ -288,10 +288,10 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
               ? "rounded-medium"
               : "rounded-full",
           tone === "light"
-            ? "border-white/10 bg-white/10 hover:border-primary/60"
+            ? "border-white/10 bg-white/10"
             : tone === "inherit"
-              ? "border-divider bg-white/90 text-current hover:border-(--header-active-color) hover:text-(--header-active-color)"
-              : "border-divider bg-content1/90 hover:border-primary/60",
+              ? "border-divider bg-white/90 text-current"
+              : "border-divider bg-content1/90",
         )}
       >
         <Icon
@@ -300,9 +300,7 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             "shrink-0 text-lg",
             tone === "light"
               ? "text-white/70"
-              : tone === "inherit"
-                ? "text-current opacity-55"
-                : "text-default-500",
+              : "text-default-500/75",
           )}
         />
 
@@ -310,12 +308,10 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
           <span
             key={placeholderIndex}
             className={clsx(
-              "absolute inset-0 truncate text-sm font-medium leading-5 transition-all duration-600 ease-in-out",
+              "absolute inset-0 truncate text-sm font-normal leading-5 transition-all duration-600 ease-in-out",
               tone === "light"
                 ? "text-white/60"
-                : tone === "inherit"
-                  ? "text-current opacity-55"
-                  : "text-default-500",
+                : "text-default-500/75",
             )}
             style={{
               transform: `translateY(${animationState === "enter" ? "20px" : animationState === "exit" ? "-20px" : "0px"})`,
@@ -339,9 +335,7 @@ const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             "flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-transparent transition-colors",
             tone === "light"
               ? "text-white/70 hover:bg-white/10 hover:text-white"
-              : tone === "inherit"
-                ? "text-current opacity-60 hover:bg-content2 hover:text-(--header-active-color) hover:opacity-100"
-                : "text-default-500 hover:bg-content2 hover:text-foreground",
+              : "text-default-500/75 hover:bg-content2 hover:text-default-600",
           )}
         >
           <Icon icon="solar:clipboard-text-linear" className="text-xl" />
