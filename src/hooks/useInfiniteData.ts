@@ -25,6 +25,7 @@ interface UseInfiniteDataProps<T> {
   };
   forceFetchOnMount?: boolean;
   dataKey?: string | null;
+  enabled?: boolean;
   /** SWR dedupingInterval in ms — set per CLAUDE.md 7.3 volatility table. */
   staleTime?: number;
 }
@@ -37,6 +38,7 @@ export const useInfiniteData = <T>({
   extraParams = {},
   forceFetchOnMount = false,
   dataKey = null,
+  enabled = true,
   staleTime = STALE_TIME.list,
 }: UseInfiniteDataProps<T>) => {
   const [data, setData] = useState<T[]>(initialData);
@@ -46,7 +48,7 @@ export const useInfiniteData = <T>({
   const [hasMore, setHasMore] = useState(initialData.length < initialTotal);
 
   // Add this state to track if we're in the initial sync phase
-  const [isSyncing, setIsSyncing] = useState(!isSSR());
+  const [isSyncing, setIsSyncing] = useState(!isSSR() && enabled);
 
   const isLoadingRef = useRef(false);
   const currentPageRef = useRef(1);
@@ -65,9 +67,11 @@ export const useInfiniteData = <T>({
   // otherwise two markets share one cache entry for the same listing.
   const market = (getCookie<string>("market") as string) || "";
 
-  const swrKey = dataKey
-    ? [`/infinite-data-${dataKey}`, serializedParams, market]
-    : ["/infinite-data", serializedParams, market];
+  const swrKey = enabled
+    ? dataKey
+      ? [`/infinite-data-${dataKey}`, serializedParams, market]
+      : ["/infinite-data", serializedParams, market]
+    : null;
 
   const {
     data: swrResponse,

@@ -22,11 +22,10 @@ import { getAccessTokenFromContext } from "@/helpers/auth";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import NoProductsFound from "@/components/NoProductsFound";
-import { ErrorState } from "@/components/ui";
+import { Button, EmptyState, ErrorState } from "@/components/ui";
 import { ArrowRight, ShoppingCart, Search } from "lucide-react";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
-import { Button } from "@heroui/react";
 import { loadTranslations } from "../../../../i18n";
 import {
   SelectedFilters,
@@ -145,6 +144,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
 
     return (safeQuery || "").trim();
   }, [selectedFilters?.search, safeQuery]);
+  const hasSearchTerm = effectiveSearch.length > 0;
 
   const {
     data: products,
@@ -157,6 +157,7 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
     error: fetchError,
   } = useInfiniteData<Product>({
     fetcher: getProducts,
+    enabled: hasSearchTerm,
     dataKey: `/productsSearch:${safeQuery}`,
     perPage: PER_PAGE,
     initialData: initialProducts?.data?.data || [],
@@ -288,113 +289,130 @@ const SearchResultsPage: NextPageWithLayout<ProductsPageProps> = ({
         <MyBreadcrumbs
           breadcrumbs={[
             {
-              href: `/products/search?q=${encodeURIComponent(safeQuery)}`,
-              label: `${t("search_results")} (${safeQuery})`,
+              href: hasSearchTerm
+                ? `/products/search?q=${encodeURIComponent(effectiveSearch)}`
+                : "/products/search/",
+              label: hasSearchTerm
+                ? `${t("search_results")} (${effectiveSearch})`
+                : t("search_products"),
             },
           ]}
         />
 
-        <PageHeader
-          title={`${t("search_results")} : "${safeQuery}"`}
-          subtitle={t("search_placeholder")}
-          highlightText={total ? ` ${total} Products` : ""}
-        />
-
-        {/* Re-fetch when the market/location changes (see onLocationChange) */}
-        <button
-          id="search-products-refetch"
-          onClick={() => refetch()}
-          className="hidden"
-        />
-
-        <div className="flex w-full gap-2 flex-col md:flex-row">
-          <div className="flex-none h-full">
-            <ProductFilter
-              selectedFilters={selectedFilters}
-              setSelectedFilters={setSelectedFilters}
-              onApplyFilters={onApplyFilters}
-              totalProducts={total}
-              sidebarType="search"
-              sidebarValue={safeQuery}
-              searchComponent={true}
+        {!hasSearchTerm ? (
+          <EmptyState
+            icon={<Search size={40} />}
+            title={t("search_products")}
+            description={t("start_typing_to_search")}
+          />
+        ) : (
+          <>
+            <PageHeader
+              title={`${t("search_results")} : "${effectiveSearch}"`}
+              subtitle={t("search_placeholder")}
+              highlightText={total ? ` ${total} ${t("products")}` : ""}
             />
-          </div>
 
-          <div className="flex-1 pb-28 md:pb-0">
-            <InfiniteScroll
-              hasMore={hasMore}
-              isLoading={isLoadingMore}
-              onLoadMore={loadMore}
-            >
-              <div className="grid grid-cols-1 gap-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {isLoading && products.length === 0
-                  ? Array.from({ length: PER_PAGE }).map((_, i) => (
-                      <ProductCardSkeleton key={i} />
-                    ))
-                  : products.map((product, index) => (
-                      <ProductCard
-                        key={`${product.id}-${index}`}
-                        product={product}
-                      />
-                    ))}
+            <button
+              id="search-products-refetch"
+              onClick={() => refetch()}
+              className="hidden"
+            />
+
+            <div className="flex w-full gap-2 flex-col md:flex-row">
+              <div className="flex-none h-full">
+                <ProductFilter
+                  selectedFilters={selectedFilters}
+                  setSelectedFilters={setSelectedFilters}
+                  onApplyFilters={onApplyFilters}
+                  totalProducts={total}
+                  sidebarType="search"
+                  sidebarValue={effectiveSearch}
+                  searchComponent={true}
+                />
               </div>
 
-              {isLoadingMore && (
-                <div className="mt-6 grid grid-cols-1 gap-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                  {Array.from({ length: PER_PAGE }).map((_, i) => (
-                    <ProductCardSkeleton key={`loading-${i}`} />
-                  ))}
-                </div>
-              )}
-
-              {products.length > 0 ? (
-                <InfiniteScrollStatus
-                  entityType="product"
-                  total={total}
+              <div className="flex-1 pb-28 md:pb-0">
+                <InfiniteScroll
                   hasMore={hasMore}
-                />
-              ) : fetchError ? (
-                <ErrorState
-                  title={t("something_went_wrong")}
-                  description={t("search_error_message")}
-                  retryLabel={t("try_again")}
-                  onRetry={() => refetch()}
-                />
-              ) : (
-                !isLoading && (
-                  <NoProductsFound
-                    icon={safeQuery.trim().length === 1 ? Search : ShoppingCart}
-                    title={
-                      safeQuery.trim().length === 1
-                        ? t("type_at_least_2_chars")
-                        : t("no_products_found")
-                    }
-                    description={
-                      safeQuery.trim().length === 1
-                        ? t("enter_min_2_chars")
-                        : t("no_products_found_message", { query: safeQuery })
-                    }
-                    customActions={
-                      <div className="flex w-full justify-center items-center">
-                        <Button
-                          color="primary"
-                          className="h-8"
-                          variant="solid"
-                          onPress={() => {
-                            router.push("/");
-                          }}
-                          endContent={<ArrowRight size={16} />}
-                        >
-                          {t("home_title")}
-                        </Button>
-                      </div>
-                    }
-                  />
-                )
-              )}
-            </InfiniteScroll>
-          </div>
-        </div>
+                  isLoading={isLoadingMore}
+                  onLoadMore={loadMore}
+                >
+                  <div className="grid grid-cols-1 gap-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {isLoading && products.length === 0
+                      ? Array.from({ length: PER_PAGE }).map((_, i) => (
+                          <ProductCardSkeleton key={i} />
+                        ))
+                      : products.map((product, index) => (
+                          <ProductCard
+                            key={`${product.id}-${index}`}
+                            product={product}
+                          />
+                        ))}
+                  </div>
+
+                  {isLoadingMore && (
+                    <div className="mt-6 grid grid-cols-1 gap-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                      {Array.from({ length: PER_PAGE }).map((_, i) => (
+                        <ProductCardSkeleton key={`loading-${i}`} />
+                      ))}
+                    </div>
+                  )}
+
+                  {products.length > 0 ? (
+                    <InfiniteScrollStatus
+                      entityType="product"
+                      total={total}
+                      hasMore={hasMore}
+                    />
+                  ) : fetchError ? (
+                    <ErrorState
+                      title={t("something_went_wrong")}
+                      description={t("search_error_message")}
+                      retryLabel={t("try_again")}
+                      onRetry={() => refetch()}
+                    />
+                  ) : (
+                    !isLoading && (
+                      <NoProductsFound
+                        icon={
+                          effectiveSearch.length === 1 ? Search : ShoppingCart
+                        }
+                        title={
+                          effectiveSearch.length === 1
+                            ? t("type_at_least_2_chars")
+                            : t("no_products_found")
+                        }
+                        description={
+                          effectiveSearch.length === 1
+                            ? t("enter_min_2_chars")
+                            : t("no_products_found_message", {
+                                query: effectiveSearch,
+                              })
+                        }
+                        customActions={
+                          <div className="flex w-full justify-center items-center">
+                            <Button
+                              color="primary"
+                              className="h-8"
+                              variant="solid"
+                              onPress={() => {
+                                router.push("/");
+                              }}
+                              endContent={<ArrowRight size={16} />}
+                            >
+                              {t("home_title")}
+                            </Button>
+                          </div>
+                        }
+                      />
+                    )
+                  )}
+                </InfiniteScroll>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
@@ -439,7 +457,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           apiParams.sort = initialFilters.sort;
         }
 
-        const products = await getProducts(apiParams);
+        const products = q.trim() ? await getProducts(apiParams) : null;
         const settings = await getSettings({ market });
 
         return {

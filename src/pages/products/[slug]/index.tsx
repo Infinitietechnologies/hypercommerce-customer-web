@@ -16,7 +16,7 @@ import { fetchProductDetailPageData } from "@/services/ProductDetailPageService"
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import NoProductsFound from "@/components/NoProductsFound";
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui";
 import DynamicSEO from "@/SEO/DynamicSEO";
 import {
   generateProductSchema,
@@ -229,7 +229,10 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
         <MyBreadcrumbs
           breadcrumbs={[
             {
-              label: t("products"),
+              href: product?.category
+                ? `/categories/${product.category}/`
+                : "/categories/",
+              label: product?.category_name || t("categories"),
               startContent: <Package size={12} />,
             },
             { label: product?.title || "" },

@@ -45,18 +45,18 @@ const ProductCardAction: FC<ProductCardActionProps> = ({
     return (
       <Button
         aria-label={label}
-        className="h-9 w-full px-3 text-xs font-semibold !shadow-none"
+        className="h-10 w-full gap-2 px-3 text-xs font-semibold !shadow-none"
         color="primary"
         isDisabled={isOutOfStock}
         isLoading={isLoading}
         startContent={
           isLoading ? undefined : (
-            <Icon icon="solar:add-circle-linear" className="text-lg" />
+            <Icon icon="solar:cart-plus-linear" className="text-lg" />
           )
         }
         onPress={onPress}
       >
-        {shortLabel}
+        {label}
       </Button>
     );
   }

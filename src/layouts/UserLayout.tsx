@@ -63,8 +63,8 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
       {/* Desktop nav rail */}
-      <aside className="hidden md:block md:w-[240px] shrink-0">
-        <nav className="sticky top-24 flex flex-col gap-0.5 rounded-large border border-divider bg-content1 p-2">
+      <aside className="hidden shrink-0 pt-6 md:block md:w-[240px]">
+        <nav className="sticky top-32 flex flex-col gap-0.5 rounded-large border border-divider bg-content1 p-2">
           {menuItems.map((item) => {
             const isActive = item.key === activeTab;
             return (
