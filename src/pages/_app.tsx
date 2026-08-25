@@ -17,14 +17,14 @@ import DefaultLayout from "@/layouts/default";
 import UserLayout from "@/layouts/UserLayout";
 import { NextPageWithLayout } from "@/types";
 import { fontSans, fontMono, fontDisplay } from "@/config/fonts";
-import { trackPageView } from "@/lib/analytics";
+import GoogleAnalytics from "@/components/Functional/GoogleAnalytics";
 import { adTrackingService } from "@/services/adTrackingService";
 import "@/styles/index.css";
 import { CircleX } from "lucide-react";
 import i18n from "../../i18n";
 
 const ToastProvider = dynamic(
-  () => import("@heroui/react").then((mod) => mod.ToastProvider),
+  () => import("@/components/ui").then((mod) => mod.ToastProvider),
   { ssr: false }
 );
 
@@ -68,26 +68,6 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     adTrackingService.init();
   }, []);
 
-  // Track page views on route changes
-  useEffect(() => {
-    const handleRouteChange = (url: string) => {
-      // Get the page title from document or use the URL as fallback
-      const pageTitle = document.title || url;
-      trackPageView(url, pageTitle);
-    };
-
-    // Track initial page view
-    handleRouteChange(router.pathname);
-
-    // Listen to route changes
-    router.events.on("routeChangeComplete", handleRouteChange);
-
-    // Cleanup listener on unmount
-    return () => {
-      router.events.off("routeChangeComplete", handleRouteChange);
-    };
-  }, [router.events, router.pathname]);
-
   // ✅ Use custom layout if defined, else wrap in DefaultLayout
   const getLayout =
     Component.getLayout ??
@@ -116,6 +96,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
 
   return (
     <HeroUIProvider navigate={router.push}>
+      <GoogleAnalytics />
       <Head>
         <meta
           name="viewport"

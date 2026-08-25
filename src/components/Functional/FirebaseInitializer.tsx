@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { useRouter, type NextRouter } from "next/router";
-import { FirebaseInstance, initializeFirebase } from "@/lib/firebase";
-import { setFirebaseInstance } from "@/lib/analytics";
+import {
+  FirebaseInstance,
+  initializeFirebase,
+  initializeFirebaseAnalytics,
+} from "@/lib/firebase";
+import {
+  ANALYTICS_CONSENT_EVENT,
+  getAnalyticsConsent,
+  setFirebaseInstance,
+} from "@/lib/analytics";
 import { RecaptchaVerifier } from "firebase/auth";
 import {
   firebaseConfigType,
@@ -222,7 +230,6 @@ export default function FirebaseInitializer({
         queueMicrotask(() => {
           setFirebase(firebaseInstance);
           window.firebaseInstance = firebaseInstance;
-          // Set Firebase instance for analytics
           setFirebaseInstance(firebaseInstance);
         });
 
@@ -265,6 +272,31 @@ export default function FirebaseInitializer({
       });
     }
   }, [settings, firebase]);
+
+  useEffect(() => {
+    if (!firebase || process.env.NODE_ENV !== "production") return;
+
+    const initializeAnalyticsAfterConsent = () => {
+      if (getAnalyticsConsent() !== "accepted") return;
+
+      void initializeFirebaseAnalytics(firebase).then(() => {
+        setFirebaseInstance(firebase);
+      });
+    };
+
+    initializeAnalyticsAfterConsent();
+    window.addEventListener(
+      ANALYTICS_CONSENT_EVENT,
+      initializeAnalyticsAfterConsent,
+    );
+
+    return () => {
+      window.removeEventListener(
+        ANALYTICS_CONSENT_EVENT,
+        initializeAnalyticsAfterConsent,
+      );
+    };
+  }, [firebase]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {

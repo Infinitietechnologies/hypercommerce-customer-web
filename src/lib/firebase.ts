@@ -14,8 +14,12 @@ import {
   OAuthProvider,
   RecaptchaVerifier,
 } from "firebase/auth";
-import { getAnalytics, Analytics, isSupported } from "firebase/analytics";
-import { addToast } from "@heroui/react";
+import {
+  Analytics,
+  initializeAnalytics,
+  isSupported as isAnalyticsSupported,
+} from "firebase/analytics";
+import { toast } from "@/components/ui";
 
 // Define the Firebase instance type
 export interface FirebaseInstance {
@@ -85,7 +89,7 @@ export function initializeFirebase(
         authError instanceof Error ? authError.message : "Unknown error"
       }`;
       console.error(errorMsg);
-      addToast({
+      toast({
         title: "Firebase Auth Error",
         description: errorMsg,
         color: "danger",
@@ -93,7 +97,6 @@ export function initializeFirebase(
       return null;
     }
 
-    // Create instance without RecaptchaVerifier and Analytics first
     const instance: FirebaseInstance = {
       app: firebaseApp,
       auth,
@@ -105,34 +108,52 @@ export function initializeFirebase(
     // Cache the instance
     cachedFirebaseInstance = instance;
 
-    // Initialize Analytics asynchronously and update the instance
-    if (typeof window !== "undefined") {
-      isSupported()
-        .then((supported) => {
-          if (supported && firebaseApp) {
-            const analytics = getAnalytics(firebaseApp);
-            instance.analytics = analytics;
-            console.log("Firebase Analytics initialized successfully");
-          }
-        })
-        .catch((error) => {
-          console.warn("Firebase Analytics not supported:", error);
-        });
-    }
-
     return instance;
   } catch (error) {
     const errorMsg = `Firebase setup failed: ${
       error instanceof Error ? error.message : "Unknown error occurred"
     }`;
     console.error("Firebase initialization error:", errorMsg);
-    addToast({
+    toast({
       title: "Firebase Setup Error",
       description: errorMsg,
       color: "danger",
     });
     return null;
   }
+}
+
+let firebaseAnalyticsInitialization: Promise<Analytics | null> | null = null;
+
+export function initializeFirebaseAnalytics(
+  firebaseInstance: FirebaseInstance,
+): Promise<Analytics | null> {
+  if (process.env.NODE_ENV !== "production") {
+    return Promise.resolve(null);
+  }
+
+  if (firebaseInstance.analytics) {
+    return Promise.resolve(firebaseInstance.analytics);
+  }
+
+  if (!firebaseAnalyticsInitialization) {
+    firebaseAnalyticsInitialization = isAnalyticsSupported()
+      .then((supported) => {
+        if (!supported) return null;
+
+        const analytics = initializeAnalytics(firebaseInstance.app, {
+          config: { send_page_view: false },
+        });
+        firebaseInstance.analytics = analytics;
+        return analytics;
+      })
+      .catch((error: unknown) => {
+        console.warn("Firebase Analytics is unavailable:", error);
+        return null;
+      });
+  }
+
+  return firebaseAnalyticsInitialization;
 }
 
 //function to properly clear reCAPTCHA
@@ -211,14 +232,14 @@ export function initializeRecaptchaVerifier(
         },
         "expired-callback": () => {
           console.log("reCAPTCHA expired");
-          addToast({
+          toast({
             title: "reCAPTCHA Expired",
             description: "Please refresh and try again",
             color: "warning",
           });
         },
         "error-callback": () => {
-          addToast({
+          toast({
             title: "reCAPTCHA Error",
             description: "Please refresh and try again",
             color: "danger",
@@ -236,7 +257,7 @@ export function initializeRecaptchaVerifier(
       error instanceof Error ? error.message : "Unknown error"
     }`;
     console.error(errorMsg);
-    addToast({
+    toast({
       title: "reCAPTCHA Setup Error",
       description: errorMsg,
       color: "danger",

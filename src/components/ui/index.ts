@@ -87,6 +87,7 @@ export {
   TableRow,
   Tabs,
   Tooltip,
+  ToastProvider,
   User,
   useDisclosure,
 } from "@heroui/react";

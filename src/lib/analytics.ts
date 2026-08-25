@@ -1,182 +1,245 @@
-import { logEvent, setUserProperties, setUserId } from "firebase/analytics";
-import type { FirebaseInstance } from "./firebase";
-import { OrderItem } from "@/types/ApiResponse";
+import type { OrderItem } from "@/types/ApiResponse";
+import {
+  logEvent,
+  setUserId as setFirebaseUserId,
+  setUserProperties as setFirebaseUserProperties,
+} from "firebase/analytics";
+import type { FirebaseInstance } from "@/lib/firebase";
 
-// Analytics event types for type safety
-export interface AnalyticsEvent {
-  name: string;
-  params?: Record<string, string | number | boolean>;
-}
+export const GOOGLE_ANALYTICS_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "G-WHEQTBMDCR";
+export const GOOGLE_ANALYTICS_ENABLED = process.env.NODE_ENV === "production";
+export const ANALYTICS_CONSENT_EVENT = "analytics-consent-change";
+export const COOKIE_CONSENT_KEY = "cookie_consent_choice";
 
-// Internal cache for Firebase instance
-let cachedFirebaseInstance: FirebaseInstance | null = null;
+export type AnalyticsConsent = "accepted" | "declined";
 
-// Function to set the Firebase instance (call this once during app initialization)
-export function setFirebaseInstance(instance: FirebaseInstance | null): void {
-  cachedFirebaseInstance = instance;
-}
+type AnalyticsItem = {
+  item_id: string;
+  item_name: string;
+  affiliation?: string;
+  coupon?: string;
+  discount?: number;
+  index?: number;
+  item_brand?: string;
+  item_category?: string;
+  item_list_id?: string | number;
+  item_list_name?: string;
+  item_variant?: string;
+  location_id?: string;
+  price?: number;
+  quantity?: number;
+};
 
-// Internal function to get Firebase instance
-function getFirebaseInstance(): FirebaseInstance | null {
-  // Skip analytics in development
-  if (process.env.NODE_ENV === "development") {
-    return null;
+type AnalyticsParams = Record<
+  string,
+  string | number | boolean | null | undefined | AnalyticsItem[]
+>;
+
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
   }
-
-  return cachedFirebaseInstance;
 }
 
-// Helper function to log events safely
-export function trackEvent(
-  eventName: string,
-  params?: Record<string, string | number | boolean>
-): void {
-  const firebaseInstance = getFirebaseInstance();
+let isGoogleAnalyticsInitialized = false;
+let firebaseInstance: FirebaseInstance | null = null;
+const pendingFirebaseEvents: Array<{
+  eventName: string;
+  params: AnalyticsParams;
+}> = [];
+let analyticsUserId = "";
+let analyticsUserProperties: Record<string, string> = {};
 
-  if (!firebaseInstance?.analytics) {
-    return; // Silently fail if analytics not initialized
-  }
-  try {
-    logEvent(firebaseInstance.analytics, eventName, params);
-    if (eventName != "page_view") {
-      console.log(`Analytics event tracked: ${eventName}`, params);
+const flushFirebaseAnalytics = () => {
+  const analytics = firebaseInstance?.analytics;
+  if (!analytics || !GOOGLE_ANALYTICS_ENABLED) return;
+
+  const usesSeparateMeasurementId =
+    firebaseInstance?.app.options.measurementId !== GOOGLE_ANALYTICS_ID;
+  pendingFirebaseEvents.splice(0).forEach(({ eventName, params }) => {
+    if (usesSeparateMeasurementId) {
+      logEvent(analytics, eventName, params);
     }
-  } catch (error) {
-    console.error("Error tracking analytics event:", error);
+  });
+
+  setFirebaseUserId(analytics, analyticsUserId || null);
+  if (Object.keys(analyticsUserProperties).length > 0) {
+    setFirebaseUserProperties(analytics, analyticsUserProperties);
+  }
+};
+
+export function setFirebaseInstance(instance: FirebaseInstance | null): void {
+  firebaseInstance = instance;
+  flushFirebaseAnalytics();
+}
+
+const getGtag = () => {
+  if (typeof window === "undefined") return null;
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag =
+    window.gtag ||
+    ((...args: unknown[]) => {
+      window.dataLayer?.push(args);
+    });
+
+  return window.gtag;
+};
+
+export const getAnalyticsConsent = (): AnalyticsConsent | null => {
+  if (typeof window === "undefined") return null;
+
+  const consent = window.localStorage.getItem(COOKIE_CONSENT_KEY);
+  return consent === "accepted" || consent === "declined" ? consent : null;
+};
+
+export const initializeGoogleAnalytics = (): void => {
+  if (
+    !GOOGLE_ANALYTICS_ENABLED ||
+    isGoogleAnalyticsInitialized ||
+    getAnalyticsConsent() !== "accepted"
+  ) {
+    return;
+  }
+
+  const gtag = getGtag();
+  if (!gtag) return;
+
+  gtag("js", new Date());
+  gtag("config", GOOGLE_ANALYTICS_ID, { send_page_view: false });
+  isGoogleAnalyticsInitialized = true;
+};
+
+export function trackEvent(eventName: string, params?: AnalyticsParams): void {
+  if (
+    !GOOGLE_ANALYTICS_ENABLED ||
+    getAnalyticsConsent() !== "accepted"
+  ) {
+    return;
+  }
+
+  getGtag()?.("event", eventName, {
+    ...(params || {}),
+    send_to: GOOGLE_ANALYTICS_ID,
+  });
+
+  const eventParams = params || {};
+  const usesSeparateFirebaseMeasurementId =
+    firebaseInstance?.app.options.measurementId !== GOOGLE_ANALYTICS_ID;
+  if (firebaseInstance?.analytics && usesSeparateFirebaseMeasurementId) {
+    logEvent(firebaseInstance.analytics, eventName, eventParams);
+  } else if (!firebaseInstance?.analytics && pendingFirebaseEvents.length < 50) {
+    pendingFirebaseEvents.push({ eventName, params: eventParams });
   }
 }
 
-// Track page views
 export function trackPageView(pagePath: string, pageTitle: string): void {
+  if (typeof window === "undefined") return;
+
   trackEvent("page_view", {
+    page_location: window.location.href,
     page_path: pagePath,
     page_title: pageTitle,
   });
 }
 
-// Track product views
 export function trackProductView(
   productId: string,
   productName: string,
   category?: string,
-  price?: number
+  price?: number,
 ): void {
   trackEvent("view_item", {
-    item_id: productId,
-    item_name: productName,
-    item_category: category || "",
-    price: price || 0,
+    items: [
+      {
+        item_id: productId,
+        item_name: productName,
+        item_category: category,
+        price: price || 0,
+      },
+    ],
   });
 }
 
-// Track add to cart
 export function trackAddToCart(
   productId: string,
   productName: string,
   price: number,
-  quantity: number
+  quantity: number,
 ): void {
   trackEvent("add_to_cart", {
-    item_id: productId,
-    item_name: productName,
-    price: price,
-    quantity: quantity,
+    items: [{ item_id: productId, item_name: productName, price, quantity }],
   });
 }
 
-// Track remove from cart
 export function trackRemoveFromCart(
   productId: string,
-  productName: string
+  productName: string,
 ): void {
   trackEvent("remove_from_cart", {
-    item_id: productId,
-    item_name: productName,
+    items: [{ item_id: productId, item_name: productName }],
   });
 }
 
-// Track purchase
 export function trackPurchase(
   orderId: string,
   total: number,
   currency: string = "USD",
   promocode: string = "",
-  delivery_charge: number | string = "0",
-  orderItems: OrderItem[]
+  deliveryCharge: number | string = "0",
+  orderItems: OrderItem[],
 ): void {
-  // Skip analytics in development
-  if (process.env.NODE_ENV === "development") {
-    return;
-  }
-
-  const firebaseInstance = getFirebaseInstance();
-
-  if (!firebaseInstance?.analytics) {
-    return; // Silently fail if analytics not initialized
-  }
-
-  const items = orderItems.map((item, index) => ({
+  const items: AnalyticsItem[] = orderItems.map((item, index) => ({
     item_id: item.sku || item.product_id.toString(),
     item_name: item.title,
     affiliation: item.store?.name || item.seller_name || "Online Store",
     coupon: item.promo_discount ? "applied" : undefined,
     discount:
       parseFloat(item.discount || "0") + parseFloat(item.promo_discount || "0"),
-    index: index,
+    index,
     item_brand: item.seller_name,
-    item_category: undefined,
-    item_list_id: item?.product_variant_id || undefined,
-    item_list_name: item.product.name,
+    item_list_id: item.product_variant_id || undefined,
+    item_list_name: item.product.name || undefined,
     item_variant: item.variant_title || undefined,
     location_id: item.store_id?.toString(),
     price: parseFloat(item.price),
     quantity: item.quantity,
   }));
 
-  try {
-    logEvent(firebaseInstance.analytics, "purchase" as any, {
-      transaction_id: orderId,
-      value: total,
-      currency: currency,
-      tax: orderItems.reduce(
-        (sum, item) => sum + parseFloat(item.tax_amount || "0"),
-        0
-      ),
-      coupon: promocode,
-      shipping: delivery_charge,
-      items: items,
-    });
-    // console.log(`Analytics event tracked: purchase`, { transaction_id: orderId, value: total });
-  } catch (error) {
-    console.error("Error tracking analytics event:", error);
-  }
+  trackEvent("purchase", {
+    transaction_id: orderId,
+    value: total,
+    currency,
+    tax: orderItems.reduce(
+      (sum, item) => sum + parseFloat(item.tax_amount || "0"),
+      0,
+    ),
+    coupon: promocode,
+    shipping:
+      typeof deliveryCharge === "string"
+        ? parseFloat(deliveryCharge || "0")
+        : deliveryCharge,
+    items,
+  });
 }
 
-// Track search
 export function trackSearch(searchTerm: string): void {
-  trackEvent("search", {
-    search_term: searchTerm,
-  });
+  trackEvent("search", { search_term: searchTerm });
 }
 
-// Track login
 export function trackLogin(method: string): void {
-  trackEvent("login", {
-    method: method,
-  });
+  trackEvent("login", { method });
 }
 
-// Track sign up
 export function trackSignUp(method: string): void {
-  trackEvent("sign_up", {
-    method: method,
-  });
+  trackEvent("sign_up", { method });
 }
 
-// Track category view
 export function trackCategoryView(
   categoryId: string,
-  categoryName: string
+  categoryName: string,
 ): void {
   trackEvent("view_item_list", {
     item_list_id: categoryId,
@@ -184,54 +247,43 @@ export function trackCategoryView(
   });
 }
 
-// Track store view
 export function trackStoreView(storeId: string, storeName: string): void {
-  trackEvent("view_store", {
-    store_id: storeId,
-    store_name: storeName,
-  });
+  trackEvent("view_store", { store_id: storeId, store_name: storeName });
 }
 
-// Set user properties
 export function setAnalyticsUserProperties(
-  properties: Record<string, string>
+  properties: Record<string, string>,
 ): void {
-  // Skip analytics in development
-  if (process.env.NODE_ENV === "development") {
+  analyticsUserProperties = { ...analyticsUserProperties, ...properties };
+
+  if (
+    !GOOGLE_ANALYTICS_ENABLED ||
+    getAnalyticsConsent() !== "accepted"
+  ) {
     return;
   }
 
-  const firebaseInstance = getFirebaseInstance();
-
-  if (!firebaseInstance?.analytics) {
-    return; // Silently fail if analytics not initialized
-  }
-
-  try {
-    setUserProperties(firebaseInstance.analytics, properties);
-    console.log("User properties set:", properties);
-  } catch (error) {
-    console.error("Error setting user properties:", error);
+  getGtag()?.("set", "user_properties", properties);
+  if (firebaseInstance?.analytics) {
+    setFirebaseUserProperties(firebaseInstance.analytics, properties);
   }
 }
 
-// Set user ID
 export function setAnalyticsUserId(userId: string): void {
-  // Skip analytics in development
-  if (process.env.NODE_ENV === "development") {
+  analyticsUserId = userId;
+
+  if (
+    !GOOGLE_ANALYTICS_ENABLED ||
+    getAnalyticsConsent() !== "accepted"
+  ) {
     return;
   }
 
-  const firebaseInstance = getFirebaseInstance();
-
-  if (!firebaseInstance?.analytics) {
-    return; // Silently fail if analytics not initialized
-  }
-
-  try {
-    setUserId(firebaseInstance.analytics, userId);
-    console.log("User ID set:", userId);
-  } catch (error) {
-    console.error("Error setting user ID:", error);
+  getGtag()?.("config", GOOGLE_ANALYTICS_ID, {
+    send_page_view: false,
+    user_id: userId || null,
+  });
+  if (firebaseInstance?.analytics) {
+    setFirebaseUserId(firebaseInstance.analytics, userId || null);
   }
 }

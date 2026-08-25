@@ -1,9 +1,12 @@
-import { Button } from "@heroui/react";
+import { Button } from "@/components/ui";
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-
-const COOKIE_KEY = "cookie_consent_choice";
+import {
+  ANALYTICS_CONSENT_EVENT,
+  AnalyticsConsent,
+  COOKIE_CONSENT_KEY,
+} from "@/lib/analytics";
 
 const CookieConsent = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,7 +18,7 @@ const CookieConsent = () => {
     if (pathname && pathname.startsWith("/privacy-policy")) return;
 
     // ✅ Check if user already made a choice
-    const consent = localStorage.getItem(COOKIE_KEY);
+    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
 
     if (!consent) {
       setTimeout(() => {
@@ -24,15 +27,19 @@ const CookieConsent = () => {
     }
   }, [pathname]);
 
-  const handleAccept = () => {
-    localStorage.setItem(COOKIE_KEY, "accepted");
+  const saveConsent = (consent: AnalyticsConsent) => {
+    localStorage.setItem(COOKIE_CONSENT_KEY, consent);
+    window.dispatchEvent(
+      new CustomEvent<AnalyticsConsent>(ANALYTICS_CONSENT_EVENT, {
+        detail: consent,
+      }),
+    );
     setShowModal(false);
   };
 
-  const handleDecline = () => {
-    localStorage.setItem(COOKIE_KEY, "declined");
-    setShowModal(false);
-  };
+  const handleAccept = () => saveConsent("accepted");
+
+  const handleDecline = () => saveConsent("declined");
 
   if (!showModal) return null;
 
