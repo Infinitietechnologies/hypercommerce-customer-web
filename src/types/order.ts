@@ -35,6 +35,23 @@ export interface OrderShipment {
   }[];
 }
 
+export interface PaymentInitiationResponse {
+  link?: string;
+  clientSecret?: string;
+  paymentIntentId?: string;
+  razorpay_order_id?: string;
+  key_id?: string;
+  amount?: number;
+  currency?: string;
+  authorization_url?: string;
+  access_code?: string;
+  reference?: string;
+  payment_session_id?: string;
+  reference_id?: string;
+  payment_request_id?: string | null;
+  expires_at?: string | null;
+}
+
 export interface Order {
   id: number;
   uuid: string;
@@ -123,8 +140,7 @@ export interface Order {
   created_at: string;
   updated_at: string;
 
-  /** NEW FIELD */
-  payment_response: any | null;
+  payment_response: PaymentInitiationResponse | null;
 }
 
 /** One event inside a tracker step (order/item/return timeline). */
@@ -426,18 +442,7 @@ export interface OrderCheckoutResponse {
   user: OrderUser;
   created_at: string;
   updated_at: string;
-  payment_response?: {
-    link?: string;
-    clientSecret?: string;
-    paymentIntentId?: string;
-    razorpay_order_id?: string;
-    key_id?: string;
-    amount?: number;
-    currency?: string;
-    authorization_url?: string;
-    access_code?: string;
-    reference?: string;
-  } | null;
+  payment_response?: PaymentInitiationResponse | null;
 }
 
 export interface PaymentDetails {

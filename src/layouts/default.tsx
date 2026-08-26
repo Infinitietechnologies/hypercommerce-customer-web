@@ -191,31 +191,13 @@ export default function DefaultLayout({
   const maintenanceMessage =
     maintenanceState.message || systemSettings?.webMaintenanceMessage || null;
 
-  const isVersionLower = (current: string, target: string) => {
-    const v1 = current.split(".").map(Number);
-    const v2 = target.split(".").map(Number);
-    for (let i = 0; i < Math.max(v1.length, v2.length); i++) {
-      const n1 = v1[i] || 0;
-      const n2 = v2[i] || 0;
-      if (n1 < n2) return true;
-      if (n1 > n2) return false;
-    }
-    return false;
-  };
-
-  const isBelowMinVersion =
-    versionCheck?.min_supported_version &&
-    isVersionLower(currentVersion, versionCheck.min_supported_version);
-
   const forceUpdateRequired =
-    (versionCheck?.update_available === true &&
-      versionCheck?.update_type === "force_update") ||
-    isBelowMinVersion;
+    versionCheck?.update_available === true &&
+    versionCheck?.update_type === "force_update";
 
   const softUpdateAvailable =
     versionCheck?.update_available === true &&
     versionCheck?.update_type === "soft_update" &&
-    !isBelowMinVersion && // Don't show soft if it's actually a force requirement
     !isSoftUpdateDismissed;
 
   const forceUpdateMessage =

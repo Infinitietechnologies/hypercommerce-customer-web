@@ -22,9 +22,10 @@ import { loadTranslations } from "../../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
 import WalletTransactionTable from "@/components/Tables/WalletTransactionTable";
-import { ErrorState } from "@/components/ui";
+import { ErrorState, toast } from "@/components/ui";
 import { serverSideAuthGuard } from "@/guards/authGuard";
 import { useRouter } from "next/router";
+import { getWalletTransaction } from "@/services/wallet";
 
 type WalletPageProps = {
   initialUserData: userData;
@@ -58,8 +59,14 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const router = useRouter();
+  const xenditTransactionId = Number(router.query.transaction);
+  const isConfirmingXendit =
+    router.isReady &&
+    router.query.xendit_return === "1" &&
+    Number.isInteger(xenditTransactionId) &&
+    xenditTransactionId > 0;
 
-  const { data: userData } = useSWR(
+  const { data: userData, mutate: refreshUserData } = useSWR(
     !isSSR() ? "user-data" : null,
     fetchUserData,
     {
@@ -72,6 +79,65 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
       dispatch(setUserDataRedux(userData));
     }
   }, [userData, dispatch]);
+
+  useEffect(() => {
+    if (!router.isReady || router.query.xendit_return !== "1") return;
+
+    const transactionId = xenditTransactionId;
+    if (!Number.isInteger(transactionId) || transactionId <= 0) return;
+
+    let active = true;
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const finish = async (status: "completed" | "failed" | "pending") => {
+      if (!active) return;
+      if (status === "completed") {
+        await refreshUserData();
+        toast({ title: t("deposit.success.title"), color: "success" });
+      } else if (status === "failed") {
+        toast({ title: t("deposit.error.title"), color: "danger" });
+      } else {
+        toast({ title: t("checkout.paymentPending"), color: "warning" });
+      }
+
+      void router.replace("/my-account/wallet", undefined, {
+        shallow: true,
+        scroll: false,
+      });
+    };
+
+    const poll = async () => {
+      if (!active) return;
+      const response = await getWalletTransaction(transactionId);
+      const status = response?.data?.status;
+
+      if (status === "completed") {
+        await finish("completed");
+        return;
+      }
+
+      if (status === "failed" || status === "cancelled") {
+        await finish("failed");
+        return;
+      }
+
+      attempts += 1;
+      if (attempts >= 30) {
+        await finish("pending");
+        return;
+      }
+
+      timer = setTimeout(poll, 3000);
+    };
+
+    timer = setTimeout(poll, 1500);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [refreshUserData, router, router.isReady, router.query.transaction, router.query.xendit_return, t, xenditTransactionId]);
 
   return (
     <>
@@ -98,6 +164,11 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
           </div>
 
           <div className="w-full flex flex-col gap-2">
+            {isConfirmingXendit ? (
+              <div className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-700">
+                {t("payments.xendit.confirmingWallet")}
+              </div>
+            ) : null}
             <div className="bg-amber-50/10 backdrop-blur-lg rounded-xl p-4 shadow-md">
           <WalletCard loading={false} />
         </div>

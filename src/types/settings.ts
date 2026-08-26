@@ -139,6 +139,12 @@ export interface PaymentSettings {
   flutterwavePublicKey: string;
   flutterwaveCurrencyCode: string;
 
+  xenditPayment: boolean;
+  xenditPaymentMode: "test" | "live";
+  xenditCountry: "ID" | "PH" | "VN" | "TH" | "SG" | "MY" | string;
+  xenditEnabledCurrencies: string[];
+  xenditFallbackCurrency: string;
+
   wallet: boolean;
 }
 

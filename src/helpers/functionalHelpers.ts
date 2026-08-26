@@ -577,6 +577,7 @@ export const handleCheckout = async (
         "stripePayment",
         "paystackPayment",
         "flutterwavePayment",
+        "xenditPayment",
       ].includes(payment_type);
 
       if (!opensSdk) {

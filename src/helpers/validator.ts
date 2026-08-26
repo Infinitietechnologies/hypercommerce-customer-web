@@ -97,6 +97,15 @@ export const validateMobile = (mobile: string): string => {
   return "";
 };
 
+export const isValidHttpsUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.username === "" && parsed.password === "";
+  } catch {
+    return false;
+  }
+};
+
 export const looksLikeEmail = (value: string): boolean => {
   return value.includes("@") || /[a-zA-Z]/.test(value);
 };

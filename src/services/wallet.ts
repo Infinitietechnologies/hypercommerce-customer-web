@@ -84,6 +84,20 @@ export const getWalletTransactions = async (
   }
 };
 
+export const getWalletTransaction = async (
+  id: number,
+): Promise<ApiResponse<WalletTransaction>> => {
+  try {
+    const response = await api.get<ApiResponse<WalletTransaction>>(
+      `/user/wallet/transactions/${id}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("API error:", error);
+    return fallbackApiRes;
+  }
+};
+
 export const getWallet = async (
   params: { access_token?: string | null } = {},
 ): Promise<ApiResponse<Wallet>> => {

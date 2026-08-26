@@ -14,8 +14,8 @@ import {
   Textarea,
   Form,
   useDisclosure,
-  addToast,
-} from "@heroui/react";
+  toast,
+} from "@/components/ui";
 import PaymentMethods from "../PaymentMethods";
 import { prepareWalletRecharge } from "@/routes/api";
 import { updateUserDataInRedux } from "@/helpers/functionalHelpers";
@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import RazorPay from "../PaymentGateway/RazorPay";
 import Stripe from "../PaymentGateway/Stripe";
 import PayStack from "../PaymentGateway/Paystack";
-import { isValidUrl } from "@/helpers/validator";
+import { isValidHttpsUrl, isValidUrl } from "@/helpers/validator";
 
 const DepositModal = () => {
   const { t } = useTranslation();
@@ -153,7 +153,7 @@ const DepositModal = () => {
               "Invalid or missing Flutterwave payment link:",
               paymentLink
             );
-            addToast({
+            toast({
               title: t("checkout.flutterwave_link_invalid"),
               description:
                 t("checkout.flutterwave_link_error_message") ||
@@ -162,6 +162,22 @@ const DepositModal = () => {
             });
             return; // Stop further execution
           }
+        }
+
+        if (selectedPayment === "xenditPayment") {
+          const paymentLink = res?.data?.payment_response?.link;
+
+          if (paymentLink && isValidHttpsUrl(paymentLink)) {
+            window.location.assign(paymentLink);
+            return;
+          }
+
+          toast({
+            title: t("payments.xendit.invalidLink"),
+            color: "danger",
+          });
+          setShowPaymentGateway(false);
+          return;
         }
 
         // ✅ Automatically trigger payment gateway after short delay
@@ -184,7 +200,7 @@ const DepositModal = () => {
           }
         }, 100);
       } else {
-        addToast({
+        toast({
           title: t("deposit.error.title"),
           description: res.message || t("deposit.error.message"),
           color: "danger",
@@ -193,7 +209,7 @@ const DepositModal = () => {
     } catch (error) {
       console.error("Unexpected error during form submission:", error);
 
-      addToast({
+      toast({
         title: t("deposit.unexpected.title"),
         description: t("deposit.unexpected.message"),
         color: "danger",
@@ -204,7 +220,7 @@ const DepositModal = () => {
   };
 
   const handlePaymentSuccess = () => {
-    addToast({
+    toast({
       title: t("deposit.success.title"),
       description: t("deposit.success.message"),
       color: "success",

@@ -1572,6 +1572,13 @@
     "stripe": {
       "name": "Pay with Stripe",
       "tagline": "Secure card payments globally."
+    },
+    "xendit": {
+      "name": "Pay with Xendit",
+      "tagline": "Secure local and card payments.",
+      "payButton": "Continue to Xendit",
+      "invalidLink": "Xendit returned an invalid checkout link. Please try again.",
+      "confirmingWallet": "Confirming your Xendit wallet recharge…"
     }
   },
   "pending": "Pending",

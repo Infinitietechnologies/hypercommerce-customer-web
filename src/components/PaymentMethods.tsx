@@ -1,6 +1,6 @@
 import { useSettings } from "@/contexts/SettingsContext";
 import { getCartDataFromRedux } from "@/helpers/getters";
-import { Image, Radio, RadioGroup } from "@heroui/react";
+import { Image, Radio, RadioGroup } from "@/components/ui";
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -57,6 +57,15 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       tagline: t("payments.flutterwave.tagline"),
       icon: "/Payments/flutterwave.png",
       isEnabled: paymentSettings?.flutterwavePayment === true,
+      disabled: false,
+      disabledReason: "",
+    },
+    {
+      id: "xenditPayment",
+      name: t("payments.xendit.name"),
+      tagline: t("payments.xendit.tagline"),
+      icon: "/Payments/xendit.svg",
+      isEnabled: paymentSettings?.xenditPayment === true,
       disabled: false,
       disabledReason: "",
     },

@@ -89,6 +89,10 @@ export interface PrepareWalletRechargeResponse {
     receipt: string;
     status: string; // e.g., "created"
     link: string;
+    payment_session_id?: string;
+    reference_id?: string;
+    payment_request_id?: string | null;
+    expires_at?: string | null;
   };
 }
 

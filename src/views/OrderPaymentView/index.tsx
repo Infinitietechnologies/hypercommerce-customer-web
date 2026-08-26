@@ -10,6 +10,7 @@ import RazorPay from "@/components/PaymentGateway/RazorPay";
 import Stripe from "@/components/PaymentGateway/Stripe";
 import PayStack from "@/components/PaymentGateway/Paystack";
 import FlutterwavePayment from "@/components/PaymentGateway/FlutterwavePayment";
+import XenditPayment from "@/components/PaymentGateway/XenditPayment";
 import { getSpecificOrders } from "@/services/orders";
 import { Order } from "@/types/order";
 
@@ -21,6 +22,7 @@ const OrderPaymentView: FC = () => {
   const dispatch = useDispatch();
   const { formatPrice } = useSettings();
   const slug = typeof router.query.slug === "string" ? router.query.slug : "";
+  const returnedFromXendit = router.query.xendit_return === "1";
 
   const [order, setOrder] = useState<Order | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
@@ -48,13 +50,13 @@ const OrderPaymentView: FC = () => {
         return;
       }
       setOrder(o);
-      setPhase("pay");
+      setPhase(returnedFromXendit ? "waiting" : "pay");
     })();
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [slug, returnedFromXendit]);
 
   const onError = () => setPhase("failed");
   const onSuccess = () => setPhase("waiting");
@@ -233,6 +235,15 @@ const OrderPaymentView: FC = () => {
         return (
           <FlutterwavePayment
             onSuccess={onSuccess}
+            onError={onError}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            orderSlug={slug}
+          />
+        );
+      case "xenditPayment":
+        return (
+          <XenditPayment
             onError={onError}
             isLoading={isLoading}
             setIsLoading={setIsLoading}
