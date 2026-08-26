@@ -25,12 +25,15 @@ import clsx from "clsx";
 
 type SelectedLocation = {
   placeName: string;
-  latLng: { lat: number; lng: number };
+  latLng: { lat: number; lng: number } | null;
   placeDescription: string;
 };
 
-type PersistedLocation = UserLocation & {
+type PersistedLocation = Omit<UserLocation, "lat" | "lng"> & {
+  lat: number | null;
+  lng: number | null;
   addressId?: number;
+  selectionSource?: "address" | "current" | "automatic";
 };
 
 interface LocationSelectorProps {
@@ -42,12 +45,20 @@ interface LocationSelectorProps {
 const USER_LOCATION_CHANGED_EVENT = "hypercommerce:user-location-changed";
 
 const hasCoordinates = (
-  location: UserLocation | null | undefined,
-): location is UserLocation =>
+  location: Pick<PersistedLocation, "lat" | "lng"> | null | undefined,
+): boolean =>
   location?.lat != null &&
   location?.lng != null &&
   Number.isFinite(Number(location.lat)) &&
   Number.isFinite(Number(location.lng));
+
+const hasPersistedSelection = (
+  location: PersistedLocation | null | undefined,
+): location is PersistedLocation =>
+  !!location &&
+  (hasCoordinates(location) ||
+    ((location.selectionSource === "address" || location.addressId != null) &&
+      !!location.placeName?.trim()));
 
 const LocationSelector = ({
   variant = "desktop",
@@ -89,13 +100,15 @@ const LocationSelector = ({
           "userLocation",
         ) as PersistedLocation | null;
 
-        if (hasCoordinates(userLocation)) {
+        if (hasPersistedSelection(userLocation)) {
           const locationData: SelectedLocation = {
             placeName: userLocation.placeName || "Selected Location",
-            latLng: {
-              lat: Number(userLocation.lat),
-              lng: Number(userLocation.lng),
-            },
+            latLng: hasCoordinates(userLocation)
+              ? {
+                  lat: Number(userLocation.lat),
+                  lng: Number(userLocation.lng),
+                }
+              : null,
             placeDescription: userLocation.placeDescription || "",
           };
 
@@ -131,8 +144,8 @@ const LocationSelector = ({
   useEffect(() => {
     if (!isInitialized || bootstrappedRef.current) return;
 
-    const existing = getCookie("userLocation") as UserLocation | null;
-    if (hasCoordinates(existing)) return; // already chosen
+    const existing = getCookie("userLocation") as PersistedLocation | null;
+    if (hasPersistedSelection(existing)) return; // already chosen
     bootstrappedRef.current = true;
 
     const applyDefaultMarket = () =>
@@ -146,7 +159,11 @@ const LocationSelector = ({
           : t("locationSelector.defaultArea", "Default location"),
         undefined,
         "",
-        { silent: true },
+        {
+          silent: true,
+          automatic: true,
+          selectionSource: "automatic",
+        },
       );
 
     // Demo mode always uses the default market location — never the client GPS.
@@ -173,7 +190,11 @@ const LocationSelector = ({
               t("locationSelector.currentLocation", "Current Location"),
             countryCode,
             "",
-            { silent: true },
+            {
+              silent: true,
+              automatic: true,
+              selectionSource: "automatic",
+            },
           );
         },
         () => applyDefaultMarket(),
@@ -283,12 +304,28 @@ const LocationSelector = ({
 
   // Commit a chosen location: persist cookie, resolve market, refresh catalogue.
   const commitLocation = async (
-    latLng: { lat: number; lng: number },
+    latLng: { lat: number | null; lng: number | null },
     placeName: string,
     countryCode?: string,
     placeDescription = "",
-    options: { silent?: boolean; addressId?: number } = {},
+    options: {
+      silent?: boolean;
+      addressId?: number;
+      automatic?: boolean;
+      selectionSource?: PersistedLocation["selectionSource"];
+    } = {},
   ) => {
+    // GPS/default resolution is asynchronous and both navbar variants mount a
+    // selector. Never let a late automatic callback replace a choice the user
+    // made while that lookup was in flight.
+    if (options.automatic) {
+      const existing = getCookie(
+        "userLocation",
+      ) as PersistedLocation | null;
+
+      if (hasPersistedSelection(existing)) return;
+    }
+
     // In demo mode the location is always forced to the default.
     const finalLatLng = demoMode
       ? {
@@ -300,10 +337,22 @@ const LocationSelector = ({
     const finalLocation: SelectedLocation = demoMode
       ? {
           placeName: "Bhuj ,Gujrat ,India",
-          latLng: finalLatLng,
+          latLng: {
+            lat: Number(finalLatLng.lat),
+            lng: Number(finalLatLng.lng),
+          },
           placeDescription: "",
         }
-      : { placeName, latLng: finalLatLng, placeDescription };
+      : {
+          placeName,
+          latLng: hasCoordinates(finalLatLng)
+            ? {
+                lat: Number(finalLatLng.lat),
+                lng: Number(finalLatLng.lng),
+              }
+            : null,
+          placeDescription,
+        };
 
     setSelectedLocation(finalLocation);
     setSelectedAddressId(options.addressId ?? null);
@@ -314,6 +363,7 @@ const LocationSelector = ({
       placeName: finalLocation.placeName,
       placeDescription: finalLocation.placeDescription,
       addressId: options.addressId,
+      selectionSource: options.selectionSource ?? "current",
       // ISO2 (e.g. "IN") — powers country-based product delivery ETA.
       countryCode: countryCode ? countryCode.toUpperCase() : undefined,
     };
@@ -399,11 +449,21 @@ const LocationSelector = ({
     // Use the address's stored country code so the market resolves reliably
     // (no geocoding round-trip needed).
     await commitLocation(
-      { lat: address.latitude, lng: address.longitude },
+      {
+        lat:
+          address.latitude != null && Number.isFinite(Number(address.latitude))
+            ? Number(address.latitude)
+            : null,
+        lng:
+          address.longitude != null &&
+          Number.isFinite(Number(address.longitude))
+            ? Number(address.longitude)
+            : null,
+      },
       placeName,
       address.country_code,
       "",
-      { addressId: address.id },
+      { addressId: address.id, selectionSource: "address" },
     );
     setLocatingId(null);
   };

@@ -11,8 +11,8 @@ export type Address = {
   address_type: "home" | "office" | string; // Extend with more types if needed
   country: string;
   country_code: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string; // or `Date` if parsed
   updated_at: string; // or `Date` if parsed
 };
