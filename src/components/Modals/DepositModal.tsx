@@ -24,9 +24,11 @@ import RazorPay from "../PaymentGateway/RazorPay";
 import Stripe from "../PaymentGateway/Stripe";
 import PayStack from "../PaymentGateway/Paystack";
 import { isValidHttpsUrl, isValidUrl } from "@/helpers/validator";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const DepositModal = () => {
   const { t } = useTranslation();
+  const { currencySymbol, currency } = useSettings();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedPayment, setSelectedPayment] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -307,7 +309,11 @@ const DepositModal = () => {
                   autoFocus
                   isRequired
                   errorMessage={errors.amount}
-                  startContent={<span className="text-gray-500">$</span>}
+                  startContent={
+                    <span className="text-gray-500">
+                      {currencySymbol || currency}
+                    </span>
+                  }
                   className="w-full"
                   classNames={{
                     input: "",
@@ -332,7 +338,6 @@ const DepositModal = () => {
                   }}
                 />
                 <Textarea
-                  isRequired
                   label={t("deposit.input.description.label")}
                   name="description"
                   placeholder={t("deposit.input.description.placeholder")}

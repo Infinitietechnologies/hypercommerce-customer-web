@@ -39,6 +39,16 @@ interface LocationSelectorProps {
   showLabel?: boolean;
 }
 
+const USER_LOCATION_CHANGED_EVENT = "hypercommerce:user-location-changed";
+
+const hasCoordinates = (
+  location: UserLocation | null | undefined,
+): location is UserLocation =>
+  location?.lat != null &&
+  location?.lng != null &&
+  Number.isFinite(Number(location.lat)) &&
+  Number.isFinite(Number(location.lng));
+
 const LocationSelector = ({
   variant = "desktop",
   tone = "light",
@@ -70,16 +80,22 @@ const LocationSelector = ({
   const [isAddressesLoading, setIsAddressesLoading] = useState(false);
   const [locatingId, setLocatingId] = useState<string | null>(null); // "current" or address id
 
-  // Initialize component with cookie data
+  // Initialize from the persisted choice and keep the separately mounted
+  // desktop/mobile selectors in sync.
   useEffect(() => {
     const initializeLocation = () => {
       try {
-        const userLocation = getCookie("userLocation") as PersistedLocation;
+        const userLocation = getCookie(
+          "userLocation",
+        ) as PersistedLocation | null;
 
-        if (userLocation && userLocation.lat && userLocation.lng) {
+        if (hasCoordinates(userLocation)) {
           const locationData: SelectedLocation = {
             placeName: userLocation.placeName || "Selected Location",
-            latLng: { lat: userLocation.lat, lng: userLocation.lng },
+            latLng: {
+              lat: Number(userLocation.lat),
+              lng: Number(userLocation.lng),
+            },
             placeDescription: userLocation.placeDescription || "",
           };
 
@@ -94,6 +110,14 @@ const LocationSelector = ({
     };
 
     initializeLocation();
+
+    window.addEventListener(USER_LOCATION_CHANGED_EVENT, initializeLocation);
+
+    return () =>
+      window.removeEventListener(
+        USER_LOCATION_CHANGED_EVENT,
+        initializeLocation,
+      );
   }, []);
 
   // Auto-resolve a location + market on first load so the storefront never
@@ -108,7 +132,7 @@ const LocationSelector = ({
     if (!isInitialized || bootstrappedRef.current) return;
 
     const existing = getCookie("userLocation") as UserLocation | null;
-    if (existing && existing.lat && existing.lng) return; // already chosen
+    if (hasCoordinates(existing)) return; // already chosen
     bootstrappedRef.current = true;
 
     const applyDefaultMarket = () =>
@@ -294,6 +318,7 @@ const LocationSelector = ({
       countryCode: countryCode ? countryCode.toUpperCase() : undefined,
     };
     setCookie<PersistedLocation>("userLocation", userLocation);
+    window.dispatchEvent(new Event(USER_LOCATION_CHANGED_EVENT));
 
     await resolveMarket(countryCode);
     onLocationChange();

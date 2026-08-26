@@ -23,6 +23,7 @@ const MARKET_SCOPED_KEY_PREFIXES = [
   "/infinite-data",
   "search:",
   "seller-reviews",
+  "user-wallet",
 ];
 
 export const isMarketScopedKey = (key: unknown): boolean => {

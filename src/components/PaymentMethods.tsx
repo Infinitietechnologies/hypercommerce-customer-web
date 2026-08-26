@@ -117,7 +117,8 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
     <RadioGroup
       value={selectedPayment}
       onValueChange={setSelectedPayment}
-      className="gap-0"
+      className="w-full"
+      classNames={{ wrapper: "w-full gap-0" }}
       isDisabled={isLoading}
     >
       {paymentMethods.map((method, idx) => (
