@@ -51,6 +51,13 @@ const StoriesRail = ({
             <div className="scrollbar-hide flex snap-x gap-3 overflow-x-auto pb-1 min-[1024px]:gap-4">
               {items.map((item) => {
                 const profile = item.profile;
+                const segmentCount = Math.min(
+                  Math.max(item.status_count, 1),
+                  12,
+                );
+                const segmentGap = 5;
+                const segmentLength = 100 / segmentCount - segmentGap;
+
                 return (
                   <button
                     key={profile.id}
@@ -63,11 +70,37 @@ const StoriesRail = ({
                   >
                     <span
                       className={`relative grid size-16 place-items-center rounded-full border-2 p-0.75 transition-transform group-hover:scale-105 motion-reduce:transition-none ${
-                        profile.has_unseen_status
-                          ? "border-primary"
-                          : "border-default-300"
+                        item.status_count > 1
+                          ? "border-transparent"
+                          : profile.has_unseen_status
+                            ? "border-primary"
+                            : "border-default-300"
                       }`}
                     >
+                      {item.status_count > 1 ? (
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 64 64"
+                          className={`pointer-events-none absolute inset-0 z-20 size-full ${
+                            profile.has_unseen_status
+                              ? "text-primary"
+                              : "text-default-300"
+                          }`}
+                        >
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="30"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            pathLength="100"
+                            strokeDasharray={`${segmentLength} ${segmentGap}`}
+                            transform="rotate(-90 32 32)"
+                          />
+                        </svg>
+                      ) : null}
                       <Image
                         removeWrapper
                         disableAnimation
@@ -77,11 +110,6 @@ const StoriesRail = ({
                         className="aspect-square size-full object-cover"
                         fallbackSrc="/logo.png"
                       />
-                      {item.status_count > 1 ? (
-                        <span className="absolute bottom-0 end-0 z-20 grid size-5 place-items-center rounded-full border-2 border-content1 bg-primary text-xxs font-bold text-primary-foreground">
-                          {item.status_count}
-                        </span>
-                      ) : null}
                     </span>
                     <span className="w-full truncate text-center text-xs font-semibold text-foreground">
                       {profile.username}
