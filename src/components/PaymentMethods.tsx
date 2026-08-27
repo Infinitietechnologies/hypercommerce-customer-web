@@ -64,7 +64,7 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       id: "xenditPayment",
       name: t("payments.xendit.name"),
       tagline: t("payments.xendit.tagline"),
-      icon: "/Payments/xendit.svg",
+      icon: "/Payments/xendit.png",
       isEnabled: paymentSettings?.xenditPayment === true,
       disabled: false,
       disabledReason: "",

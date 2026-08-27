@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48" role="img" aria-labelledby="title">
-  <title id="title">Xendit</title>
-  <rect width="160" height="48" rx="10" fill="#ffffff"/>
-  <path d="M18 12h8l7 9 7-9h8L37 26l11 14h-8l-7-9-7 9h-8l11-14L18 12z" fill="#4573ff"/>
-  <text x="56" y="31" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#172b4d">Xendit</text>
-</svg>
