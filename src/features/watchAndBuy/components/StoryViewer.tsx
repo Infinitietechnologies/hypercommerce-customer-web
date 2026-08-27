@@ -80,6 +80,8 @@ const StoryViewer = ({
   useEffect(() => {
     const dialog = dialogRef.current;
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const focusableSelector =
       'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const focusFrame = window.requestAnimationFrame(() => {
@@ -112,6 +114,7 @@ const StoryViewer = ({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
   }, [goNext, goPrevious, onClose]);
@@ -127,7 +130,7 @@ const StoryViewer = ({
       })}
       className="fixed inset-0 z-overlay grid place-items-center bg-shell"
     >
-      <div className="relative h-dvh w-full overflow-hidden bg-shell md:aspect-reel md:h-dvh md:w-auto md:max-w-md md:border-x md:border-shell-divider">
+      <div className="relative h-dvh w-full overflow-hidden bg-shell md:aspect-reel md:h-dvh md:w-auto md:border-x md:border-shell-divider">
         <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-shell to-transparent px-3 pb-8 pt-3">
           <div className="mb-3 flex gap-1" aria-hidden="true">
             {statuses.map((status, index) => (
@@ -196,10 +199,17 @@ const StoryViewer = ({
               size="sm"
               variant="light"
               onPress={onClose}
-              aria-label={t("a11y.close")}
+              aria-label={t("watchBuy.back")}
               className="text-shell-foreground"
             >
-              <Icon icon="solar:close-circle-linear" className="text-2xl" />
+              <Icon
+                icon={
+                  i18n.dir() === "rtl"
+                    ? "solar:arrow-right-linear"
+                    : "solar:arrow-left-linear"
+                }
+                className="text-2xl"
+              />
             </Button>
           </div>
         </div>

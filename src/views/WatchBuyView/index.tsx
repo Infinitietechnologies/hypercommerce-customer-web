@@ -82,6 +82,9 @@ const WatchBuyView = ({
   );
   const [isProductsOpen, setProductsOpen] = useState(false);
   const [activeReelId, setActiveReelId] = useState<number | null>(null);
+  const [likingReelIds, setLikingReelIds] = useState<ReadonlySet<number>>(
+    new Set(),
+  );
   const openedSlugRef = useRef<string | null>(null);
   const seenStatusIds = useRef(new Set<number>());
 
@@ -166,9 +169,16 @@ const WatchBuyView = ({
   const openReelProfile = useCallback(
     (reel: WatchBuyReel) => {
       closeReel();
-      void openStory({ profile: reel.profile, status_count: 0 });
+      const storeSlug =
+        reel.products.find((product) => product.is_primary)?.store_slug ??
+        reel.products[0]?.store_slug;
+      if (storeSlug) {
+        void router.push(`/stores/${encodeURIComponent(storeSlug)}`);
+      } else if (reel.profile.has_active_status) {
+        void openStory({ profile: reel.profile, status_count: 0 });
+      }
     },
-    [closeReel, openStory],
+    [closeReel, openStory, router],
   );
 
   const showReelProducts = useCallback(
@@ -194,7 +204,10 @@ const WatchBuyView = ({
         return;
       }
 
+      if (likingReelIds.has(reel.id)) return;
+
       const nextLiked = !reel.liked_by_me;
+      setLikingReelIds((current) => new Set(current).add(reel.id));
       setReelLiked(reel.id, nextLiked);
       const response = await updateWatchBuyLikes([
         { reel_id: reel.id, liked: nextLiked },
@@ -203,8 +216,13 @@ const WatchBuyView = ({
         setReelLiked(reel.id, reel.liked_by_me);
         toastError(t("watchBuy.reels.likeFailed"));
       }
+      setLikingReelIds((current) => {
+        const next = new Set(current);
+        next.delete(reel.id);
+        return next;
+      });
     },
-    [isLoggedIn, router.asPath, setReelLiked, t],
+    [isLoggedIn, likingReelIds, router.asPath, setReelLiked, t],
   );
 
   const shareReel = useCallback(
@@ -219,13 +237,17 @@ const WatchBuyView = ({
       try {
         if (navigator.share) {
           await navigator.share(shareData);
-        } else {
-          await navigator.clipboard.writeText(url);
-          toastSuccess(t("watchBuy.linkCopied"));
+          return;
         }
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError")
           return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(url);
+        toastSuccess(t("watchBuy.linkCopied"));
+      } catch {
         toastError(t("watchBuy.shareFailed"));
       }
     },
@@ -307,6 +329,7 @@ const WatchBuyView = ({
           reels={reels}
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
+          likingReelIds={likingReelIds}
           onClose={closeReel}
           onLike={toggleLike}
           onLoadMore={loadMore}

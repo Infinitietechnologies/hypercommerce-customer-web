@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
@@ -12,6 +12,7 @@ interface ReelViewerProps {
   activeReelId: number;
   hasMore: boolean;
   isLoadingMore: boolean;
+  likingReelIds: ReadonlySet<number>;
   onClose: () => void;
   onLike: (reel: WatchBuyReel) => void;
   onLoadMore: () => void;
@@ -25,6 +26,7 @@ const ReelViewer = ({
   activeReelId,
   hasMore,
   isLoadingMore,
+  likingReelIds,
   onClose,
   onLike,
   onLoadMore,
@@ -33,9 +35,10 @@ const ReelViewer = ({
   onShowProducts,
   reels,
 }: ReelViewerProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const feedRef = useRef<HTMLElement | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const feed = feedRef.current;
@@ -43,7 +46,12 @@ const ReelViewer = ({
       `[data-reel-id="${activeReelId}"]`,
     );
     const frame = window.requestAnimationFrame(() => {
-      if (feed && target) feed.scrollTop = target.offsetTop;
+      if (feed && target) {
+        feed.scrollTop =
+          target.getBoundingClientRect().top -
+          feed.getBoundingClientRect().top +
+          feed.scrollTop;
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, [activeReelId]);
@@ -51,6 +59,8 @@ const ReelViewer = ({
   useEffect(() => {
     const dialog = dialogRef.current;
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const selector =
       'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const focusFrame = window.requestAnimationFrame(() => {
@@ -104,6 +114,7 @@ const ReelViewer = ({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
   }, [onClose, reels.length]);
@@ -122,10 +133,17 @@ const ReelViewer = ({
         size="sm"
         variant="flat"
         onPress={onClose}
-        aria-label={t("watchBuy.reels.closeViewer")}
-        className="fixed end-3 top-3 z-30 bg-shell/60 text-shell-foreground backdrop-blur-md"
+        aria-label={t("watchBuy.back")}
+        className="fixed start-3 top-3 z-30 bg-shell/70 text-shell-foreground shadow-overlay backdrop-blur-md"
       >
-        <Icon icon="solar:close-circle-bold" className="text-2xl" />
+        <Icon
+          icon={
+            i18n.dir() === "rtl"
+              ? "solar:arrow-right-linear"
+              : "solar:arrow-left-linear"
+          }
+          className="text-2xl"
+        />
       </Button>
 
       <section
@@ -137,7 +155,10 @@ const ReelViewer = ({
           <ReelCard
             key={reel.id}
             reel={reel}
+            isLikePending={likingReelIds.has(reel.id)}
+            isMuted={isMuted}
             onLike={onLike}
+            onMutedChange={setIsMuted}
             onOpenProfile={() => onOpenProfile(reel)}
             onShare={onShare}
             onShowProducts={onShowProducts}
@@ -150,7 +171,7 @@ const ReelViewer = ({
           rootMargin="1200px"
         />
         {isLoadingMore ? (
-          <Skeleton className="mx-auto h-dvh w-full snap-start rounded-none md:aspect-reel md:w-auto md:max-w-md" />
+          <Skeleton className="mx-auto h-dvh w-full snap-start rounded-none md:aspect-reel md:w-auto" />
         ) : null}
       </section>
     </div>

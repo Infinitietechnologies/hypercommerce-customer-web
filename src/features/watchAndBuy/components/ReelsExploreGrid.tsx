@@ -1,5 +1,4 @@
 import { Icon } from "@iconify/react";
-import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
@@ -41,7 +40,7 @@ const ReelsExploreGrid = ({
       </div>
 
       <div className="columns-2 gap-2 md:columns-3 md:gap-3 min-[1024px]:columns-4">
-        {reels.map((reel, index) => (
+        {reels.map((reel) => (
           <button
             key={reel.id}
             type="button"
@@ -49,10 +48,13 @@ const ReelsExploreGrid = ({
             aria-label={t("watchBuy.reels.open", {
               username: reel.profile.username,
             })}
-            className={clsx(
-              "group relative mb-2 block w-full break-inside-avoid overflow-hidden rounded-large border border-divider bg-shell text-start shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none md:mb-3",
-              index % 5 === 0 ? "aspect-square" : "aspect-reel",
-            )}
+            style={{
+              aspectRatio:
+                reel.width && reel.height
+                  ? `${reel.width} / ${reel.height}`
+                  : "9 / 16",
+            }}
+            className="group relative mb-2 block w-full break-inside-avoid overflow-hidden rounded-large border border-divider bg-shell text-start shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none md:mb-3"
           >
             {reel.cover_url ? (
               <Image
@@ -64,12 +66,28 @@ const ReelsExploreGrid = ({
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
               />
             ) : (
-              <span className="grid h-full w-full place-items-center bg-content3 text-shell-foreground">
-                <Icon
-                  icon="solar:clapperboard-play-bold"
-                  className="text-4xl"
+              <video
+                src={reel.video_url}
+                muted
+                playsInline
+                preload="auto"
+                aria-hidden="true"
+                onLoadedData={(event) => {
+                  event.currentTarget.currentTime = Math.min(
+                    0.1,
+                    event.currentTarget.duration || 0.1,
+                  );
+                }}
+                className="h-full w-full object-cover"
+              >
+                <track
+                  default
+                  kind="captions"
+                  src="/captions/empty.vtt"
+                  srcLang="en"
+                  label={t("watchBuy.media.captions")}
                 />
-              </span>
+              </video>
             )}
 
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-shell via-transparent to-transparent" />
@@ -114,10 +132,9 @@ const ReelsExploreGrid = ({
           {Array.from({ length: 4 }, (_, index) => (
             <Skeleton
               key={index}
-              className={clsx(
-                "mb-2 w-full break-inside-avoid rounded-large md:mb-3",
-                index % 3 === 0 ? "aspect-square" : "aspect-reel",
-              )}
+              className={`mb-2 w-full break-inside-avoid rounded-large md:mb-3 ${
+                index % 3 === 0 ? "aspect-square" : "aspect-reel"
+              }`}
             />
           ))}
         </div>

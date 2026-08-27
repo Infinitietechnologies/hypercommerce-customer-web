@@ -2,23 +2,25 @@ import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, Image } from "@/components/ui";
-import type {
-  WatchBuyProduct,
-  WatchBuyReel,
-  WatchBuyStatusSummary,
-} from "@/types/watchBuy";
+import { Image } from "@/components/ui";
+import type { WatchBuyProduct, WatchBuyReel } from "@/types/watchBuy";
 
 interface ReelCardProps {
+  isLikePending: boolean;
+  isMuted: boolean;
   onLike: (reel: WatchBuyReel) => void;
-  onOpenProfile: (story: WatchBuyStatusSummary) => void;
+  onMutedChange: (muted: boolean) => void;
+  onOpenProfile: () => void;
   onShare: (reel: WatchBuyReel) => void;
   onShowProducts: (products: WatchBuyProduct[]) => void;
   reel: WatchBuyReel;
 }
 
 const ReelCard = ({
+  isLikePending,
+  isMuted,
   onLike,
+  onMutedChange,
   onOpenProfile,
   onShare,
   onShowProducts,
@@ -27,7 +29,6 @@ const ReelCard = ({
   const { t } = useTranslation();
   const containerRef = useRef<HTMLElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isMuted, setIsMuted] = useState(true);
   const [isPaused, setIsPaused] = useState(true);
   const primaryProduct =
     reel.products.find((product) => product.is_primary) ?? reel.products[0];
@@ -56,6 +57,13 @@ const ReelCard = ({
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (videoRef.current) videoRef.current.muted = isMuted;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isMuted]);
+
   const togglePlayback = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -70,15 +78,39 @@ const ReelCard = ({
     }
   };
 
+  const toggleAudio = () => {
+    const video = videoRef.current;
+    const nextMuted = !isMuted;
+    if (video) {
+      video.muted = nextMuted;
+      if (!nextMuted) {
+        video.volume = 1;
+        void video.play().then(() => setIsPaused(false));
+      }
+    }
+    onMutedChange(nextMuted);
+  };
+
   return (
     <article
       ref={containerRef}
       data-reel-id={reel.id}
-      className="relative h-dvh w-full snap-start overflow-hidden bg-shell md:mx-auto md:aspect-reel md:w-auto md:max-w-md md:border-x md:border-shell-divider"
+      className="relative h-dvh w-full snap-start overflow-hidden bg-shell md:mx-auto md:aspect-reel md:w-auto md:border-x md:border-shell-divider"
       aria-label={t("watchBuy.reels.itemLabel", {
         username: reel.profile.username,
       })}
     >
+      {reel.cover_url ? (
+        <Image
+          removeWrapper
+          disableAnimation
+          src={reel.cover_url}
+          alt=""
+          radius="none"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-45 blur-2xl"
+        />
+      ) : null}
+
       <video
         ref={videoRef}
         src={reel.video_url}
@@ -87,7 +119,7 @@ const ReelCard = ({
         loop
         muted={isMuted}
         preload="metadata"
-        className="h-full w-full object-cover"
+        className="relative z-0 h-full w-full object-contain"
       >
         <track
           default
@@ -115,46 +147,19 @@ const ReelCard = ({
 
       <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-shell via-transparent to-shell/25" />
 
-      <div className="absolute end-3 bottom-36 z-20 flex flex-col items-center gap-4 text-shell-foreground">
-        <button
-          type="button"
-          onClick={() =>
-            onOpenProfile({ profile: reel.profile, status_count: 0 })
-          }
-          aria-label={t("watchBuy.stories.open", {
-            username: reel.profile.username,
-          })}
-          className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          <span
-            className={`grid size-12 place-items-center rounded-full border-2 p-0.5 ${
-              reel.profile.has_unseen_status
-                ? "border-primary"
-                : "border-shell-divider"
-            }`}
-          >
-            <Image
-              removeWrapper
-              disableAnimation
-              src={reel.profile.photo_url ?? undefined}
-              alt=""
-              radius="full"
-              fallbackSrc="/logo.png"
-              className="size-full object-cover"
-            />
-          </span>
-        </button>
-
+      <div className="absolute end-3 bottom-28 z-20 flex flex-col items-center gap-3 text-shell-foreground md:bottom-8">
         <button
           type="button"
           onClick={() => onLike(reel)}
+          disabled={isLikePending}
+          aria-busy={isLikePending}
           aria-pressed={reel.liked_by_me}
           aria-label={
             reel.liked_by_me
               ? t("watchBuy.reels.unlike")
               : t("watchBuy.reels.like")
           }
-          className="flex flex-col items-center gap-0.5 rounded-medium p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="flex flex-col items-center gap-0.5 rounded-medium p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-60"
         >
           <Icon
             icon={reel.liked_by_me ? "solar:heart-bold" : "solar:heart-linear"}
@@ -173,15 +178,13 @@ const ReelCard = ({
           <span className="text-xs font-bold">{t("watchBuy.reels.share")}</span>
         </button>
 
-        <Button
-          isIconOnly
-          size="sm"
-          variant="flat"
-          onPress={() => setIsMuted((muted) => !muted)}
+        <button
+          type="button"
+          onClick={toggleAudio}
           aria-label={
             isMuted ? t("watchBuy.media.unmute") : t("watchBuy.media.mute")
           }
-          className="bg-shell/55 text-shell-foreground backdrop-blur-sm"
+          className="grid size-9 place-items-center rounded-full bg-shell/55 text-shell-foreground backdrop-blur-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           <Icon
             icon={
@@ -189,18 +192,17 @@ const ReelCard = ({
             }
             className="text-xl"
           />
-        </Button>
+        </button>
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-20 pe-20 text-shell-foreground md:pb-6">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-4 pb-20 pe-20 text-shell-foreground md:pb-6">
         <button
           type="button"
-          onClick={() =>
-            onOpenProfile({ profile: reel.profile, status_count: 0 })
-          }
-          className="mb-1 rounded-small text-start text-sm font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          onClick={onOpenProfile}
+          className="pointer-events-auto mb-1 inline-flex items-center gap-1 rounded-small text-start text-sm font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
-          @{reel.profile.username}
+          <Icon icon="solar:shop-linear" className="text-base" />@
+          {reel.profile.username}
         </button>
         {reel.caption ? (
           <p className="mb-3 line-clamp-2 text-sm leading-5 text-shell-foreground/90">
@@ -212,26 +214,17 @@ const ReelCard = ({
           <button
             type="button"
             onClick={() => onShowProducts(reel.products)}
-            className="flex w-full max-w-sm items-center gap-2 rounded-medium border border-shell-divider bg-shell/70 p-2 text-start backdrop-blur-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            className="pointer-events-auto inline-flex max-w-full items-center gap-2 rounded-full border border-shell-divider bg-shell/70 px-3 py-2 text-start backdrop-blur-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
-            <Image
-              removeWrapper
-              disableAnimation
-              src={primaryProduct.image ?? undefined}
-              alt=""
-              className="size-11 shrink-0 rounded-small bg-content1 object-contain p-1"
-            />
+            <Icon icon="solar:bag-3-bold" className="shrink-0 text-xl" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs font-bold">
-                {primaryProduct.title}
-              </span>
-              <span className="block text-xxs text-shell-muted">
                 {t("watchBuy.products.viewCount", {
                   count: reel.products.length,
                 })}
               </span>
             </span>
-            <Icon icon="solar:bag-3-bold" className="shrink-0 text-xl" />
+            <Icon icon="solar:alt-arrow-right-linear" className="shrink-0" />
           </button>
         ) : null}
       </div>
