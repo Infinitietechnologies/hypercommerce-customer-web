@@ -74,11 +74,11 @@ const StoriesRail = ({
                         src={profile.photo_url ?? undefined}
                         alt=""
                         radius="full"
-                        className="size-full object-cover"
+                        className="aspect-square size-full object-cover"
                         fallbackSrc="/logo.png"
                       />
                       {item.status_count > 1 ? (
-                        <span className="absolute -bottom-1 -end-1 grid size-5 place-items-center rounded-full border-2 border-content1 bg-primary text-xxs font-bold text-primary-foreground">
+                        <span className="absolute bottom-0 end-0 z-20 grid size-5 place-items-center rounded-full border-2 border-content1 bg-primary text-xxs font-bold text-primary-foreground">
                           {item.status_count}
                         </span>
                       ) : null}
