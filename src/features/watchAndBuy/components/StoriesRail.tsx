@@ -22,24 +22,22 @@ const StoriesRail = ({
   return (
     <section
       aria-labelledby="watch-buy-stories-title"
-      className="border-b border-divider bg-content1 px-4 py-3 md:px-6"
+      className="border-b border-divider bg-content1 px-4 py-4 md:px-6"
     >
-      <div className="mx-auto max-w-site min-[1024px]:flex min-[1024px]:items-center min-[1024px]:gap-6">
-        <div className="mb-2 min-[1024px]:mb-0 min-[1024px]:w-64 min-[1024px]:shrink-0">
-          <div>
-            <h1
-              id="watch-buy-stories-title"
-              className="font-display text-large font-extrabold tracking-tight text-foreground"
-            >
-              {t("watchBuy.title")}
-            </h1>
-            <p className="text-xs text-default-500">
-              {t("watchBuy.stories.subtitle")}
-            </p>
-          </div>
+      <div className="mx-auto max-w-site">
+        <div className="mb-3 md:mb-4">
+          <h1
+            id="watch-buy-stories-title"
+            className="font-display text-large font-extrabold tracking-tight text-foreground"
+          >
+            {t("watchBuy.title")}
+          </h1>
+          <p className="text-xs text-default-500">
+            {t("watchBuy.stories.subtitle")}
+          </p>
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0">
           {failed && items.length === 0 ? (
             <button
               type="button"
@@ -50,7 +48,7 @@ const StoriesRail = ({
               {t("watchBuy.stories.retry")}
             </button>
           ) : items.length > 0 ? (
-            <div className="scrollbar-hide flex snap-x gap-3 overflow-x-auto pb-1">
+            <div className="scrollbar-hide flex snap-x gap-3 overflow-x-auto pb-1 min-[1024px]:gap-4">
               {items.map((item) => {
                 const profile = item.profile;
                 return (

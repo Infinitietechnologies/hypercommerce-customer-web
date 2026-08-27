@@ -3,12 +3,12 @@ import { Skeleton } from "@/components/ui";
 const WatchBuySkeleton = () => (
   <div className="min-h-dvh bg-content2">
     <div className="border-b border-divider bg-content1 px-4 py-4">
-      <div className="mx-auto max-w-site min-[1024px]:flex min-[1024px]:items-center min-[1024px]:gap-6">
-        <div className="mb-3 min-[1024px]:mb-0 min-[1024px]:w-64 min-[1024px]:shrink-0">
+      <div className="mx-auto max-w-site">
+        <div className="mb-3 md:mb-4">
           <Skeleton className="mb-2 h-6 w-40 rounded-small" />
           <Skeleton className="h-3 w-56 max-w-full rounded-small" />
         </div>
-        <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
+        <div className="flex min-w-0 gap-3 overflow-hidden min-[1024px]:gap-4">
           {Array.from({ length: 7 }, (_, index) => (
             <div
               key={index}
