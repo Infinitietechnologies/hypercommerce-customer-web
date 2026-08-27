@@ -8,7 +8,8 @@ import type { FirebaseInstance } from "@/lib/firebase";
 
 export const GOOGLE_ANALYTICS_ID =
   process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "G-WHEQTBMDCR";
-export const GOOGLE_ANALYTICS_ENABLED = process.env.NODE_ENV === "production";
+export const ANALYTICS_ENABLED = process.env.NODE_ENV === "production";
+export const GOOGLE_ANALYTICS_ENABLED = ANALYTICS_ENABLED;
 export const ANALYTICS_CONSENT_EVENT = "analytics-consent-change";
 export const COOKIE_CONSENT_KEY = "cookie_consent_choice";
 

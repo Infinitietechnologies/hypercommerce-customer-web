@@ -18,6 +18,7 @@ import UserLayout from "@/layouts/UserLayout";
 import { NextPageWithLayout } from "@/types";
 import { fontSans, fontMono, fontDisplay } from "@/config/fonts";
 import GoogleAnalytics from "@/components/Functional/GoogleAnalytics";
+import MicrosoftClarity from "@/components/Functional/MicrosoftClarity";
 import { adTrackingService } from "@/services/adTrackingService";
 import "@/styles/index.css";
 import { CircleX } from "lucide-react";
@@ -97,6 +98,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <HeroUIProvider navigate={router.push}>
       <GoogleAnalytics />
+      <MicrosoftClarity />
       <Head>
         <meta
           name="viewport"
