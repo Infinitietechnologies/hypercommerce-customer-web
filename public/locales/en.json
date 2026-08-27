@@ -2244,6 +2244,58 @@
       "default": "An error occurred. Please try again."
     }
   },
+  "watchBuy": {
+    "title": "Watch & Buy",
+    "navLabel": "Watch",
+    "metaDescription": "Discover products through seller stories and shoppable videos.",
+    "shareText": "Watch this shoppable video.",
+    "linkCopied": "Reel link copied",
+    "shareFailed": "We couldn't share this reel.",
+    "media": {
+      "play": "Play video",
+      "pause": "Pause video",
+      "mute": "Mute video",
+      "unmute": "Unmute video",
+      "captions": "Video captions"
+    },
+    "stories": {
+      "subtitle": "Fresh updates from stores you can shop",
+      "retry": "Reload stories",
+      "empty": "No active stories right now. New updates will appear here.",
+      "open": "Open {{username}}'s story",
+      "viewerLabel": "{{username}}'s stories",
+      "previous": "Previous story",
+      "next": "Next story",
+      "failed": "We couldn't load this story",
+      "emptyProfile": "This story is no longer available.",
+      "seenFailed": "Story progress couldn't be saved."
+    },
+    "reels": {
+      "label": "Shoppable reels",
+      "feedLabel": "Watch & Buy reels",
+      "itemLabel": "Shoppable reel from {{username}}",
+      "like": "Like reel",
+      "unlike": "Unlike reel",
+      "share": "Share",
+      "likeFailed": "Your like couldn't be updated."
+    },
+    "products": {
+      "title": "Products in this post",
+      "subtitle": "{{count}} linked products",
+      "view": "View",
+      "viewCount": "View {{count}} products",
+      "unavailable": "Unavailable"
+    },
+    "error": {
+      "title": "We couldn't load Watch & Buy",
+      "description": "Please check your connection and try again."
+    },
+    "empty": {
+      "title": "New videos are on the way",
+      "description": "Explore the catalog while sellers prepare their next shoppable videos.",
+      "action": "Browse products"
+    }
+  },
   "a11y": {
     "add_to_wishlist": "Add to wishlist",
     "share_product": "Share this product",

@@ -643,6 +643,15 @@ export const Navbar: FC = () => {
     />
   ) : null;
 
+  const WatchBuyAction = (
+    <HeaderAction
+      icon={<Icon icon="solar:clapperboard-play-linear" className="h-5 w-5" />}
+      label={t("watchBuy.title")}
+      href="/watch-and-buy"
+      showLabel={header.showActionLabels}
+    />
+  );
+
   const CartAction = (
     <button
       onClick={openCart}
@@ -720,6 +729,7 @@ export const Navbar: FC = () => {
           {item.label}
         </Link>
       ))}
+      {WatchBuyAction}
       {header.showWishlist ? WishlistAction : null}
       {header.showOrders ? OrdersAction : null}
       {header.showAccount ? AccountAction : null}

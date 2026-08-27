@@ -22,6 +22,7 @@ import FullPageLoader from "@/components/ui/FullPageLoader";
 import { maintenanceStore } from "@/stores/maintenanceStore";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
 const BottomNavigation = dynamic(
   () => import("@/components/Functional/BottomNavigation"),
   { ssr: false },
@@ -58,6 +59,8 @@ export default function DefaultLayout({
   children?: React.ReactNode;
   initialSettings?: Settings | null;
 }) {
+  const router = useRouter();
+  const isWatchBuyRoute = router.pathname.startsWith("/watch-and-buy");
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [maintenanceState, setMaintenanceState] = useState(
     maintenanceStore.getState(),
@@ -233,11 +236,17 @@ export default function DefaultLayout({
               // Show normal layout with navbar, content, and footer
               <>
                 <Navbar />
-                <main className="w-full max-w-site mx-auto min-h-[80vh] px-4 sm:px-6 grow pb-4">
+                <main
+                  className={
+                    isWatchBuyRoute
+                      ? "w-full min-h-dvh grow"
+                      : "w-full max-w-site mx-auto min-h-[80vh] px-4 sm:px-6 grow pb-4"
+                  }
+                >
                   {children}
                 </main>
-                <Footer />
-                <ScrollToTopButton />
+                {isWatchBuyRoute ? null : <Footer />}
+                {isWatchBuyRoute ? null : <ScrollToTopButton />}
                 <BottomNavigation />
                 <CookieConsent />
                 <RemovedItemsModal />

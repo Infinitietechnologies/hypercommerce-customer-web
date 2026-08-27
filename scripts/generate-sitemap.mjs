@@ -22,6 +22,7 @@ const staticRoutes = [
     { path: '/shipping-policy/', priority: '0.4' },
     { path: '/stores/', priority: '0.8' },
     { path: '/terms-and-conditions/', priority: '0.4' },
+    { path: '/watch-and-buy/', priority: '0.8' },
 ];
 
 // Get current date in ISO format

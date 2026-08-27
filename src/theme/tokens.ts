@@ -184,6 +184,7 @@ export const spacing = {
 export const aspectRatio = {
   "home-banner": "21 / 8",
   "home-banner-mobile": "4 / 3",
+  reel: "9 / 16",
 } as const;
 
 /**

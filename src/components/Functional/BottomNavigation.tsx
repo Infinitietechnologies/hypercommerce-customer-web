@@ -6,6 +6,7 @@ import {
   Home03Icon,
 } from "@hugeicons/core-free-icons";
 import { User } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
@@ -129,6 +130,11 @@ const BottomNavigation = () => {
       path: "/categories",
     },
     {
+      id: "watch",
+      label: t("watchBuy.navLabel"),
+      path: "/watch-and-buy",
+    },
+    {
       id: "cart",
       label: t("bag_title"),
       path: "/cart",
@@ -204,6 +210,20 @@ const BottomNavigation = () => {
           strokeWidth={isActive ? 2 : 1.5}
           fill="none"
           className="mb-1"
+        />
+      );
+    }
+
+    if (itemId === "watch") {
+      return (
+        <Icon
+          icon={
+            isActive
+              ? "solar:clapperboard-play-bold"
+              : "solar:clapperboard-play-linear"
+          }
+          className="mb-1 text-2xl"
+          aria-hidden="true"
         />
       );
     }
