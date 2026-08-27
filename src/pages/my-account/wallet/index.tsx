@@ -59,12 +59,14 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const router = useRouter();
-  const xenditTransactionId = Number(router.query.transaction);
-  const isConfirmingXendit =
+  const hostedTransactionId = Number(router.query.transaction);
+  const isXenditReturn = router.query.xendit_return === "1";
+  const isMercadoPagoReturn = router.query.mercado_pago_return === "1";
+  const isConfirmingHostedPayment =
     router.isReady &&
-    router.query.xendit_return === "1" &&
-    Number.isInteger(xenditTransactionId) &&
-    xenditTransactionId > 0;
+    (isXenditReturn || isMercadoPagoReturn) &&
+    Number.isInteger(hostedTransactionId) &&
+    hostedTransactionId > 0;
 
   const { data: userData, mutate: refreshUserData } = useSWR(
     !isSSR() ? "user-data" : null,
@@ -81,9 +83,9 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
   }, [userData, dispatch]);
 
   useEffect(() => {
-    if (!router.isReady || router.query.xendit_return !== "1") return;
+    if (!router.isReady || (!isXenditReturn && !isMercadoPagoReturn)) return;
 
-    const transactionId = xenditTransactionId;
+    const transactionId = hostedTransactionId;
     if (!Number.isInteger(transactionId) || transactionId <= 0) return;
 
     let active = true;
@@ -137,7 +139,7 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
       active = false;
       clearTimeout(timer);
     };
-  }, [refreshUserData, router, router.isReady, router.query.transaction, router.query.xendit_return, t, xenditTransactionId]);
+  }, [hostedTransactionId, isMercadoPagoReturn, isXenditReturn, refreshUserData, router, t]);
 
   return (
     <>
@@ -164,9 +166,11 @@ const WalletPage: NextPageWithLayout<WalletPageProps> = ({
           </div>
 
           <div className="w-full flex flex-col gap-2">
-            {isConfirmingXendit ? (
+            {isConfirmingHostedPayment ? (
               <div className="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-700">
-                {t("payments.xendit.confirmingWallet")}
+                {isMercadoPagoReturn
+                  ? t("payments.mercadoPago.confirmingWallet")
+                  : t("payments.xendit.confirmingWallet")}
               </div>
             ) : null}
             <div className="bg-amber-50/10 backdrop-blur-lg rounded-xl p-4 shadow-md">

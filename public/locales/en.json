@@ -1579,6 +1579,13 @@
       "payButton": "Continue to Xendit",
       "invalidLink": "Xendit returned an invalid checkout link. Please try again.",
       "confirmingWallet": "Confirming your Xendit wallet recharge…"
+    },
+    "mercadoPago": {
+      "name": "Pay with Mercado Pago",
+      "tagline": "Cards, bank transfers, cash and local payment methods.",
+      "payButton": "Continue to Mercado Pago",
+      "invalidLink": "Mercado Pago returned an invalid checkout link. Please try again.",
+      "confirmingWallet": "Confirming your Mercado Pago wallet recharge…"
     }
   },
   "pending": "Pending",

@@ -1579,6 +1579,13 @@
       "payButton": "Xendit पर जारी रखें",
       "invalidLink": "Xendit ने अमान्य चेकआउट लिंक लौटाया। कृपया पुनः प्रयास करें।",
       "confirmingWallet": "आपके Xendit वॉलेट रिचार्ज की पुष्टि हो रही है…"
+    },
+    "mercadoPago": {
+      "name": "Mercado Pago से भुगतान करें",
+      "tagline": "कार्ड, बैंक ट्रांसफर, नकद और स्थानीय भुगतान विधियाँ।",
+      "payButton": "Mercado Pago पर जारी रखें",
+      "invalidLink": "Mercado Pago ने अमान्य चेकआउट लिंक लौटाया। कृपया पुनः प्रयास करें।",
+      "confirmingWallet": "आपके Mercado Pago वॉलेट रिचार्ज की पुष्टि हो रही है…"
     }
   },
   "pending": "लंबित",

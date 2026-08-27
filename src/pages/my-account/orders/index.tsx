@@ -182,6 +182,27 @@ const OrdersPage: NextPageWithLayout<OrdersPageProps> = ({
   const { systemSettings } = useSettings();
   const shouldFetch = typeof window !== "undefined" && router.isReady;
 
+  useEffect(() => {
+    if (!router.isReady || router.query.mercado_pago_return !== "1") return;
+
+    const orderSlug = router.query.order_slug;
+    if (typeof orderSlug !== "string" || orderSlug === "") return;
+
+    const result =
+      typeof router.query.mercado_pago_result === "string"
+        ? router.query.mercado_pago_result
+        : "pending";
+
+    void router.replace({
+      pathname: "/payment/[slug]",
+      query: {
+        slug: orderSlug,
+        mercado_pago_return: "1",
+        mercado_pago_result: result,
+      },
+    });
+  }, [router]);
+
   const [currentPage, setCurrentPage] = useState(
     parseInt(router.query.page as string) || 1
   );

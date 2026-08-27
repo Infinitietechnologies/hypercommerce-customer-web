@@ -1579,6 +1579,13 @@
       "payButton": "المتابعة إلى Xendit",
       "invalidLink": "أعاد Xendit رابط دفع غير صالح. يرجى المحاولة مرة أخرى.",
       "confirmingWallet": "جارٍ تأكيد شحن محفظتك عبر Xendit…"
+    },
+    "mercadoPago": {
+      "name": "الدفع عبر Mercado Pago",
+      "tagline": "البطاقات والتحويلات المصرفية والنقد وطرق الدفع المحلية.",
+      "payButton": "المتابعة إلى Mercado Pago",
+      "invalidLink": "أعاد Mercado Pago رابط دفع غير صالح. يرجى المحاولة مرة أخرى.",
+      "confirmingWallet": "جارٍ تأكيد شحن محفظتك عبر Mercado Pago…"
     }
   },
   "pending": "قيد الانتظار",

@@ -70,6 +70,15 @@ const PaymentMethods: FC<PaymentMethodsProps> = ({
       disabledReason: "",
     },
     {
+      id: "mercadoPagoPayment",
+      name: t("payments.mercadoPago.name"),
+      tagline: t("payments.mercadoPago.tagline"),
+      icon: "/Payments/mercado-pago.png",
+      isEnabled: paymentSettings?.mercadoPagoPayment === true,
+      disabled: false,
+      disabledReason: "",
+    },
+    {
       id: "cod",
       name: t("payments.cod.name"),
       tagline: t("payments.cod.tagline"),

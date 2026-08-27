@@ -11,6 +11,7 @@ import Stripe from "@/components/PaymentGateway/Stripe";
 import PayStack from "@/components/PaymentGateway/Paystack";
 import FlutterwavePayment from "@/components/PaymentGateway/FlutterwavePayment";
 import XenditPayment from "@/components/PaymentGateway/XenditPayment";
+import MercadoPagoPayment from "@/components/PaymentGateway/MercadoPagoPayment";
 import { getSpecificOrders } from "@/services/orders";
 import { Order } from "@/types/order";
 
@@ -23,6 +24,9 @@ const OrderPaymentView: FC = () => {
   const { formatPrice } = useSettings();
   const slug = typeof router.query.slug === "string" ? router.query.slug : "";
   const returnedFromXendit = router.query.xendit_return === "1";
+  const returnedFromMercadoPago = router.query.mercado_pago_return === "1";
+  const returnedFromHostedGateway =
+    returnedFromXendit || returnedFromMercadoPago;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
@@ -50,13 +54,13 @@ const OrderPaymentView: FC = () => {
         return;
       }
       setOrder(o);
-      setPhase(returnedFromXendit ? "waiting" : "pay");
+      setPhase(returnedFromHostedGateway ? "waiting" : "pay");
     })();
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, returnedFromXendit]);
+  }, [slug, returnedFromHostedGateway]);
 
   const onError = () => setPhase("failed");
   const onSuccess = () => setPhase("waiting");
@@ -244,6 +248,15 @@ const OrderPaymentView: FC = () => {
       case "xenditPayment":
         return (
           <XenditPayment
+            onError={onError}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            orderSlug={slug}
+          />
+        );
+      case "mercadoPagoPayment":
+        return (
+          <MercadoPagoPayment
             onError={onError}
             isLoading={isLoading}
             setIsLoading={setIsLoading}

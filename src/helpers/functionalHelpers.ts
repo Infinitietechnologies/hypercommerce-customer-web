@@ -578,6 +578,7 @@ export const handleCheckout = async (
         "paystackPayment",
         "flutterwavePayment",
         "xenditPayment",
+        "mercadoPagoPayment",
       ].includes(payment_type);
 
       if (!opensSdk) {

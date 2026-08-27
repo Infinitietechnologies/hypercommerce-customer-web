@@ -23,7 +23,11 @@ import { useTranslation } from "react-i18next";
 import RazorPay from "../PaymentGateway/RazorPay";
 import Stripe from "../PaymentGateway/Stripe";
 import PayStack from "../PaymentGateway/Paystack";
-import { isValidHttpsUrl, isValidUrl } from "@/helpers/validator";
+import {
+  isValidHttpsUrl,
+  isValidMercadoPagoUrl,
+  isValidUrl,
+} from "@/helpers/validator";
 import { useSettings } from "@/contexts/SettingsContext";
 
 const DepositModal = () => {
@@ -176,6 +180,22 @@ const DepositModal = () => {
 
           toast({
             title: t("payments.xendit.invalidLink"),
+            color: "danger",
+          });
+          setShowPaymentGateway(false);
+          return;
+        }
+
+        if (selectedPayment === "mercadoPagoPayment") {
+          const paymentLink = res?.data?.payment_response?.link;
+
+          if (paymentLink && isValidMercadoPagoUrl(paymentLink)) {
+            window.location.assign(paymentLink);
+            return;
+          }
+
+          toast({
+            title: t("payments.mercadoPago.invalidLink"),
             color: "danger",
           });
           setShowPaymentGateway(false);

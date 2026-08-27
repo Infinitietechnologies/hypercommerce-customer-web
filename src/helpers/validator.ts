@@ -106,6 +106,13 @@ export const isValidHttpsUrl = (url: string) => {
   }
 };
 
+export const isValidMercadoPagoUrl = (url: string) => {
+  if (!isValidHttpsUrl(url)) return false;
+
+  const host = new URL(url).hostname.toLowerCase();
+  return host.startsWith("mercadopago.") || host.includes(".mercadopago.");
+};
+
 export const looksLikeEmail = (value: string): boolean => {
   return value.includes("@") || /[a-zA-Z]/.test(value);
 };

@@ -145,6 +145,10 @@ export interface PaymentSettings {
   xenditEnabledCurrencies: string[];
   xenditFallbackCurrency: string;
 
+  mercadoPagoPayment: boolean;
+  mercadoPagoPaymentMode: "test" | "live";
+  mercadoPagoAccountCurrency: "ARS" | "BRL" | "CLP" | "COP" | "MXN" | "PEN" | "UYU" | string;
+
   wallet: boolean;
 }
 

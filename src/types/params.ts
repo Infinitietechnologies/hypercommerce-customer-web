@@ -92,6 +92,8 @@ export interface PrepareWalletRechargeResponse {
     payment_session_id?: string;
     reference_id?: string;
     payment_request_id?: string | null;
+    mercado_pago_order_id?: string;
+    external_reference?: string;
     expires_at?: string | null;
   };
 }
