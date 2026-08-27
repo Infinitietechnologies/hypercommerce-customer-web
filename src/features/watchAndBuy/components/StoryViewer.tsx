@@ -154,6 +154,23 @@ const StoryViewer = ({
             ))}
           </div>
           <div className="flex items-center gap-2 text-shell-foreground">
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              onPress={onClose}
+              aria-label={t("watchBuy.back")}
+              className="shrink-0 text-shell-foreground"
+            >
+              <Icon
+                icon={
+                  i18n.dir() === "rtl"
+                    ? "solar:arrow-right-linear"
+                    : "solar:arrow-left-linear"
+                }
+                className="text-2xl"
+              />
+            </Button>
             <Image
               removeWrapper
               disableAnimation
@@ -194,23 +211,6 @@ const StoryViewer = ({
                 />
               </Button>
             ) : null}
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              onPress={onClose}
-              aria-label={t("watchBuy.back")}
-              className="text-shell-foreground"
-            >
-              <Icon
-                icon={
-                  i18n.dir() === "rtl"
-                    ? "solar:arrow-right-linear"
-                    : "solar:arrow-left-linear"
-                }
-                className="text-2xl"
-              />
-            </Button>
           </div>
         </div>
 

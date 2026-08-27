@@ -8,6 +8,7 @@ import type { WatchBuyProduct, WatchBuyReel } from "@/types/watchBuy";
 interface ReelCardProps {
   isLikePending: boolean;
   isMuted: boolean;
+  isSuspended: boolean;
   onLike: (reel: WatchBuyReel) => void;
   onMutedChange: (muted: boolean) => void;
   onOpenProfile: () => void;
@@ -19,6 +20,7 @@ interface ReelCardProps {
 const ReelCard = ({
   isLikePending,
   isMuted,
+  isSuspended,
   onLike,
   onMutedChange,
   onOpenProfile,
@@ -37,17 +39,17 @@ const ReelCard = ({
     const container = containerRef.current;
     const video = videoRef.current;
     if (!container || !video) return;
+    if (isSuspended) {
+      video.pause();
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && entry.intersectionRatio >= 0.65) {
-          void video
-            .play()
-            .then(() => setIsPaused(false))
-            .catch(() => undefined);
+          void video.play().catch(() => undefined);
         } else {
           video.pause();
-          setIsPaused(true);
         }
       },
       { threshold: [0.3, 0.65, 0.9] },
@@ -55,7 +57,7 @@ const ReelCard = ({
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, []);
+  }, [isSuspended]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -68,13 +70,9 @@ const ReelCard = ({
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
-      void video
-        .play()
-        .then(() => setIsPaused(false))
-        .catch(() => undefined);
+      void video.play().catch(() => undefined);
     } else {
       video.pause();
-      setIsPaused(true);
     }
   };
 
@@ -85,7 +83,7 @@ const ReelCard = ({
       video.muted = nextMuted;
       if (!nextMuted) {
         video.volume = 1;
-        void video.play().then(() => setIsPaused(false));
+        void video.play().catch(() => undefined);
       }
     }
     onMutedChange(nextMuted);
@@ -118,6 +116,8 @@ const ReelCard = ({
         playsInline
         loop
         muted={isMuted}
+        onPause={() => setIsPaused(true)}
+        onPlay={() => setIsPaused(false)}
         preload="metadata"
         className="relative z-0 h-full w-full object-contain"
       >

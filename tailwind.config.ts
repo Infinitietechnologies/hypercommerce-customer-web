@@ -64,6 +64,7 @@ const config: import("tailwindcss").Config = {
       },
       zIndex: {
         overlay: "80",
+        sheet: "90",
       },
       colors: {
         "rating-star": accent.ratingStar,

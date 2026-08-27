@@ -168,33 +168,25 @@ const WatchBuyView = ({
 
   const openReelProfile = useCallback(
     (reel: WatchBuyReel) => {
-      closeReel();
-      const storeSlug =
-        reel.products.find((product) => product.is_primary)?.store_slug ??
-        reel.products[0]?.store_slug;
-      if (storeSlug) {
-        void router.push(`/stores/${encodeURIComponent(storeSlug)}`);
-      } else if (reel.profile.has_active_status) {
+      if (reel.profile.has_active_status) {
         void openStory({ profile: reel.profile, status_count: 0 });
       }
     },
-    [closeReel, openStory, router],
+    [openStory],
   );
 
   const showReelProducts = useCallback(
     (products: WatchBuyProduct[]) => {
-      closeReel();
       showProducts(products);
     },
-    [closeReel, showProducts],
+    [showProducts],
   );
 
   const showStoryProducts = useCallback(
     (products: WatchBuyProduct[]) => {
-      void closeStory();
       showProducts(products);
     },
-    [closeStory, showProducts],
+    [showProducts],
   );
 
   const toggleLike = useCallback(
@@ -309,6 +301,23 @@ const WatchBuyView = ({
         )}
       </div>
 
+      {activeReelId != null ? (
+        <ReelViewer
+          activeReelId={activeReelId}
+          reels={reels}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          isSuspended={Boolean(activeStory) || isProductsOpen}
+          likingReelIds={likingReelIds}
+          onClose={closeReel}
+          onLike={toggleLike}
+          onLoadMore={loadMore}
+          onOpenProfile={openReelProfile}
+          onShare={shareReel}
+          onShowProducts={showReelProducts}
+        />
+      ) : null}
+
       {activeStory ? (
         <StoryViewer
           key={activeStory.profile.username}
@@ -320,22 +329,6 @@ const WatchBuyView = ({
           onRetry={() => void openStory(activeStory)}
           onSeen={handleSeen}
           onShowProducts={showStoryProducts}
-        />
-      ) : null}
-
-      {activeReelId != null ? (
-        <ReelViewer
-          activeReelId={activeReelId}
-          reels={reels}
-          hasMore={hasMore}
-          isLoadingMore={isLoadingMore}
-          likingReelIds={likingReelIds}
-          onClose={closeReel}
-          onLike={toggleLike}
-          onLoadMore={loadMore}
-          onOpenProfile={openReelProfile}
-          onShare={shareReel}
-          onShowProducts={showReelProducts}
         />
       ) : null}
 

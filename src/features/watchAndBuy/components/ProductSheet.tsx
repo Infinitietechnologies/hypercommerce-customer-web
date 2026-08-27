@@ -34,6 +34,7 @@ const ProductSheet = ({
       onOpenChange={onOpenChange}
       size="lg"
       backdrop="blur"
+      classNames={{ backdrop: "z-sheet", wrapper: "z-sheet" }}
       title={
         <div>
           <p className="text-lg font-extrabold text-foreground">

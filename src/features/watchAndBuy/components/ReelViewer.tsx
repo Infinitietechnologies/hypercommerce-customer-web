@@ -12,6 +12,7 @@ interface ReelViewerProps {
   activeReelId: number;
   hasMore: boolean;
   isLoadingMore: boolean;
+  isSuspended: boolean;
   likingReelIds: ReadonlySet<number>;
   onClose: () => void;
   onLike: (reel: WatchBuyReel) => void;
@@ -26,6 +27,7 @@ const ReelViewer = ({
   activeReelId,
   hasMore,
   isLoadingMore,
+  isSuspended,
   likingReelIds,
   onClose,
   onLike,
@@ -157,6 +159,7 @@ const ReelViewer = ({
             reel={reel}
             isLikePending={likingReelIds.has(reel.id)}
             isMuted={isMuted}
+            isSuspended={isSuspended}
             onLike={onLike}
             onMutedChange={setIsMuted}
             onOpenProfile={() => onOpenProfile(reel)}
