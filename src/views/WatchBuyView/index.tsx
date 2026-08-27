@@ -1,21 +1,20 @@
 import { Icon } from "@iconify/react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 
 import DynamicSEO from "@/SEO/DynamicSEO";
-import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import WatchBuySkeleton from "@/components/Skeletons/WatchBuySkeleton";
 import {
   EmptyState,
   ErrorState,
-  Skeleton,
   toastError,
   toastSuccess,
 } from "@/components/ui";
 import ProductSheet from "@/features/watchAndBuy/components/ProductSheet";
-import ReelCard from "@/features/watchAndBuy/components/ReelCard";
+import ReelsExploreGrid from "@/features/watchAndBuy/components/ReelsExploreGrid";
+import ReelViewer from "@/features/watchAndBuy/components/ReelViewer";
 import StoriesRail from "@/features/watchAndBuy/components/StoriesRail";
 import StoryViewer from "@/features/watchAndBuy/components/StoryViewer";
 import { useWatchBuyFeed } from "@/features/watchAndBuy/hooks/useWatchBuyFeed";
@@ -82,7 +81,19 @@ const WatchBuyView = ({
     [],
   );
   const [isProductsOpen, setProductsOpen] = useState(false);
+  const [activeReelId, setActiveReelId] = useState<number | null>(null);
+  const openedSlugRef = useRef<string | null>(null);
   const seenStatusIds = useRef(new Set<number>());
+
+  useEffect(() => {
+    if (!effectiveSlug || openedSlugRef.current === effectiveSlug) return;
+    const target = reels.find((reel) => reel.slug === effectiveSlug);
+    if (!target) return;
+
+    openedSlugRef.current = effectiveSlug;
+    const timer = window.setTimeout(() => setActiveReelId(target.id), 0);
+    return () => window.clearTimeout(timer);
+  }, [effectiveSlug, reels]);
 
   const openStory = useCallback(async (summary: WatchBuyStatusSummary) => {
     if (!summary.profile.has_active_status) return;
@@ -138,6 +149,35 @@ const WatchBuyView = ({
     setSelectedProducts(products);
     setProductsOpen(true);
   }, []);
+
+  const closeReel = useCallback(() => {
+    setActiveReelId(null);
+    if (typeof router.query.slug !== "string") return;
+
+    const nextQuery = { ...router.query };
+    delete nextQuery.slug;
+    void router.replace(
+      { pathname: router.pathname, query: nextQuery },
+      undefined,
+      { shallow: true, scroll: false },
+    );
+  }, [router]);
+
+  const openReelProfile = useCallback(
+    (reel: WatchBuyReel) => {
+      closeReel();
+      void openStory({ profile: reel.profile, status_count: 0 });
+    },
+    [closeReel, openStory],
+  );
+
+  const showReelProducts = useCallback(
+    (products: WatchBuyProduct[]) => {
+      closeReel();
+      showProducts(products);
+    },
+    [closeReel, showProducts],
+  );
 
   const showStoryProducts = useCallback(
     (products: WatchBuyProduct[]) => {
@@ -237,30 +277,13 @@ const WatchBuyView = ({
             />
           </div>
         ) : (
-          <section
-            aria-label={t("watchBuy.reels.feedLabel")}
-            className="h-dvh snap-y snap-mandatory overflow-y-auto bg-shell"
-          >
-            {reels.map((reel) => (
-              <ReelCard
-                key={reel.id}
-                reel={reel}
-                onLike={toggleLike}
-                onOpenProfile={openStory}
-                onShare={shareReel}
-                onShowProducts={showProducts}
-              />
-            ))}
-            <InfiniteSentinel
-              hasMore={hasMore}
-              isLoading={isLoadingMore}
-              onLoadMore={loadMore}
-              rootMargin="1200px"
-            />
-            {isLoadingMore ? (
-              <Skeleton className="mx-auto h-dvh w-full snap-start rounded-none md:aspect-reel md:w-auto md:max-w-md" />
-            ) : null}
-          </section>
+          <ReelsExploreGrid
+            reels={reels}
+            hasMore={hasMore}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
+            onOpen={(reel) => setActiveReelId(reel.id)}
+          />
         )}
       </div>
 
@@ -275,6 +298,21 @@ const WatchBuyView = ({
           onRetry={() => void openStory(activeStory)}
           onSeen={handleSeen}
           onShowProducts={showStoryProducts}
+        />
+      ) : null}
+
+      {activeReelId != null ? (
+        <ReelViewer
+          activeReelId={activeReelId}
+          reels={reels}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          onClose={closeReel}
+          onLike={toggleLike}
+          onLoadMore={loadMore}
+          onOpenProfile={openReelProfile}
+          onShare={shareReel}
+          onShowProducts={showReelProducts}
         />
       ) : null}
 

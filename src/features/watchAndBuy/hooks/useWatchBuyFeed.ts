@@ -41,6 +41,7 @@ export const useWatchBuyFeed = ({
   const [storiesFailed, setStoriesFailed] = useState(
     initialStatuses ? !initialStatuses.success : false,
   );
+  const initialLoadStartedRef = useRef(false);
   const loadingMoreRef = useRef(false);
 
   const retry = useCallback(async () => {
@@ -65,8 +66,17 @@ export const useWatchBuyFeed = ({
   }, [slug]);
 
   useEffect(() => {
-    if (!enabled || (initialReels && initialStatuses)) return;
-    const timer = window.setTimeout(() => void retry(), 0);
+    if (
+      !enabled ||
+      initialLoadStartedRef.current ||
+      (initialReels && initialStatuses)
+    )
+      return;
+    const timer = window.setTimeout(() => {
+      if (initialLoadStartedRef.current) return;
+      initialLoadStartedRef.current = true;
+      void retry();
+    }, 0);
     return () => window.clearTimeout(timer);
   }, [enabled, initialReels, initialStatuses, retry]);
 

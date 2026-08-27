@@ -18,7 +18,20 @@ const WatchBuySkeleton = () => (
         </div>
       </div>
     </div>
-    <Skeleton className="mx-auto h-dvh w-full rounded-none md:aspect-reel md:w-auto md:max-w-md" />
+    <div className="mx-auto w-full max-w-site px-3 py-5 sm:px-4 md:px-6">
+      <Skeleton className="mb-2 h-6 w-48 rounded-small" />
+      <Skeleton className="mb-4 h-4 w-72 max-w-full rounded-small" />
+      <div className="columns-2 gap-2 md:columns-3 md:gap-3 min-[1024px]:columns-4">
+        {Array.from({ length: 10 }, (_, index) => (
+          <Skeleton
+            key={index}
+            className={`mb-2 w-full break-inside-avoid rounded-large md:mb-3 ${
+              index % 5 === 0 ? "aspect-square" : "aspect-reel"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
   </div>
 );
 

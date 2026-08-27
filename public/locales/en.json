@@ -2272,8 +2272,13 @@
     },
     "reels": {
       "label": "Shoppable reels",
+      "exploreTitle": "Explore shoppable videos",
+      "exploreDescription": "Tap a video to watch, shop, and keep scrolling through the feed.",
       "feedLabel": "Watch & Buy reels",
+      "viewerLabel": "Shoppable reels viewer",
       "itemLabel": "Shoppable reel from {{username}}",
+      "open": "Open reel from {{username}}",
+      "closeViewer": "Close reels viewer",
       "like": "Like reel",
       "unlike": "Unlike reel",
       "share": "Share",

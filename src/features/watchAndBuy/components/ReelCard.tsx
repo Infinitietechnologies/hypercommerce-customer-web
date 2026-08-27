@@ -73,6 +73,7 @@ const ReelCard = ({
   return (
     <article
       ref={containerRef}
+      data-reel-id={reel.id}
       className="relative h-dvh w-full snap-start overflow-hidden bg-shell md:mx-auto md:aspect-reel md:w-auto md:max-w-md md:border-x md:border-shell-divider"
       aria-label={t("watchBuy.reels.itemLabel", {
         username: reel.profile.username,
