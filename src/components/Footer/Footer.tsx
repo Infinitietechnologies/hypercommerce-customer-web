@@ -208,17 +208,6 @@ const Footer: FC = () => {
               {`V ${version}`}
             </Chip>
           </div>
-          <div className="text-xs text-ink-foreground/60">
-            {t("footer.bottom_bar.powered_by")}{" "}
-            <a
-              className="text-primary hover:text-primary/80 transition-colors font-semibold"
-              href="https://infinitietech.com/"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Infinitietech
-            </a>
-          </div>
         </div>
       </div>
     </footer>

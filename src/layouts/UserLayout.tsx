@@ -42,6 +42,7 @@ const UserLayout: FC<UserLayoutProps> = ({ children, activeTab }) => {
     { label: t("userLayout.wallet"), icon: "solar:wallet-linear", href: "/my-account/wallet", key: "wallet" },
     { label: t("userLayout.transactions"), icon: "solar:bill-list-linear", href: "/my-account/transactions", key: "transactions" },
     { label: t("userLayout.notifications", "Notifications"), icon: "solar:bell-linear", href: "/my-account/notifications", key: "notifications" },
+    { label: t("userLayout.support", "Support"), icon: "solar:chat-round-dots-linear", href: "/my-account/support", key: "support" },
     {
       label: t("userLayout.referAndEarn"),
       icon: "solar:gift-linear",

@@ -393,6 +393,14 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           <div className="flex flex-wrap gap-2">
             <Button
               size="md"
+              variant="bordered"
+              startContent={<Icon icon="solar:chat-round-dots-linear" />}
+              onPress={() => router.push(`/my-account/support?order=${order.id}`)}
+            >
+              {t("supportChat.getHelp")}
+            </Button>
+            <Button
+              size="md"
               color="primary"
               startContent={<Icon icon="solar:refresh-circle-linear" />}
               isLoading={reordering}

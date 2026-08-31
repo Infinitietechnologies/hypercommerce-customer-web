@@ -1,0 +1,227 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { getCookie } from "@/lib/cookies";
+import { supportService } from "@/services/support";
+import type {
+  SupportConnectionMode,
+  SupportMessage,
+  SupportSession,
+  SupportThreadPayload,
+  SupportTopic,
+} from "@/types/support";
+
+const getErrorMessage = (error: unknown): string => {
+  if (typeof error === "object" && error && "response" in error) {
+    const response = (error as { response?: { data?: { message?: string } } }).response;
+    if (response?.data?.message) return response.data.message;
+  }
+  return error instanceof Error ? error.message : "Something went wrong.";
+};
+
+export const useSupportChat = (initialData: SupportThreadPayload | null) => {
+  const [payload, setPayload] = useState<SupportThreadPayload | null>(initialData);
+  const [topics, setTopics] = useState<SupportTopic[]>([]);
+  const [connection, setConnection] = useState<SupportConnectionMode>("polling");
+  const [loading, setLoading] = useState(!initialData);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const socketLive = useRef(false);
+  const polling = useRef(false);
+  const payloadRef = useRef(payload);
+
+  useEffect(() => {
+    payloadRef.current = payload;
+  }, [payload]);
+
+  const activeSession = useMemo(
+    () => payload?.thread.sessions.find((session) => session.id === payload.thread.active_ticket_id) || null,
+    [payload],
+  );
+  const realtimeDriver = payload?.realtime.driver;
+  const realtimeKey = payload?.realtime.key;
+  const realtimeHost = payload?.realtime.host;
+  const realtimePort = payload?.realtime.port;
+  const realtimeScheme = payload?.realtime.scheme;
+  const realtimeCluster = payload?.realtime.cluster;
+  const realtimeAuthEndpoint = payload?.realtime.auth_endpoint;
+  const threadUuid = payload?.thread.uuid;
+
+  const messageCursor = useCallback(() => {
+    const messages = payloadRef.current?.thread.sessions.flatMap((session) => session.messages) || [];
+    return Math.max(0, ...messages.map((message) => message.id));
+  }, []);
+
+  const callCursor = useCallback(() => {
+    const calls = payloadRef.current?.thread.sessions.flatMap((session) => session.calls) || [];
+    return Math.max(0, ...calls.map((call) => call.id));
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const next = await supportService.getThread();
+      setPayload(next);
+      setError(null);
+      return next;
+    } catch (caught) {
+      setError(getErrorMessage(caught));
+      throw caught;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const mergeMessages = useCallback((messages: SupportMessage[]) => {
+    if (!messages.length) return;
+    setPayload((current) => {
+      if (!current) return current;
+      const ids = new Set(current.thread.sessions.flatMap((session) => session.messages.map((message) => message.id)));
+      const nextSessions = current.thread.sessions.map((session) => ({
+        ...session,
+        messages: [
+          ...session.messages,
+          ...messages.filter((message) => message.session_id === session.id && !ids.has(message.id)),
+        ].sort((a, b) => a.id - b.id),
+      }));
+      return {...current, thread: {...current.thread, sessions: nextSessions}};
+    });
+  }, []);
+
+  const catchUp = useCallback(async () => {
+    if (polling.current || !payloadRef.current) return;
+    polling.current = true;
+    try {
+      const updates = await supportService.getUpdates(messageCursor(), callCursor());
+      mergeMessages(updates.messages);
+      if (updates.active_ticket_id !== payloadRef.current.thread.active_ticket_id || updates.calls.length) {
+        await refresh();
+      }
+      if (!socketLive.current) setConnection("polling");
+    } catch (caught) {
+      setConnection(navigator.onLine ? "polling" : "offline");
+      setError(getErrorMessage(caught));
+    } finally {
+      polling.current = false;
+    }
+  }, [callCursor, mergeMessages, messageCursor, refresh]);
+
+  useEffect(() => {
+    if (!payload) refresh().catch(() => undefined);
+    supportService.getTopics().then(setTopics).catch((caught) => setError(getErrorMessage(caught)));
+  }, [payload, refresh]);
+
+  useEffect(() => {
+    if (!threadUuid || !realtimeKey || !realtimeDriver || !realtimeAuthEndpoint || !["reverb", "pusher"].includes(realtimeDriver)) {
+      setConnection("polling");
+      return;
+    }
+
+    let echo: { leave: (channel: string) => void; disconnect: () => void } | null = null;
+    let disposed = false;
+    void Promise.all([import("laravel-echo"), import("pusher-js")]).then(([echoModule, pusherModule]) => {
+      if (disposed) return;
+      const Echo = echoModule.default;
+      const Pusher = pusherModule.default;
+      const token = String(getCookie("access_token") || "");
+      const instance = new Echo({
+        broadcaster: realtimeDriver === "reverb" ? "reverb" : "pusher",
+        Pusher,
+        key: realtimeKey,
+        cluster: realtimeCluster || "mt1",
+        wsHost: realtimeHost || undefined,
+        wsPort: realtimePort || 80,
+        wssPort: realtimePort || 443,
+        forceTLS: realtimeScheme === "https",
+        enabledTransports: ["ws", "wss"],
+        authEndpoint: realtimeAuthEndpoint,
+        auth: {headers: {Authorization: `Bearer ${token}`, Accept: "application/json"}},
+      });
+      echo = instance;
+      instance.private(`support.thread.${threadUuid}`)
+        .subscribed(() => {
+          socketLive.current = true;
+          setConnection("live");
+          void catchUp();
+        })
+        .error(() => {
+          socketLive.current = false;
+          setConnection("polling");
+        })
+        .listen(".support.activity", (activity: {message_id?: number | null}) => {
+          void (activity.message_id ? catchUp() : refresh());
+        });
+      instance.connector.pusher.connection.bind("disconnected", () => {
+        socketLive.current = false;
+        setConnection("polling");
+      });
+      instance.connector.pusher.connection.bind("unavailable", () => {
+        socketLive.current = false;
+        setConnection(navigator.onLine ? "polling" : "offline");
+      });
+    }).catch(() => {
+      socketLive.current = false;
+      setConnection("polling");
+    });
+
+    return () => {
+      disposed = true;
+      socketLive.current = false;
+      echo?.leave(`support.thread.${threadUuid}`);
+      echo?.disconnect();
+    };
+  }, [catchUp, realtimeAuthEndpoint, realtimeCluster, realtimeDriver, realtimeHost, realtimeKey, realtimePort, realtimeScheme, refresh, threadUuid]);
+
+  useEffect(() => {
+    if (!activeSession) return;
+    void supportService.markRead(activeSession.slug, messageCursor()).catch(() => undefined);
+  }, [activeSession, messageCursor, payload?.thread.last_message_at]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (!socketLive.current && !document.hidden && navigator.onLine) void catchUp();
+    }, Math.max(15000, payload?.poll_interval_ms || 15000));
+    const sync = () => void (socketLive.current ? catchUp() : refresh());
+    const visible = () => {
+      if (!document.hidden) sync();
+    };
+    const offline = () => setConnection("offline");
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", offline);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("online", sync);
+      window.removeEventListener("offline", offline);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, [catchUp, payload?.poll_interval_ms, refresh]);
+
+  const mutate = useCallback(async (operation: () => Promise<unknown>) => {
+    setSending(true);
+    setError(null);
+    try {
+      await operation();
+      await refresh();
+    } catch (caught) {
+      setError(getErrorMessage(caught));
+      throw caught;
+    } finally {
+      setSending(false);
+    }
+  }, [refresh]);
+
+  return {
+    payload,
+    topics,
+    activeSession,
+    connection,
+    loading,
+    sending,
+    error,
+    refresh,
+    startSession: (input: Parameters<typeof supportService.startSession>[0]) => mutate(() => supportService.startSession(input)),
+    sendMessage: (session: SupportSession, message: string, attachments: File[]) => mutate(() => supportService.sendMessage(session.slug, message, attachments)),
+    resolve: (session: SupportSession) => mutate(() => supportService.resolve(session.slug)),
+    requestCallback: (session: SupportSession) => mutate(() => supportService.requestCallback(session.slug)),
+    rate: (session: SupportSession, score: number, feedback?: string) => mutate(() => supportService.rate(session.slug, score, feedback)),
+  };
+};

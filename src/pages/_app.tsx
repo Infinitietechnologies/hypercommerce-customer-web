@@ -46,6 +46,7 @@ const accountTabForPath = (pathname: string): string => {
   if (pathname.startsWith("/my-account/wallet")) return "wallet";
   if (pathname.startsWith("/my-account/transactions")) return "transactions";
   if (pathname.startsWith("/my-account/notifications")) return "notifications";
+  if (pathname.startsWith("/my-account/support")) return "support";
   if (pathname.startsWith("/my-account/refer-and-earn")) return "refer-and-earn";
   // /my-account and /my-account/profile both highlight the overview row.
   return "my-account";
