@@ -9,6 +9,7 @@ import {
   Card,
   CardBody,
   ErrorState,
+  Sheet,
   Skeleton,
   Textarea,
   toastError,
@@ -126,12 +127,6 @@ const SessionTimeline = ({ sessions }: { sessions: SupportSession[] }) => (
           <span className="h-px flex-1 bg-divider" />
         </div>
         {[...session.messages].sort((left, right) => left.id - right.id).map((message) => <MessageBubble key={message.id} message={message} />)}
-        {[...session.calls].sort((left, right) => left.id - right.id).map((call) => (
-          <div key={call.id} className="mx-auto my-3 max-w-lg rounded-xl border border-divider bg-content2 px-4 py-2 text-center text-xs text-default-600">
-            <Icon icon="solar:phone-calling-linear" className="me-1 inline" />
-            Callback {call.status.replaceAll("_", " ")} · {formatTime(call.created_at)}
-          </div>
-        ))}
       </section>
     ))}
   </>
@@ -160,6 +155,7 @@ export const SupportChat = ({ initialData }: Props) => {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [feedback, setFeedback] = useState("");
   const [showOlderOrders, setShowOlderOrders] = useState(false);
+  const [resolveConfirmOpen, setResolveConfirmOpen] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const visibleTopics = useMemo(() => chat.topics.filter((topic) => {
@@ -173,7 +169,7 @@ export const SupportChat = ({ initialData }: Props) => {
 
   useEffect(() => {
     timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight});
-  }, [chat.payload?.thread.sessions]);
+  }, [chat.payload?.thread.sessions, chat.remoteTyping]);
 
   const validateFiles = (files: File[]) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
@@ -207,10 +203,22 @@ export const SupportChat = ({ initialData }: Props) => {
     if (!chat.activeSession || (!message.trim() && !attachments.length)) return;
     try {
       await chat.sendMessage(chat.activeSession, message.trim(), attachments);
+      chat.announceTyping(false);
       setMessage("");
       setAttachments([]);
     } catch {
       toastError(chat.error || t("supportChat.sendFailed"));
+    }
+  };
+
+  const resolveConversation = async () => {
+    if (!chat.activeSession) return;
+    try {
+      await chat.resolve(chat.activeSession);
+      setResolveConfirmOpen(false);
+      toastSuccess(t("supportChat.resolved"));
+    } catch {
+      toastError(t("supportChat.actionFailed"));
     }
   };
 
@@ -229,7 +237,8 @@ export const SupportChat = ({ initialData }: Props) => {
       : "bg-warning-50 text-warning-700";
 
   return (
-    <Card className="h-[calc(100dvh-10rem)] min-h-[620px] overflow-hidden">
+    <>
+      <Card className="h-[calc(100dvh-10rem)] min-h-[620px] overflow-hidden">
       <div className="flex h-full flex-col">
         <header className="flex items-center gap-3 border-b border-divider bg-content1 px-4 py-3 sm:px-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600">
@@ -246,7 +255,7 @@ export const SupportChat = ({ initialData }: Props) => {
                 <Icon icon="solar:phone-calling-linear" width={17} />
                 <span className="hidden sm:inline">{t("supportChat.callback")}</span>
               </Button>
-              <Button size="sm" color="success" variant="flat" onPress={() => chat.resolve(chat.activeSession!).then(() => toastSuccess(t("supportChat.resolved"))).catch(() => toastError(t("supportChat.actionFailed")))} isLoading={chat.sending}>
+              <Button size="sm" color="success" variant="flat" onPress={() => setResolveConfirmOpen(true)} isLoading={chat.sending}>
                 <Icon icon="solar:check-circle-linear" width={17} />
                 <span className="hidden sm:inline">{t("supportChat.resolve")}</span>
               </Button>
@@ -262,6 +271,14 @@ export const SupportChat = ({ initialData }: Props) => {
               <p className="mt-1 text-sm text-default-500">{t("supportChat.welcomeDescription")}</p>
             </div>
           )}
+
+          {chat.remoteTyping ? (
+            <div className="mb-4 flex justify-start" aria-live="polite">
+              <div className="rounded-2xl rounded-bl-sm border border-divider bg-content1 px-4 py-3 text-sm text-default-500">
+                {t("supportChat.typing")}
+              </div>
+            </div>
+          ) : null}
 
           {!chat.activeSession && selectedOrder === undefined ? (
             <Card className="mx-auto mt-5 max-w-xl">
@@ -347,7 +364,7 @@ export const SupportChat = ({ initialData }: Props) => {
           <footer className="border-t border-divider bg-content1 p-3 sm:p-4">
             <AttachmentPicker files={attachments} onFiles={validateFiles} onRemove={(index) => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} compact />
             <div className="flex items-end gap-2">
-              <Textarea value={message} onValueChange={setMessage} maxLength={4000} minRows={1} maxRows={5} placeholder={t("supportChat.messagePlaceholder")} className="flex-1" />
+              <Textarea value={message} onValueChange={(value) => { setMessage(value); chat.announceTyping(Boolean(value.trim())); }} maxLength={4000} minRows={1} maxRows={5} placeholder={t("supportChat.messagePlaceholder")} className="flex-1" />
               <Button isIconOnly onPress={sendMessage} isLoading={chat.sending} isDisabled={!message.trim() && !attachments.length} aria-label={t("supportChat.send")}>
                 <Icon icon="solar:plain-2-bold" width={20} />
               </Button>
@@ -355,7 +372,27 @@ export const SupportChat = ({ initialData }: Props) => {
           </footer>
         ) : null}
       </div>
-    </Card>
+      </Card>
+      <Sheet
+        isOpen={resolveConfirmOpen}
+        onOpenChange={setResolveConfirmOpen}
+        title={t("supportChat.resolveConfirmTitle")}
+        backdrop="blur"
+        classNames={{base: "w-full bg-content1", body: "pb-2"}}
+        footer={(
+          <div className="flex w-full gap-2">
+            <Button className="flex-1" variant="light" onPress={() => setResolveConfirmOpen(false)} isDisabled={chat.sending}>
+              {t("supportChat.resolveCancel")}
+            </Button>
+            <Button className="flex-1" color="success" onPress={resolveConversation} isLoading={chat.sending}>
+              {t("supportChat.resolveConfirm")}
+            </Button>
+          </div>
+        )}
+      >
+        <p className="text-sm leading-6 text-default-600">{t("supportChat.resolveConfirmDescription")}</p>
+      </Sheet>
+    </>
   );
 };
 

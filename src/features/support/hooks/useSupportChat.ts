@@ -32,6 +32,16 @@ const normalizePayload = (payload: SupportThreadPayload): SupportThreadPayload =
   },
 });
 
+type SupportTypingEvent = {
+  role: "admin" | "customer";
+  typing: boolean;
+};
+
+type SupportPresenceChannel = {
+  whisper: (event: string, data: SupportTypingEvent) => SupportPresenceChannel;
+  listenForWhisper: (event: string, callback: (data: SupportTypingEvent) => void) => SupportPresenceChannel;
+};
+
 export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const [payload, setPayload] = useState<SupportThreadPayload | null>(() => initialData ? normalizePayload(initialData) : null);
   const [topics, setTopics] = useState<SupportTopic[]>([]);
@@ -39,9 +49,13 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const [loading, setLoading] = useState(!initialData);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [remoteTyping, setRemoteTyping] = useState(false);
   const socketLive = useRef(false);
   const polling = useRef(false);
   const payloadRef = useRef(payload);
+  const presenceChannel = useRef<SupportPresenceChannel | null>(null);
+  const localTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const remoteTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     payloadRef.current = payload;
@@ -119,6 +133,16 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     }
   }, [callCursor, mergeMessages, messageCursor, pollingEnabled, refresh]);
 
+  const announceTyping = useCallback((typing: boolean) => {
+    if (localTypingTimer.current) clearTimeout(localTypingTimer.current);
+    presenceChannel.current?.whisper("typing", {role: "customer", typing});
+    if (typing) {
+      localTypingTimer.current = setTimeout(() => {
+        presenceChannel.current?.whisper("typing", {role: "customer", typing: false});
+      }, 1400);
+    }
+  }, []);
+
   useEffect(() => {
     if (!payload) refresh().catch(() => undefined);
     supportService.getTopics().then(setTopics).catch((caught) => setError(getErrorMessage(caught)));
@@ -170,6 +194,16 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
         .listen(".support.activity", (activity: {message_id?: number | null}) => {
           void (activity.message_id ? catchUp() : refresh());
         });
+      const presence = instance.join(`support.presence.thread.${threadUuid}`) as SupportPresenceChannel;
+      presenceChannel.current = presence;
+      presence.listenForWhisper("typing", (activity) => {
+        if (activity.role !== "admin") return;
+        if (remoteTypingTimer.current) clearTimeout(remoteTypingTimer.current);
+        setRemoteTyping(activity.typing);
+        if (activity.typing) {
+          remoteTypingTimer.current = setTimeout(() => setRemoteTyping(false), 1800);
+        }
+      });
       instance.connector.pusher.connection.bind("disconnected", () => {
         socketLive.current = false;
         setConnection(pollingEnabled ? "polling" : "offline");
@@ -186,10 +220,15 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     return () => {
       disposed = true;
       socketLive.current = false;
+      announceTyping(false);
+      presenceChannel.current = null;
+      if (remoteTypingTimer.current) clearTimeout(remoteTypingTimer.current);
+      setRemoteTyping(false);
       echo?.leave(`support.thread.${threadUuid}`);
+      echo?.leave(`support.presence.thread.${threadUuid}`);
       echo?.disconnect();
     };
-  }, [catchUp, pollingEnabled, realtimeAuthEndpoint, realtimeCluster, realtimeDriver, realtimeHost, realtimeKey, realtimePort, realtimeScheme, refresh, threadUuid]);
+  }, [announceTyping, catchUp, pollingEnabled, realtimeAuthEndpoint, realtimeCluster, realtimeDriver, realtimeHost, realtimeKey, realtimePort, realtimeScheme, refresh, threadUuid]);
 
   useEffect(() => {
     if (!activeSession) return;
@@ -241,6 +280,8 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     loading,
     sending,
     error,
+    remoteTyping,
+    announceTyping,
     refresh,
     startSession: (input: Parameters<typeof supportService.startSession>[0]) => mutate(() => supportService.startSession(input)),
     sendMessage: (session: SupportSession, message: string, attachments: File[]) => mutate(() => supportService.sendMessage(session.slug, message, attachments)),

@@ -2091,6 +2091,10 @@
     "send": "إرسال الرسالة",
     "resolve": "حل المحادثة",
     "resolved": "تم حل المحادثة",
+    "resolveConfirmTitle": "هل تريد حل هذه المحادثة؟",
+    "resolveConfirmDescription": "قم بحل المحادثة فقط بعد معالجة مشكلتك. ستصبح المحادثة للقراءة فقط، ويمكنك تقييم الدعم الذي تلقيته.",
+    "resolveCancel": "متابعة المحادثة",
+    "resolveConfirm": "نعم، حل المحادثة",
     "callback": "طلب اتصال",
     "callbackRequested": "تم طلب الاتصال",
     "rateAssistance": "كيف تقيّم مساعدتنا؟",
@@ -2104,6 +2108,7 @@
     "actionFailed": "تعذر إكمال الإجراء. حاول مرة أخرى.",
     "sendFailed": "لم تُرسل رسالتك. حاول مجددًا.",
     "loadFailed": "تعذر تحميل محادثة الدعم.",
+    "typing": "فريق الدعم يكتب…",
     "connection": {"live": "مباشر", "polling": "تحديث دوري", "offline": "غير متصل"}
   },
   "userLayout": {

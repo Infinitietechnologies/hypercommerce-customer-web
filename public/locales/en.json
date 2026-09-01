@@ -2092,6 +2092,10 @@
     "send": "Send message",
     "resolve": "Resolve chat",
     "resolved": "Conversation resolved",
+    "resolveConfirmTitle": "Resolve this chat?",
+    "resolveConfirmDescription": "Only resolve the chat when your issue has been handled. This conversation will become read-only, and you can rate the support you received.",
+    "resolveCancel": "Keep chatting",
+    "resolveConfirm": "Yes, resolve chat",
     "callback": "Callback",
     "callbackRequested": "Callback requested",
     "rateAssistance": "How would you rate our assistance?",
@@ -2105,6 +2109,7 @@
     "actionFailed": "We could not complete that action. Please try again.",
     "sendFailed": "Your message was not sent. Please retry.",
     "loadFailed": "We could not load your support conversation.",
+    "typing": "Support is typing…",
     "connection": {"live": "Live", "polling": "Polling", "offline": "Offline"}
   },
   "userLayout": {
