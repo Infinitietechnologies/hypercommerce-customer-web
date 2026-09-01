@@ -18,8 +18,22 @@ const getErrorMessage = (error: unknown): string => {
   return error instanceof Error ? error.message : "Something went wrong.";
 };
 
+const normalizePayload = (payload: SupportThreadPayload): SupportThreadPayload => ({
+  ...payload,
+  thread: {
+    ...payload.thread,
+    sessions: [...payload.thread.sessions]
+      .sort((left, right) => left.id - right.id)
+      .map((session) => ({
+        ...session,
+        messages: [...session.messages].sort((left, right) => left.id - right.id),
+        calls: [...session.calls].sort((left, right) => left.id - right.id),
+      })),
+  },
+});
+
 export const useSupportChat = (initialData: SupportThreadPayload | null) => {
-  const [payload, setPayload] = useState<SupportThreadPayload | null>(initialData);
+  const [payload, setPayload] = useState<SupportThreadPayload | null>(() => initialData ? normalizePayload(initialData) : null);
   const [topics, setTopics] = useState<SupportTopic[]>([]);
   const [connection, setConnection] = useState<SupportConnectionMode>("polling");
   const [loading, setLoading] = useState(!initialData);
@@ -45,6 +59,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const realtimeCluster = payload?.realtime.cluster;
   const realtimeAuthEndpoint = payload?.realtime.auth_endpoint;
   const threadUuid = payload?.thread.uuid;
+  const pollingEnabled = payload?.polling_enabled ?? true;
 
   const messageCursor = useCallback(() => {
     const messages = payloadRef.current?.thread.sessions.flatMap((session) => session.messages) || [];
@@ -59,7 +74,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const refresh = useCallback(async () => {
     try {
       const next = await supportService.getThread();
-      setPayload(next);
+      setPayload(normalizePayload(next));
       setError(null);
       return next;
     } catch (caught) {
@@ -97,12 +112,12 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
       }
       if (!socketLive.current) setConnection("polling");
     } catch (caught) {
-      setConnection(navigator.onLine ? "polling" : "offline");
+      setConnection(navigator.onLine && pollingEnabled ? "polling" : "offline");
       setError(getErrorMessage(caught));
     } finally {
       polling.current = false;
     }
-  }, [callCursor, mergeMessages, messageCursor, refresh]);
+  }, [callCursor, mergeMessages, messageCursor, pollingEnabled, refresh]);
 
   useEffect(() => {
     if (!payload) refresh().catch(() => undefined);
@@ -111,7 +126,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
 
   useEffect(() => {
     if (!threadUuid || !realtimeKey || !realtimeDriver || !realtimeAuthEndpoint || !["reverb", "pusher"].includes(realtimeDriver)) {
-      setConnection("polling");
+      setConnection(pollingEnabled ? "polling" : "offline");
       return;
     }
 
@@ -122,6 +137,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
       const Echo = echoModule.default;
       const Pusher = pusherModule.default;
       const token = String(getCookie("access_token") || "");
+      const authorizationHeaders = {Authorization: `Bearer ${token}`, Accept: "application/json"};
       const instance = new Echo({
         broadcaster: realtimeDriver === "reverb" ? "reverb" : "pusher",
         Pusher,
@@ -133,7 +149,12 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
         forceTLS: realtimeScheme === "https",
         enabledTransports: ["ws", "wss"],
         authEndpoint: realtimeAuthEndpoint,
-        auth: {headers: {Authorization: `Bearer ${token}`, Accept: "application/json"}},
+        auth: {headers: authorizationHeaders},
+        channelAuthorization: {
+          endpoint: realtimeAuthEndpoint,
+          transport: "ajax",
+          headers: authorizationHeaders,
+        },
       });
       echo = instance;
       instance.private(`support.thread.${threadUuid}`)
@@ -144,22 +165,22 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
         })
         .error(() => {
           socketLive.current = false;
-          setConnection("polling");
+          setConnection(pollingEnabled ? "polling" : "offline");
         })
         .listen(".support.activity", (activity: {message_id?: number | null}) => {
           void (activity.message_id ? catchUp() : refresh());
         });
       instance.connector.pusher.connection.bind("disconnected", () => {
         socketLive.current = false;
-        setConnection("polling");
+        setConnection(pollingEnabled ? "polling" : "offline");
       });
       instance.connector.pusher.connection.bind("unavailable", () => {
         socketLive.current = false;
-        setConnection(navigator.onLine ? "polling" : "offline");
+        setConnection(navigator.onLine && pollingEnabled ? "polling" : "offline");
       });
     }).catch(() => {
       socketLive.current = false;
-      setConnection("polling");
+      setConnection(pollingEnabled ? "polling" : "offline");
     });
 
     return () => {
@@ -168,7 +189,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
       echo?.leave(`support.thread.${threadUuid}`);
       echo?.disconnect();
     };
-  }, [catchUp, realtimeAuthEndpoint, realtimeCluster, realtimeDriver, realtimeHost, realtimeKey, realtimePort, realtimeScheme, refresh, threadUuid]);
+  }, [catchUp, pollingEnabled, realtimeAuthEndpoint, realtimeCluster, realtimeDriver, realtimeHost, realtimeKey, realtimePort, realtimeScheme, refresh, threadUuid]);
 
   useEffect(() => {
     if (!activeSession) return;
@@ -176,10 +197,13 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   }, [activeSession, messageCursor, payload?.thread.last_message_at]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
+    const interval = pollingEnabled ? window.setInterval(() => {
       if (!socketLive.current && !document.hidden && navigator.onLine) void catchUp();
-    }, Math.max(15000, payload?.poll_interval_ms || 15000));
-    const sync = () => void (socketLive.current ? catchUp() : refresh());
+    }, Math.max(15000, payload?.poll_interval_ms || 15000)) : null;
+    const sync = () => {
+      if (socketLive.current) void catchUp();
+      else if (pollingEnabled) void refresh();
+    };
     const visible = () => {
       if (!document.hidden) sync();
     };
@@ -188,12 +212,12 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     window.addEventListener("offline", offline);
     document.addEventListener("visibilitychange", visible);
     return () => {
-      window.clearInterval(interval);
+      if (interval !== null) window.clearInterval(interval);
       window.removeEventListener("online", sync);
       window.removeEventListener("offline", offline);
       document.removeEventListener("visibilitychange", visible);
     };
-  }, [catchUp, payload?.poll_interval_ms, refresh]);
+  }, [catchUp, payload?.poll_interval_ms, pollingEnabled, refresh]);
 
   const mutate = useCallback(async (operation: () => Promise<unknown>) => {
     setSending(true);

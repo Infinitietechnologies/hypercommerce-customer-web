@@ -291,6 +291,28 @@ export const updateEmail = async (email: string) => {
     return response.data;
   } catch (error) {
     console.error("API error:", error);
+
+    const responseData = (
+      error as {
+        response?: {
+          data?: {
+            message?: unknown;
+            errors?: { email?: unknown };
+          };
+        };
+      }
+    ).response?.data;
+    const emailErrors = responseData?.errors?.email;
+    const message =
+      (Array.isArray(emailErrors) && typeof emailErrors[0] === "string"
+        ? emailErrors[0]
+        : null) ||
+      (typeof responseData?.message === "string" ? responseData.message : null);
+
+    if (message) {
+      return { success: false, message, data: undefined };
+    }
+
     return fallbackApiRes;
   }
 };

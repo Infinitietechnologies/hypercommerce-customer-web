@@ -107,6 +107,7 @@ export type SupportThreadPayload = {
   thread: SupportThread;
   recent_orders: SupportOrder[];
   poll_interval_ms: number;
+  polling_enabled: boolean;
   realtime: SupportRealtime;
 };
 

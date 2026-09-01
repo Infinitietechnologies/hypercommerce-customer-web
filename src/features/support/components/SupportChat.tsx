@@ -118,15 +118,15 @@ const MessageBubble = ({ message }: { message: SupportMessage }) => {
 
 const SessionTimeline = ({ sessions }: { sessions: SupportSession[] }) => (
   <>
-    {sessions.map((session) => (
+    {[...sessions].sort((left, right) => left.id - right.id).map((session) => (
       <section key={session.id} aria-label={session.slug}>
         <div className="my-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-default-400">
           <span className="h-px flex-1 bg-divider" />
           <span>{session.slug} · {session.topic?.title || "Support"}</span>
           <span className="h-px flex-1 bg-divider" />
         </div>
-        {session.messages.map((message) => <MessageBubble key={message.id} message={message} />)}
-        {session.calls.map((call) => (
+        {[...session.messages].sort((left, right) => left.id - right.id).map((message) => <MessageBubble key={message.id} message={message} />)}
+        {[...session.calls].sort((left, right) => left.id - right.id).map((call) => (
           <div key={call.id} className="mx-auto my-3 max-w-lg rounded-xl border border-divider bg-content2 px-4 py-2 text-center text-xs text-default-600">
             <Icon icon="solar:phone-calling-linear" className="me-1 inline" />
             Callback {call.status.replaceAll("_", " ")} · {formatTime(call.created_at)}
