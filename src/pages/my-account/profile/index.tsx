@@ -59,6 +59,7 @@ import { getFirebaseErrorMessage } from "@/lib/firebase";
 import Lightbox from "yet-another-react-lightbox";
 import { useSettings } from "@/contexts/SettingsContext";
 import { serverSideAuthGuard } from "@/guards/authGuard";
+import { setCookie } from "@/lib/cookies";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -83,6 +84,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
   // Redux is authoritative once the page has refreshed the profile; the SSR
   // snapshot only seeds the first paint.
   const user = userData ?? initialData;
+  const initialFormUser = initialData ?? user;
   const stripDialCode = (mobile: string, iso_2: string) => {
     if (!mobile || !iso_2) return mobile;
     const countryData = CountryList.findOneByCountryCode(iso_2);
@@ -96,12 +98,15 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
   };
 
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    mobile: stripDialCode(user?.mobile || "", user?.iso_2 || ""),
-    iso_2: user?.iso_2 || "",
-    country: user?.country || "",
-    friends_code: user?.friends_code || "",
+    name: initialFormUser?.name || "",
+    email: initialFormUser?.email || "",
+    mobile: stripDialCode(
+      initialFormUser?.mobile || "",
+      initialFormUser?.iso_2 || "",
+    ),
+    iso_2: initialFormUser?.iso_2 || "",
+    country: initialFormUser?.country || "",
+    friends_code: initialFormUser?.friends_code || "",
   });
 
   const [fieldErrors, setFieldErrors] = useState({ phone: "" });
@@ -131,16 +136,30 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
     setProfileImageFile(null);
   };
 
+  const syncUserData = useCallback(
+    (data: userData | null | undefined) => {
+      if (!data) return;
+
+      dispatch(setUserDataRedux(data));
+      setCookie("user", data);
+    },
+    [dispatch],
+  );
+
+  useEffect(() => {
+    syncUserData(initialData);
+  }, [initialData, syncUserData]);
+
   const refreshUserData = useCallback(async () => {
     try {
       const res = await getUserData();
       if (res.success && res.data) {
-        dispatch(setUserDataRedux(res.data));
+        syncUserData(res.data);
       }
     } catch (error) {
       console.error("Error refreshing user data:", error);
     }
-  }, [dispatch]);
+  }, [syncUserData]);
 
   // Auto-refresh user data when the tab becomes visible or focused
   // This helps reflect email verification status instantly when returning from email
@@ -239,7 +258,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
       const res = await updateUserData(form);
 
       if (res.success) {
-        dispatch(setUserDataRedux(res.data || {}));
+        syncUserData(res.data);
         addToast({
           title: t("pages.myAccount.toasts.successTitle"),
           description: t("pages.myAccount.toasts.successDesc"),
@@ -295,7 +314,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
       }
 
       if (emailRes.data) {
-        dispatch(setUserDataRedux(emailRes.data));
+        syncUserData(emailRes.data);
         setFormData((prev) => ({
           ...prev,
           email: emailRes.data?.email || prev.email,
@@ -481,7 +500,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
           color: "success",
         });
         if (res.data) {
-          dispatch(setUserDataRedux(res.data));
+          syncUserData(res.data);
           // Reset local form state to match the newly verified user data
           setFormData({
             name: res.data.name || "",
