@@ -27,6 +27,8 @@ export type userData = {
   id: number;
   name: string;
   email: string;
+  pending_email?: string | null;
+  pending_email_requested_at?: string | null;
   mobile: string;
   profile?: string;
   profile_image?: string;
