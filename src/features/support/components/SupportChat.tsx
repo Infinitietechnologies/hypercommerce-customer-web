@@ -486,7 +486,7 @@ export const SupportChat = ({ initialData }: Props) => {
             <Card className="mx-auto mt-5 max-w-xl">
               <CardBody className="gap-3 p-4">
                 <div className="flex items-center gap-2">
-                  <Button isIconOnly size="sm" variant="light" onPress={() => setSelectedOrder(undefined)} aria-label={t("common.back", "Back")}><Icon icon="solar:arrow-left-linear" /></Button>
+                  <Button isIconOnly size="md" variant="light" onPress={() => setSelectedOrder(undefined)} aria-label={t("common.back", "Back")}><Icon icon="solar:arrow-left-linear" /></Button>
                   <h2 className="font-bold">{t("supportChat.selectTopic")}</h2>
                 </div>
                 {visibleTopics.map((topic) => (
