@@ -41,6 +41,10 @@ type SupportPresenceChannel = {
   subscribed: (callback: () => void) => SupportPresenceChannel;
 };
 
+type SupportPrivateChannel = {
+  whisper: (event: string, data: SupportTypingEvent) => SupportPrivateChannel;
+};
+
 export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const [payload, setPayload] = useState<SupportThreadPayload | null>(() => initialData ? normalizePayload(initialData) : null);
   const [topics, setTopics] = useState<SupportTopic[]>([]);
@@ -54,6 +58,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const polling = useRef(false);
   const payloadRef = useRef(payload);
   const presenceChannel = useRef<SupportPresenceChannel | null>(null);
+  const privateThreadChannel = useRef<SupportPrivateChannel | null>(null);
   const localTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const localTyping = useRef(false);
   const remoteTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,12 +145,16 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     if (localTypingTimer.current) clearTimeout(localTypingTimer.current);
     if (activeSessionSlug && localTyping.current !== typing) {
       localTyping.current = typing;
+      privateThreadChannel.current?.whisper("typing", {role: "customer", typing});
       void supportService.typing(activeSessionSlug, typing).catch(() => undefined);
     }
     if (typing) {
       localTypingTimer.current = setTimeout(() => {
         localTyping.current = false;
-        if (activeSessionSlug) void supportService.typing(activeSessionSlug, false).catch(() => undefined);
+        if (activeSessionSlug) {
+          privateThreadChannel.current?.whisper("typing", {role: "customer", typing: false});
+          void supportService.typing(activeSessionSlug, false).catch(() => undefined);
+        }
       }, 1400);
     }
   }, [activeSessionSlug]);
@@ -225,7 +234,9 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
         },
       });
       echo = instance;
-      instance.private(`support.thread.${threadUuid}`)
+      const threadChannel = instance.private(`support.thread.${threadUuid}`);
+      privateThreadChannel.current = threadChannel as SupportPrivateChannel;
+      threadChannel
         .subscribed(() => {
           socketLive.current = true;
           setConnection("live");
@@ -239,6 +250,12 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
           void (activity.message_id ? catchUp() : refresh());
         })
         .listen(".support.typing", (activity: SupportTypingEvent) => {
+          if (activity.role !== "admin") return;
+          if (remoteTypingTimer.current) clearTimeout(remoteTypingTimer.current);
+          setRemoteTyping(activity.typing);
+          if (activity.typing) remoteTypingTimer.current = setTimeout(() => setRemoteTyping(false), 1800);
+        })
+        .listenForWhisper("typing", (activity: SupportTypingEvent) => {
           if (activity.role !== "admin") return;
           if (remoteTypingTimer.current) clearTimeout(remoteTypingTimer.current);
           setRemoteTyping(activity.typing);
@@ -269,6 +286,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
       echo?.leave(`support.thread.${threadUuid}`);
       echo?.leave(`support.presence.thread.${threadUuid}`);
       echo?.disconnect();
+      privateThreadChannel.current = null;
     };
   }, [announceTyping, catchUp, pollingEnabled, realtimeAuthEndpoint, realtimeCluster, realtimeDriver, realtimeHost, realtimeKey, realtimePort, realtimeScheme, refresh, threadUuid]);
 

@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import clsx from "clsx";
+import Lightbox from "yet-another-react-lightbox";
+import Download from "yet-another-react-lightbox/plugins/download";
 
 import {
   Button,
@@ -47,64 +49,163 @@ const PrivateAttachment = ({ attachment }: { attachment: SupportAttachment }) =>
   const { t } = useTranslation();
   const [source, setSource] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const isImage = attachment.mime_type.startsWith("image/");
+  const isPdf = attachment.mime_type === "application/pdf";
 
   useEffect(() => {
-    if (!attachment.mime_type.startsWith("image/")) return;
+    if (!isImage) return;
     let active = true;
-    let objectUrl = "";
     supportService.downloadAttachment(attachment.download_url).then((blob) => {
-      objectUrl = URL.createObjectURL(blob);
-      if (active) setSource(objectUrl);
+      if (active) setSource(URL.createObjectURL(blob));
     }).catch(() => active && setFailed(true));
     return () => {
       active = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [attachment.download_url, attachment.mime_type]);
+  }, [attachment.download_url, isImage]);
+
+  useEffect(() => () => {
+    if (source) URL.revokeObjectURL(source);
+  }, [source]);
+
+  const preview = async () => {
+    if (source) {
+      setPreviewOpen(true);
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      const blob = await supportService.downloadAttachment(attachment.download_url);
+      setSource(URL.createObjectURL(blob));
+      setPreviewOpen(true);
+      setFailed(false);
+    } catch {
+      setFailed(true);
+      toastError(t("supportChat.previewFailed"));
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const download = async () => {
+    setDownloading(true);
     try {
       const blob = await supportService.downloadAttachment(attachment.download_url);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = attachment.name;
+      document.body.append(link);
       link.click();
-      URL.revokeObjectURL(url);
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch {
       setFailed(true);
+      toastError(t("supportChat.downloadFailed"));
+    } finally {
+      setDownloading(false);
     }
   };
 
-  if (attachment.mime_type.startsWith("image/")) {
-    return source ? (
-      <button type="button" onClick={download} className="mt-2 block overflow-hidden rounded-xl border border-divider">
-        <Image unoptimized src={source} alt={attachment.name} width={320} height={224} className="max-h-56 max-w-full object-cover" />
-      </button>
-    ) : (
-      <div className="mt-2 flex h-28 w-48 items-center justify-center rounded-xl bg-content2 text-xs text-default-500">
-        {failed ? attachment.name : t("supportChat.loadingImage")}
-      </div>
-    );
-  }
-
   return (
-    <button type="button" onClick={download} className="mt-2 flex items-center gap-2 rounded-xl border border-divider bg-content1 px-3 py-2 text-left text-xs font-semibold">
-      <Icon icon="solar:file-text-linear" width={20} />
-      <span className="max-w-52 truncate">{attachment.name}</span>
-      <span className="text-default-400">{formatBytes(attachment.size)}</span>
-      <Icon icon="solar:download-linear" width={18} />
-    </button>
+    <>
+      {isImage ? (
+        <div className="mt-2 inline-flex max-w-full flex-col items-start gap-1.5">
+          {source ? (
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              className="group relative block cursor-zoom-in overflow-hidden rounded-lg border border-divider bg-content2"
+              aria-label={t("supportChat.previewAttachment", {name: attachment.name})}
+            >
+              <Image unoptimized src={source} alt={attachment.name} width={128} height={96} className="h-24 w-32 object-cover" />
+              <span className="absolute inset-0 grid place-items-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+                <Icon icon="solar:magnifer-zoom-in-linear" width={22} />
+              </span>
+            </button>
+          ) : (
+            <div className="flex h-24 w-32 items-center justify-center rounded-lg bg-content2 px-2 text-center text-xs text-default-500">
+              {failed ? attachment.name : t("supportChat.loadingImage")}
+            </div>
+          )}
+          <button type="button" onClick={download} disabled={downloading} className="inline-flex items-center gap-1 text-xs font-semibold text-default-500 hover:text-primary disabled:opacity-50">
+            <Icon icon={downloading ? "solar:refresh-circle-linear" : "solar:download-linear"} width={15} className={downloading ? "animate-spin" : ""} />
+            {t("supportChat.downloadAttachment")}
+          </button>
+        </div>
+      ) : (
+        <div className="mt-2 flex max-w-full items-center gap-1.5">
+          <button
+            type="button"
+            onClick={preview}
+            disabled={!isPdf || previewLoading}
+            aria-label={isPdf ? t("supportChat.previewAttachment", {name: attachment.name}) : undefined}
+            className="flex min-w-0 items-center gap-2 rounded-lg border border-divider bg-content1 px-3 py-2 text-left text-xs font-semibold hover:bg-content2 disabled:cursor-default"
+          >
+            <Icon icon={previewLoading ? "solar:refresh-circle-linear" : "solar:file-text-linear"} width={19} className={previewLoading ? "animate-spin" : ""} />
+            <span className="max-w-44 truncate">{attachment.name}</span>
+            <span className="shrink-0 text-default-400">{formatBytes(attachment.size)}</span>
+            {isPdf ? <Icon icon="solar:eye-linear" width={17} className="shrink-0" /> : null}
+          </button>
+          <button type="button" onClick={download} disabled={downloading} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-divider bg-content1 text-default-500 hover:border-primary hover:text-primary disabled:opacity-50" aria-label={t("supportChat.downloadNamedAttachment", {name: attachment.name})}>
+            <Icon icon={downloading ? "solar:refresh-circle-linear" : "solar:download-linear"} width={18} className={downloading ? "animate-spin" : ""} />
+          </button>
+        </div>
+      )}
+
+      {isImage && source ? (
+        <Lightbox
+          open={previewOpen}
+          close={() => setPreviewOpen(false)}
+          slides={[{src: source, alt: attachment.name, download: {url: source, filename: attachment.name}}]}
+          plugins={[Download]}
+          render={{buttonPrev: () => null, buttonNext: () => null}}
+          labels={{Download: t("supportChat.downloadAttachment")}}
+        />
+      ) : null}
+
+      {isPdf && source ? (
+        <Sheet
+          isOpen={previewOpen}
+          onOpenChange={setPreviewOpen}
+          size="5xl"
+          title={<span className="truncate">{attachment.name}</span>}
+          classNames={{base: "w-full bg-content1", body: "p-0"}}
+          footer={(
+            <Button className="w-full" variant="bordered" onPress={download} isLoading={downloading}>
+              <Icon icon="solar:download-linear" width={17} />
+              {t("supportChat.downloadAttachment")}
+            </Button>
+          )}
+        >
+          <iframe src={source} title={attachment.name} className="h-full min-h-96 w-full border-0" />
+        </Sheet>
+      ) : null}
+    </>
   );
 };
 
 const MessageBubble = ({ message }: { message: SupportMessage }) => {
   const { t } = useTranslation();
   if (message.sender_role === "system") {
+    const success = message.type === "closure";
+    const normalizedText = message.text.toLowerCase();
+    const icon = success
+      ? "solar:check-circle-linear"
+      : normalizedText.includes("call") || normalizedText.includes("callback")
+        ? "solar:phone-calling-linear"
+        : normalizedText.includes("assign")
+          ? "solar:user-check-linear"
+          : "solar:info-circle-linear";
     return (
-      <div className={`mx-auto my-4 max-w-lg rounded-xl border px-4 py-3 text-center text-sm ${message.type === "closure" ? "border-success-200 bg-success-50 text-success-700" : "border-divider bg-content2 text-default-600"}`}>
-        <div className="font-semibold">{message.type === "closure" ? "✓ " : ""}{message.text}</div>
-        <time className="mt-1 block text-[11px] opacity-70">{formatTime(message.created_at)}</time>
+      <div className={clsx("mx-auto my-2 flex w-fit max-w-full flex-wrap items-center justify-center gap-1.5 px-2 text-center text-xs leading-5", success ? "text-success-700" : "text-default-500")} role="status">
+        <span className={clsx("grid h-5 w-5 shrink-0 place-items-center rounded-full", success ? "bg-success-50" : "bg-content2")}>
+          <Icon icon={icon} width={14} />
+        </span>
+        <span className="font-medium">{message.text}</span>
+        <time className="shrink-0 opacity-60">{formatTime(message.created_at)}</time>
       </div>
     );
   }
