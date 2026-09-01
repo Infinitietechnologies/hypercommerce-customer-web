@@ -5,6 +5,8 @@ import type {
   SupportTopic,
   SupportUpdates,
   SupportMessage,
+  SupportMessagePage,
+  SupportRealtimePayload,
 } from "@/types/support";
 
 type TokenParams = { access_token?: string };
@@ -24,6 +26,16 @@ export const supportService = {
     return data(await api.get("/user/support/thread/updates", {
       params: { after_message_id: afterMessageId, after_call_id: afterCallId },
     }));
+  },
+
+  async getOlderMessages(beforeMessageId: number): Promise<SupportMessagePage> {
+    return data(await api.get("/user/support/thread/messages", {
+      params: { before_message_id: beforeMessageId, limit: 50 },
+    }));
+  },
+
+  async getRealtime(): Promise<SupportRealtimePayload> {
+    return data(await api.get("/user/support/realtime"));
   },
 
   async startSession(input: {
@@ -51,6 +63,10 @@ export const supportService = {
 
   async markRead(slug: string, messageId: number): Promise<void> {
     await api.post(`/user/support/sessions/${slug}/read`, { message_id: messageId });
+  },
+
+  async typing(slug: string, typing: boolean): Promise<void> {
+    await api.post(`/user/support/sessions/${slug}/typing`, { typing });
   },
 
   async requestCallback(slug: string, phone?: string): Promise<void> {

@@ -2109,6 +2109,11 @@
     "actionFailed": "We could not complete that action. Please try again.",
     "sendFailed": "Your message was not sent. Please retry.",
     "loadFailed": "We could not load your support conversation.",
+    "loadOlder": "Load older messages",
+    "executiveConnecting": "A customer support executive will connect with you shortly.",
+    "notificationTitle": "New customer support message",
+    "notificationFrom": "New message from {{name}}",
+    "notificationBody": "Open support to view the reply.",
     "typing": "Support is typing…",
     "connection": {"live": "Live", "polling": "Polling", "offline": "Offline"}
   },

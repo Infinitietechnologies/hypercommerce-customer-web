@@ -33,6 +33,11 @@ const ProgressBar = dynamic(() => import("@/components/ProgressBar"), {
   ssr: false,
 });
 
+const SupportNotificationListener = dynamic(
+  () => import("@/features/support/components/SupportNotificationListener"),
+  { ssr: false },
+);
+
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
@@ -141,6 +146,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         <ReduxProvider>
           <ErrorBoundary>{getLayout(content)}</ErrorBoundary>
           <AuthSheetHost />
+          <SupportNotificationListener />
         </ReduxProvider>
       </NextThemesProvider>
     </HeroUIProvider>

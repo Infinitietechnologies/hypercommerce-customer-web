@@ -38,8 +38,7 @@ type SupportTypingEvent = {
 };
 
 type SupportPresenceChannel = {
-  whisper: (event: string, data: SupportTypingEvent) => SupportPresenceChannel;
-  listenForWhisper: (event: string, callback: (data: SupportTypingEvent) => void) => SupportPresenceChannel;
+  subscribed: (callback: () => void) => SupportPresenceChannel;
 };
 
 export const useSupportChat = (initialData: SupportThreadPayload | null) => {
@@ -50,12 +49,15 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [remoteTyping, setRemoteTyping] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const socketLive = useRef(false);
   const polling = useRef(false);
   const payloadRef = useRef(payload);
   const presenceChannel = useRef<SupportPresenceChannel | null>(null);
   const localTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const localTyping = useRef(false);
   const remoteTypingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingOlderRef = useRef(false);
 
   useEffect(() => {
     payloadRef.current = payload;
@@ -65,6 +67,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     () => payload?.thread.sessions.find((session) => session.id === payload.thread.active_ticket_id) || null,
     [payload],
   );
+  const activeSessionSlug = activeSession?.slug;
   const realtimeDriver = payload?.realtime.driver;
   const realtimeKey = payload?.realtime.key;
   const realtimeHost = payload?.realtime.host;
@@ -135,11 +138,52 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
 
   const announceTyping = useCallback((typing: boolean) => {
     if (localTypingTimer.current) clearTimeout(localTypingTimer.current);
-    presenceChannel.current?.whisper("typing", {role: "customer", typing});
+    if (activeSessionSlug && localTyping.current !== typing) {
+      localTyping.current = typing;
+      void supportService.typing(activeSessionSlug, typing).catch(() => undefined);
+    }
     if (typing) {
       localTypingTimer.current = setTimeout(() => {
-        presenceChannel.current?.whisper("typing", {role: "customer", typing: false});
+        localTyping.current = false;
+        if (activeSessionSlug) void supportService.typing(activeSessionSlug, false).catch(() => undefined);
       }, 1400);
+    }
+  }, [activeSessionSlug]);
+
+  const loadOlder = useCallback(async () => {
+    const pagination = payloadRef.current?.thread.message_pagination;
+    if (!pagination?.has_more || !pagination.oldest_message_id || loadingOlderRef.current) return;
+    loadingOlderRef.current = true;
+    setLoadingOlder(true);
+    try {
+      const page = await supportService.getOlderMessages(pagination.oldest_message_id);
+      setPayload((current) => {
+        if (!current) return current;
+        const ids = new Set(current.thread.sessions.flatMap((session) => session.messages.map((message) => message.id)));
+        return {
+          ...current,
+          thread: {
+            ...current.thread,
+            message_pagination: {
+              has_more: page.has_more,
+              oldest_message_id: page.oldest_message_id,
+            },
+            sessions: current.thread.sessions.map((session) => ({
+              ...session,
+              messages: [
+                ...page.messages.filter((message) => message.session_id === session.id && !ids.has(message.id)),
+                ...session.messages,
+              ].sort((left, right) => left.id - right.id),
+            })),
+          },
+        };
+      });
+    } catch (caught) {
+      setError(getErrorMessage(caught));
+      throw caught;
+    } finally {
+      loadingOlderRef.current = false;
+      setLoadingOlder(false);
     }
   }, []);
 
@@ -193,17 +237,15 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
         })
         .listen(".support.activity", (activity: {message_id?: number | null}) => {
           void (activity.message_id ? catchUp() : refresh());
+        })
+        .listen(".support.typing", (activity: SupportTypingEvent) => {
+          if (activity.role !== "admin") return;
+          if (remoteTypingTimer.current) clearTimeout(remoteTypingTimer.current);
+          setRemoteTyping(activity.typing);
+          if (activity.typing) remoteTypingTimer.current = setTimeout(() => setRemoteTyping(false), 1800);
         });
       const presence = instance.join(`support.presence.thread.${threadUuid}`) as SupportPresenceChannel;
       presenceChannel.current = presence;
-      presence.listenForWhisper("typing", (activity) => {
-        if (activity.role !== "admin") return;
-        if (remoteTypingTimer.current) clearTimeout(remoteTypingTimer.current);
-        setRemoteTyping(activity.typing);
-        if (activity.typing) {
-          remoteTypingTimer.current = setTimeout(() => setRemoteTyping(false), 1800);
-        }
-      });
       instance.connector.pusher.connection.bind("disconnected", () => {
         socketLive.current = false;
         setConnection(pollingEnabled ? "polling" : "offline");
@@ -281,6 +323,9 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     sending,
     error,
     remoteTyping,
+    loadingOlder,
+    hasOlder: Boolean(payload?.thread.message_pagination?.has_more),
+    loadOlder,
     announceTyping,
     refresh,
     startSession: (input: Parameters<typeof supportService.startSession>[0]) => mutate(() => supportService.startSession(input)),

@@ -2108,6 +2108,11 @@
     "actionFailed": "تعذر إكمال الإجراء. حاول مرة أخرى.",
     "sendFailed": "لم تُرسل رسالتك. حاول مجددًا.",
     "loadFailed": "تعذر تحميل محادثة الدعم.",
+    "loadOlder": "تحميل الرسائل الأقدم",
+    "executiveConnecting": "سيتواصل معك أحد ممثلي دعم العملاء قريبًا.",
+    "notificationTitle": "رسالة جديدة من دعم العملاء",
+    "notificationFrom": "رسالة جديدة من {{name}}",
+    "notificationBody": "افتح الدعم لعرض الرد.",
     "typing": "فريق الدعم يكتب…",
     "connection": {"live": "مباشر", "polling": "تحديث دوري", "offline": "غير متصل"}
   },

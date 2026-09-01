@@ -71,6 +71,10 @@ export type SupportThread = {
     avatar: string | null;
   };
   sessions: SupportSession[];
+  message_pagination: {
+    has_more: boolean;
+    oldest_message_id: number | null;
+  } | null;
 };
 
 export type SupportOrder = {
@@ -117,4 +121,17 @@ export type SupportUpdates = {
   active_ticket_id: number | null;
   message_cursor: number;
   call_cursor: number;
+};
+
+export type SupportMessagePage = {
+  messages: SupportMessage[];
+  has_more: boolean;
+  oldest_message_id: number | null;
+};
+
+export type SupportRealtimePayload = {
+  user_id: number;
+  thread_uuid: string | null;
+  configured: boolean;
+  realtime: SupportRealtime;
 };

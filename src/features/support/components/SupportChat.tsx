@@ -28,8 +28,12 @@ import { useSupportChat } from "@/features/support/hooks/useSupportChat";
 type Props = { initialData: SupportThreadPayload | null };
 
 const formatTime = (value: string) => new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
 }).format(new Date(value));
 
 const formatBytes = (bytes: number) => {
@@ -157,6 +161,7 @@ export const SupportChat = ({ initialData }: Props) => {
   const [showOlderOrders, setShowOlderOrders] = useState(false);
   const [resolveConfirmOpen, setResolveConfirmOpen] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const latestMessageIdRef = useRef(0);
 
   const visibleTopics = useMemo(() => chat.topics.filter((topic) => {
     if (topic.context === "both") return true;
@@ -168,8 +173,30 @@ export const SupportChat = ({ initialData }: Props) => {
   );
 
   useEffect(() => {
-    timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight});
-  }, [chat.payload?.thread.sessions, chat.remoteTyping]);
+    const latestMessageId = Math.max(0, ...(chat.payload?.thread.sessions.flatMap((session) => session.messages.map((item) => item.id)) || []));
+    if (latestMessageId > latestMessageIdRef.current) {
+      latestMessageIdRef.current = latestMessageId;
+      timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight});
+    }
+  }, [chat.payload?.thread.sessions]);
+
+  useEffect(() => {
+    if (chat.remoteTyping) timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight, behavior: "smooth"});
+  }, [chat.remoteTyping]);
+
+  const loadOlderMessages = async () => {
+    const timeline = timelineRef.current;
+    if (!timeline || !chat.hasOlder || chat.loadingOlder) return;
+    const previousHeight = timeline.scrollHeight;
+    try {
+      await chat.loadOlder();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (timelineRef.current) timelineRef.current.scrollTop = timelineRef.current.scrollHeight - previousHeight;
+      }));
+    } catch {
+      toastError(t("supportChat.actionFailed"));
+    }
+  };
 
   const validateFiles = (files: File[]) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
@@ -263,7 +290,19 @@ export const SupportChat = ({ initialData }: Props) => {
           ) : null}
         </header>
 
-        <div ref={timelineRef} className="flex-1 overflow-y-auto bg-content2/40 px-3 py-4 sm:px-6">
+        <div
+          ref={timelineRef}
+          className="flex-1 overflow-y-auto bg-content2/40 px-3 py-4 sm:px-6"
+          onScroll={(event) => { if (event.currentTarget.scrollTop <= 64) void loadOlderMessages(); }}
+        >
+          {chat.hasOlder ? (
+            <div className="mb-3 text-center">
+              <Button size="sm" variant="light" onPress={loadOlderMessages} isLoading={chat.loadingOlder}>
+                <Icon icon="solar:history-linear" width={17} />
+                {t("supportChat.loadOlder")}
+              </Button>
+            </div>
+          ) : null}
           {chat.payload.thread.sessions.length ? <SessionTimeline sessions={chat.payload.thread.sessions} /> : (
             <div className="mx-auto max-w-lg py-8 text-center">
               <Icon icon="solar:help-outline" width={44} className="mx-auto text-primary-500" />
@@ -271,6 +310,13 @@ export const SupportChat = ({ initialData }: Props) => {
               <p className="mt-1 text-sm text-default-500">{t("supportChat.welcomeDescription")}</p>
             </div>
           )}
+
+          {chat.activeSession && !chat.activeSession.assignee ? (
+            <div className="mx-auto my-4 flex max-w-lg items-start gap-2 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-700" role="status">
+              <Icon icon="solar:headphones-round-sound-linear" width={20} className="mt-0.5 shrink-0" />
+              <span>{t("supportChat.executiveConnecting")}</span>
+            </div>
+          ) : null}
 
           {chat.remoteTyping ? (
             <div className="mb-4 flex justify-start" aria-live="polite">
