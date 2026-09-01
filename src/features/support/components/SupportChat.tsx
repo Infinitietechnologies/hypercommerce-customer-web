@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
 import Image from "next/image";
+import clsx from "clsx";
 
 import {
   Button,
@@ -43,6 +44,7 @@ const formatBytes = (bytes: number) => {
 };
 
 const PrivateAttachment = ({ attachment }: { attachment: SupportAttachment }) => {
+  const { t } = useTranslation();
   const [source, setSource] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -81,7 +83,7 @@ const PrivateAttachment = ({ attachment }: { attachment: SupportAttachment }) =>
       </button>
     ) : (
       <div className="mt-2 flex h-28 w-48 items-center justify-center rounded-xl bg-content2 text-xs text-default-500">
-        {failed ? attachment.name : "Loading image…"}
+        {failed ? attachment.name : t("supportChat.loadingImage")}
       </div>
     );
   }
@@ -97,6 +99,7 @@ const PrivateAttachment = ({ attachment }: { attachment: SupportAttachment }) =>
 };
 
 const MessageBubble = ({ message }: { message: SupportMessage }) => {
+  const { t } = useTranslation();
   if (message.sender_role === "system") {
     return (
       <div className={`mx-auto my-4 max-w-lg rounded-xl border px-4 py-3 text-center text-sm ${message.type === "closure" ? "border-success-200 bg-success-50 text-success-700" : "border-divider bg-content2 text-default-600"}`}>
@@ -111,7 +114,7 @@ const MessageBubble = ({ message }: { message: SupportMessage }) => {
     <div className={`mb-4 flex ${mine ? "justify-end" : "justify-start"}`}>
       <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[72%] ${mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-divider bg-content1 text-foreground"}`}>
         <div className="mb-1 flex items-center justify-between gap-4 text-[11px] opacity-70">
-          <span>{mine ? "You" : message.sender_name || "Support"}</span>
+          <span>{mine ? t("supportChat.you") : message.sender_name || t("supportChat.supportAgent")}</span>
           <time>{formatTime(message.created_at)}</time>
         </div>
         <p className="whitespace-pre-wrap break-words text-sm leading-6">{message.text}</p>
@@ -121,20 +124,24 @@ const MessageBubble = ({ message }: { message: SupportMessage }) => {
   );
 };
 
-const SessionTimeline = ({ sessions }: { sessions: SupportSession[] }) => (
-  <>
-    {[...sessions].sort((left, right) => left.id - right.id).map((session) => (
-      <section key={session.id} aria-label={session.slug}>
-        <div className="my-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-default-400">
-          <span className="h-px flex-1 bg-divider" />
-          <span>{session.slug} · {session.topic?.title || "Support"}</span>
-          <span className="h-px flex-1 bg-divider" />
-        </div>
-        {[...session.messages].sort((left, right) => left.id - right.id).map((message) => <MessageBubble key={message.id} message={message} />)}
-      </section>
-    ))}
-  </>
-);
+const SessionTimeline = ({ sessions }: { sessions: SupportSession[] }) => {
+  const { t } = useTranslation();
+
+  return (
+    <>
+      {[...sessions].sort((left, right) => left.id - right.id).map((session) => (
+        <section key={session.id} aria-label={session.slug}>
+          <div className="my-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-default-400">
+            <span className="h-px flex-1 bg-divider" />
+            <span>{session.slug} · {session.topic?.title || t("supportChat.supportAgent")}</span>
+            <span className="h-px flex-1 bg-divider" />
+          </div>
+          {[...session.messages].sort((left, right) => left.id - right.id).map((message) => <MessageBubble key={message.id} message={message} />)}
+        </section>
+      ))}
+    </>
+  );
+};
 
 const OrderChoice = ({ order, selected, onSelect }: { order: SupportOrder; selected: boolean; onSelect: () => void }) => (
   <button type="button" onClick={onSelect} className={`w-full rounded-xl border p-3 text-start transition-colors ${selected ? "border-primary bg-primary-50" : "border-divider bg-content1 hover:bg-content2"}`}>
@@ -150,15 +157,17 @@ export const SupportChat = ({ initialData }: Props) => {
   const { t } = useTranslation();
   const router = useRouter();
   const chat = useSupportChat(initialData);
+  const requestedOrder = Number(router.query.order);
   const [selectedOrder, setSelectedOrder] = useState<number | null | undefined>(() => {
-    const requestedOrder = Number(router.query.order);
     return requestedOrder > 0 ? requestedOrder : undefined;
   });
   const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [ratingScore, setRatingScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState("");
   const [showOlderOrders, setShowOlderOrders] = useState(false);
+  const [startFlowOpen, setStartFlowOpen] = useState(() => requestedOrder > 0 || Boolean(initialData && !initialData.thread.sessions.length));
   const [resolveConfirmOpen, setResolveConfirmOpen] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef(0);
@@ -171,6 +180,9 @@ export const SupportChat = ({ initialData }: Props) => {
     () => chat.topics.find((topic) => topic.id === selectedTopic) ?? null,
     [chat.topics, selectedTopic],
   );
+  const sessionCount = chat.payload?.thread.sessions.length;
+  const lastSession = chat.payload?.thread.sessions.at(-1);
+  const supportFlowOpen = startFlowOpen || sessionCount === 0;
 
   useEffect(() => {
     const latestMessageId = Math.max(0, ...(chat.payload?.thread.sessions.flatMap((session) => session.messages.map((item) => item.id)) || []));
@@ -220,6 +232,7 @@ export const SupportChat = ({ initialData }: Props) => {
       setAttachments([]);
       setSelectedOrder(undefined);
       setSelectedTopic(null);
+      setStartFlowOpen(false);
       toastSuccess(t("supportChat.started"));
     } catch {
       toastError(chat.error || t("supportChat.actionFailed"));
@@ -243,10 +256,37 @@ export const SupportChat = ({ initialData }: Props) => {
     try {
       await chat.resolve(chat.activeSession);
       setResolveConfirmOpen(false);
+      setSelectedOrder(undefined);
+      setSelectedTopic(null);
+      setStartFlowOpen(false);
       toastSuccess(t("supportChat.resolved"));
     } catch {
       toastError(t("supportChat.actionFailed"));
     }
+  };
+
+  const submitRating = async () => {
+    if (!lastSession || !ratingScore) return;
+    try {
+      await chat.rate(lastSession, ratingScore, feedback.trim() || undefined);
+      setRatingScore(null);
+      setFeedback("");
+      toastSuccess(t("supportChat.thanks"));
+    } catch {
+      toastError(t("supportChat.actionFailed"));
+    }
+  };
+
+  const openNewSupportFlow = () => {
+    setSelectedOrder(undefined);
+    setSelectedTopic(null);
+    setMessage("");
+    setAttachments([]);
+    setShowOlderOrders(false);
+    setStartFlowOpen(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight, behavior: "smooth"});
+    }));
   };
 
   if (chat.loading) {
@@ -256,7 +296,6 @@ export const SupportChat = ({ initialData }: Props) => {
     return <ErrorState title={t("supportChat.loadFailed")} description={chat.error || undefined} retryLabel={t("common.retry", "Retry")} onRetry={chat.refresh} />;
   }
 
-  const lastSession = chat.payload.thread.sessions.at(-1);
   const modeClasses = chat.connection === "live"
     ? "bg-success-50 text-success-700"
     : chat.connection === "offline"
@@ -267,7 +306,7 @@ export const SupportChat = ({ initialData }: Props) => {
     <>
       <Card className="h-[calc(100dvh-10rem)] min-h-[620px] overflow-hidden">
       <div className="flex h-full flex-col">
-        <header className="flex items-center gap-3 border-b border-divider bg-content1 px-4 py-3 sm:px-5">
+        <header className="flex flex-wrap items-center gap-3 border-b border-divider bg-content1 px-4 py-3 sm:flex-nowrap sm:px-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600">
             <Icon icon="solar:chat-round-dots-linear" width={22} />
           </div>
@@ -275,24 +314,27 @@ export const SupportChat = ({ initialData }: Props) => {
             <h1 className="truncate text-base font-bold">{t("supportChat.title")}</h1>
             <p className="truncate text-xs text-default-500">{chat.activeSession ? `${chat.activeSession.slug} · ${chat.activeSession.topic?.title || ""}` : t("supportChat.assistant")}</p>
           </div>
-          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${modeClasses}`}>{t(`supportChat.connection.${chat.connection}`)}</span>
+          <span className={clsx("inline-flex h-8 shrink-0 items-center gap-2 rounded-full border border-divider px-2.5 text-xs font-semibold", modeClasses)}>
+            <span className="h-2 w-2 rounded-full bg-current" />
+            {t(`supportChat.connection.${chat.connection}`)}
+          </span>
           {chat.activeSession ? (
-            <>
-              <Button size="sm" variant="flat" onPress={() => chat.requestCallback(chat.activeSession!).then(() => toastSuccess(t("supportChat.callbackRequested"))).catch(() => toastError(t("supportChat.actionFailed")))} isLoading={chat.sending}>
+            <div className="order-last flex w-full items-center gap-2 sm:order-none sm:w-auto">
+              <Button size="xs" variant="bordered" className="h-9 flex-1 rounded-xl border-divider bg-content1 px-3 sm:flex-none" onPress={() => chat.requestCallback(chat.activeSession!).then(() => toastSuccess(t("supportChat.callbackRequested"))).catch(() => toastError(t("supportChat.actionFailed")))} isLoading={chat.sending}>
                 <Icon icon="solar:phone-calling-linear" width={17} />
-                <span className="hidden sm:inline">{t("supportChat.callback")}</span>
+                <span>{t("supportChat.callback")}</span>
               </Button>
-              <Button size="sm" color="success" variant="flat" onPress={() => setResolveConfirmOpen(true)} isLoading={chat.sending}>
+              <Button size="xs" color="success" variant="flat" className="h-9 flex-1 rounded-xl px-3 sm:flex-none" onPress={() => setResolveConfirmOpen(true)} isLoading={chat.sending}>
                 <Icon icon="solar:check-circle-linear" width={17} />
-                <span className="hidden sm:inline">{t("supportChat.resolve")}</span>
+                <span>{t("supportChat.resolve")}</span>
               </Button>
-            </>
+            </div>
           ) : null}
         </header>
 
         <div
           ref={timelineRef}
-          className="flex-1 overflow-y-auto bg-content2/40 px-3 py-4 sm:px-6"
+          className="slim-scrollbar flex-1 overflow-y-auto bg-content2/40 px-3 py-4 sm:px-6"
           onScroll={(event) => { if (event.currentTarget.scrollTop <= 64) void loadOlderMessages(); }}
         >
           {chat.hasOlder ? (
@@ -326,7 +368,7 @@ export const SupportChat = ({ initialData }: Props) => {
             </div>
           ) : null}
 
-          {!chat.activeSession && selectedOrder === undefined ? (
+          {!chat.activeSession && supportFlowOpen && selectedOrder === undefined ? (
             <Card className="mx-auto mt-5 max-w-xl">
               <CardBody className="gap-3 p-4">
                 <h2 className="font-bold">{t("supportChat.selectOrder")}</h2>
@@ -339,7 +381,7 @@ export const SupportChat = ({ initialData }: Props) => {
             </Card>
           ) : null}
 
-          {!chat.activeSession && selectedOrder !== undefined && !selectedTopic ? (
+          {!chat.activeSession && supportFlowOpen && selectedOrder !== undefined && !selectedTopic ? (
             <Card className="mx-auto mt-5 max-w-xl">
               <CardBody className="gap-3 p-4">
                 <div className="flex items-center gap-2">
@@ -356,7 +398,7 @@ export const SupportChat = ({ initialData }: Props) => {
             </Card>
           ) : null}
 
-          {!chat.activeSession && selectedTopic ? (
+          {!chat.activeSession && supportFlowOpen && selectedTopic ? (
             <Card className="mx-auto mt-5 max-w-xl">
               <CardBody className="gap-3 p-4">
                 <h2 className="font-bold">{t("supportChat.describeIssue")}</h2>
@@ -369,11 +411,23 @@ export const SupportChat = ({ initialData }: Props) => {
                   </div>
                 ) : null}
                 {selectedTopicDetails?.quick_replies.length ? (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="slim-scrollbar flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label={t("supportChat.quickReplies")}>
                     {selectedTopicDetails.quick_replies.map((reply) => (
-                      <Button key={reply} size="sm" variant={message === reply ? "solid" : "bordered"} onPress={() => setMessage(reply)}>
-                        {reply}
-                      </Button>
+                      <button
+                        key={reply}
+                        type="button"
+                        onClick={() => setMessage(reply)}
+                        aria-pressed={message === reply}
+                        className={clsx(
+                          "inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors",
+                          message === reply
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-divider bg-content1 text-default-600 hover:border-primary hover:bg-primary-50 hover:text-primary",
+                        )}
+                      >
+                        <Icon icon="solar:chat-round-dots-linear" width={16} />
+                        <span className="whitespace-nowrap">{reply}</span>
+                      </button>
                     ))}
                   </div>
                 ) : null}
@@ -391,18 +445,43 @@ export const SupportChat = ({ initialData }: Props) => {
             <Card className="mx-auto my-5 max-w-xl">
               <CardBody className="items-center gap-3 p-5 text-center">
                 <h2 className="font-bold">{t("supportChat.rateAssistance")}</h2>
-                <div className="flex gap-2" dir="ltr">
+                <p className="text-xs text-default-500">{t("supportChat.ratingHint")}</p>
+                <div className="flex gap-1" dir="ltr" role="group" aria-label={t("supportChat.rateAssistance")}>
                   {[1, 2, 3, 4, 5].map((score) => (
-                    <button key={score} type="button" onClick={() => chat.rate(lastSession, score, feedback).then(() => toastSuccess(t("supportChat.thanks"))).catch(() => toastError(t("supportChat.actionFailed")))} className="text-3xl text-warning transition-transform hover:scale-110" aria-label={`${score} stars`}>☆</button>
+                    <button
+                      key={score}
+                      type="button"
+                      aria-pressed={ratingScore === score}
+                      onClick={() => setRatingScore(score)}
+                      className={clsx(
+                        "flex h-10 w-10 items-center justify-center rounded-full text-rating-star transition-colors hover:bg-warning-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                        score <= (ratingScore ?? 0) ? "bg-warning-50" : "bg-transparent",
+                      )}
+                      aria-label={t("supportChat.ratingStars", {count: score})}
+                    >
+                      <Icon icon={score <= (ratingScore ?? 0) ? "solar:star-bold" : "solar:star-linear"} width={26} />
+                    </button>
                   ))}
                 </div>
                 <Textarea value={feedback} onValueChange={setFeedback} maxLength={2000} minRows={2} placeholder={t("supportChat.feedbackPlaceholder")} />
+                <Button className="w-full" onPress={submitRating} isLoading={chat.sending} isDisabled={!ratingScore}>
+                  {t("supportChat.submitRating")}
+                </Button>
               </CardBody>
             </Card>
           ) : null}
 
-          {!chat.activeSession && chat.payload.thread.sessions.length ? (
-            <div className="my-5 text-center text-sm font-semibold">{t("supportChat.stillIssue")} <button type="button" className="text-primary underline" onClick={() => { setSelectedOrder(undefined); setSelectedTopic(null); }}>{t("supportChat.chatWithUs")}</button></div>
+          {!chat.activeSession && !supportFlowOpen && chat.payload.thread.sessions.length ? (
+            <div className="mx-auto my-5 flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-divider bg-content1 p-4 shadow-sm">
+              <div className="min-w-0">
+                <div className="font-semibold">{t("supportChat.stillIssue")}</div>
+                <div className="mt-1 text-xs text-default-500">{t("supportChat.startAnotherDescription")}</div>
+              </div>
+              <Button size="xs" className="h-9 shrink-0 rounded-xl px-3" onPress={openNewSupportFlow}>
+                <Icon icon="solar:chat-round-dots-linear" width={17} />
+                {t("supportChat.chatWithUs")}
+              </Button>
+            </div>
           ) : null}
         </div>
 
@@ -410,7 +489,22 @@ export const SupportChat = ({ initialData }: Props) => {
           <footer className="border-t border-divider bg-content1 p-3 sm:p-4">
             <AttachmentPicker files={attachments} onFiles={validateFiles} onRemove={(index) => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} compact />
             <div className="flex items-end gap-2">
-              <Textarea value={message} onValueChange={(value) => { setMessage(value); chat.announceTyping(Boolean(value.trim())); }} maxLength={4000} minRows={1} maxRows={5} placeholder={t("supportChat.messagePlaceholder")} className="flex-1" />
+              <Textarea
+                value={message}
+                onValueChange={(value) => { setMessage(value); chat.announceTyping(Boolean(value.trim())); }}
+                onBlur={() => chat.announceTyping(false)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    void sendMessage();
+                  }
+                }}
+                maxLength={4000}
+                minRows={1}
+                maxRows={5}
+                placeholder={t("supportChat.messagePlaceholder")}
+                className="flex-1"
+              />
               <Button isIconOnly onPress={sendMessage} isLoading={chat.sending} isDisabled={!message.trim() && !attachments.length} aria-label={t("supportChat.send")}>
                 <Icon icon="solar:plain-2-bold" width={20} />
               </Button>
@@ -447,20 +541,24 @@ const AttachmentPicker = ({ files, onFiles, onRemove, compact = false }: {
   onFiles: (files: File[]) => void;
   onRemove: (index: number) => void;
   compact?: boolean;
-}) => (
-  <div className={compact ? "mb-2" : ""}>
-    <div className="flex flex-wrap gap-2">
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-divider px-3 py-2 text-xs font-semibold hover:bg-content2">
-        <Icon icon="solar:paperclip-linear" width={18} />
-        Attach
-        <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={(event) => { onFiles(Array.from(event.target.files || [])); event.target.value = ""; }} />
-      </label>
-      {files.map((file, index) => (
-        <span key={`${file.name}-${file.lastModified}`} className="inline-flex items-center gap-1 rounded-full bg-content2 px-3 py-2 text-xs">
-          <span className="max-w-40 truncate">{file.name}</span>
-          <button type="button" onClick={() => onRemove(index)} aria-label={`Remove ${file.name}`}><Icon icon="solar:close-circle-linear" width={16} /></button>
-        </span>
-      ))}
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className={compact ? "mb-2" : ""}>
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-divider px-3 py-2 text-xs font-semibold hover:bg-content2">
+          <Icon icon="solar:paperclip-linear" width={18} />
+          {t("supportChat.attach")}
+          <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={(event) => { onFiles(Array.from(event.target.files || [])); event.target.value = ""; }} />
+        </label>
+        {files.map((file, index) => (
+          <span key={`${file.name}-${file.lastModified}`} className="inline-flex items-center gap-1 rounded-full bg-content2 px-3 py-2 text-xs">
+            <span className="max-w-40 truncate">{file.name}</span>
+            <button type="button" onClick={() => onRemove(index)} aria-label={t("supportChat.removeAttachment", {name: file.name})}><Icon icon="solar:close-circle-linear" width={16} /></button>
+          </span>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};

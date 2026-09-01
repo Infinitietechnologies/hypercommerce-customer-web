@@ -282,8 +282,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
       if (!socketLive.current && !document.hidden && navigator.onLine) void catchUp();
     }, Math.max(15000, payload?.poll_interval_ms || 15000)) : null;
     const sync = () => {
-      if (socketLive.current) void catchUp();
-      else if (pollingEnabled) void refresh();
+      if (!socketLive.current && pollingEnabled) void refresh();
     };
     const visible = () => {
       if (!document.hidden) sync();

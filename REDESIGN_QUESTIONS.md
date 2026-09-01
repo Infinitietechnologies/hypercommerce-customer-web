@@ -1,5 +1,9 @@
 # Redesign decisions and data gaps
 
+## Customer support
+
+- There is no `/redesign` counterpart for the customer support timeline. The live storefront tokens and the approved single-timeline support flow therefore define this screen until a dedicated redesign reference is added.
+
 ## Watch & Buy
 
 - The current checkout has no `src/redesign/` counterpart for Watch & Buy. The live customer API and existing storefront tokens therefore define the first implementation.
