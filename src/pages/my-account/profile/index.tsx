@@ -97,7 +97,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
-    email: user?.pending_email || user?.email || "",
+    email: user?.email || "",
     mobile: stripDialCode(user?.mobile || "", user?.iso_2 || ""),
     iso_2: user?.iso_2 || "",
     country: user?.country || "",
@@ -105,7 +105,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
   });
 
   const [fieldErrors, setFieldErrors] = useState({ phone: "" });
-  const [currentEmailPassword, setCurrentEmailPassword] = useState("");
   const [isCheckingPhone, setIsCheckingPhone] = useState(false);
   const normalizedDemoNumber = demoNumber.replace(/\D/g, "");
   const normalizedCurrentUserNumber = stripDialCode(
@@ -116,14 +115,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
     (user?.email || "").toLowerCase() === demoEmail.toLowerCase();
   const isDemoPhoneLockedUser =
     normalizedCurrentUserNumber === normalizedDemoNumber;
-  const normalizedFormEmail = formData.email.trim().toLowerCase();
-  const normalizedCurrentEmail = (user?.email || "").trim().toLowerCase();
-  const normalizedPendingEmail = (user?.pending_email || "")
-    .trim()
-    .toLowerCase();
-  const isEmailChanged = normalizedFormEmail !== normalizedCurrentEmail;
-  const isPendingEmail =
-    normalizedPendingEmail !== "" && normalizedFormEmail === normalizedPendingEmail;
 
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -131,14 +122,13 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
   const setInitialState = () => {
     setFormData({
       name: user?.name || "",
-      email: user?.pending_email || user?.email || "",
+      email: user?.email || "",
       mobile: stripDialCode(user?.mobile || "", user?.iso_2 || ""),
       iso_2: user?.iso_2 || "US",
       country: user?.country || "",
       friends_code: user?.friends_code || "",
     });
     setProfileImageFile(null);
-    setCurrentEmailPassword("");
   };
 
   const refreshUserData = useCallback(async () => {
@@ -155,7 +145,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
   // Auto-refresh user data when the tab becomes visible or focused
   // This helps reflect email verification status instantly when returning from email
   useEffect(() => {
-    if (user?.email_verified_at && !user?.pending_email) return;
+    if (user?.email_verified_at) return;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -168,7 +158,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
     return () => {
       window.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [user?.email_verified_at, user?.pending_email, refreshUserData]);
+  }, [user?.email_verified_at, refreshUserData]);
 
   const debouncedPhoneCheck = useRef<NodeJS.Timeout | null>(null);
   const handlePhoneValidation = (phoneNumber: string) => {
@@ -292,18 +282,9 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
       return;
     }
 
-    if (!currentEmailPassword) {
-      addToast({
-        title: t("pages.myAccount.toasts.updateFailedTitle"),
-        description: t("pages.myAccount.labels.passwordRequired"),
-        color: "danger",
-      });
-      return;
-    }
-
     setIsEmailUpdating(true);
     try {
-      const emailRes = await updateEmail(formData.email, currentEmailPassword);
+      const emailRes = await updateEmail(formData.email);
       if (!emailRes.success) {
         addToast({
           title: t("pages.myAccount.toasts.updateFailedTitle"),
@@ -317,10 +298,9 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
         dispatch(setUserDataRedux(emailRes.data));
         setFormData((prev) => ({
           ...prev,
-          email: emailRes.data?.pending_email || prev.email,
+          email: emailRes.data?.email || prev.email,
         }));
       }
-      setCurrentEmailPassword("");
 
       addToast({
         title: t("pages.myAccount.labels.emailUpdateSuccess"),
@@ -740,28 +720,8 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                       }
                       endContent={
                         <div className="flex items-center gap-2 me-1">
-                          {isPendingEmail ? (
-                            <div className="flex items-center gap-1.5">
-                              <Chip
-                                color="warning"
-                                variant="light"
-                                size="sm"
-                                className="border-none h-7 px-2 text-[11px] font-bold"
-                              >
-                                {t("pages.myAccount.labels.verificationPending")}
-                              </Chip>
-                              <Button
-                                size="sm"
-                                variant="bordered"
-                                color="primary"
-                                className="h-8 px-3 text-[11px] font-medium border-1"
-                                onPress={handleResendVerification}
-                                isLoading={isResending}
-                              >
-                                {t("pages.myAccount.labels.resendVerification")}
-                              </Button>
-                            </div>
-                          ) : isEmailChanged && !isDemoEmailLockedUser ? (
+                          {formData.email !== user?.email &&
+                          !isDemoEmailLockedUser ? (
                             <Button
                               size="sm"
                               color="primary"
@@ -769,7 +729,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                               className="h-8 px-4 text-xs font-semibold shadow-sm"
                               onPress={handleUpdateEmail}
                               isLoading={isEmailUpdating}
-                              isDisabled={!currentEmailPassword}
                             >
                               {t("pages.myAccount.labels.update") || "Update"}
                             </Button>
@@ -827,20 +786,6 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                         </div>
                       }
                     />
-                    {isEmailChanged && !isPendingEmail && !isDemoEmailLockedUser ? (
-                      <Input
-                        name="current_email_password"
-                        type="password"
-                        label={t("pages.myAccount.labels.currentPassword")}
-                        labelPlacement="outside"
-                        isRequired
-                        value={currentEmailPassword}
-                        onChange={(event) => setCurrentEmailPassword(event.target.value)}
-                        startContent={
-                          <Icon icon="solar:lock-password-linear" width={20} height={20} className="text-default-400" />
-                        }
-                      />
-                    ) : null}
                     <PhoneInput
                       isReadOnly={isDemoPhoneLockedUser}
                       label={t("pages.myAccount.labels.phone")}

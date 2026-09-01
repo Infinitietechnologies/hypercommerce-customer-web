@@ -280,13 +280,12 @@ export const updateUserData = async (params: UpdateUserParams | FormData) => {
   }
 };
 
-export const updateEmail = async (email: string, currentPassword: string) => {
+export const updateEmail = async (email: string) => {
   try {
     const response = await api.post<ApiResponse<userData>>(
       "/user/update-email",
       {
         email,
-        current_password: currentPassword,
       },
     );
     return response.data;
