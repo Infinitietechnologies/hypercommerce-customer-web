@@ -51,6 +51,7 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
   const [connection, setConnection] = useState<SupportConnectionMode>("polling");
   const [loading, setLoading] = useState(!initialData);
   const [sending, setSending] = useState(false);
+  const mutationInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [remoteTyping, setRemoteTyping] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
@@ -317,18 +318,20 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     };
   }, [catchUp, payload?.poll_interval_ms, pollingEnabled, refresh]);
 
-  const mutate = useCallback(async (operation: () => Promise<unknown>) => {
-    setSending(true);
-    setError(null);
-    try {
-      await operation();
-      await refresh();
-    } catch (caught) {
-      setError(getErrorMessage(caught));
-      throw caught;
-    } finally {
-      setSending(false);
-    }
+  const mutate = useCallback((operation: () => Promise<unknown>) => {
+    if (mutationInFlight.current) return Promise.reject(new Error("Support action already in progress"));
+    mutationInFlight.current = true;
+    const task = (async () => {
+      setSending(true);
+      try {
+        await operation();
+        await refresh().catch(() => undefined);
+      } finally {
+        setSending(false);
+        mutationInFlight.current = false;
+      }
+    })();
+    return task;
   }, [refresh]);
 
   return {

@@ -6,6 +6,9 @@ import Image from "next/image";
 import clsx from "clsx";
 import Lightbox from "yet-another-react-lightbox";
 import Download from "yet-another-react-lightbox/plugins/download";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import SupportDropZone from "@/features/support/components/SupportDropZone";
+import { supportErrorMessage } from "@/features/support/supportError";
 
 import {
   Button,
@@ -126,9 +129,9 @@ const PrivateAttachment = ({ attachment }: { attachment: SupportAttachment }) =>
               </span>
             </button>
           ) : (
-            <div className="flex h-24 w-32 items-center justify-center rounded-lg bg-content2 px-2 text-center text-xs text-default-500">
-              {failed ? attachment.name : t("supportChat.loadingImage")}
-            </div>
+            <button type="button" onClick={preview} disabled={!failed || previewLoading} className="flex h-24 w-32 flex-col items-center justify-center gap-1 rounded-lg bg-content2 px-2 text-center text-xs text-default-500 disabled:cursor-wait" aria-label={t("supportChat.previewAttachment", {name: attachment.name})}>
+              {failed ? <><span className="max-w-full truncate">{attachment.name}</span><span className="text-primary">{t("retry")}</span></> : t("supportChat.loadingImage")}
+            </button>
           )}
           <button type="button" onClick={download} disabled={downloading} className="inline-flex items-center gap-1 text-xs font-semibold text-default-500 hover:text-primary disabled:opacity-50">
             <Icon icon={downloading ? "solar:refresh-circle-linear" : "solar:download-linear"} width={15} className={downloading ? "animate-spin" : ""} />
@@ -160,9 +163,10 @@ const PrivateAttachment = ({ attachment }: { attachment: SupportAttachment }) =>
           open={previewOpen}
           close={() => setPreviewOpen(false)}
           slides={[{src: source, alt: attachment.name, download: {url: source, filename: attachment.name}}]}
-          plugins={[Download]}
+          plugins={[Download, Zoom]}
+          zoom={{ scrollToZoom: true, maxZoomPixelRatio: 5 }}
           render={{buttonPrev: () => null, buttonNext: () => null}}
-          labels={{Download: t("supportChat.downloadAttachment")}}
+          labels={{Download: t("supportChat.downloadAttachment"), "Zoom in": t("supportChat.zoomIn"), "Zoom out": t("supportChat.zoomOut")}}
         />
       ) : null}
 
@@ -189,7 +193,7 @@ const PrivateAttachment = ({ attachment }: { attachment: SupportAttachment }) =>
 
 const MessageBubble = ({ message }: { message: SupportMessage }) => {
   const { t } = useTranslation();
-  if (message.sender_role === "system") {
+  if (message.sender_role === "system" && message.type !== "auto_reply") {
     const success = message.type === "closure";
     const normalizedText = message.text.toLowerCase();
     const icon = success
@@ -313,6 +317,7 @@ export const SupportChat = ({ initialData }: Props) => {
 
   const validateFiles = (files: File[]) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (chat.sending) return;
     if (files.length + attachments.length > 5 || files.some((file) => !allowed.includes(file.type) || file.size > 10 * 1024 * 1024)) {
       toastError(t("supportChat.attachmentError"));
       return;
@@ -335,8 +340,8 @@ export const SupportChat = ({ initialData }: Props) => {
       setSelectedTopic(null);
       setStartFlowOpen(false);
       toastSuccess(t("supportChat.started"));
-    } catch {
-      toastError(chat.error || t("supportChat.actionFailed"));
+    } catch (error) {
+      toastError(supportErrorMessage(error, t("supportChat.actionFailed"), seconds => t("supportChat.rateLimited", {seconds})));
     }
   };
 
@@ -347,8 +352,8 @@ export const SupportChat = ({ initialData }: Props) => {
       chat.announceTyping(false);
       setMessage("");
       setAttachments([]);
-    } catch {
-      toastError(chat.error || t("supportChat.sendFailed"));
+    } catch (error) {
+      toastError(supportErrorMessage(error, t("supportChat.sendFailed"), seconds => t("supportChat.rateLimited", {seconds})));
     }
   };
 
@@ -406,6 +411,7 @@ export const SupportChat = ({ initialData }: Props) => {
   return (
     <>
       <Card className="h-[calc(100dvh-10rem)] min-h-[620px] overflow-hidden">
+      <SupportDropZone enabled={!chat.sending && Boolean(chat.activeSession || (supportFlowOpen && selectedTopic))} onFiles={validateFiles}>
       <div className="flex h-full flex-col">
         <header className="flex flex-wrap items-center gap-3 border-b border-divider bg-content1 px-4 py-3 sm:flex-nowrap sm:px-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600">
@@ -421,7 +427,7 @@ export const SupportChat = ({ initialData }: Props) => {
           </span>
           {chat.activeSession ? (
             <div className="order-last flex w-full items-center gap-2 sm:order-none sm:w-auto">
-              <Button size="xs" variant="bordered" className="h-9 flex-1 rounded-xl border-divider bg-content1 px-3 sm:flex-none" onPress={() => chat.requestCallback(chat.activeSession!).then(() => toastSuccess(t("supportChat.callbackRequested"))).catch(() => toastError(t("supportChat.actionFailed")))} isLoading={chat.sending}>
+              <Button size="xs" variant="bordered" className="h-9 flex-1 rounded-xl border-divider bg-content1 px-3 sm:flex-none" onPress={() => chat.requestCallback(chat.activeSession!).then(() => toastSuccess(t("supportChat.callbackRequested"))).catch(error => toastError(supportErrorMessage(error, t("supportChat.actionFailed"), seconds => t("supportChat.rateLimited", {seconds}))))} isLoading={chat.sending}>
                 <Icon icon="solar:phone-calling-linear" width={17} />
                 <span>{t("supportChat.callback")}</span>
               </Button>
@@ -613,6 +619,7 @@ export const SupportChat = ({ initialData }: Props) => {
           </footer>
         ) : null}
       </div>
+      </SupportDropZone>
       </Card>
       <Sheet
         isOpen={resolveConfirmOpen}
@@ -648,10 +655,10 @@ const AttachmentPicker = ({ files, onFiles, onRemove, compact = false }: {
   return (
     <div className={compact ? "mb-2" : ""}>
       <div className="flex flex-wrap gap-2">
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-divider px-3 py-2 text-xs font-semibold hover:bg-content2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-divider px-3 py-2 text-xs font-semibold hover:bg-content2 focus-within:ring-2 focus-within:ring-focus">
           <Icon icon="solar:paperclip-linear" width={18} />
-          {t("supportChat.attach")}
-          <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={(event) => { onFiles(Array.from(event.target.files || [])); event.target.value = ""; }} />
+          {t("supportChat.dropOrAttach")}
+          <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={(event) => { onFiles(Array.from(event.target.files || [])); event.target.value = ""; }} />
         </label>
         {files.map((file, index) => (
           <span key={`${file.name}-${file.lastModified}`} className="inline-flex items-center gap-1 rounded-full bg-content2 px-3 py-2 text-xs">

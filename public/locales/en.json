@@ -2078,6 +2078,11 @@
   "upload_supporting_photos": "Upload supporting photos",
   "usage": "Usage",
   "supportChat": {
+    "dropMedia": "Drop images or PDFs to attach",
+    "dropOrAttach": "Drop files here or attach",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "rateLimited": "Too many requests. Please wait {{seconds}} seconds and try again.",
     "title": "Customer Support",
     "assistant": "Your personal support assistant",
     "welcome": "How can we help?",
