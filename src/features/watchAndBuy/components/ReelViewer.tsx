@@ -1,9 +1,9 @@
 import { Icon } from "@iconify/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
-import { Button, Skeleton } from "@/components/ui";
+import { Button, Skeleton, Tooltip } from "@/components/ui";
 import type { WatchBuyProduct, WatchBuyReel } from "@/types/watchBuy";
 
 import ReelCard from "./ReelCard";
@@ -42,20 +42,12 @@ const ReelViewer = ({
   const feedRef = useRef<HTMLElement | null>(null);
   const [isMuted, setIsMuted] = useState(true);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const feed = feedRef.current;
     const target = feed?.querySelector<HTMLElement>(
       `[data-reel-id="${activeReelId}"]`,
     );
-    const frame = window.requestAnimationFrame(() => {
-      if (feed && target) {
-        feed.scrollTop =
-          target.getBoundingClientRect().top -
-          feed.getBoundingClientRect().top +
-          feed.scrollTop;
-      }
-    });
-    return () => window.cancelAnimationFrame(frame);
+    if (feed && target) feed.scrollTop = target.offsetTop;
   }, [activeReelId]);
 
   useEffect(() => {
@@ -130,28 +122,30 @@ const ReelViewer = ({
       tabIndex={-1}
       className="fixed inset-0 z-overlay bg-shell"
     >
-      <Button
-        isIconOnly
-        size="sm"
-        variant="flat"
-        onPress={onClose}
-        aria-label={t("watchBuy.back")}
-        className="fixed start-3 top-3 z-30 bg-shell/70 text-shell-foreground shadow-overlay backdrop-blur-md"
-      >
-        <Icon
-          icon={
-            i18n.dir() === "rtl"
-              ? "solar:arrow-right-linear"
-              : "solar:arrow-left-linear"
-          }
-          className="text-2xl"
-        />
-      </Button>
+      <Tooltip content={t("watchBuy.back")}>
+        <Button
+          isIconOnly
+          size="sm"
+          variant="flat"
+          onPress={onClose}
+          aria-label={t("watchBuy.back")}
+          className="fixed start-4 top-4 z-40 bg-shell/70 text-shell-foreground shadow-overlay backdrop-blur-md transition hover:scale-105 hover:bg-shell-foreground/15 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none md:start-5 md:top-5"
+        >
+          <Icon
+            icon={
+              i18n.dir() === "rtl"
+                ? "solar:arrow-right-linear"
+                : "solar:arrow-left-linear"
+            }
+            className="text-2xl"
+          />
+        </Button>
+      </Tooltip>
 
       <section
         ref={feedRef}
         aria-label={t("watchBuy.reels.feedLabel")}
-        className="h-dvh snap-y snap-mandatory overflow-y-auto overscroll-contain bg-shell"
+        className="scrollbar-hide h-dvh snap-y snap-mandatory overflow-y-auto overscroll-contain bg-shell"
       >
         {reels.map((reel) => (
           <ReelCard

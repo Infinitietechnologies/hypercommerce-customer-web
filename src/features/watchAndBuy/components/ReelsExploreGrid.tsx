@@ -7,6 +7,7 @@ import type { WatchBuyReel } from "@/types/watchBuy";
 
 interface ReelsExploreGridProps {
   hasMore: boolean;
+  isPageHeading?: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
   onOpen: (reel: WatchBuyReel) => void;
@@ -15,6 +16,7 @@ interface ReelsExploreGridProps {
 
 const ReelsExploreGrid = ({
   hasMore,
+  isPageHeading = false,
   isLoadingMore,
   onLoadMore,
   onOpen,
@@ -28,12 +30,21 @@ const ReelsExploreGrid = ({
       className="mx-auto w-full max-w-site px-3 py-5 sm:px-4 md:px-6"
     >
       <div className="mb-4">
-        <h2
-          id="watch-buy-explore-title"
-          className="font-display text-xl font-extrabold tracking-tight text-foreground"
-        >
-          {t("watchBuy.reels.exploreTitle")}
-        </h2>
+        {isPageHeading ? (
+          <h1
+            id="watch-buy-explore-title"
+            className="font-display text-xl font-extrabold tracking-tight text-foreground"
+          >
+            {t("watchBuy.reels.exploreTitle")}
+          </h1>
+        ) : (
+          <h2
+            id="watch-buy-explore-title"
+            className="font-display text-xl font-extrabold tracking-tight text-foreground"
+          >
+            {t("watchBuy.reels.exploreTitle")}
+          </h2>
+        )}
         <p className="mt-1 text-sm text-default-500">
           {t("watchBuy.reels.exploreDescription")}
         </p>
@@ -78,7 +89,7 @@ const ReelsExploreGrid = ({
                     event.currentTarget.duration || 0.1,
                   );
                 }}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
               >
                 <track
                   default
@@ -92,7 +103,7 @@ const ReelsExploreGrid = ({
 
             <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-shell via-transparent to-transparent" />
             <span className="absolute inset-0 grid place-items-center">
-              <span className="grid size-11 place-items-center rounded-full bg-shell/55 text-shell-foreground opacity-90 backdrop-blur-sm transition group-hover:scale-110 motion-reduce:transform-none motion-reduce:transition-none">
+              <span className="grid size-11 place-items-center rounded-full bg-shell/55 text-shell-foreground opacity-90 shadow-overlay backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-shell/75 motion-reduce:transform-none motion-reduce:transition-none">
                 <Icon icon="solar:play-bold" className="ms-0.5 text-2xl" />
               </span>
             </span>

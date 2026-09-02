@@ -19,6 +19,8 @@ const StoriesRail = ({
 }: StoriesRailProps) => {
   const { t } = useTranslation();
 
+  if (!failed && items.length === 0) return null;
+
   return (
     <section
       aria-labelledby="watch-buy-stories-title"
@@ -47,7 +49,7 @@ const StoriesRail = ({
               <Icon icon="solar:restart-linear" className="text-xl" />
               {t("watchBuy.stories.retry")}
             </button>
-          ) : items.length > 0 ? (
+          ) : (
             <div className="scrollbar-hide flex snap-x gap-3 overflow-x-auto pb-1 min-[1024px]:gap-4">
               {items.map((item) => {
                 const profile = item.profile;
@@ -118,10 +120,6 @@ const StoriesRail = ({
                 );
               })}
             </div>
-          ) : (
-            <p className="rounded-large bg-content2 px-4 py-3 text-sm text-default-500">
-              {t("watchBuy.stories.empty")}
-            </p>
           )}
         </div>
       </div>

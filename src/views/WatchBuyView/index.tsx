@@ -294,6 +294,7 @@ const WatchBuyView = ({
           <ReelsExploreGrid
             reels={reels}
             hasMore={hasMore}
+            isPageHeading={stories.length === 0 && !storiesFailed}
             isLoadingMore={isLoadingMore}
             onLoadMore={loadMore}
             onOpen={(reel) => setActiveReelId(reel.id)}
