@@ -78,6 +78,8 @@ const AuthSheetHost = () => {
       size="md"
       backdrop="blur"
       classNames={{
+        backdrop: "z-sheet",
+        wrapper: "z-sheet",
         base: "overflow-hidden border border-divider bg-content1 shadow-overlay",
         header: "px-5 pb-4 pt-4 sm:px-6 sm:pt-6",
         body: "px-5 pb-6 pt-0 sm:px-6 sm:pb-7",

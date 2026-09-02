@@ -2318,6 +2318,7 @@
       "pause": "Pause video",
       "mute": "Mute video",
       "unmute": "Unmute video",
+      "sound": "Sound",
       "captions": "Video captions"
     },
     "stories": {
@@ -2346,8 +2347,11 @@
     },
     "products": {
       "title": "Products in this post",
+      "featuredTitle": "Featured products",
+      "count": "{{count}} products",
       "subtitle": "{{count}} linked products",
       "view": "View",
+      "viewProduct": "View product",
       "viewCount": "View {{count}} products",
       "unavailable": "Unavailable"
     },

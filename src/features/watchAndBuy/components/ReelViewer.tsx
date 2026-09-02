@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import { Button, Skeleton, Tooltip } from "@/components/ui";
-import type { WatchBuyProduct, WatchBuyReel } from "@/types/watchBuy";
+import type { WatchBuyReel } from "@/types/watchBuy";
 
 import ReelCard from "./ReelCard";
 
@@ -19,7 +19,6 @@ interface ReelViewerProps {
   onLoadMore: () => void;
   onOpenProfile: (reel: WatchBuyReel) => void;
   onShare: (reel: WatchBuyReel) => void;
-  onShowProducts: (products: WatchBuyProduct[]) => void;
   reels: WatchBuyReel[];
 }
 
@@ -34,10 +33,9 @@ const ReelViewer = ({
   onLoadMore,
   onOpenProfile,
   onShare,
-  onShowProducts,
   reels,
 }: ReelViewerProps) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const feedRef = useRef<HTMLElement | null>(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -120,57 +118,51 @@ const ReelViewer = ({
       aria-modal="true"
       aria-label={t("watchBuy.reels.viewerLabel")}
       tabIndex={-1}
-      className="fixed inset-0 z-overlay bg-shell"
+      className="fixed inset-0 z-overlay flex items-center justify-center bg-shell p-2 sm:p-3"
     >
-      <Tooltip content={t("watchBuy.back")}>
-        <Button
-          isIconOnly
-          size="sm"
-          variant="flat"
-          onPress={onClose}
-          aria-label={t("watchBuy.back")}
-          className="fixed start-4 top-4 z-40 bg-shell/70 text-shell-foreground shadow-overlay backdrop-blur-md transition hover:scale-105 hover:bg-shell-foreground/15 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none md:start-5 md:top-5"
-        >
-          <Icon
-            icon={
-              i18n.dir() === "rtl"
-                ? "solar:arrow-right-linear"
-                : "solar:arrow-left-linear"
-            }
-            className="text-2xl"
-          />
-        </Button>
-      </Tooltip>
+      <div className="relative h-full w-full max-w-full overflow-hidden rounded-xlarge border border-shell-divider bg-shell shadow-overlay sm:aspect-reel sm:max-h-full sm:w-auto">
+        <Tooltip content={t("watchBuy.back")}>
+          <Button
+            isIconOnly
+            size="sm"
+            variant="flat"
+            onPress={onClose}
+            aria-label={t("watchBuy.back")}
+            className="absolute end-3 top-3 z-50 bg-shell/65 text-shell-foreground shadow-overlay backdrop-blur-md transition hover:scale-105 hover:bg-shell-foreground/15 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            <Icon icon="solar:close-circle-linear" className="text-2xl" />
+          </Button>
+        </Tooltip>
 
-      <section
-        ref={feedRef}
-        aria-label={t("watchBuy.reels.feedLabel")}
-        className="scrollbar-hide h-dvh snap-y snap-mandatory overflow-y-auto overscroll-contain bg-shell"
-      >
-        {reels.map((reel) => (
-          <ReelCard
-            key={reel.id}
-            reel={reel}
-            isLikePending={likingReelIds.has(reel.id)}
-            isMuted={isMuted}
-            isSuspended={isSuspended}
-            onLike={onLike}
-            onMutedChange={setIsMuted}
-            onOpenProfile={() => onOpenProfile(reel)}
-            onShare={onShare}
-            onShowProducts={onShowProducts}
+        <section
+          ref={feedRef}
+          aria-label={t("watchBuy.reels.feedLabel")}
+          className="scrollbar-hide h-full snap-y snap-mandatory overflow-y-auto overscroll-contain bg-shell"
+        >
+          {reels.map((reel) => (
+            <ReelCard
+              key={reel.id}
+              reel={reel}
+              isLikePending={likingReelIds.has(reel.id)}
+              isMuted={isMuted}
+              isSuspended={isSuspended}
+              onLike={onLike}
+              onMutedChange={setIsMuted}
+              onOpenProfile={() => onOpenProfile(reel)}
+              onShare={onShare}
+            />
+          ))}
+          <InfiniteSentinel
+            hasMore={hasMore}
+            isLoading={isLoadingMore}
+            onLoadMore={onLoadMore}
+            rootMargin="1200px"
           />
-        ))}
-        <InfiniteSentinel
-          hasMore={hasMore}
-          isLoading={isLoadingMore}
-          onLoadMore={onLoadMore}
-          rootMargin="1200px"
-        />
-        {isLoadingMore ? (
-          <Skeleton className="mx-auto h-dvh w-full snap-start rounded-none md:aspect-reel md:w-auto" />
-        ) : null}
-      </section>
+          {isLoadingMore ? (
+            <Skeleton className="h-full w-full snap-start rounded-none" />
+          ) : null}
+        </section>
+      </div>
     </div>
   );
 };

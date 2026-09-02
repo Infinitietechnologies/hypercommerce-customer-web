@@ -175,18 +175,27 @@ const WatchBuyView = ({
     [openStory],
   );
 
-  const showReelProducts = useCallback(
+  const showStoryProducts = useCallback(
     (products: WatchBuyProduct[]) => {
       showProducts(products);
     },
     [showProducts],
   );
 
-  const showStoryProducts = useCallback(
-    (products: WatchBuyProduct[]) => {
-      showProducts(products);
+  const openReel = useCallback(
+    (reel: WatchBuyReel) => {
+      openedSlugRef.current = reel.slug;
+      setActiveReelId(reel.id);
+      void router.replace(
+        {
+          pathname: router.pathname,
+          query: { ...router.query, slug: reel.slug },
+        },
+        undefined,
+        { shallow: true, scroll: false },
+      );
     },
-    [showProducts],
+    [router],
   );
 
   const toggleLike = useCallback(
@@ -219,7 +228,9 @@ const WatchBuyView = ({
 
   const shareReel = useCallback(
     async (reel: WatchBuyReel) => {
-      const url = `${window.location.origin}/watch-and-buy?slug=${encodeURIComponent(reel.slug)}`;
+      const shareUrl = new URL("/watch-and-buy", window.location.origin);
+      shareUrl.searchParams.set("slug", reel.slug);
+      const url = shareUrl.toString();
       const shareData = {
         title: t("watchBuy.title"),
         text: reel.caption ?? t("watchBuy.shareText"),
@@ -297,7 +308,7 @@ const WatchBuyView = ({
             isPageHeading={stories.length === 0 && !storiesFailed}
             isLoadingMore={isLoadingMore}
             onLoadMore={loadMore}
-            onOpen={(reel) => setActiveReelId(reel.id)}
+            onOpen={openReel}
           />
         )}
       </div>
@@ -315,7 +326,6 @@ const WatchBuyView = ({
           onLoadMore={loadMore}
           onOpenProfile={openReelProfile}
           onShare={shareReel}
-          onShowProducts={showReelProducts}
         />
       ) : null}
 

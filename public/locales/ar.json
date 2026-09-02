@@ -2317,6 +2317,7 @@
       "pause": "إيقاف الفيديو مؤقتًا",
       "mute": "كتم الفيديو",
       "unmute": "تشغيل صوت الفيديو",
+      "sound": "الصوت",
       "captions": "تسميات الفيديو"
     },
     "stories": {
@@ -2345,8 +2346,11 @@
     },
     "products": {
       "title": "المنتجات في هذا المنشور",
+      "featuredTitle": "المنتجات المميزة",
+      "count": "{{count}} منتجات",
       "subtitle": "{{count}} منتجات مرتبطة",
       "view": "عرض",
+      "viewProduct": "عرض المنتج",
       "viewCount": "عرض {{count}} منتجات",
       "unavailable": "غير متاح"
     },

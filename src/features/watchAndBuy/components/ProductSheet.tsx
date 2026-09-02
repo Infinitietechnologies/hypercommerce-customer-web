@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 
 import { Button, Divider, Image, Link, Sheet } from "@/components/ui";
+import { formatWatchBuyPrice } from "@/features/watchAndBuy/formatPrice";
 import type { WatchBuyProduct } from "@/types/watchBuy";
 
 interface ProductSheetProps {
@@ -9,17 +10,6 @@ interface ProductSheetProps {
   onOpenChange: (open: boolean) => void;
   products: WatchBuyProduct[];
 }
-
-const formatPrice = (product: WatchBuyProduct, value: number) => {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: product.currency_code,
-    }).format(value);
-  } catch {
-    return `${product.currency_symbol}${value.toFixed(2)}`;
-  }
-};
 
 const ProductSheet = ({
   isOpen,
@@ -72,11 +62,11 @@ const ProductSheet = ({
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="text-sm font-extrabold text-foreground">
-                      {formatPrice(product, sellingPrice)}
+                      {formatWatchBuyPrice(product, sellingPrice)}
                     </span>
                     {discounted ? (
                       <span className="text-xs text-default-400 line-through">
-                        {formatPrice(product, product.price)}
+                        {formatWatchBuyPrice(product, product.price)}
                       </span>
                     ) : null}
                     {!product.available ? (

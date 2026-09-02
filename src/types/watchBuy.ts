@@ -43,6 +43,9 @@ export interface WatchBuyReel {
   blocked_at: string | null;
   video_url: string;
   cover_url: string | null;
+  preview_type: "image" | "video" | string;
+  preview_url: string | null;
+  preview_time_seconds: number | null;
   duration_ms: number | null;
   width: number | null;
   height: number | null;

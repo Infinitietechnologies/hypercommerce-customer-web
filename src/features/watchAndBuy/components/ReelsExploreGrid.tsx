@@ -24,6 +24,16 @@ const ReelsExploreGrid = ({
 }: ReelsExploreGridProps) => {
   const { t } = useTranslation();
 
+  const formatDuration = (durationMs: number | null) => {
+    if (durationMs == null) return null;
+
+    const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
   return (
     <section
       aria-labelledby="watch-buy-explore-title"
@@ -50,85 +60,83 @@ const ReelsExploreGrid = ({
         </p>
       </div>
 
-      <div className="columns-2 gap-2 md:columns-3 md:gap-3 min-[1024px]:columns-4">
-        {reels.map((reel) => (
-          <button
-            key={reel.id}
-            type="button"
-            onClick={() => onOpen(reel)}
-            aria-label={t("watchBuy.reels.open", {
-              username: reel.profile.username,
-            })}
-            style={{
-              aspectRatio:
-                reel.width && reel.height
-                  ? `${reel.width} / ${reel.height}`
-                  : "9 / 16",
-            }}
-            className="group relative mb-2 block w-full break-inside-avoid overflow-hidden rounded-large border border-divider bg-shell text-start shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none md:mb-3"
-          >
-            {reel.cover_url ? (
-              <Image
-                removeWrapper
-                disableAnimation
-                src={reel.cover_url}
-                alt={reel.caption ?? ""}
-                radius="none"
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
-              />
-            ) : (
-              <video
-                src={reel.video_url}
-                muted
-                playsInline
-                preload="auto"
-                aria-hidden="true"
-                onLoadedData={(event) => {
-                  event.currentTarget.currentTime = Math.min(
-                    0.1,
-                    event.currentTarget.duration || 0.1,
-                  );
-                }}
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
-              >
-                <track
-                  default
-                  kind="captions"
-                  src="/captions/empty.vtt"
-                  srcLang="en"
-                  label={t("watchBuy.media.captions")}
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 min-[1024px]:grid-cols-4">
+        {reels.map((reel) => {
+          const duration = formatDuration(reel.duration_ms);
+
+          return (
+            <button
+              key={reel.id}
+              type="button"
+              onClick={() => onOpen(reel)}
+              aria-label={t("watchBuy.reels.open", {
+                username: reel.profile.username,
+              })}
+              className="group relative aspect-reel w-full overflow-hidden rounded-large border border-divider bg-shell text-start shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none"
+            >
+              {reel.preview_type === "image" && reel.preview_url ? (
+                <Image
+                  removeWrapper
+                  disableAnimation
+                  src={reel.preview_url}
+                  alt={reel.caption ?? ""}
+                  radius="none"
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
                 />
-              </video>
-            )}
+              ) : (
+                <video
+                  src={reel.preview_url ?? reel.video_url}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  aria-hidden="true"
+                  onLoadedData={(event) => {
+                    const previewTime = reel.preview_time_seconds ?? 0.1;
+                    event.currentTarget.currentTime = Math.min(
+                      previewTime,
+                      event.currentTarget.duration || previewTime,
+                    );
+                  }}
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+                >
+                  <track
+                    default
+                    kind="captions"
+                    src="/captions/empty.vtt"
+                    srcLang="en"
+                    label={t("watchBuy.media.captions")}
+                  />
+                </video>
+              )}
 
-            <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-shell via-transparent to-transparent" />
-            <span className="absolute inset-0 grid place-items-center">
-              <span className="grid size-11 place-items-center rounded-full bg-shell/55 text-shell-foreground opacity-90 shadow-overlay backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-shell/75 motion-reduce:transform-none motion-reduce:transition-none">
-                <Icon icon="solar:play-bold" className="ms-0.5 text-2xl" />
-              </span>
-            </span>
+              <span className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-shell via-transparent to-shell/30" />
 
-            <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3 text-shell-foreground">
-              <span className="min-w-0">
-                <span className="block truncate text-xs font-extrabold">
-                  @{reel.profile.username}
+              {duration ? (
+                <span className="absolute start-2 top-2 z-30 inline-flex items-center gap-1 rounded-full bg-shell/65 px-2 py-1 text-xxs font-bold text-shell-foreground shadow-overlay backdrop-blur-sm">
+                  <Icon icon="solar:play-bold" className="text-xs" />
+                  {duration}
                 </span>
-                {reel.products.length > 0 ? (
-                  <span className="mt-0.5 flex items-center gap-1 text-xxs text-shell-muted">
-                    <Icon icon="solar:bag-3-bold" />
-                    {t("watchBuy.products.viewCount", {
-                      count: reel.products.length,
-                    })}
+              ) : null}
+
+              <span className="absolute inset-x-0 bottom-0 z-30 p-3 text-shell-foreground">
+                {reel.caption ? (
+                  <span className="mb-1 line-clamp-2 text-sm font-extrabold leading-5 drop-shadow-sm">
+                    {reel.caption}
                   </span>
                 ) : null}
+                <span className="flex items-center justify-between gap-2 text-xxs font-semibold text-shell-muted">
+                  <span className="min-w-0 truncate">
+                    @{reel.profile.username}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1 text-shell-foreground">
+                    <Icon icon="solar:heart-linear" className="text-xs" />
+                    {reel.like_count}
+                  </span>
+                </span>
               </span>
-              <span className="flex shrink-0 items-center gap-1 text-xs font-bold">
-                <Icon icon="solar:heart-bold" />
-                {reel.like_count}
-              </span>
-            </span>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       <InfiniteSentinel
@@ -139,13 +147,11 @@ const ReelsExploreGrid = ({
       />
 
       {isLoadingMore ? (
-        <div className="mt-2 columns-2 gap-2 md:columns-3 md:gap-3 min-[1024px]:columns-4">
+        <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 min-[1024px]:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
             <Skeleton
               key={index}
-              className={`mb-2 w-full break-inside-avoid rounded-large md:mb-3 ${
-                index % 3 === 0 ? "aspect-square" : "aspect-reel"
-              }`}
+              className="aspect-reel w-full rounded-large"
             />
           ))}
         </div>
