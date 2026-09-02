@@ -160,13 +160,14 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
     }
   }, [activeSessionSlug]);
 
-  const loadOlder = useCallback(async () => {
+  const loadOlder = useCallback(async (beforePrepend?: () => void) => {
     const pagination = payloadRef.current?.thread.message_pagination;
     if (!pagination?.has_more || !pagination.oldest_message_id || loadingOlderRef.current) return;
     loadingOlderRef.current = true;
     setLoadingOlder(true);
     try {
       const page = await supportService.getOlderMessages(pagination.oldest_message_id);
+      beforePrepend?.();
       setPayload((current) => {
         if (!current) return current;
         const ids = new Set(current.thread.sessions.flatMap((session) => session.messages.map((message) => message.id)));

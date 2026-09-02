@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
@@ -9,6 +9,7 @@ import Download from "yet-another-react-lightbox/plugins/download";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import SupportDropZone from "@/features/support/components/SupportDropZone";
 import { supportErrorMessage } from "@/features/support/supportError";
+import { captureSupportScroll, restoreSupportScroll } from "@/features/support/supportScroll";
 
 import {
   Button,
@@ -204,7 +205,7 @@ const MessageBubble = ({ message }: { message: SupportMessage }) => {
           ? "solar:user-check-linear"
           : "solar:info-circle-linear";
     return (
-      <div className={clsx("mx-auto my-2 flex w-fit max-w-full flex-wrap items-center justify-center gap-1.5 px-2 text-center text-xs leading-5", success ? "text-success-700" : "text-default-500")} role="status">
+      <div data-message-id={message.id} className={clsx("mx-auto my-2 flex w-fit max-w-full flex-wrap items-center justify-center gap-1.5 px-2 text-center text-xs leading-5", success ? "text-success-700" : "text-default-500")} role="status">
         <span className={clsx("grid h-5 w-5 shrink-0 place-items-center rounded-full", success ? "bg-success-50" : "bg-content2")}>
           <Icon icon={icon} width={14} />
         </span>
@@ -216,7 +217,7 @@ const MessageBubble = ({ message }: { message: SupportMessage }) => {
 
   const mine = message.sender_role === "user";
   return (
-    <div className={`mb-4 flex ${mine ? "justify-end" : "justify-start"}`}>
+    <div data-message-id={message.id} className={`mb-4 flex ${mine ? "justify-end" : "justify-start"}`}>
       <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[72%] ${mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-divider bg-content1 text-foreground"}`}>
         <div className="mb-1 flex items-center justify-between gap-4 text-[11px] opacity-70">
           <span>{mine ? t("supportChat.you") : message.sender_name || t("supportChat.supportAgent")}</span>
@@ -276,6 +277,9 @@ export const SupportChat = ({ initialData }: Props) => {
   const [resolveConfirmOpen, setResolveConfirmOpen] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
   const latestMessageIdRef = useRef(0);
+  const followingLatestRef = useRef(true);
+  const historyLoadingRef = useRef(false);
+  const historyAnchorRef = useRef<ReturnType<typeof captureSupportScroll> | null>(null);
 
   const visibleTopics = useMemo(() => chat.topics.filter((topic) => {
     if (topic.context === "both") return true;
@@ -289,29 +293,40 @@ export const SupportChat = ({ initialData }: Props) => {
   const lastSession = chat.payload?.thread.sessions.at(-1);
   const supportFlowOpen = startFlowOpen || sessionCount === 0;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const restoringHistory = !chat.loadingOlder && historyAnchorRef.current && timelineRef.current;
+    if (restoringHistory && historyAnchorRef.current && timelineRef.current) {
+      restoreSupportScroll(timelineRef.current, historyAnchorRef.current);
+      historyAnchorRef.current = null;
+    }
     const latestMessageId = Math.max(0, ...(chat.payload?.thread.sessions.flatMap((session) => session.messages.map((item) => item.id)) || []));
     if (latestMessageId > latestMessageIdRef.current) {
       latestMessageIdRef.current = latestMessageId;
-      timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight});
+      if (followingLatestRef.current && !historyLoadingRef.current && !restoringHistory) {
+        timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight});
+      }
     }
-  }, [chat.payload?.thread.sessions]);
+  }, [chat.payload?.thread.sessions, chat.loadingOlder]);
 
   useEffect(() => {
-    if (chat.remoteTyping) timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight, behavior: "smooth"});
+    if (chat.remoteTyping && followingLatestRef.current && !historyLoadingRef.current) {
+      timelineRef.current?.scrollTo({top: timelineRef.current.scrollHeight, behavior: "smooth"});
+    }
   }, [chat.remoteTyping]);
 
   const loadOlderMessages = async () => {
     const timeline = timelineRef.current;
-    if (!timeline || !chat.hasOlder || chat.loadingOlder) return;
-    const previousHeight = timeline.scrollHeight;
+    if (!timeline || !chat.hasOlder || chat.loadingOlder || historyLoadingRef.current) return;
+    historyLoadingRef.current = true;
     try {
-      await chat.loadOlder();
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (timelineRef.current) timelineRef.current.scrollTop = timelineRef.current.scrollHeight - previousHeight;
-      }));
+      await chat.loadOlder(() => {
+        if (timelineRef.current) historyAnchorRef.current = captureSupportScroll(timelineRef.current);
+      });
     } catch {
+      historyAnchorRef.current = null;
       toastError(t("supportChat.actionFailed"));
+    } finally {
+      historyLoadingRef.current = false;
     }
   };
 
@@ -441,8 +456,12 @@ export const SupportChat = ({ initialData }: Props) => {
 
         <div
           ref={timelineRef}
-          className="slim-scrollbar flex-1 overflow-y-auto bg-content2/40 px-3 py-4 sm:px-6"
-          onScroll={(event) => { if (event.currentTarget.scrollTop <= 64) void loadOlderMessages(); }}
+          className="slim-scrollbar flex-1 overflow-y-auto bg-content2/40 px-3 py-4 sm:px-6 [overflow-anchor:none]"
+          onScroll={(event) => {
+            const element = event.currentTarget;
+            followingLatestRef.current = element.scrollHeight - element.scrollTop - element.clientHeight < 180;
+            if (element.scrollTop <= 64) void loadOlderMessages();
+          }}
         >
           {chat.hasOlder ? (
             <div className="mb-3 text-center">

@@ -63,8 +63,9 @@ self.addEventListener("push", (event) => {
 // Handle notification clicks
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = getNotificationUrl(event?.notification?.data);
-  if (!url) return;
+  const destination = getNotificationUrl(event?.notification?.data);
+  if (!destination) return;
+  const url = new URL(destination, self.location.origin).href;
   event.waitUntil(
     (async () => {
       try {
@@ -119,6 +120,8 @@ const normalizeType = (type) => (type ?? "").toString().trim().toLowerCase();
 
 function getNotificationUrl(data) {
   const parsed = parseNotificationData(data);
+  if (normalizeType(parsed?.type) === "support_message") return "/my-account/support/";
+
   const quickLink = firstStringValue(parsed, [
     "redirect_url",
     "url",
@@ -190,4 +193,3 @@ function getNotificationUrl(data) {
     }
   }
 }
-

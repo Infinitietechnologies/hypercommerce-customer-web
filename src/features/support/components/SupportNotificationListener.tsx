@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { addToast } from "@heroui/react";
+import { closeToast, Link, toast } from "@/components/ui";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 
@@ -54,12 +54,25 @@ const SupportNotificationListener = () => {
           ? t("supportChat.notificationFrom", {name: event.message.sender_name})
           : t("supportChat.notificationTitle");
         const description = event.message.preview || t("supportChat.notificationBody");
-        addToast({title, description, color: "primary"});
+        const toastKey = toast({
+          title: (
+            <Link
+              href="/my-account/support/"
+              color="foreground"
+              className="w-full flex-col items-start gap-1 rounded-small text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-focus"
+              onClick={() => { if (toastKey) closeToast(toastKey); }}
+            >
+              <span className="text-sm font-medium">{title}</span>
+              <span className="text-sm font-normal text-default-600">{description}</span>
+            </Link>
+          ),
+          color: "primary",
+        });
         if (document.hidden && window.Notification?.permission === "granted") {
           const notification = new Notification(title, {body: description, tag: `support-${event.thread_uuid}`});
           notification.onclick = () => {
             window.focus();
-            void router.push("/my-account/support");
+            void router.push("/my-account/support/");
             notification.close();
           };
         }

@@ -52,6 +52,8 @@ export const getNotificationRedirectUrl = (
   const data = parseNotificationData(rawData);
   const type = normalizeType(notificationType ?? (data?.type as string | undefined));
 
+  if (type === "support_message") return "/my-account/support/";
+
   const quickLink = firstStringValue(data, [
     "redirect_url",
     "url",
