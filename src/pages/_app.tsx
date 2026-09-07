@@ -26,7 +26,7 @@ import i18n from "../../i18n";
 
 const ToastProvider = dynamic(
   () => import("@/components/ui").then((mod) => mod.ToastProvider),
-  { ssr: false }
+  { ssr: false },
 );
 
 const ProgressBar = dynamic(() => import("@/components/ProgressBar"), {
@@ -52,7 +52,8 @@ const accountTabForPath = (pathname: string): string => {
   if (pathname.startsWith("/my-account/transactions")) return "transactions";
   if (pathname.startsWith("/my-account/notifications")) return "notifications";
   if (pathname.startsWith("/my-account/support")) return "support";
-  if (pathname.startsWith("/my-account/refer-and-earn")) return "refer-and-earn";
+  if (pathname.startsWith("/my-account/refer-and-earn"))
+    return "refer-and-earn";
   // /my-account and /my-account/profile both highlight the overview row.
   return "my-account";
 };
@@ -128,9 +129,12 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           toastOffset={10}
           toastProps={{
             classNames: {
-              base: "max-w-[calc(100vw-40px)] sm:max-w-md pe-6",
+              base: "max-w-[calc(100vw-40px)] pe-14 sm:max-w-md",
+              closeButton:
+                "end-2! top-2! pointer-events-auto size-10 min-w-10 bg-transparent p-0 opacity-100 hover:bg-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
               title: "whitespace-normal line-clamp-none overflow-visible",
-              description: "whitespace-normal line-clamp-none overflow-visible text-ellipsis-none",
+              description:
+                "whitespace-normal line-clamp-none overflow-visible text-ellipsis-none",
             },
 
             timeout: 4000,

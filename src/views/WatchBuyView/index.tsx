@@ -83,6 +83,9 @@ const WatchBuyView = ({
   const [storyLoading, setStoryLoading] = useState(false);
   const [storyFailed, setStoryFailed] = useState(false);
   const [activeReelId, setActiveReelId] = useState<number | null>(null);
+  const [activeReelProfileId, setActiveReelProfileId] = useState<number | null>(
+    null,
+  );
   const [activeShare, setActiveShare] = useState<{
     reel: WatchBuyReel;
     url: string;
@@ -209,6 +212,7 @@ const WatchBuyView = ({
   const closeReel = useCallback(() => {
     setActiveShare(null);
     setActiveReelId(null);
+    setActiveReelProfileId(null);
     if (typeof router.query.slug !== "string") return;
 
     const nextQuery = { ...router.query };
@@ -220,18 +224,14 @@ const WatchBuyView = ({
     );
   }, [router]);
 
-  const openReelProfile = useCallback(
-    (reel: WatchBuyReel) => {
-      if (reel.profile.has_active_status) {
-        void openStory({ profile: reel.profile, status_count: 0 });
-      }
-    },
-    [openStory],
-  );
+  const openReelProfile = useCallback((reel: WatchBuyReel) => {
+    setActiveReelProfileId(reel.profile.id);
+  }, []);
 
   const openReel = useCallback(
     (reel: WatchBuyReel) => {
       openedSlugRef.current = reel.slug;
+      setActiveReelProfileId(null);
       setActiveReelId(reel.id);
       void router.replace(
         {
@@ -350,6 +350,10 @@ const WatchBuyView = ({
   const canonical = effectiveSlug
     ? `/watch-and-buy/?slug=${encodeURIComponent(effectiveSlug)}`
     : "/watch-and-buy/";
+  const viewerReels =
+    activeReelProfileId == null
+      ? reels
+      : reels.filter((reel) => reel.profile.id === activeReelProfileId);
 
   return (
     <>
@@ -412,8 +416,9 @@ const WatchBuyView = ({
 
       {activeReelId != null ? (
         <ReelViewer
+          key={activeReelProfileId ?? "all-reels"}
           activeReelId={activeReelId}
-          reels={reels}
+          reels={viewerReels}
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
           isSuspended={Boolean(activeStory) || Boolean(activeShare)}

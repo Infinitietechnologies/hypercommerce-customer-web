@@ -187,7 +187,7 @@ const StoryViewer = ({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{profile.username}</p>
               {current ? (
-                <p className="text-xxs text-shell-muted">
+                <p className="text-xs font-medium text-shell-foreground/80">
                   {new Date(current.created_at).toLocaleString(i18n.language)}
                 </p>
               ) : null}

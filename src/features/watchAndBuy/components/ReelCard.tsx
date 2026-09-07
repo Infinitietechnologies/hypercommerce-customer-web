@@ -251,41 +251,24 @@ const ReelCard = ({
           hasProducts ? "bottom-32" : "bottom-5"
         }`}
       >
-        {reel.profile.has_active_status ? (
-          <button
-            type="button"
-            onClick={onOpenProfile}
-            className="flex min-w-0 items-center gap-2 rounded-small text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            <Image
-              removeWrapper
-              disableAnimation
-              src={reel.profile.photo_url ?? undefined}
-              alt=""
-              radius="full"
-              fallbackSrc="/logo.png"
-              className="size-8 shrink-0 border border-shell-divider object-cover"
-            />
-            <span className="truncate text-sm font-bold drop-shadow-sm">
-              {reel.profile.username}
-            </span>
-          </button>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2">
-            <Image
-              removeWrapper
-              disableAnimation
-              src={reel.profile.photo_url ?? undefined}
-              alt=""
-              radius="full"
-              fallbackSrc="/logo.png"
-              className="size-8 shrink-0 border border-shell-divider object-cover"
-            />
-            <span className="truncate text-sm font-bold drop-shadow-sm">
-              {reel.profile.username}
-            </span>
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          className="flex min-w-0 items-center gap-2 rounded-small text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        >
+          <Image
+            removeWrapper
+            disableAnimation
+            src={reel.profile.photo_url ?? undefined}
+            alt=""
+            radius="full"
+            fallbackSrc="/logo.png"
+            className="size-8 shrink-0 border border-shell-divider object-cover"
+          />
+          <span className="truncate text-sm font-bold drop-shadow-sm">
+            {reel.profile.username}
+          </span>
+        </button>
         {reel.caption ? (
           <p className="mt-2 line-clamp-2 max-w-md text-sm font-medium leading-5 text-shell-muted drop-shadow-sm">
             {reel.caption}

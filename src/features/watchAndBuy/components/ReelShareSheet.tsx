@@ -3,23 +3,14 @@ import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import {
   EmailIcon,
-  EmailShareButton,
   FacebookIcon,
-  FacebookShareButton,
   LinkedinIcon,
-  LinkedinShareButton,
   PinterestIcon,
-  PinterestShareButton,
   RedditIcon,
-  RedditShareButton,
   TelegramIcon,
-  TelegramShareButton,
   ThreadsIcon,
-  ThreadsShareButton,
   WhatsappIcon,
-  WhatsappShareButton,
   XIcon,
-  XShareButton,
 } from "react-share";
 
 import {
@@ -35,7 +26,9 @@ import {
   getReelShareImageUrl,
   getReelShareMessage,
   getReelShareText,
+  getReelWebShareLinks,
 } from "@/features/watchAndBuy/reelSharing";
+import { useScreenType } from "@/hooks/useScreenType";
 import type { WatchBuyReel } from "@/types/watchBuy";
 
 interface ReelShareSheetProps {
@@ -52,12 +45,81 @@ const ReelShareSheet = ({
   url,
 }: ReelShareSheetProps) => {
   const { t } = useTranslation();
+  const screen = useScreenType();
   const hasNativeShare = canUseMobileNativeShare();
 
   if (!reel) return null;
 
   const shareMessage = getReelShareMessage(reel, t);
   const pinterestMedia = getReelShareImageUrl(reel);
+  const useWebApps = screen === "desktop" || screen === "desktop-4k";
+  const shareLinks = getReelWebShareLinks({
+    imageUrl: pinterestMedia,
+    message: shareMessage,
+    subject: t("watchBuy.share.emailSubject"),
+    url,
+    useWebApps,
+  });
+  const shareOptions = [
+    {
+      id: "whatsapp",
+      href: shareLinks.whatsapp,
+      icon: <WhatsappIcon size={44} round />,
+      label: t("watchBuy.share.whatsapp"),
+    },
+    {
+      id: "telegram",
+      href: shareLinks.telegram,
+      icon: <TelegramIcon size={44} round />,
+      label: t("watchBuy.share.telegram"),
+    },
+    {
+      id: "facebook",
+      href: shareLinks.facebook,
+      icon: <FacebookIcon size={44} round />,
+      label: t("watchBuy.share.facebook"),
+    },
+    {
+      id: "x",
+      href: shareLinks.x,
+      icon: <XIcon size={44} round />,
+      label: t("watchBuy.share.x"),
+    },
+    {
+      id: "threads",
+      href: shareLinks.threads,
+      icon: <ThreadsIcon size={44} round />,
+      label: t("watchBuy.share.threads"),
+    },
+    ...(shareLinks.pinterest
+      ? [
+          {
+            id: "pinterest",
+            href: shareLinks.pinterest,
+            icon: <PinterestIcon size={44} round />,
+            label: t("watchBuy.share.pinterest"),
+          },
+        ]
+      : []),
+    {
+      id: "reddit",
+      href: shareLinks.reddit,
+      icon: <RedditIcon size={44} round />,
+      label: t("watchBuy.share.reddit"),
+    },
+    {
+      id: "linkedin",
+      href: shareLinks.linkedin,
+      icon: <LinkedinIcon size={44} round />,
+      label: t("watchBuy.share.linkedin"),
+    },
+    {
+      id: "email",
+      href: shareLinks.email,
+      icon: <EmailIcon size={44} round />,
+      label: t("watchBuy.share.email"),
+    },
+  ];
   const optionClass =
     "flex min-w-0 flex-col items-center gap-2 rounded-medium px-1 py-2 text-xs font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
@@ -174,110 +236,26 @@ const ReelShareSheet = ({
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-          <WhatsappShareButton
-            url={url}
-            title={shareMessage}
-            separator=" — "
-            className={optionClass}
-            aria-label={t("watchBuy.share.whatsapp")}
-          >
-            <WhatsappIcon size={44} round />
-            <span className="w-full text-center">
-              {t("watchBuy.share.whatsapp")}
-            </span>
-          </WhatsappShareButton>
-          <TelegramShareButton
-            url={url}
-            title={shareMessage}
-            className={optionClass}
-            aria-label={t("watchBuy.share.telegram")}
-          >
-            <TelegramIcon size={44} round />
-            <span className="w-full text-center">
-              {t("watchBuy.share.telegram")}
-            </span>
-          </TelegramShareButton>
-          <FacebookShareButton
-            url={url}
-            className={optionClass}
-            aria-label={t("watchBuy.share.facebook")}
-          >
-            <FacebookIcon size={44} round />
-            <span className="w-full text-center">
-              {t("watchBuy.share.facebook")}
-            </span>
-          </FacebookShareButton>
-          <XShareButton
-            url={url}
-            title={shareMessage}
-            hashtags={["WatchAndBuy"]}
-            className={optionClass}
-            aria-label={t("watchBuy.share.x")}
-          >
-            <XIcon size={44} round />
-            <span className="w-full text-center">{t("watchBuy.share.x")}</span>
-          </XShareButton>
-          <ThreadsShareButton
-            url={url}
-            title={shareMessage}
-            className={optionClass}
-            aria-label={t("watchBuy.share.threads")}
-          >
-            <ThreadsIcon size={44} round />
-            <span className="w-full text-center">
-              {t("watchBuy.share.threads")}
-            </span>
-          </ThreadsShareButton>
-          {pinterestMedia ? (
-            <PinterestShareButton
-              url={url}
-              media={pinterestMedia}
-              description={shareMessage}
+          {shareOptions.map((option) => (
+            <a
+              key={option.id}
+              href={option.href}
+              target={
+                option.id === "email" && !useWebApps ? undefined : "_blank"
+              }
+              rel={
+                option.id === "email" && !useWebApps
+                  ? undefined
+                  : "noopener noreferrer"
+              }
               className={optionClass}
-              aria-label={t("watchBuy.share.pinterest")}
+              aria-label={option.label}
+              onClick={() => onOpenChange(false)}
             >
-              <PinterestIcon size={44} round />
-              <span className="w-full text-center">
-                {t("watchBuy.share.pinterest")}
-              </span>
-            </PinterestShareButton>
-          ) : null}
-          <RedditShareButton
-            url={url}
-            title={shareMessage}
-            className={optionClass}
-            aria-label={t("watchBuy.share.reddit")}
-          >
-            <RedditIcon size={44} round />
-            <span className="w-full text-center">
-              {t("watchBuy.share.reddit")}
-            </span>
-          </RedditShareButton>
-          <LinkedinShareButton
-            url={url}
-            title={t("watchBuy.share.emailSubject")}
-            summary={shareMessage}
-            source={t("watchBuy.title")}
-            className={optionClass}
-            aria-label={t("watchBuy.share.linkedin")}
-          >
-            <LinkedinIcon size={44} round />
-            <span className="w-full text-center">
-              {t("watchBuy.share.linkedin")}
-            </span>
-          </LinkedinShareButton>
-          <EmailShareButton
-            url={url}
-            subject={t("watchBuy.share.emailSubject")}
-            body={shareMessage}
-            className={optionClass}
-            aria-label={t("watchBuy.share.email")}
-          >
-            <EmailIcon size={44} round />
-            <span className="w-full text-center">
-              {t("watchBuy.share.email")}
-            </span>
-          </EmailShareButton>
+              {option.icon}
+              <span className="w-full text-center">{option.label}</span>
+            </a>
+          ))}
         </div>
         {hasNativeShare ? (
           <div className="mt-4 flex gap-3 rounded-large border border-divider bg-default-100 p-3 text-default-600">

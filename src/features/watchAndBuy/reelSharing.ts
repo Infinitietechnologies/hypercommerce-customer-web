@@ -71,6 +71,84 @@ export const getReelShareText = (
   url: string,
 ) => `${getReelShareMessage(reel, t)}\n\n${url}`;
 
+export const getWhatsappShareUrl = (text: string, useWebApp: boolean) => {
+  const endpoint = useWebApp
+    ? "https://web.whatsapp.com/send"
+    : "https://api.whatsapp.com/send";
+
+  return `${endpoint}?text=${encodeURIComponent(text)}`;
+};
+
+interface ReelWebShareLinksOptions {
+  imageUrl: string | null;
+  message: string;
+  subject: string;
+  url: string;
+  useWebApps: boolean;
+}
+
+const buildShareUrl = (
+  endpoint: string,
+  params: Record<string, string | null | undefined>,
+) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) searchParams.set(key, value);
+  });
+
+  return `${endpoint}?${searchParams.toString()}`;
+};
+
+export const getReelWebShareLinks = ({
+  imageUrl,
+  message,
+  subject,
+  url,
+  useWebApps,
+}: ReelWebShareLinksOptions) => {
+  const text = `${message}\n\n${url}`;
+
+  return {
+    email: useWebApps
+      ? buildShareUrl("https://mail.google.com/mail/", {
+          view: "cm",
+          fs: "1",
+          su: subject,
+          body: text,
+        })
+      : buildShareUrl("mailto:", { subject, body: text }),
+    facebook: buildShareUrl("https://www.facebook.com/sharer/sharer.php", {
+      u: url,
+    }),
+    linkedin: buildShareUrl("https://www.linkedin.com/sharing/share-offsite/", {
+      url,
+    }),
+    pinterest: imageUrl
+      ? buildShareUrl("https://pinterest.com/pin/create/button/", {
+          url,
+          media: imageUrl,
+          description: message,
+        })
+      : null,
+    reddit: buildShareUrl("https://www.reddit.com/submit", {
+      url,
+      title: message,
+    }),
+    telegram: buildShareUrl("https://t.me/share/url", {
+      url,
+      text: message,
+    }),
+    threads: buildShareUrl("https://www.threads.net/intent/post", { text }),
+    whatsapp: getWhatsappShareUrl(text, useWebApps),
+    x: buildShareUrl("https://twitter.com/intent/tweet", {
+      url,
+      text: message,
+      hashtags: "WatchAndBuy",
+    }),
+  };
+};
+
 export const copyTextToClipboard = async (text: string) => {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     try {
