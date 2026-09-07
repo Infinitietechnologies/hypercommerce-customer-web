@@ -170,16 +170,17 @@ const WatchBuyView = ({
 
   const handleSeen = useCallback((statusId: number) => {
     seenStatusIds.current.add(statusId);
-    setStoryData((current) =>
-      current
-        ? {
-            ...current,
-            items: current.items.map((status) =>
-              status.id === statusId ? { ...status, seen_by_me: true } : status,
-            ),
-          }
-        : current,
-    );
+    setStoryData((current) => {
+      const target = current?.items.find((status) => status.id === statusId);
+      if (!current || !target || target.seen_by_me) return current;
+
+      return {
+        ...current,
+        items: current.items.map((status) =>
+          status.id === statusId ? { ...status, seen_by_me: true } : status,
+        ),
+      };
+    });
   }, []);
 
   const closeReel = useCallback(() => {

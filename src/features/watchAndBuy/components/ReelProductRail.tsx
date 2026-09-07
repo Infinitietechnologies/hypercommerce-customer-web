@@ -6,12 +6,19 @@ import type { WatchBuyProduct } from "@/types/watchBuy";
 import ReelProductCard from "./ReelProductCard";
 
 interface ReelProductRailProps {
+  onInteractionEnd?: () => void;
+  onInteractionStart?: () => void;
   products: WatchBuyProduct[];
 }
 
-const ReelProductRail = ({ products }: ReelProductRailProps) => {
+const ReelProductRail = ({
+  onInteractionEnd,
+  onInteractionStart,
+  products,
+}: ReelProductRailProps) => {
   const { t } = useTranslation();
   const railRef = useRef<HTMLUListElement | null>(null);
+  const wheelEndTimerRef = useRef<number | null>(null);
   const dragRef = useRef({
     active: false,
     moved: false,
@@ -30,15 +37,27 @@ const ReelProductRail = ({ products }: ReelProductRailProps) => {
         Math.abs(event.deltaX) > Math.abs(event.deltaY)
           ? event.deltaX
           : event.deltaY;
-      const previousScroll = rail.scrollLeft;
-      rail.scrollLeft += delta;
-      if (rail.scrollLeft !== previousScroll) {
-        event.preventDefault();
-        event.stopPropagation();
+      const maxScroll = rail.scrollWidth - rail.clientWidth;
+      const canScroll =
+        (delta < 0 && rail.scrollLeft > 0) ||
+        (delta > 0 && rail.scrollLeft < maxScroll);
+      if (!canScroll) return;
+
+      onInteractionStart?.();
+      rail.scrollBy({ behavior: "smooth", left: delta });
+      event.preventDefault();
+      event.stopPropagation();
+      if (wheelEndTimerRef.current != null) {
+        window.clearTimeout(wheelEndTimerRef.current);
       }
+      wheelEndTimerRef.current = window.setTimeout(() => {
+        onInteractionEnd?.();
+        wheelEndTimerRef.current = null;
+      }, 160);
     };
 
     const handlePointerDown = (event: PointerEvent) => {
+      onInteractionStart?.();
       if (event.pointerType !== "mouse" || event.button !== 0) return;
       dragRef.current = {
         active: true,
@@ -61,6 +80,7 @@ const ReelProductRail = ({ products }: ReelProductRailProps) => {
     };
 
     const handlePointerEnd = (event: PointerEvent) => {
+      onInteractionEnd?.();
       if (dragRef.current.pointerId !== event.pointerId) return;
       dragRef.current.active = false;
       if (rail.hasPointerCapture(event.pointerId)) {
@@ -69,6 +89,7 @@ const ReelProductRail = ({ products }: ReelProductRailProps) => {
     };
 
     const handlePointerCancel = () => {
+      onInteractionEnd?.();
       dragRef.current.active = false;
       dragRef.current.moved = false;
     };
@@ -91,6 +112,9 @@ const ReelProductRail = ({ products }: ReelProductRailProps) => {
     rail.addEventListener("dragstart", preventDrag);
 
     return () => {
+      if (wheelEndTimerRef.current != null) {
+        window.clearTimeout(wheelEndTimerRef.current);
+      }
       rail.removeEventListener("wheel", handleWheel);
       rail.removeEventListener("pointerdown", handlePointerDown);
       rail.removeEventListener("pointermove", handlePointerMove);
@@ -99,7 +123,7 @@ const ReelProductRail = ({ products }: ReelProductRailProps) => {
       rail.removeEventListener("click", handleClick, true);
       rail.removeEventListener("dragstart", preventDrag);
     };
-  }, [products.length]);
+  }, [onInteractionEnd, onInteractionStart, products.length]);
 
   if (products.length === 0) return null;
 
@@ -108,7 +132,7 @@ const ReelProductRail = ({ products }: ReelProductRailProps) => {
       <ul
         ref={railRef}
         aria-label={t("watchBuy.products.featuredTitle")}
-        className="scrollbar-hide flex cursor-grab touch-pan-x select-none snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pe-4 active:cursor-grabbing"
+        className="scrollbar-hide flex cursor-grab touch-pan-x select-none snap-x snap-proximity gap-2 overflow-x-auto scroll-smooth overscroll-x-contain pe-4 active:cursor-grabbing"
       >
         {products.map((product, index) => (
           <ReelProductCard

@@ -7,6 +7,7 @@ import { useDocumentScrollLock } from "@/features/watchAndBuy/hooks/useDocumentS
 import type { WatchBuyProfile, WatchBuyStatus } from "@/types/watchBuy";
 
 import ReelProductRail from "./ReelProductRail";
+import StoryProgressBars from "./StoryProgressBars";
 
 interface StoryViewerProps {
   error: boolean;
@@ -18,9 +19,6 @@ interface StoryViewerProps {
   profile: WatchBuyProfile;
   statuses: WatchBuyStatus[];
 }
-
-const IMAGE_DURATION_MS = 5000;
-const PROGRESS_TICK_MS = 100;
 
 const StoryViewer = ({
   error,
@@ -34,16 +32,23 @@ const StoryViewer = ({
 }: StoryViewerProps) => {
   const { t, i18n } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+  const [pausedStatusId, setPausedStatusId] = useState<number | null>(null);
+  const [playbackVersion, setPlaybackVersion] = useState(0);
+  const [readyStatusId, setReadyStatusId] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const completedRef = useRef(false);
+  const advancingStatusIdRef = useRef<number | null>(null);
+  const resumeVideoRef = useRef(false);
   const current = statuses[currentIndex];
+  const currentStatusId = current?.id;
 
   useDocumentScrollLock();
 
   const goNext = useCallback(() => {
+    if (!current || advancingStatusIdRef.current === current.id) return;
+    advancingStatusIdRef.current = current.id;
     if (currentIndex >= statuses.length - 1) {
       if (!completedRef.current) {
         completedRef.current = true;
@@ -51,36 +56,44 @@ const StoryViewer = ({
       }
       return;
     }
-    setProgress(0);
     setCurrentIndex((index) => index + 1);
-  }, [currentIndex, onComplete, statuses.length]);
+  }, [current, currentIndex, onComplete, statuses.length]);
 
   const goPrevious = useCallback(() => {
-    setProgress(0);
+    if (currentIndex === 0) {
+      advancingStatusIdRef.current = null;
+      if (videoRef.current) videoRef.current.currentTime = 0;
+      setPlaybackVersion((version) => version + 1);
+      return;
+    }
     setCurrentIndex((index) => Math.max(0, index - 1));
-  }, []);
+  }, [currentIndex]);
 
   useEffect(() => {
+    if (currentStatusId == null) return;
+    advancingStatusIdRef.current = null;
+    onSeen(currentStatusId);
+  }, [currentStatusId, onSeen]);
+
+  const pauseProgress = useCallback(() => {
     if (!current) return;
-    onSeen(current.id);
+    setPausedStatusId(current.id);
+    const video = videoRef.current;
+    resumeVideoRef.current = Boolean(video && !video.paused);
+    video?.pause();
+  }, [current]);
 
-    if (current.content_type === "video") return;
+  const resumeProgress = useCallback(() => {
+    setPausedStatusId(null);
+    if (resumeVideoRef.current) {
+      void videoRef.current?.play().catch(() => undefined);
+    }
+    resumeVideoRef.current = false;
+  }, []);
 
-    const startedAt = Date.now();
-    const timer = window.setInterval(() => {
-      const nextProgress = Math.min(
-        100,
-        ((Date.now() - startedAt) / IMAGE_DURATION_MS) * 100,
-      );
-      setProgress(nextProgress);
-      if (nextProgress >= 100) {
-        window.clearInterval(timer);
-        goNext();
-      }
-    }, PROGRESS_TICK_MS);
-
-    return () => window.clearInterval(timer);
-  }, [current, goNext, onSeen]);
+  const markCurrentReady = useCallback(() => {
+    if (currentStatusId != null) setReadyStatusId(currentStatusId);
+  }, [currentStatusId]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -132,27 +145,18 @@ const StoryViewer = ({
     >
       <div className="relative h-dvh w-full overflow-hidden bg-shell md:aspect-reel md:h-dvh md:w-auto md:border-x md:border-shell-divider">
         <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-shell to-transparent px-3 pb-8 pt-3">
-          <div className="mb-3 flex gap-1" aria-hidden="true">
-            {statuses.map((status, index) => (
-              <span
-                key={status.id}
-                className="h-1 flex-1 overflow-hidden rounded-full bg-shell-foreground/30"
-              >
-                <span
-                  className="block h-full rounded-full bg-shell-foreground transition-[width] duration-100 motion-reduce:transition-none"
-                  style={{
-                    width: `${
-                      index < currentIndex
-                        ? 100
-                        : index === currentIndex
-                          ? progress
-                          : 0
-                    }%`,
-                  }}
-                />
-              </span>
-            ))}
-          </div>
+          {current ? (
+            <StoryProgressBars
+              key={`${current.id}-${playbackVersion}`}
+              currentIndex={currentIndex}
+              isPaused={pausedStatusId === current.id}
+              isReady={!current.media_url || readyStatusId === current.id}
+              onFinished={goNext}
+              status={current}
+              statuses={statuses}
+              videoRef={videoRef}
+            />
+          ) : null}
           <div className="flex items-center gap-2 text-shell-foreground">
             <Button
               isIconOnly
@@ -243,12 +247,9 @@ const StoryViewer = ({
                   playsInline
                   muted={isMuted}
                   onEnded={goNext}
-                  onTimeUpdate={(event) => {
-                    const media = event.currentTarget;
-                    if (media.duration > 0) {
-                      setProgress((media.currentTime / media.duration) * 100);
-                    }
-                  }}
+                  onError={goNext}
+                  onLoadedMetadata={markCurrentReady}
+                  onPlaying={markCurrentReady}
                   className="h-full w-full object-contain"
                 >
                   <track
@@ -266,6 +267,8 @@ const StoryViewer = ({
                   src={current.media_url}
                   alt={current.text ?? ""}
                   radius="none"
+                  onError={markCurrentReady}
+                  onLoad={markCurrentReady}
                   className="h-full w-full object-contain"
                 />
               ) : (
@@ -279,12 +282,20 @@ const StoryViewer = ({
               type="button"
               aria-label={t("watchBuy.stories.previous")}
               onClick={goPrevious}
+              onPointerCancel={resumeProgress}
+              onPointerDown={pauseProgress}
+              onPointerLeave={resumeProgress}
+              onPointerUp={resumeProgress}
               className="absolute inset-y-20 start-0 z-10 w-1/3 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
             />
             <button
               type="button"
               aria-label={t("watchBuy.stories.next")}
               onClick={goNext}
+              onPointerCancel={resumeProgress}
+              onPointerDown={pauseProgress}
+              onPointerLeave={resumeProgress}
+              onPointerUp={resumeProgress}
               className="absolute inset-y-20 end-0 z-10 w-1/3 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
             />
 
@@ -300,7 +311,11 @@ const StoryViewer = ({
               ) : null}
             </div>
 
-            <ReelProductRail products={current.products} />
+            <ReelProductRail
+              products={current.products}
+              onInteractionEnd={resumeProgress}
+              onInteractionStart={pauseProgress}
+            />
           </>
         ) : (
           <div className="grid h-full place-items-center px-6 text-center text-shell-foreground">
