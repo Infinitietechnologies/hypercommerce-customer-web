@@ -20,10 +20,6 @@ export default function Document({ lang, dir }: HypercommerceDocumentProps) {
         <meta name="theme-color" content="#000000" />
 
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <meta
-          name="google-site-verification"
-          content="myEMkqRat5aCxpIq0mD1HfuiWYhtSUOYILkM_fothqo"
-        />
 
       </Head>
       <body className="min-h-screen bg-background font-sans antialiased">
