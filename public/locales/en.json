@@ -2135,7 +2135,7 @@
     "notificationFrom": "New message from {{name}}",
     "notificationBody": "Open support to view the reply.",
     "typing": "Support is typing…",
-    "connection": {"live": "Live", "polling": "Polling", "offline": "Offline"}
+    "connection": { "live": "Live", "polling": "Polling", "offline": "Offline" }
   },
   "userLayout": {
     "addresses": "Addresses",
@@ -2312,6 +2312,18 @@
     "shareText": "Watch this shoppable video.",
     "linkCopied": "Reel link copied",
     "shareFailed": "We couldn't share this reel.",
+    "share": {
+      "title": "Share this reel",
+      "description": "Send this shoppable reel with a direct link.",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "facebook": "Facebook",
+      "x": "X",
+      "email": "Email",
+      "emailSubject": "Watch this shoppable reel",
+      "moreApps": "More apps",
+      "copyLink": "Copy link"
+    },
     "back": "Back to Watch & Buy",
     "media": {
       "play": "Play video",

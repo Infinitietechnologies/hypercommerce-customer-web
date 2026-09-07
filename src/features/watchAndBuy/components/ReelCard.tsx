@@ -202,7 +202,33 @@ const ReelCard = ({
         />
       </span>
 
-      <div className="absolute inset-x-0 top-0 z-30 flex items-center px-3 py-3 pe-16 text-shell-foreground">
+      <Tooltip
+        content={
+          isMuted ? t("watchBuy.media.unmute") : t("watchBuy.media.mute")
+        }
+      >
+        <button
+          type="button"
+          onClick={toggleAudio}
+          aria-label={
+            isMuted ? t("watchBuy.media.unmute") : t("watchBuy.media.mute")
+          }
+          className="absolute end-3 top-3 z-40 grid size-11 place-items-center rounded-full bg-shell/55 text-shell-foreground shadow-overlay backdrop-blur-md transition hover:scale-105 hover:bg-shell-foreground/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none"
+        >
+          <Icon
+            icon={
+              isMuted ? "solar:volume-cross-linear" : "solar:volume-loud-linear"
+            }
+            className="text-2xl"
+          />
+        </button>
+      </Tooltip>
+
+      <div
+        className={`absolute inset-x-0 z-30 px-4 pe-20 text-shell-foreground ${
+          hasProducts ? "bottom-32" : "bottom-5"
+        }`}
+      >
         {reel.profile.has_active_status ? (
           <button
             type="button"
@@ -216,12 +242,11 @@ const ReelCard = ({
               alt=""
               radius="full"
               fallbackSrc="/logo.png"
-              className="size-9 shrink-0 border border-shell-divider object-cover"
+              className="size-8 shrink-0 border border-shell-divider object-cover"
             />
-            <span className="truncate text-sm font-extrabold drop-shadow-sm">
+            <span className="truncate text-sm font-bold drop-shadow-sm">
               {reel.profile.username}
             </span>
-            <Icon icon="solar:shop-2-linear" className="shrink-0 text-sm" />
           </button>
         ) : (
           <div className="flex min-w-0 items-center gap-2">
@@ -232,18 +257,22 @@ const ReelCard = ({
               alt=""
               radius="full"
               fallbackSrc="/logo.png"
-              className="size-9 shrink-0 border border-shell-divider object-cover"
+              className="size-8 shrink-0 border border-shell-divider object-cover"
             />
-            <span className="truncate text-sm font-extrabold drop-shadow-sm">
+            <span className="truncate text-sm font-bold drop-shadow-sm">
               {reel.profile.username}
             </span>
-            <Icon icon="solar:shop-2-linear" className="shrink-0 text-sm" />
           </div>
         )}
+        {reel.caption ? (
+          <p className="mt-2 line-clamp-2 max-w-md text-sm font-medium leading-5 text-shell-muted drop-shadow-sm">
+            {reel.caption}
+          </p>
+        ) : null}
       </div>
 
       <div
-        className={`absolute end-3 z-30 flex flex-col items-center gap-3 text-shell-foreground ${
+        className={`absolute end-3 z-30 flex flex-col items-center gap-4 text-shell-foreground ${
           hasProducts ? "bottom-44" : "bottom-5"
         }`}
       >
@@ -260,12 +289,12 @@ const ReelCard = ({
           }
           className="group/action flex w-12 flex-col items-center gap-1 rounded-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-60"
         >
-          <span className="grid size-11 place-items-center rounded-full bg-shell/55 shadow-overlay backdrop-blur-md transition group-hover/action:scale-105 group-hover/action:bg-shell-foreground/15 group-active/action:scale-95 motion-reduce:transform-none motion-reduce:transition-none">
+          <span className="grid size-11 place-items-center drop-shadow-md transition group-hover/action:scale-105 group-active/action:scale-95 motion-reduce:transform-none motion-reduce:transition-none">
             <Icon
               icon={
                 reel.liked_by_me ? "solar:heart-bold" : "solar:heart-linear"
               }
-              className={`text-2xl ${reel.liked_by_me ? "text-danger" : ""}`}
+              className={`text-4xl ${reel.liked_by_me ? "text-danger" : ""}`}
             />
           </span>
           <span className="text-xxs font-bold drop-shadow-sm">
@@ -279,60 +308,13 @@ const ReelCard = ({
           aria-label={t("watchBuy.reels.share")}
           className="group/action flex w-12 flex-col items-center gap-1 rounded-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
-          <span className="grid size-11 place-items-center rounded-full bg-shell/55 shadow-overlay backdrop-blur-md transition group-hover/action:scale-105 group-hover/action:bg-shell-foreground/15 group-active/action:scale-95 motion-reduce:transform-none motion-reduce:transition-none">
-            <Icon icon="solar:share-linear" className="text-2xl" />
+          <span className="grid size-11 place-items-center drop-shadow-md transition group-hover/action:scale-105 group-active/action:scale-95 motion-reduce:transform-none motion-reduce:transition-none">
+            <Icon icon="solar:share-linear" className="text-3xl" />
           </span>
           <span className="text-xxs font-bold drop-shadow-sm">
             {t("watchBuy.reels.share")}
           </span>
         </button>
-
-        <Tooltip
-          content={
-            isMuted ? t("watchBuy.media.unmute") : t("watchBuy.media.mute")
-          }
-        >
-          <button
-            type="button"
-            onClick={toggleAudio}
-            aria-label={
-              isMuted ? t("watchBuy.media.unmute") : t("watchBuy.media.mute")
-            }
-            className="group/action flex w-12 flex-col items-center gap-1 rounded-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            <span className="grid size-11 place-items-center rounded-full bg-shell/55 text-shell-foreground shadow-overlay backdrop-blur-md transition group-hover/action:scale-105 group-hover/action:bg-shell-foreground/15 group-active/action:scale-95 motion-reduce:transform-none motion-reduce:transition-none">
-              <Icon
-                icon={
-                  isMuted
-                    ? "solar:volume-cross-linear"
-                    : "solar:volume-loud-linear"
-                }
-                className="text-2xl"
-              />
-            </span>
-            <span className="text-xxs font-bold drop-shadow-sm">
-              {t("watchBuy.media.sound")}
-            </span>
-          </button>
-        </Tooltip>
-      </div>
-
-      <div
-        className={`pointer-events-none absolute inset-x-0 z-30 px-4 pe-20 text-shell-foreground ${
-          hasProducts ? "bottom-44" : "bottom-5"
-        }`}
-      >
-        {reel.caption ? (
-          <p className="line-clamp-2 max-w-md text-large font-extrabold leading-6 drop-shadow-sm">
-            {reel.caption}
-          </p>
-        ) : null}
-        <p className="mt-1 flex items-center gap-1.5 text-xxs font-semibold text-shell-muted drop-shadow-sm">
-          @{reel.profile.username}
-          <span aria-hidden="true">•</span>
-          <Icon icon="solar:heart-linear" />
-          {reel.like_count}
-        </p>
       </div>
 
       <ReelProductRail products={reel.products} />

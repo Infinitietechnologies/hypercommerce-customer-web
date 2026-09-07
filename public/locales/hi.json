@@ -2136,7 +2136,7 @@
     "notificationFrom": "{{name}} का नया संदेश",
     "notificationBody": "जवाब देखने के लिए सहायता चैट खोलें।",
     "typing": "सहायता एजेंट लिख रहा है…",
-    "connection": {"live": "लाइव", "polling": "पोलिंग", "offline": "ऑफ़लाइन"}
+    "connection": { "live": "लाइव", "polling": "पोलिंग", "offline": "ऑफ़लाइन" }
   },
   "userLayout": {
     "addresses": "पते",
@@ -2313,6 +2313,18 @@
     "shareText": "यह खरीदारी योग्य वीडियो देखें।",
     "linkCopied": "रील लिंक कॉपी हो गया",
     "shareFailed": "यह रील साझा नहीं हो सकी।",
+    "share": {
+      "title": "यह रील साझा करें",
+      "description": "इस खरीदारी योग्य रील का सीधा लिंक भेजें।",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "facebook": "Facebook",
+      "x": "X",
+      "email": "ईमेल",
+      "emailSubject": "यह खरीदारी योग्य रील देखें",
+      "moreApps": "और ऐप्स",
+      "copyLink": "लिंक कॉपी करें"
+    },
     "back": "देखें और खरीदें पर वापस जाएँ",
     "media": {
       "play": "वीडियो चलाएँ",

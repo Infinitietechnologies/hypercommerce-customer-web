@@ -1,9 +1,16 @@
 import { Icon } from "@iconify/react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 
-import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import { Button, Skeleton, Tooltip } from "@/components/ui";
+import { useDocumentScrollLock } from "@/features/watchAndBuy/hooks/useDocumentScrollLock";
+import { getSnappedReelIndex } from "@/features/watchAndBuy/navigation";
 import type { WatchBuyReel } from "@/types/watchBuy";
 
 import ReelCard from "./ReelCard";
@@ -14,6 +21,7 @@ interface ReelViewerProps {
   isLoadingMore: boolean;
   isSuspended: boolean;
   likingReelIds: ReadonlySet<number>;
+  onActiveReelChange: (reel: WatchBuyReel) => void;
   onClose: () => void;
   onLike: (reel: WatchBuyReel) => void;
   onLoadMore: () => void;
@@ -28,6 +36,7 @@ const ReelViewer = ({
   isLoadingMore,
   isSuspended,
   likingReelIds,
+  onActiveReelChange,
   onClose,
   onLike,
   onLoadMore,
@@ -35,54 +44,103 @@ const ReelViewer = ({
   onShare,
   reels,
 }: ReelViewerProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const feedRef = useRef<HTMLElement | null>(null);
+  const activeReelIdRef = useRef(activeReelId);
+  const positionedRef = useRef(false);
+  const scrollFrameRef = useRef<number | null>(null);
   const [isMuted, setIsMuted] = useState(true);
 
+  useDocumentScrollLock();
+
   useLayoutEffect(() => {
+    if (positionedRef.current) return;
     const feed = feedRef.current;
     const target = feed?.querySelector<HTMLElement>(
       `[data-reel-id="${activeReelId}"]`,
     );
-    if (feed && target) feed.scrollTop = target.offsetTop;
-  }, [activeReelId]);
+    if (feed && target) {
+      feed.scrollTop = target.offsetTop;
+      activeReelIdRef.current = activeReelId;
+      positionedRef.current = true;
+    }
+  }, [activeReelId, reels]);
+
+  const updateActiveReel = useCallback(() => {
+    const feed = feedRef.current;
+    if (!feed || feed.clientHeight === 0) return;
+
+    const index = getSnappedReelIndex(
+      feed.scrollTop,
+      feed.clientHeight,
+      reels.length,
+    );
+    if (index == null) return;
+    const reel = reels[index];
+    if (!reel) return;
+
+    if (reel.id !== activeReelIdRef.current) {
+      activeReelIdRef.current = reel.id;
+      onActiveReelChange(reel);
+    }
+
+    if (index >= reels.length - 3 && hasMore && !isLoadingMore) {
+      onLoadMore();
+    }
+  }, [hasMore, isLoadingMore, onActiveReelChange, onLoadMore, reels]);
+
+  const handleScroll = useCallback(() => {
+    if (scrollFrameRef.current != null) {
+      window.cancelAnimationFrame(scrollFrameRef.current);
+    }
+    scrollFrameRef.current = window.requestAnimationFrame(() => {
+      scrollFrameRef.current = null;
+      updateActiveReel();
+    });
+  }, [updateActiveReel]);
+
+  const moveReel = useCallback(
+    (direction: -1 | 1) => {
+      const feed = feedRef.current;
+      if (!feed || feed.clientHeight === 0) return;
+
+      const currentIndex = getSnappedReelIndex(
+        feed.scrollTop,
+        feed.clientHeight,
+        reels.length,
+      );
+      if (currentIndex == null) return;
+      const nextIndex = Math.max(
+        0,
+        Math.min(reels.length - 1, currentIndex + direction),
+      );
+      feed.scrollTo({
+        top: nextIndex * feed.clientHeight,
+        behavior: "smooth",
+      });
+    },
+    [reels.length],
+  );
+
+  useEffect(
+    () => () => {
+      if (scrollFrameRef.current != null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const dialog = dialogRef.current;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const selector =
       'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const focusFrame = window.requestAnimationFrame(() => {
-      dialog?.querySelector<HTMLElement>(selector)?.focus();
-    });
+    const focusFrame = window.requestAnimationFrame(() => dialog?.focus());
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-      if (
-        event.key === "ArrowDown" ||
-        event.key === "PageDown" ||
-        event.key === "ArrowUp" ||
-        event.key === "PageUp"
-      ) {
-        const feed = feedRef.current;
-        if (feed) {
-          event.preventDefault();
-          const direction =
-            event.key === "ArrowDown" || event.key === "PageDown" ? 1 : -1;
-          const currentIndex = Math.round(feed.scrollTop / feed.clientHeight);
-          const nextIndex = Math.max(
-            0,
-            Math.min(reels.length - 1, currentIndex + direction),
-          );
-          feed.scrollTo({
-            top: nextIndex * feed.clientHeight,
-            behavior: "smooth",
-          });
-        }
-      }
+      if (event.key === "Escape" && !isSuspended) onClose();
       if (event.key !== "Tab" || !dialog) return;
 
       const focusable = Array.from(
@@ -106,10 +164,9 @@ const ReelViewer = ({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
-  }, [onClose, reels.length]);
+  }, [isSuspended, onClose, reels.length]);
 
   return (
     <div
@@ -118,9 +175,25 @@ const ReelViewer = ({
       aria-modal="true"
       aria-label={t("watchBuy.reels.viewerLabel")}
       tabIndex={-1}
-      className="fixed inset-0 z-overlay flex items-center justify-center bg-shell p-2 sm:p-3"
+      onKeyDownCapture={(event) => {
+        if (isSuspended) return;
+        if (
+          event.key !== "ArrowDown" &&
+          event.key !== "PageDown" &&
+          event.key !== "ArrowUp" &&
+          event.key !== "PageUp"
+        )
+          return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        moveReel(
+          event.key === "ArrowDown" || event.key === "PageDown" ? 1 : -1,
+        );
+      }}
+      className="fixed inset-0 z-overlay flex items-center justify-center bg-shell sm:p-3"
     >
-      <div className="relative h-full w-full max-w-full overflow-hidden rounded-xlarge border border-shell-divider bg-shell shadow-overlay sm:aspect-reel sm:max-h-full sm:w-auto">
+      <div className="relative h-full w-full max-w-full overflow-hidden bg-shell shadow-overlay sm:aspect-reel sm:max-h-full sm:w-auto sm:rounded-xlarge sm:border sm:border-shell-divider">
         <Tooltip content={t("watchBuy.back")}>
           <Button
             isIconOnly
@@ -128,16 +201,25 @@ const ReelViewer = ({
             variant="flat"
             onPress={onClose}
             aria-label={t("watchBuy.back")}
-            className="absolute end-3 top-3 z-50 bg-shell/65 text-shell-foreground shadow-overlay backdrop-blur-md transition hover:scale-105 hover:bg-shell-foreground/15 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none"
+            className="absolute start-2 top-2 z-50 bg-transparent text-shell-foreground shadow-none drop-shadow-md transition hover:scale-105 hover:bg-shell/45 active:scale-95 motion-reduce:transform-none motion-reduce:transition-none"
           >
-            <Icon icon="solar:close-circle-linear" className="text-2xl" />
+            <Icon
+              icon={
+                i18n.dir() === "rtl"
+                  ? "solar:arrow-right-linear"
+                  : "solar:arrow-left-linear"
+              }
+              className="text-3xl"
+            />
           </Button>
         </Tooltip>
 
         <section
           ref={feedRef}
+          role="feed"
           aria-label={t("watchBuy.reels.feedLabel")}
-          className="scrollbar-hide h-full snap-y snap-mandatory overflow-y-auto overscroll-contain bg-shell"
+          onScroll={handleScroll}
+          className="scrollbar-hide h-full touch-pan-y snap-y snap-mandatory overflow-y-auto overscroll-none bg-shell"
         >
           {reels.map((reel) => (
             <ReelCard
@@ -152,12 +234,6 @@ const ReelViewer = ({
               onShare={onShare}
             />
           ))}
-          <InfiniteSentinel
-            hasMore={hasMore}
-            isLoading={isLoadingMore}
-            onLoadMore={onLoadMore}
-            rootMargin="1200px"
-          />
           {isLoadingMore ? (
             <Skeleton className="h-full w-full snap-start rounded-none" />
           ) : null}

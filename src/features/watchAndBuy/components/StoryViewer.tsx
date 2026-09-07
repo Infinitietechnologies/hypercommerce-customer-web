@@ -3,19 +3,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button, Image, Skeleton } from "@/components/ui";
-import type {
-  WatchBuyProduct,
-  WatchBuyProfile,
-  WatchBuyStatus,
-} from "@/types/watchBuy";
+import { useDocumentScrollLock } from "@/features/watchAndBuy/hooks/useDocumentScrollLock";
+import type { WatchBuyProfile, WatchBuyStatus } from "@/types/watchBuy";
+
+import ReelProductRail from "./ReelProductRail";
 
 interface StoryViewerProps {
   error: boolean;
   isLoading: boolean;
   onClose: () => void;
+  onComplete: () => void;
   onRetry: () => void;
   onSeen: (statusId: number) => void;
-  onShowProducts: (products: WatchBuyProduct[]) => void;
   profile: WatchBuyProfile;
   statuses: WatchBuyStatus[];
 }
@@ -27,9 +26,9 @@ const StoryViewer = ({
   error,
   isLoading,
   onClose,
+  onComplete,
   onRetry,
   onSeen,
-  onShowProducts,
   profile,
   statuses,
 }: StoryViewerProps) => {
@@ -39,16 +38,22 @@ const StoryViewer = ({
   const [isMuted, setIsMuted] = useState(true);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const completedRef = useRef(false);
   const current = statuses[currentIndex];
+
+  useDocumentScrollLock();
 
   const goNext = useCallback(() => {
     if (currentIndex >= statuses.length - 1) {
-      onClose();
+      if (!completedRef.current) {
+        completedRef.current = true;
+        onComplete();
+      }
       return;
     }
     setProgress(0);
     setCurrentIndex((index) => index + 1);
-  }, [currentIndex, onClose, statuses.length]);
+  }, [currentIndex, onComplete, statuses.length]);
 
   const goPrevious = useCallback(() => {
     setProgress(0);
@@ -80,13 +85,9 @@ const StoryViewer = ({
   useEffect(() => {
     const dialog = dialogRef.current;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const focusableSelector =
       'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const focusFrame = window.requestAnimationFrame(() => {
-      dialog?.querySelector<HTMLElement>(focusableSelector)?.focus();
-    });
+    const focusFrame = window.requestAnimationFrame(() => dialog?.focus());
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -114,7 +115,6 @@ const StoryViewer = ({
     return () => {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
   }, [goNext, goPrevious, onClose]);
@@ -288,25 +288,19 @@ const StoryViewer = ({
               className="absolute inset-y-20 end-0 z-10 w-1/3 focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-focus"
             />
 
-            <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-shell via-shell/80 to-transparent px-4 pb-8 pt-16 text-shell-foreground">
+            <div
+              className={`pointer-events-none absolute inset-x-0 z-30 bg-gradient-to-t from-shell via-shell/80 to-transparent px-4 pt-16 text-shell-foreground ${
+                current.products.length > 0 ? "bottom-36 pb-3" : "bottom-0 pb-8"
+              }`}
+            >
               {current.text && current.media_url ? (
-                <p className="mb-3 line-clamp-3 text-sm font-medium leading-5">
+                <p className="line-clamp-3 text-sm font-medium leading-5">
                   {current.text}
                 </p>
               ) : null}
-              {current.products.length > 0 ? (
-                <Button
-                  fullWidth
-                  color="primary"
-                  startContent={<Icon icon="solar:bag-3-bold" />}
-                  onPress={() => onShowProducts(current.products)}
-                >
-                  {t("watchBuy.products.viewCount", {
-                    count: current.products.length,
-                  })}
-                </Button>
-              ) : null}
             </div>
+
+            <ReelProductRail products={current.products} />
           </>
         ) : (
           <div className="grid h-full place-items-center px-6 text-center text-shell-foreground">

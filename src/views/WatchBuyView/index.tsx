@@ -6,18 +6,17 @@ import { useTranslation } from "react-i18next";
 
 import DynamicSEO from "@/SEO/DynamicSEO";
 import WatchBuySkeleton from "@/components/Skeletons/WatchBuySkeleton";
-import {
-  EmptyState,
-  ErrorState,
-  toastError,
-  toastSuccess,
-} from "@/components/ui";
-import ProductSheet from "@/features/watchAndBuy/components/ProductSheet";
+import { EmptyState, ErrorState, toastError } from "@/components/ui";
 import ReelsExploreGrid from "@/features/watchAndBuy/components/ReelsExploreGrid";
 import ReelViewer from "@/features/watchAndBuy/components/ReelViewer";
+import ReelShareSheet from "@/features/watchAndBuy/components/ReelShareSheet";
 import StoriesRail from "@/features/watchAndBuy/components/StoriesRail";
 import StoryViewer from "@/features/watchAndBuy/components/StoryViewer";
 import { useWatchBuyFeed } from "@/features/watchAndBuy/hooks/useWatchBuyFeed";
+import {
+  getNextActiveStory,
+  getReelShareUrl,
+} from "@/features/watchAndBuy/navigation";
 import { RootState } from "@/lib/redux/store";
 import {
   getWatchBuyProfileStatuses,
@@ -26,7 +25,6 @@ import {
 } from "@/services/watchBuy";
 import { authSheetStore } from "@/stores/authSheetStore";
 import type {
-  WatchBuyProduct,
   WatchBuyProfileStatusesData,
   WatchBuyReel,
   WatchBuyReelsResponse,
@@ -47,9 +45,9 @@ const WatchBuyView = ({
 }: WatchBuyViewProps) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const effectiveSlug =
-    slug ??
-    (typeof router.query.slug === "string" ? router.query.slug : undefined);
+  const routeSlug =
+    typeof router.query.slug === "string" ? router.query.slug : undefined;
+  const effectiveSlug = router.isReady ? routeSlug : slug;
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const {
     hasMore,
@@ -77,29 +75,37 @@ const WatchBuyView = ({
     useState<WatchBuyProfileStatusesData | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
   const [storyFailed, setStoryFailed] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<WatchBuyProduct[]>(
-    [],
-  );
-  const [isProductsOpen, setProductsOpen] = useState(false);
   const [activeReelId, setActiveReelId] = useState<number | null>(null);
+  const [activeShare, setActiveShare] = useState<{
+    reel: WatchBuyReel;
+    url: string;
+  } | null>(null);
   const [likingReelIds, setLikingReelIds] = useState<ReadonlySet<number>>(
     new Set(),
   );
   const openedSlugRef = useRef<string | null>(null);
+  const storyRequestIdRef = useRef(0);
   const seenStatusIds = useRef(new Set<number>());
 
   useEffect(() => {
-    if (!effectiveSlug || openedSlugRef.current === effectiveSlug) return;
+    if (
+      !effectiveSlug ||
+      activeReelId != null ||
+      openedSlugRef.current === effectiveSlug
+    )
+      return;
     const target = reels.find((reel) => reel.slug === effectiveSlug);
     if (!target) return;
 
     openedSlugRef.current = effectiveSlug;
     const timer = window.setTimeout(() => setActiveReelId(target.id), 0);
     return () => window.clearTimeout(timer);
-  }, [effectiveSlug, reels]);
+  }, [activeReelId, effectiveSlug, reels]);
 
   const openStory = useCallback(async (summary: WatchBuyStatusSummary) => {
     if (!summary.profile.has_active_status) return;
+    const requestId = storyRequestIdRef.current + 1;
+    storyRequestIdRef.current = requestId;
     setActiveStory(summary);
     setStoryData(null);
     setStoryFailed(false);
@@ -111,6 +117,8 @@ const WatchBuyView = ({
       { per_page: 50 },
     );
 
+    if (storyRequestIdRef.current !== requestId) return;
+
     if (response.success && response.data) {
       setStoryData(response.data);
     } else {
@@ -119,20 +127,46 @@ const WatchBuyView = ({
     setStoryLoading(false);
   }, []);
 
-  const closeStory = useCallback(async () => {
-    const username = activeStory?.profile.username;
-    const statusIds = Array.from(seenStatusIds.current);
+  const persistSeenStatuses = useCallback(
+    (username: string) => {
+      const statusIds = Array.from(seenStatusIds.current);
+      seenStatusIds.current.clear();
+      setProfileSeen(username);
+      if (!isLoggedIn || statusIds.length === 0) return;
+
+      void markWatchBuyStatusesSeen(statusIds).then((response) => {
+        if (!response.success) {
+          toastError(t("watchBuy.stories.seenFailed"));
+        }
+      });
+    },
+    [isLoggedIn, setProfileSeen, t],
+  );
+
+  const closeStory = useCallback(() => {
+    storyRequestIdRef.current += 1;
+    if (activeStory) persistSeenStatuses(activeStory.profile.username);
     setActiveStory(null);
     setStoryData(null);
+    setStoryLoading(false);
+  }, [activeStory, persistSeenStatuses]);
 
-    if (username) setProfileSeen(username);
-    if (!isLoggedIn || statusIds.length === 0) return;
+  const completeStory = useCallback(() => {
+    if (!activeStory) return;
+    persistSeenStatuses(activeStory.profile.username);
 
-    const response = await markWatchBuyStatusesSeen(statusIds);
-    if (!response.success) {
-      toastError(t("watchBuy.stories.seenFailed"));
+    const nextStory = getNextActiveStory(stories, activeStory.profile.id);
+
+    if (nextStory) {
+      void openStory(nextStory);
+      return;
     }
-  }, [activeStory, isLoggedIn, setProfileSeen, t]);
+
+    storyRequestIdRef.current += 1;
+    setActiveStory(null);
+    setStoryData(null);
+    setStoryLoading(false);
+  }, [activeStory, openStory, persistSeenStatuses, stories]);
 
   const handleSeen = useCallback((statusId: number) => {
     seenStatusIds.current.add(statusId);
@@ -148,12 +182,8 @@ const WatchBuyView = ({
     );
   }, []);
 
-  const showProducts = useCallback((products: WatchBuyProduct[]) => {
-    setSelectedProducts(products);
-    setProductsOpen(true);
-  }, []);
-
   const closeReel = useCallback(() => {
+    setActiveShare(null);
     setActiveReelId(null);
     if (typeof router.query.slug !== "string") return;
 
@@ -175,17 +205,28 @@ const WatchBuyView = ({
     [openStory],
   );
 
-  const showStoryProducts = useCallback(
-    (products: WatchBuyProduct[]) => {
-      showProducts(products);
-    },
-    [showProducts],
-  );
-
   const openReel = useCallback(
     (reel: WatchBuyReel) => {
       openedSlugRef.current = reel.slug;
       setActiveReelId(reel.id);
+      void router.replace(
+        {
+          pathname: router.pathname,
+          query: { ...router.query, slug: reel.slug },
+        },
+        undefined,
+        { shallow: true, scroll: false },
+      );
+    },
+    [router],
+  );
+
+  const setActiveReel = useCallback(
+    (reel: WatchBuyReel) => {
+      openedSlugRef.current = reel.slug;
+      setActiveReelId(reel.id);
+      if (router.query.slug === reel.slug) return;
+
       void router.replace(
         {
           pathname: router.pathname,
@@ -226,36 +267,12 @@ const WatchBuyView = ({
     [isLoggedIn, likingReelIds, router.asPath, setReelLiked, t],
   );
 
-  const shareReel = useCallback(
-    async (reel: WatchBuyReel) => {
-      const shareUrl = new URL("/watch-and-buy", window.location.origin);
-      shareUrl.searchParams.set("slug", reel.slug);
-      const url = shareUrl.toString();
-      const shareData = {
-        title: t("watchBuy.title"),
-        text: reel.caption ?? t("watchBuy.shareText"),
-        url,
-      };
-
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-          return;
-        }
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError")
-          return;
-      }
-
-      try {
-        await navigator.clipboard.writeText(url);
-        toastSuccess(t("watchBuy.linkCopied"));
-      } catch {
-        toastError(t("watchBuy.shareFailed"));
-      }
-    },
-    [t],
-  );
+  const shareReel = useCallback((reel: WatchBuyReel) => {
+    setActiveShare({
+      reel,
+      url: getReelShareUrl(window.location.origin, reel.slug),
+    });
+  }, []);
 
   if (isLoading && reels.length === 0 && stories.length === 0) {
     return <WatchBuySkeleton />;
@@ -319,8 +336,9 @@ const WatchBuyView = ({
           reels={reels}
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
-          isSuspended={Boolean(activeStory) || isProductsOpen}
+          isSuspended={Boolean(activeStory) || Boolean(activeShare)}
           likingReelIds={likingReelIds}
+          onActiveReelChange={setActiveReel}
           onClose={closeReel}
           onLike={toggleLike}
           onLoadMore={loadMore}
@@ -329,6 +347,15 @@ const WatchBuyView = ({
         />
       ) : null}
 
+      <ReelShareSheet
+        isOpen={Boolean(activeShare)}
+        reel={activeShare?.reel ?? null}
+        url={activeShare?.url ?? ""}
+        onOpenChange={(open) => {
+          if (!open) setActiveShare(null);
+        }}
+      />
+
       {activeStory ? (
         <StoryViewer
           key={activeStory.profile.username}
@@ -336,18 +363,12 @@ const WatchBuyView = ({
           statuses={storyData?.items ?? []}
           isLoading={storyLoading}
           error={storyFailed}
-          onClose={() => void closeStory()}
+          onClose={closeStory}
+          onComplete={completeStory}
           onRetry={() => void openStory(activeStory)}
           onSeen={handleSeen}
-          onShowProducts={showStoryProducts}
         />
       ) : null}
-
-      <ProductSheet
-        isOpen={isProductsOpen}
-        products={selectedProducts}
-        onOpenChange={setProductsOpen}
-      />
     </>
   );
 };

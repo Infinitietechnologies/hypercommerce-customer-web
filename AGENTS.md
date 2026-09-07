@@ -83,6 +83,7 @@ Everything below is what the project **actually uses today**. Do not add to this
 | Payments | Stripe (`@stripe/react-stripe-js`), Razorpay (inline SDK), Paystack, Flutterwave (redirect) |
 | Maps | `leaflet` + `react-leaflet`, `@types/google.maps` |
 | Carousel / media | `swiper` `^12`, `yet-another-react-lightbox` |
+| Sharing | Web Share API + `react-share` `^5.3.0` |
 | PWA | `@ducanh2912/next-pwa` |
 | Analytics | `@vercel/speed-insights`, `src/lib/analytics.ts`, `src/services/adTrackingService.ts` |
 | Utility | `lodash`, `clsx`, `cookie`, `nprogress`, `react-confetti` |
