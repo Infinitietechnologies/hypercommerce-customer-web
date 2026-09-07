@@ -62,6 +62,29 @@ const config: import("tailwindcss").Config = {
         overlay: shadow.overlay,
         primary: shadow.primary,
       },
+      keyframes: {
+        "reel-like-burst": {
+          "0%": {
+            opacity: "0",
+            transform: "translate(-50%, -50%) scale(0.35) rotate(-12deg)",
+          },
+          "35%": {
+            opacity: "1",
+            transform: "translate(-50%, -50%) scale(1.18) rotate(4deg)",
+          },
+          "72%": {
+            opacity: "1",
+            transform: "translate(-50%, -50%) scale(0.95) rotate(0deg)",
+          },
+          "100%": {
+            opacity: "0",
+            transform: "translate(-50%, -60%) scale(0.8) rotate(0deg)",
+          },
+        },
+      },
+      animation: {
+        "reel-like-burst": "reel-like-burst 700ms ease-out forwards",
+      },
       zIndex: {
         overlay: "80",
         sheet: "90",

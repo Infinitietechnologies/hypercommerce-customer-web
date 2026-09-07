@@ -1,5 +1,10 @@
 import { Icon } from "@iconify/react";
-import { useEffect, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 
 import { Image, Tooltip } from "@/components/ui";
@@ -16,6 +21,12 @@ interface ReelCardProps {
   onOpenProfile: () => void;
   onShare: (reel: WatchBuyReel) => void;
   reel: WatchBuyReel;
+}
+
+interface LikeBurst {
+  id: number;
+  x: number;
+  y: number;
 }
 
 const ReelCard = ({
@@ -35,7 +46,7 @@ const ReelCard = ({
   const mediaPressTimerRef = useRef<number | null>(null);
   const likeBurstTimerRef = useRef<number | null>(null);
   const [isPaused, setIsPaused] = useState(true);
-  const [showLikeBurst, setShowLikeBurst] = useState(false);
+  const [likeBurst, setLikeBurst] = useState<LikeBurst | null>(null);
   const hasProducts = reel.products.length > 0;
 
   useEffect(() => {
@@ -104,7 +115,7 @@ const ReelCard = ({
     onMutedChange(nextMuted);
   };
 
-  const handleMediaPress = () => {
+  const handleMediaPress = (event: ReactMouseEvent<HTMLButtonElement>) => {
     const now = Date.now();
     const isDoublePress = now - lastMediaPressRef.current < 300;
     lastMediaPressRef.current = now;
@@ -115,14 +126,23 @@ const ReelCard = ({
         mediaPressTimerRef.current = null;
       }
       if (!reel.liked_by_me && !isLikePending) onLike(reel);
-      setShowLikeBurst(true);
+      const bounds = containerRef.current?.getBoundingClientRect();
+      setLikeBurst({
+        id: now,
+        x: bounds
+          ? event.clientX - bounds.left
+          : event.currentTarget.clientWidth / 2,
+        y: bounds
+          ? event.clientY - bounds.top
+          : event.currentTarget.clientHeight / 2,
+      });
       if (likeBurstTimerRef.current != null) {
         window.clearTimeout(likeBurstTimerRef.current);
       }
       likeBurstTimerRef.current = window.setTimeout(() => {
-        setShowLikeBurst(false);
+        setLikeBurst(null);
         likeBurstTimerRef.current = null;
-      }, 650);
+      }, 700);
       return;
     }
 
@@ -190,17 +210,19 @@ const ReelCard = ({
         </span>
       </button>
 
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-0 z-20 grid place-items-center transition duration-300 motion-reduce:transition-none ${
-          showLikeBurst ? "scale-100 opacity-100" : "scale-75 opacity-0"
-        }`}
-      >
-        <Icon
-          icon="solar:heart-bold"
-          className="text-7xl text-danger drop-shadow-lg"
-        />
-      </span>
+      {likeBurst ? (
+        <span
+          key={likeBurst.id}
+          aria-hidden="true"
+          style={{ left: likeBurst.x, top: likeBurst.y }}
+          className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-1/2 animate-reel-like-burst motion-reduce:animate-none"
+        >
+          <Icon
+            icon="solar:heart-bold"
+            className="text-7xl text-danger drop-shadow-lg"
+          />
+        </span>
+      ) : null}
 
       <Tooltip
         content={

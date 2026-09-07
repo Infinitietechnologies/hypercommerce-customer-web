@@ -19,11 +19,14 @@ export const serializeJsonLd = (value: unknown): string =>
 export const getCanonicalUrl = (path: string, baseUrl?: string): string => {
   const base = (baseUrl || process.env.NEXT_PUBLIC_SITE_URL || "").trim();
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  // Ensure we don't have double slashes if base ends with a slash or cleanPath starts with one
-  const fullUrl = `${base.replace(/\/$/, "")}${cleanPath}`;
+  const suffixIndex = cleanPath.search(/[?#]/);
+  const pathname =
+    suffixIndex === -1 ? cleanPath : cleanPath.slice(0, suffixIndex);
+  const suffix = suffixIndex === -1 ? "" : cleanPath.slice(suffixIndex);
+  const normalizedPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
   // next.config.ts sets trailingSlash — the canonical must name the URL the site
   // actually serves, not the form that 308s to it.
-  return fullUrl.endsWith("/") ? fullUrl : `${fullUrl}/`;
+  return `${base.replace(/\/$/, "")}${normalizedPath}${suffix}`;
 };
 
 /**

@@ -17,6 +17,13 @@ import {
   getNextActiveStory,
   getReelShareUrl,
 } from "@/features/watchAndBuy/navigation";
+import {
+  canUseMobileNativeShare,
+  getReelShareImageUrl,
+  getReelShareMessage,
+  getReelShareText,
+  loadReelShareImageFile,
+} from "@/features/watchAndBuy/reelSharing";
 import { RootState } from "@/lib/redux/store";
 import {
   getWatchBuyProfileStatuses,
@@ -84,6 +91,7 @@ const WatchBuyView = ({
     new Set(),
   );
   const openedSlugRef = useRef<string | null>(null);
+  const nativeShareImagesRef = useRef(new Map<number, File>());
   const storyRequestIdRef = useRef(0);
   const seenStatusIds = useRef(new Set<number>());
 
@@ -101,6 +109,21 @@ const WatchBuyView = ({
     const timer = window.setTimeout(() => setActiveReelId(target.id), 0);
     return () => window.clearTimeout(timer);
   }, [activeReelId, effectiveSlug, reels]);
+
+  useEffect(() => {
+    if (activeReelId == null || !canUseMobileNativeShare()) return;
+    const reel = reels.find((item) => item.id === activeReelId);
+    if (!reel || nativeShareImagesRef.current.has(reel.id)) return;
+
+    let isCurrent = true;
+    void loadReelShareImageFile(reel).then((file) => {
+      if (isCurrent && file) nativeShareImagesRef.current.set(reel.id, file);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [activeReelId, reels]);
 
   const openStory = useCallback(async (summary: WatchBuyStatusSummary) => {
     if (!summary.profile.has_active_status) return;
@@ -268,23 +291,79 @@ const WatchBuyView = ({
     [isLoggedIn, likingReelIds, router.asPath, setReelLiked, t],
   );
 
-  const shareReel = useCallback((reel: WatchBuyReel) => {
-    setActiveShare({
-      reel,
-      url: getReelShareUrl(window.location.origin, reel.slug),
-    });
-  }, []);
+  const shareReel = useCallback(
+    async (reel: WatchBuyReel) => {
+      const publicOrigin =
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() || window.location.origin;
+      const url = getReelShareUrl(publicOrigin, reel.slug);
+
+      if (canUseMobileNativeShare()) {
+        const shareData = {
+          title: t("watchBuy.share.title"),
+          text: getReelShareText(reel, t, url),
+        };
+        const image = nativeShareImagesRef.current.get(reel.id);
+
+        try {
+          await navigator.share({
+            ...shareData,
+            ...(image ? { files: [image] } : {}),
+          });
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+          }
+
+          if (image) {
+            try {
+              await navigator.share(shareData);
+              return;
+            } catch (retryError) {
+              if (
+                retryError instanceof DOMException &&
+                retryError.name === "AbortError"
+              ) {
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      setActiveShare({ reel, url });
+    },
+    [t],
+  );
 
   if (isLoading && reels.length === 0 && stories.length === 0) {
     return <WatchBuySkeleton />;
   }
 
+  const seoReel = effectiveSlug
+    ? (reels.find((reel) => reel.slug === effectiveSlug) ?? null)
+    : null;
+  const seoDescription = seoReel
+    ? getReelShareMessage(seoReel, t)
+    : t("watchBuy.metaDescription");
+  const seoImage = seoReel ? getReelShareImageUrl(seoReel) : null;
+  const canonical = effectiveSlug
+    ? `/watch-and-buy/?slug=${encodeURIComponent(effectiveSlug)}`
+    : "/watch-and-buy/";
+
   return (
     <>
       <DynamicSEO
-        title={t("watchBuy.title")}
-        description={t("watchBuy.metaDescription")}
-        canonical="/watch-and-buy"
+        title={seoReel ? t("watchBuy.share.seoTitle") : t("watchBuy.title")}
+        description={seoDescription}
+        canonical={canonical}
+        ogType={seoReel ? "article" : "website"}
+        ogDescription={seoDescription}
+        ogImage={seoImage ?? undefined}
+        ogImageAlt={seoReel ? t("watchBuy.share.previewAlt") : undefined}
+        twitterDescription={seoDescription}
+        twitterImage={seoImage ?? undefined}
+        twitterImageAlt={seoReel ? t("watchBuy.share.previewAlt") : undefined}
       />
 
       <div className="min-h-dvh bg-content2">

@@ -72,7 +72,7 @@ const ReelsExploreGrid = ({
               aria-label={t("watchBuy.reels.open", {
                 username: reel.profile.username,
               })}
-              className="group relative aspect-reel w-full overflow-hidden rounded-large border border-divider bg-shell text-start shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none"
+              className="relative aspect-reel w-full cursor-pointer overflow-hidden rounded-large border border-divider bg-shell text-start shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               {reel.preview_type === "image" && reel.preview_url ? (
                 <Image
@@ -81,7 +81,7 @@ const ReelsExploreGrid = ({
                   src={reel.preview_url}
                   alt={reel.caption ?? ""}
                   radius="none"
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 <video
@@ -97,7 +97,7 @@ const ReelsExploreGrid = ({
                       event.currentTarget.duration || previewTime,
                     );
                   }}
-                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+                  className="h-full w-full object-cover"
                 >
                   <track
                     default

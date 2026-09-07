@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react";
 import {
+  type WheelEvent as ReactWheelEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -10,7 +11,10 @@ import { useTranslation } from "react-i18next";
 
 import { Button, Skeleton, Tooltip } from "@/components/ui";
 import { useDocumentScrollLock } from "@/features/watchAndBuy/hooks/useDocumentScrollLock";
-import { getSnappedReelIndex } from "@/features/watchAndBuy/navigation";
+import {
+  getReelWheelDirection,
+  getSnappedReelIndex,
+} from "@/features/watchAndBuy/navigation";
 import type { WatchBuyReel } from "@/types/watchBuy";
 
 import ReelCard from "./ReelCard";
@@ -50,6 +54,8 @@ const ReelViewer = ({
   const activeReelIdRef = useRef(activeReelId);
   const positionedRef = useRef(false);
   const scrollFrameRef = useRef<number | null>(null);
+  const wheelReleaseTimerRef = useRef<number | null>(null);
+  const wheelLockedRef = useRef(false);
   const [isMuted, setIsMuted] = useState(true);
 
   useDocumentScrollLock();
@@ -123,10 +129,36 @@ const ReelViewer = ({
     [reels.length],
   );
 
+  const handleViewerWheel = useCallback(
+    (event: ReactWheelEvent<HTMLDivElement>) => {
+      if (isSuspended || event.target !== event.currentTarget) return;
+
+      const direction = getReelWheelDirection(event.deltaX, event.deltaY);
+      if (direction === 0) return;
+
+      event.preventDefault();
+      if (wheelLockedRef.current) return;
+
+      wheelLockedRef.current = true;
+      moveReel(direction);
+      if (wheelReleaseTimerRef.current != null) {
+        window.clearTimeout(wheelReleaseTimerRef.current);
+      }
+      wheelReleaseTimerRef.current = window.setTimeout(() => {
+        wheelLockedRef.current = false;
+        wheelReleaseTimerRef.current = null;
+      }, 450);
+    },
+    [isSuspended, moveReel],
+  );
+
   useEffect(
     () => () => {
       if (scrollFrameRef.current != null) {
         window.cancelAnimationFrame(scrollFrameRef.current);
+      }
+      if (wheelReleaseTimerRef.current != null) {
+        window.clearTimeout(wheelReleaseTimerRef.current);
       }
     },
     [],
@@ -191,6 +223,7 @@ const ReelViewer = ({
           event.key === "ArrowDown" || event.key === "PageDown" ? 1 : -1,
         );
       }}
+      onWheel={handleViewerWheel}
       className="fixed inset-0 z-overlay flex items-center justify-center bg-shell sm:p-3"
     >
       <div className="relative h-full w-full max-w-full overflow-hidden bg-shell shadow-overlay sm:aspect-reel sm:max-h-full sm:w-auto sm:rounded-xlarge sm:border sm:border-shell-divider">

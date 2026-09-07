@@ -12,6 +12,14 @@ export const getSnappedReelIndex = (
   );
 };
 
+export const getReelWheelDirection = (
+  deltaX: number,
+  deltaY: number,
+): -1 | 0 | 1 => {
+  if (Math.abs(deltaY) < 24 || Math.abs(deltaY) <= Math.abs(deltaX)) return 0;
+  return deltaY > 0 ? 1 : -1;
+};
+
 export const getReelShareUrl = (origin: string, slug: string) => {
   const url = new URL("/watch-and-buy/", origin);
   url.searchParams.set("slug", slug);
