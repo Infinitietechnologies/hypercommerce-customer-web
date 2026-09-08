@@ -1,5 +1,3 @@
-import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
-import { useTranslation } from "react-i18next";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { getSettings } from "@/routes/api";
@@ -8,14 +6,9 @@ import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { GetServerSideProps } from "next";
 import { loadTranslations } from "../../../i18n";
 import { useSettings } from "@/contexts/SettingsContext";
-import SellerRegisterForm from "@/components/Seller/SellerRegisterForm";
-import PageHead from "@/SEO/PageHead";
-import EnhancedSellerMarketing from "@/components/Seller/EnhancedSellerMarketing";
-import SellerSteps from "@/components/Seller/SellerSteps";
-import SellerTestimonials from "@/components/Seller/SellerTestimonials";
+import SellerLandingView from "@/views/SellerLandingView";
 
 export default function SellerRegistration() {
-  const { t } = useTranslation();
   const { isSingleVendor } = useSettings();
   const router = useRouter();
 
@@ -27,30 +20,7 @@ export default function SellerRegistration() {
 
   if (isSingleVendor) return null;
 
-  return (
-    <div className="min-h-screen w-full">
-      <div className="w-full flex flex-col items-start gap-12">
-        <PageHead pageTitle={t("pages.sellerRegister.pageTitle")} />
-
-        <MyBreadcrumbs
-          breadcrumbs={[
-            {
-              href: "/seller-register",
-              label: t("pages.sellerRegister.pageTitle"),
-            },
-          ]}
-        />
-
-        <EnhancedSellerMarketing />
-
-        <SellerSteps />
-
-        <SellerRegisterForm />
-
-        <SellerTestimonials />
-      </div>
-    </div>
-  );
+  return <SellerLandingView />;
 }
 
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
@@ -68,8 +38,6 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         }
 
         await loadTranslations(context);
-
-
         return {
           props: {
             initialSettings: settings.data,

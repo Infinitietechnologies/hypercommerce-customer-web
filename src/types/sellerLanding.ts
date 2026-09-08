@@ -30,6 +30,7 @@ export interface SellerLandingSection {
 export interface SellerLandingSettings {
   schemaVersion: 1;
   seo?: LocalizedSellerContent;
+  seoMedia?: Record<string, string>;
   sections: SellerLandingSection[];
 }
 

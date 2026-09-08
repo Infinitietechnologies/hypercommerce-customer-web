@@ -15,6 +15,7 @@ import {
 import { orderStatusPriority } from "@/config/constants";
 import { parse } from "cookie";
 import { GetServerSidePropsContext } from "next";
+import type { SellerLandingSettings } from "@/types/sellerLanding";
 
 export const isStatusBeforeOrAt = (current: string, target: string) => {
   const currentPriority = orderStatusPriority[current] || 0;
@@ -145,7 +146,8 @@ export function getSpecificSettings(
     | "system"
     | "app"
     | "home_general_settings"
-    | "advertisement",
+    | "advertisement"
+    | "seller_landing",
 ):
   | WebSettings
   | SystemSettings
@@ -155,6 +157,7 @@ export function getSpecificSettings(
   | HomeGeneralSettings
   | NotificationSettings
   | AdvertisementSettings
+  | SellerLandingSettings
   | undefined {
   // Check if settings is an array
   if (!Array.isArray(settings)) {
