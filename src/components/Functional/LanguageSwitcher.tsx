@@ -11,27 +11,7 @@ import {
 import { getFlagEmoji } from "@/helpers/getters";
 import { ChevronDown } from "lucide-react";
 import { changeLanguage } from "../../../i18n";
-
-const languages = [
-  {
-    code: "en",
-    countryCode: "us",
-    name: "English",
-    flag: "🇺🇸",
-  },
-  {
-    code: "hi",
-    countryCode: "in",
-    name: "हिन्दी",
-    flag: "🇮🇳",
-  },
-  {
-    code: "ar",
-    countryCode: "sa",
-    name: "العربية",
-    flag: "🇸🇦",
-  },
-];
+import { SUPPORTED_LANGUAGES } from "@/config/languages";
 
 interface LanguageSwitcherProps {
   variant?: "desktop" | "mobile";
@@ -42,7 +22,7 @@ const LanguageSwitcher = ({ variant = "desktop" }: LanguageSwitcherProps) => {
 
   const getCurrentLanguage = () => {
     return (
-      languages.find((lang) => lang.code === i18n.language) || languages[0]
+      SUPPORTED_LANGUAGES.find((lang) => lang.code === i18n.language) || SUPPORTED_LANGUAGES[0]
     );
   };
 
@@ -88,7 +68,7 @@ const LanguageSwitcher = ({ variant = "desktop" }: LanguageSwitcherProps) => {
           }
         }}
       >
-        {languages.map((language) => (
+        {SUPPORTED_LANGUAGES.map((language) => (
           <DropdownItem
             key={language.code}
             textValue={language.name}

@@ -8,12 +8,11 @@ import { getCookie, setCookie } from "@/lib/cookies";
 import enTranslation from "./public/locales/en.json";
 import hiTranslation from "./public/locales/hi.json";
 import arTranslation from "./public/locales/ar.json";
+import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from "@/config/languages";
 
 const LANGUAGE_KEY = "i18nextLng";
 
-const DEFAULT_LANG = "en";
-
-const languages = {
+const translationResources = {
   en: {
     translation: enTranslation,
   },
@@ -27,10 +26,10 @@ const languages = {
 
 // Initialize i18n with static defaults. Client-specific detection will run later.
 i18n.use(initReactI18next).init({
-  resources: languages,
+  resources: translationResources,
   // Default language on server - client will override if a cookie is present
-  lng: getCookie<string>(LANGUAGE_KEY) || DEFAULT_LANG,
-  fallbackLng: DEFAULT_LANG,
+  lng: getCookie<string>(LANGUAGE_KEY) || DEFAULT_LANGUAGE,
+  fallbackLng: DEFAULT_LANGUAGE,
   interpolation: {
     escapeValue: false,
   },
@@ -38,6 +37,8 @@ i18n.use(initReactI18next).init({
 
 // Function to change language and persist in cookie
 export const changeLanguage = (lng: string) => {
+  const supportedLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === lng);
+  if (!supportedLanguage) return;
   // Persist cookie only in browser
   if (typeof window !== "undefined") {
     setCookie(LANGUAGE_KEY, lng, { expires: 365 });
@@ -46,14 +47,14 @@ export const changeLanguage = (lng: string) => {
 
   // Ensure this code runs only in the browser
   if (typeof document !== "undefined") {
-    document.documentElement.setAttribute("dir", lng === "ar" ? "rtl" : "ltr");
+    document.documentElement.setAttribute("dir", supportedLanguage.direction);
     document.documentElement.setAttribute("lang", lng);
   }
 };
 
 export const loadTranslations = async (context: GetServerSidePropsContext) => {
   const lang =
-    (getCookieFromContext(context, LANGUAGE_KEY) as string) || DEFAULT_LANG;
+    (getCookieFromContext(context, LANGUAGE_KEY) as string) || DEFAULT_LANGUAGE;
 
   // The singleton is already initialised at module scope, so a second init()
   // is a no-op — changeLanguage is what actually switches the active language.
