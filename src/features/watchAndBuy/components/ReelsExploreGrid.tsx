@@ -24,16 +24,6 @@ const ReelsExploreGrid = ({
 }: ReelsExploreGridProps) => {
   const { t } = useTranslation();
 
-  const formatDuration = (durationMs: number | null) => {
-    if (durationMs == null) return null;
-
-    const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
-
   return (
     <section
       aria-labelledby="watch-buy-explore-title"
@@ -62,8 +52,6 @@ const ReelsExploreGrid = ({
 
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-3 min-[1024px]:grid-cols-4">
         {reels.map((reel) => {
-          const duration = formatDuration(reel.duration_ms);
-
           return (
             <button
               key={reel.id}
@@ -110,13 +98,6 @@ const ReelsExploreGrid = ({
               )}
 
               <span className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-shell via-transparent to-shell/30" />
-
-              {duration ? (
-                <span className="absolute start-2 top-2 z-30 inline-flex items-center gap-1 rounded-full bg-shell/65 px-2 py-1 text-xxs font-bold text-shell-foreground shadow-overlay backdrop-blur-sm">
-                  <Icon icon="solar:play-bold" className="text-xs" />
-                  {duration}
-                </span>
-              ) : null}
 
               <span className="absolute inset-x-0 bottom-0 z-30 p-3 text-shell-foreground">
                 {reel.caption ? (
