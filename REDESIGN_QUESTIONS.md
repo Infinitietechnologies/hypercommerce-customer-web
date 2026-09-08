@@ -1,5 +1,9 @@
 # Redesign decisions and data gaps
 
+## Seller registration
+
+- There is no `src/redesign/` counterpart for the seller registration landing page. The existing storefront layout and design tokens therefore remain authoritative while section titles, subtitles, labels, item copy, and media are populated from the seller landing API. Benefit images are optional and fall back to the existing static icons when no uploaded image is configured.
+
 ## Customer support
 
 - There is no `/redesign` counterpart for the customer support timeline. The live storefront tokens and the approved single-timeline support flow therefore define this screen until a dedicated redesign reference is added.

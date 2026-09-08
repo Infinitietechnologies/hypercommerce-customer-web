@@ -1,5 +1,4 @@
 import type { HomeNavbarAppearance } from "./home";
-import type { SellerLandingSettings } from "./sellerLanding";
 
 export type VersionCheckData = {
   update_available: boolean;
@@ -42,10 +41,6 @@ export type Settings = [
   {
     variable: "advertisement";
     value: AdvertisementSettings;
-  },
-  {
-    variable: "seller_landing";
-    value: SellerLandingSettings;
   },
 ];
 

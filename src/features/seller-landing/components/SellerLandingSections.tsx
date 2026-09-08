@@ -9,6 +9,7 @@ import {
 } from "framer-motion";
 import { Button, Image } from "@/components/ui";
 import Reveal from "@/components/custom/Reveal";
+import RatingStars from "@/components/RatingStars";
 import SellerRegisterForm from "@/components/Seller/SellerRegisterForm";
 import type { ResolvedSellerLandingSection } from "@/types/sellerLanding";
 
@@ -19,9 +20,9 @@ const iconNames: Record<string, string> = {
   chart: "solar:chart-2-bold-duotone",
   truck: "solar:delivery-bold-duotone",
 };
+const benefitIcons = [iconNames.users, iconNames.package, iconNames.shield, iconNames.chart];
 
 const text = (value: unknown) => String(value ?? "");
-const icon = (value: unknown) => iconNames[text(value)] || text(value) || iconNames.package;
 
 function SellerHero({ section, logo, siteName }: { section: ResolvedSellerLandingSection; logo: string; siteName: string }) {
   const isSplit = section.variant === "split";
@@ -83,12 +84,23 @@ function SellerBenefits({ section, overlapsHero }: { section: ResolvedSellerLand
   const cards = section.items.map((item, index) => (
     <Reveal key={item.id} delay={index * 0.08} className={section.variant === "feature_cards" ? "group rounded-large border border-divider bg-content1 p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary hover:shadow-md" : "group flex items-start gap-3 p-5"}>
       <div className={`shrink-0 bg-primary-50 text-primary flex items-center justify-center ${section.variant === "feature_cards" ? "mb-4 h-12 w-12 rounded-medium" : "h-9 w-9 rounded-full"}`}>
-        <Icon icon={icon(item.settings.icon)} className={section.variant === "feature_cards" ? "h-6 w-6" : "h-4 w-4"} />
+        {item.media.image ? (
+          <Image
+            src={item.media.image}
+            alt=""
+            removeWrapper
+            className={`h-full w-full object-cover ${section.variant === "feature_cards" ? "rounded-medium" : "rounded-full"}`}
+          />
+        ) : (
+          <Icon icon={benefitIcons[index % benefitIcons.length]} className={section.variant === "feature_cards" ? "h-6 w-6" : "h-4 w-4"} />
+        )}
       </div>
       <div><h2 className="mb-1 text-sm font-bold">{text(item.copy.title)}</h2><p className="text-xs leading-relaxed text-foreground/50">{text(item.copy.description)}</p></div>
     </Reveal>
   ));
-  const heading = text(section.copy.title) ? <Reveal className="mb-6 text-center"><h2 className="text-2xl font-bold md:text-3xl">{text(section.copy.title)}</h2>{text(section.copy.subtitle) && <p className="mt-2 text-sm text-foreground/50">{text(section.copy.subtitle)}</p>}</Reveal> : null;
+  const title = text(section.copy.title);
+  const subtitle = text(section.copy.subtitle);
+  const heading = title || subtitle ? <Reveal className={`mb-6 text-center ${section.variant === "overlap_grid" && overlapsHero ? "rounded-large border border-divider bg-content1 px-4 py-5 shadow-md" : ""}`}>{title && <h2 className="text-2xl font-bold md:text-3xl">{title}</h2>}{subtitle && <p className="mt-2 text-sm text-foreground/50">{subtitle}</p>}</Reveal> : null;
   if (section.variant === "feature_cards") return <section className="w-full px-4"><div className="mx-auto max-w-site">{heading}<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{cards}</div></div></section>;
   return <section className={`relative z-10 w-full px-4 ${overlapsHero ? "-mt-[6.5rem] sm:-mt-32 lg:-mt-[6.5rem]" : ""}`}><div className="mx-auto max-w-site">{heading}<div className="grid grid-cols-1 divide-y divide-divider rounded-large border border-divider bg-content1 shadow-md sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">{cards}</div></div></section>;
 }
@@ -97,7 +109,7 @@ function StepCard({ section, index }: { section: ResolvedSellerLandingSection; i
   const item = section.items[index];
   const points = Array.isArray(item.copy.points) ? item.copy.points : [];
   const stepLabel = text(section.copy.stepLabel || "Step {number}").replace("{number}", String(index + 1));
-  return <div className="rounded-large border border-primary-200 bg-content1 p-5 shadow-sm"><div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-medium bg-primary-50 text-primary"><Icon icon={icon(item.settings.icon)} className="h-5 w-5" /></div><div><p className="mb-0.5 text-xs font-semibold text-primary">{stepLabel}</p><h3 className="text-lg font-bold leading-tight">{text(item.copy.title)}</h3><p className="mt-1 text-sm leading-relaxed text-foreground/50">{text(item.copy.description)}</p></div></div><ul className="mt-4 space-y-2 border-t border-divider pt-4">{points.map((point, pointIndex) => <li key={pointIndex} className="flex items-start gap-2 text-xs text-foreground/70"><Icon icon="solar:check-circle-bold" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{text(point)}</li>)}</ul></div>;
+  return <div className="rounded-large border border-primary-200 bg-content1 p-5 shadow-sm"><div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-medium bg-primary-50 text-primary">{item.media.image ? <Image src={item.media.image} alt="" removeWrapper className="h-full w-full object-cover" /> : <Icon icon={benefitIcons[index % benefitIcons.length]} className="h-5 w-5" />}</div><div><p className="mb-0.5 text-xs font-semibold text-primary">{stepLabel}</p><h3 className="text-lg font-bold leading-tight">{text(item.copy.title)}</h3><p className="mt-1 text-sm leading-relaxed text-foreground/50">{text(item.copy.description)}</p></div></div><ul className="mt-4 space-y-2 border-t border-divider pt-4">{points.map((point, pointIndex) => <li key={pointIndex} className="flex items-start gap-2 text-xs text-foreground/70"><Icon icon="solar:check-circle-bold" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{text(point)}</li>)}</ul></div>;
 }
 
 function StepsHeading({ section }: { section: ResolvedSellerLandingSection }) {
@@ -120,7 +132,7 @@ function SellerSteps({ section }: { section: ResolvedSellerLandingSection }) {
 function TestimonialCard({ section, index }: { section: ResolvedSellerLandingSection; index: number }) {
   const item = section.items[index];
   const rating = Math.min(5, Math.max(1, Number(item.settings.rating) || 5));
-  return <div className="flex h-full flex-col justify-between gap-6 rounded-large border border-primary-200 bg-primary-50/40 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-md"><div><div className="mb-4 flex gap-0.5">{Array.from({length: rating}).map((_, star) => <Icon key={star} icon="solar:star-bold" className="h-4 w-4 text-warning" />)}</div><p className="text-sm leading-relaxed">{text(item.copy.text)}</p></div><div className="flex items-center gap-3">{item.media.avatar ? <Image src={item.media.avatar} alt="" className="h-10 w-10 rounded-full object-cover" /> : <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-default-200 text-xs font-bold text-foreground/50">{text(item.copy.name).charAt(0)}</div>}<div><p className="text-xs font-bold">{text(item.copy.name)}</p><p className="text-xs text-foreground/50">{text(section.copy.verifiedLabel)}, {text(item.copy.business)}</p></div></div></div>;
+  return <div className="flex h-full flex-col justify-between gap-6 rounded-large border border-primary-200 bg-primary-50/40 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-md"><div><div className="mb-4 flex items-center gap-2"><div className="flex gap-0.5" aria-label={`${rating.toFixed(1)} out of 5 stars`}><RatingStars rating={rating} size={16} /></div><span className="text-xs font-semibold text-foreground/60">{rating.toFixed(1)}</span></div><p className="text-sm leading-relaxed">{text(item.copy.text)}</p></div><div className="flex items-center gap-3">{item.media.avatar ? <Image src={item.media.avatar} alt="" className="h-10 w-10 rounded-full object-cover" /> : <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-default-200 text-xs font-bold text-foreground/50">{text(item.copy.name).charAt(0)}</div>}<div><p className="text-xs font-bold">{text(item.copy.name)}</p><p className="text-xs text-foreground/50">{text(section.copy.verifiedLabel)}, {text(item.copy.business)}</p></div></div></div>;
 }
 
 function SellerTestimonials({ section }: { section: ResolvedSellerLandingSection }) {

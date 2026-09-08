@@ -105,6 +105,12 @@ const defaultSectionCopy = (
       verifiedLabel: t("pages.enhancedSellerMarketing.testimonials.verifiedBuyer"),
     };
   }
+  if (type === "benefits") {
+    return {
+      title: t("pages.enhancedSellerMarketing.benefits.title"),
+      subtitle: t("pages.enhancedSellerMarketing.benefits.subtitle"),
+    };
+  }
   return {};
 };
 
@@ -140,15 +146,14 @@ const defaultItemCopy = (
 
 const itemDefaults = (
   type: SellerLandingSection["type"],
-  item: SellerLandingItem,
   index: number,
 ): { settings: Record<string, unknown>; media: Record<string, string> } => {
   if (type === "benefits") {
-    return { settings: { icon: ["users", "package", "shield", "chart"][index % 4] }, media: {} };
+    return { settings: {}, media: {} };
   }
   if (type === "steps") {
     return {
-      settings: { icon: ["users", "package", "truck"][index % 3] },
+      settings: {},
       media: { image: `/seller-landing/simple-step${index + 1}.png` },
     };
   }
@@ -163,11 +168,12 @@ const resolveItem = (
   locale: string,
   t: TFunction,
 ): ResolvedSellerLandingItem => {
-  const defaults = itemDefaults(sectionType, item, index);
+  const defaults = itemDefaults(sectionType, index);
+  const presetId = item.preset?.replace("hypercommerce.", "");
   return {
     ...item,
     copy: {
-      ...(item.preset ? defaultItemCopy(sectionType, item.id, t) : {}),
+      ...(presetId ? defaultItemCopy(sectionType, presetId, t) : {}),
       ...copyFor(item.content, locale),
     },
     settings: { ...defaults.settings, ...populated(item.settings) },
@@ -213,28 +219,35 @@ export const resolveSellerLanding = (
       keywords: String(copyFor(source.seo, locale).keywords || "seller registration, sell online, marketplace"),
       image: mediaFor(source.seoMedia).image || "/seller-landing/hero-seller.png",
     },
-    sections: sections.map((entry) => ({
-      ...entry,
-      copy: {
-        ...(entry.preset ? defaultSectionCopy(entry.type, t) : {}),
-        ...copyFor(entry.content, locale),
-      },
-      settings: {
-        ...(entry.type === "hero" ? { ctaHref: "#seller-register" } : {}),
-        ...populated(entry.settings),
-      },
-      media: {
-        ...(entry.type === "hero"
-          ? {
-              desktopImage: "/seller-landing/hero-seller.png",
-              mobileImage: "/seller-landing/hero-seller-mobile.png",
-            }
-          : {}),
-        ...mediaFor(entry.media),
-      },
-      items: (entry.items || []).map((item, index) =>
-        resolveItem(entry.type, item, index, locale, t),
-      ),
-    })),
+    sections: sections.map((entry) => {
+      const defaultEntry = DEFAULT_SELLER_LANDING.sections.find(
+        (candidateEntry) => candidateEntry.type === entry.type,
+      );
+      const items = entry.items?.length ? entry.items : defaultEntry?.items || [];
+
+      return {
+        ...entry,
+        copy: {
+          ...defaultSectionCopy(entry.type, t),
+          ...copyFor(entry.content, locale),
+        },
+        settings: {
+          ...(entry.type === "hero" ? { ctaHref: "#seller-register" } : {}),
+          ...populated(entry.settings),
+        },
+        media: {
+          ...(entry.type === "hero"
+            ? {
+                desktopImage: "/seller-landing/hero-seller.png",
+                mobileImage: "/seller-landing/hero-seller-mobile.png",
+              }
+            : {}),
+          ...mediaFor(entry.media),
+        },
+        items: items.map((item, index) =>
+          resolveItem(entry.type, item, index, locale, t),
+        ),
+      };
+    }),
   };
 };
