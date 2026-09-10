@@ -77,7 +77,7 @@ Everything below is what the project **actually uses today**. Do not add to this
 | SSR data | `getServerSideProps` (primary), `getStaticProps` where allowed |
 | HTTP | **axios** `^1.13.2` — one instance in `src/services/client.ts`, endpoint callers in `src/services/<domain>.ts`, interceptors in `src/routes/interceptor.ts` |
 | Forms / validation | **No form library.** Controlled React state + `src/helpers/validator.ts`; `libphonenumber-js` for phone |
-| i18n | `i18next` + `react-i18next`, bundles in `public/locales/{en,hi,ar}.json`, init in `i18n.ts`, scanner `npm run scan:i18n`. Arabic forces RTL |
+| i18n | `i18next` + `react-i18next`; enabled languages and labels load from the panel’s `web` language APIs through `LanguageProvider`. Bundles in `public/locales/{en,hi,ar}.json` are startup/offline fallbacks. Direction comes from the API and is persisted with the locale cookie. |
 | Icons | **`@iconify/react` (solar set) — the redesign standard**, matches the Hero UI handoff 1:1; use `<Icon icon="solar:…" />` for new redesign screens. `lucide-react` `^0.562.0` remains for pre-redesign screens (118 files); `react-icons` `^5.5.0` lingers in 4 files and is being retired. Do not add a fourth set |
 | Auth | Firebase Auth (phone OTP, Google, Apple) + Sanctum bearer token in cookies |
 | Payments | Stripe (`@stripe/react-stripe-js`), Razorpay (inline SDK), Paystack, Flutterwave (redirect) |
@@ -163,7 +163,7 @@ custom weight scale or a downward remap.
 
 ```
 hypercommerce-customer-web/
-├── i18n.ts                     # i18next init + changeLanguage()
+├── i18n.ts                     # i18next fallback init + dynamic resource application
 ├── i18next-scanner.config.cjs
 ├── next.config.ts              # next + PWA
 ├── tailwind.config.ts          # HeroUI plugin, consuming src/theme/

@@ -20,9 +20,9 @@ import { fontSans, fontMono, fontDisplay } from "@/config/fonts";
 import GoogleAnalytics from "@/components/Functional/GoogleAnalytics";
 import MicrosoftClarity from "@/components/Functional/MicrosoftClarity";
 import { adTrackingService } from "@/services/adTrackingService";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import "@/styles/index.css";
 import { CircleX } from "lucide-react";
-import i18n from "../../i18n";
 
 const ToastProvider = dynamic(
   () => import("@/components/ui").then((mod) => mod.ToastProvider),
@@ -61,18 +61,7 @@ const accountTabForPath = (pathname: string): string => {
 function App({ Component, pageProps }: AppPropsWithLayout) {
   const router = useRouter();
 
-  // // Set initial RTL direction based on language
   useEffect(() => {
-    const currentLang = i18n.language;
-    if (currentLang === "ar") {
-      document.documentElement.setAttribute("dir", "rtl");
-      document.documentElement.setAttribute("lang", "ar");
-    } else {
-      document.documentElement.setAttribute("dir", "ltr");
-      document.documentElement.setAttribute("lang", currentLang);
-    }
-
-    // Initialize Ad Tracking Service
     adTrackingService.init();
   }, []);
 
@@ -147,11 +136,13 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
             ),
           }}
         />
-        <ReduxProvider>
-          <ErrorBoundary>{getLayout(content)}</ErrorBoundary>
-          <AuthSheetHost />
-          <SupportNotificationListener />
-        </ReduxProvider>
+        <LanguageProvider>
+          <ReduxProvider>
+            <ErrorBoundary>{getLayout(content)}</ErrorBoundary>
+            <AuthSheetHost />
+            <SupportNotificationListener />
+          </ReduxProvider>
+        </LanguageProvider>
       </NextThemesProvider>
     </HeroUIProvider>
   );

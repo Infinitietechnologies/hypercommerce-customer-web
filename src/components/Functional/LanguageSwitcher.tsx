@@ -1,30 +1,20 @@
-import React from "react";
-import { useTranslation } from "react-i18next";
 import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
   Button,
-  Image,
 } from "@/components/ui";
-import { getFlagEmoji } from "@/helpers/getters";
 import { ChevronDown } from "lucide-react";
-import { changeLanguage } from "../../../i18n";
-import { SUPPORTED_LANGUAGES } from "@/config/languages";
+import { useLanguages } from "@/contexts/LanguageContext";
 
 interface LanguageSwitcherProps {
   variant?: "desktop" | "mobile";
 }
 
 const LanguageSwitcher = ({ variant = "desktop" }: LanguageSwitcherProps) => {
-  const { i18n } = useTranslation();
-
-  const getCurrentLanguage = () => {
-    return (
-      SUPPORTED_LANGUAGES.find((lang) => lang.code === i18n.language) || SUPPORTED_LANGUAGES[0]
-    );
-  };
+  const { languages, currentLanguage, isLoading, selectLanguage } =
+    useLanguages();
 
   return (
     <Dropdown
@@ -39,20 +29,11 @@ const LanguageSwitcher = ({ variant = "desktop" }: LanguageSwitcherProps) => {
         <Button
           size="sm"
           variant="light"
+          isDisabled={isLoading}
           className={`flex h-8 min-w-0 items-center gap-1 text-xs font-semibold text-inherit transition-colors hover:text-(--header-active-color) ${variant === "mobile" ? "px-1" : "px-2"}`}
         >
           <div className="flex items-center gap-1">
-            {variant === "desktop" ? (
-              <Image
-                src={getFlagEmoji(getCurrentLanguage().countryCode)}
-                alt=""
-                className="h-4 w-5 rounded-sm sm:hidden"
-              />
-            ) : null}
-            <span className="inline">
-              {getCurrentLanguage().code.charAt(0).toUpperCase() +
-                getCurrentLanguage().code.slice(1)}
-            </span>
+            <span className="inline">{currentLanguage.code.toUpperCase()}</span>
             <ChevronDown className="h-4 w-4 shrink-0" />
           </div>
         </Button>
@@ -60,29 +41,24 @@ const LanguageSwitcher = ({ variant = "desktop" }: LanguageSwitcherProps) => {
       <DropdownMenu
         aria-label="Language selection"
         selectionMode="single"
-        selectedKeys={[i18n.language]}
+        selectedKeys={[currentLanguage.code]}
         onSelectionChange={(keys) => {
           const selected = Array.from(keys)[0];
           if (selected) {
-            changeLanguage(selected as string);
+            void selectLanguage(String(selected));
           }
         }}
       >
-        {SUPPORTED_LANGUAGES.map((language) => (
+        {languages.map((language) => (
           <DropdownItem
             key={language.code}
-            textValue={language.name}
+            textValue={language.native_name}
             className="flex items-center gap-2"
-            startContent={
-              <Image
-                src={getFlagEmoji(language.countryCode)}
-                alt={`flag`}
-                className="h-4 w-5 rounded-sm"
-              />
-            }
           >
-            <span className={`fi fi-${language.countryCode} me-2`} />
-            <span>{language.name}</span>
+            <span>{language.native_name}</span>
+            <span className="text-foreground/50">
+              {language.code.toUpperCase()}
+            </span>
           </DropdownItem>
         ))}
       </DropdownMenu>

@@ -1,64 +1,90 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { getCookieFromContext } from "@/helpers/getters";
-import { GetServerSidePropsContext } from "next";
-import { getCookie, setCookie } from "@/lib/cookies";
+import type { GetServerSidePropsContext } from "next";
 
-// Languages
+import {
+  DEFAULT_LANGUAGE,
+  FALLBACK_LANGUAGES,
+  LANGUAGE_COOKIE_KEY,
+  LANGUAGE_DIRECTION_COOKIE_KEY,
+} from "@/config/languages";
+import { getCookieFromContext } from "@/helpers/getters";
+import { getCookie, setCookie } from "@/lib/cookies";
+import { getWebLabels, getWebLanguages } from "@/services/language";
+import type { LanguageDirection, TranslationLabels } from "@/types/language";
+import arTranslation from "./public/locales/ar.json";
 import enTranslation from "./public/locales/en.json";
 import hiTranslation from "./public/locales/hi.json";
-import arTranslation from "./public/locales/ar.json";
-import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from "@/config/languages";
-
-const LANGUAGE_KEY = "i18nextLng";
 
 const translationResources = {
-  en: {
-    translation: enTranslation,
-  },
-  hi: {
-    translation: hiTranslation,
-  },
-  ar: {
-    translation: arTranslation,
-  },
+  en: { translation: enTranslation },
+  hi: { translation: hiTranslation },
+  ar: { translation: arTranslation },
 };
 
-// Initialize i18n with static defaults. Client-specific detection will run later.
 i18n.use(initReactI18next).init({
   resources: translationResources,
-  // Default language on server - client will override if a cookie is present
-  lng: getCookie<string>(LANGUAGE_KEY) || DEFAULT_LANGUAGE,
+  lng: getCookie<string>(LANGUAGE_COOKIE_KEY) || DEFAULT_LANGUAGE,
   fallbackLng: DEFAULT_LANGUAGE,
   interpolation: {
     escapeValue: false,
   },
 });
 
-// Function to change language and persist in cookie
-export const changeLanguage = (lng: string) => {
-  const supportedLanguage = SUPPORTED_LANGUAGES.find((language) => language.code === lng);
-  if (!supportedLanguage) return;
-  // Persist cookie only in browser
-  if (typeof window !== "undefined") {
-    setCookie(LANGUAGE_KEY, lng, { expires: 365 });
+export const applyLanguage = async (
+  code: string,
+  labels: TranslationLabels | undefined,
+  direction: LanguageDirection,
+  persist = true,
+): Promise<void> => {
+  if (labels && Object.keys(labels).length > 0) {
+    if (i18n.hasResourceBundle(code, "translation")) {
+      i18n.removeResourceBundle(code, "translation");
+    }
+    i18n.addResourceBundle(code, "translation", labels, true, true);
   }
-  i18n.changeLanguage(lng);
 
-  // Ensure this code runs only in the browser
+  await i18n.changeLanguage(code);
+
   if (typeof document !== "undefined") {
-    document.documentElement.setAttribute("dir", supportedLanguage.direction);
-    document.documentElement.setAttribute("lang", lng);
+    if (persist) {
+      setCookie(LANGUAGE_COOKIE_KEY, code, { expires: 365 });
+    }
+    setCookie(LANGUAGE_DIRECTION_COOKIE_KEY, direction, { expires: 365 });
+    document.documentElement.setAttribute("dir", direction);
+    document.documentElement.setAttribute("lang", code);
   }
 };
 
-export const loadTranslations = async (context: GetServerSidePropsContext) => {
-  const lang =
-    (getCookieFromContext(context, LANGUAGE_KEY) as string) || DEFAULT_LANGUAGE;
+export const loadTranslations = async (
+  context: GetServerSidePropsContext,
+): Promise<void> => {
+  const languagesResponse = await getWebLanguages();
+  const available =
+    languagesResponse.success && languagesResponse.data?.languages.length
+      ? languagesResponse.data.languages
+      : FALLBACK_LANGUAGES;
+  const storedCode = getCookieFromContext<string>(context, LANGUAGE_COOKIE_KEY);
+  const selected =
+    available.find((language) => language.code === storedCode) ??
+    available.find(
+      (language) => language.code === languagesResponse.data?.default,
+    ) ??
+    available.find((language) => language.code === DEFAULT_LANGUAGE) ??
+    available[0];
+  const labelsResponse = await getWebLabels(selected.code);
+  const resolvedLanguage = labelsResponse.data
+    ? (available.find(
+        (language) => language.code === labelsResponse.data?.locale,
+      ) ?? selected)
+    : selected;
 
-  // The singleton is already initialised at module scope, so a second init()
-  // is a no-op — changeLanguage is what actually switches the active language.
-  await i18n.changeLanguage(lang);
+  await applyLanguage(
+    resolvedLanguage.code,
+    labelsResponse.success ? labelsResponse.data?.labels : undefined,
+    labelsResponse.data?.direction ?? resolvedLanguage.direction,
+    false,
+  );
 };
 
 export default i18n;
