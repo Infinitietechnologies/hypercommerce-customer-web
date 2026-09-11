@@ -7,6 +7,8 @@ import { Wishlist, WishlistItem } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { isSSR } from "@/helpers/getters";
 import { serverSideAuthGuard } from "@/guards/authGuard";
+import { getMarketFromContext } from "@/helpers/functionalHelpers";
+import { getSettings } from "@/services/settings";
 import { loadTranslations } from "../../../../i18n";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHead from "@/SEO/PageHead";
@@ -91,8 +93,14 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
 
       if (guard) return guard;
 
+      const market = getMarketFromContext(context);
+      const settings = await getSettings({ market });
       await loadTranslations(context);
-      return { props: {} };
+      return {
+        props: {
+          initialSettings: settings.success ? settings.data : null,
+        },
+      };
     }
   : undefined;
 
