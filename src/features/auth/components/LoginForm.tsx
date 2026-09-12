@@ -24,7 +24,11 @@ import { useOtpLogin } from "@/features/auth/useOtpLogin";
 import useSWR from "swr";
 import { getSettings } from "@/routes/api";
 import { getSpecificSettings } from "@/helpers/getters";
-import type { Settings, SystemSettings } from "@/types/ApiResponse";
+import type {
+  AuthenticationSettings,
+  Settings,
+  SystemSettings,
+} from "@/types/ApiResponse";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -69,6 +73,12 @@ const LoginForm = ({
     (getSpecificSettings(settings, "system") as SystemSettings | undefined)
       ?.demoMode,
   );
+  const authSettings = settings
+    ? (getSpecificSettings(
+        settings,
+        "authentication",
+      ) as AuthenticationSettings)
+    : null;
 
   // Demo mode ships with a shared test account — prefill it so reviewers can
   // sign in without knowing the credentials.
@@ -81,7 +91,7 @@ const LoginForm = ({
     password?: string;
   }>({});
 
-  const otp = useOtpLogin({ onSuccess });
+  const otp = useOtpLogin({ authSettings, onSuccess });
 
   // Prefill the shared demo account once demo mode is known (settings may load
   // after this form mounts, so lazy state init alone can miss it).

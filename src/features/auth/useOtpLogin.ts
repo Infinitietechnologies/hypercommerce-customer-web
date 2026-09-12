@@ -6,7 +6,6 @@ import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 
 import { toastError, toastSuccess } from "@/components/ui";
-import { useSettings } from "@/contexts/SettingsContext";
 import { handlePhoneLogin, handleResendOtp, handleSignUp } from "@/helpers/auth";
 import {
   setAnalyticsUserId,
@@ -18,8 +17,10 @@ import { login as ReduxLogin } from "@/lib/redux/slices/authSlice";
 import { clearRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { syncOfflineCartToServer, updateCartData, updateDataOnAuth } from "@/helpers/updators";
 import { sendOtp, verifyOtp } from "@/services/auth";
+import type { AuthenticationSettings } from "@/types/settings";
 
 import { useResendCooldown } from "./useResendCooldown";
+import { resolveSmsGateway } from "./smsGateway";
 
 export type OtpStep = "phone" | "verify";
 
@@ -29,10 +30,15 @@ export type OtpStep = "phone" | "verify";
  * endpoints. Lifted out of the old LoginModal so the /login route and the
  * desktop sheet share one implementation instead of keeping copies in sync.
  */
-export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
+export const useOtpLogin = ({
+  authSettings,
+  onSuccess,
+}: {
+  authSettings: AuthenticationSettings | null | undefined;
+  onSuccess: () => void;
+}) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
-  const { authSettings } = useSettings();
 
   const [step, setStep] = useState<OtpStep>("phone");
   const [phone, setPhone] = useState("");
@@ -41,9 +47,7 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
   const [isResending, setIsResending] = useState(false);
   const cooldown = useResendCooldown();
 
-  const gateway =
-    authSettings?.smsGateway ||
-    (authSettings?.firebase ? "firebase" : authSettings?.customSms ? "custom" : "firebase");
+  const gateway = resolveSmsGateway(authSettings);
   const isFirebase = gateway === "firebase";
 
   const firebase = () => {
@@ -64,6 +68,14 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
       toastError(
         t("login_modal.errors.invalid_phone_title"),
         t("login_modal.errors.invalid_phone_desc"),
+      );
+      return;
+    }
+
+    if (!gateway) {
+      toastError(
+        t("login_modal.errors.verification_failed_title"),
+        t("firebase.errors.operation_not_allowed"),
       );
       return;
     }
@@ -95,10 +107,18 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
       setIsSending(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phone, isFirebase, t]);
+  }, [phone, gateway, isFirebase, t]);
 
   const resend = useCallback(async () => {
     if (cooldown.secondsLeft > 0) return;
+
+    if (!gateway) {
+      toastError(
+        t("login_modal.errors.verification_failed_title"),
+        t("firebase.errors.operation_not_allowed"),
+      );
+      return;
+    }
 
     setIsResending(true);
     try {
@@ -126,7 +146,7 @@ export const useOtpLogin = ({ onSuccess }: { onSuccess: () => void }) => {
       setIsResending(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phone, isFirebase, cooldown.secondsLeft, t]);
+  }, [phone, gateway, isFirebase, cooldown.secondsLeft, t]);
 
   const verify = useCallback(
     async (otp: string, friendsCode?: string) => {
