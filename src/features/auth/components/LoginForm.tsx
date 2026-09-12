@@ -20,13 +20,12 @@ import {
 } from "@/components/ui";
 import { handleLoginUser } from "@/helpers/auth";
 import { looksLikeEmail } from "@/helpers/validator";
+import { resolveSocialLoginProviders } from "@/features/auth/socialLogin";
 import { useOtpLogin } from "@/features/auth/useOtpLogin";
-import useSWR from "swr";
-import { getSettings } from "@/routes/api";
+import { usePublicSettings } from "@/features/auth/usePublicSettings";
 import { getSpecificSettings } from "@/helpers/getters";
 import type {
   AuthenticationSettings,
-  Settings,
   SystemSettings,
 } from "@/types/ApiResponse";
 
@@ -65,10 +64,7 @@ const LoginForm = ({
   // AuthSheetHost is mounted in _app OUTSIDE the layout's SettingsProvider, so
   // useSettings() would return defaults here. Read the shared "/settings" SWR
   // cache (populated by the layout) to know whether demo mode is on.
-  const { data: settings } = useSWR<Settings | null>("/settings", async () => {
-    const res = await getSettings();
-    return res.data ?? null;
-  });
+  const { data: settings } = usePublicSettings();
   const demoMode = Boolean(
     (getSpecificSettings(settings, "system") as SystemSettings | undefined)
       ?.demoMode,
@@ -79,6 +75,8 @@ const LoginForm = ({
         "authentication",
       ) as AuthenticationSettings)
     : null;
+  const socialLogin = resolveSocialLoginProviders(authSettings);
+  const hasSocialLogin = socialLogin.google || socialLogin.apple;
 
   // Demo mode ships with a shared test account — prefill it so reviewers can
   // sign in without knowing the credentials.
@@ -315,28 +313,36 @@ const LoginForm = ({
         </Tab>
       </Tabs>
 
-      <div className={`flex items-center gap-4 ${compact ? "my-5" : "my-6"}`}>
-        <Divider className="flex-1" />
-        <span className="text-tiny font-semibold uppercase tracking-widest text-default-400">
-          {t("login_modal.or")}
-        </span>
-        <Divider className="flex-1" />
-      </div>
+      {hasSocialLogin && (
+        <>
+          <div className={`flex items-center gap-4 ${compact ? "my-5" : "my-6"}`}>
+            <Divider className="flex-1" />
+            <span className="text-tiny font-semibold uppercase tracking-widest text-default-400">
+              {t("login_modal.or")}
+            </span>
+            <Divider className="flex-1" />
+          </div>
 
-      <div className="flex flex-col gap-3">
-        <GoogleLoginBtn
-          context="login"
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          onOpenChange={onSuccess}
-        />
-        <AppleLoginBtn
-          context="login"
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          onOpenChange={onSuccess}
-        />
-      </div>
+          <div className="flex flex-col gap-3">
+            {socialLogin.google && (
+              <GoogleLoginBtn
+                context="login"
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                onOpenChange={onSuccess}
+              />
+            )}
+            {socialLogin.apple && (
+              <AppleLoginBtn
+                context="login"
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                onOpenChange={onSuccess}
+              />
+            )}
+          </div>
+        </>
+      )}
 
       <p
         className={`text-center text-sm text-default-500 ${compact ? "mt-5" : "mt-6"}`}

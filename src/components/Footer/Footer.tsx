@@ -90,9 +90,9 @@ const Footer: FC = () => {
     { label: t("footer.quick_links.faqs"), href: "/faqs" },
     ...(!isSingleVendor
       ? [
-          { label: t("footer.quick_links.stores"), href: "/stores" },
-          { label: t("footer.quick_links.become_seller", "Become a Seller"), href: "/seller-register" },
-        ]
+        { label: t("footer.quick_links.stores"), href: "/stores" },
+        { label: t("footer.quick_links.become_seller", "Become a Seller"), href: "/seller-register" },
+      ]
       : []),
   ];
 
@@ -149,11 +149,11 @@ const Footer: FC = () => {
           <LinkColumn header={t("footer.policies.header")} links={policyLinks} />
 
           {/* Social + trust */}
-          <div>
-            <h3 className="font-display text-sm font-semibold tracking-wide uppercase text-ink-foreground mb-4">
-              {t("footer.social.follow_us")}
-            </h3>
-            {socials.length > 0 && (
+          {socials.length > 0 && (
+            <div>
+              <h3 className="font-display text-sm font-semibold tracking-wide uppercase text-ink-foreground mb-4">
+                {t("footer.social.follow_us")}
+              </h3>
               <div className="flex items-center gap-2.5 mb-6">
                 {socials.map((s) => (
                   <a
@@ -176,22 +176,8 @@ const Footer: FC = () => {
                   </a>
                 ))}
               </div>
-            )}
-            <div className="flex flex-col gap-2 text-xs text-ink-foreground/70">
-              <span className="flex items-center gap-2">
-                <Icon className="text-base text-primary" icon="solar:box-linear" />
-                {t("footer.company_info.quality")}
-              </span>
-              <span className="flex items-center gap-2">
-                <Icon className="text-base text-primary" icon="solar:shield-check-linear" />
-                {t("footer.company_info.secure")}
-              </span>
-              <span className="flex items-center gap-2">
-                <Icon className="text-base text-primary" icon="solar:verified-check-linear" />
-                {t("footer.company_info.trusted")}
-              </span>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Bottom bar */}

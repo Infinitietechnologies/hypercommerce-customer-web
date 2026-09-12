@@ -9,8 +9,12 @@ import { useTranslation } from "react-i18next";
 import AppleLoginBtn from "@/components/Functional/AppleLoginBtn";
 import GoogleLoginBtn from "@/components/Functional/GoogleLoginBtn";
 import { Button, Divider, Input, Link, toastError } from "@/components/ui";
+import { resolveSocialLoginProviders } from "@/features/auth/socialLogin";
+import { usePublicSettings } from "@/features/auth/usePublicSettings";
 import { handleRegisterUser } from "@/helpers/auth";
+import { getSpecificSettings } from "@/helpers/getters";
 import { validateEmail, validatePassword } from "@/helpers/validator";
+import type { AuthenticationSettings } from "@/types/settings";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -43,6 +47,15 @@ export interface RegisterFormProps {
 const RegisterForm = ({ onSuccess, onSwitchToLogin, compact = false }: RegisterFormProps) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const { data: settings } = usePublicSettings();
+  const authSettings = settings
+    ? (getSpecificSettings(
+        settings,
+        "authentication",
+      ) as AuthenticationSettings)
+    : null;
+  const socialLogin = resolveSocialLoginProviders(authSettings);
+  const hasSocialLogin = socialLogin.google || socialLogin.apple;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -202,26 +215,34 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, compact = false }: RegisterF
         </Button>
       </form>
 
-      <div className={`flex items-center gap-3 ${compact ? "my-4" : "my-6"}`}>
-        <Divider className="flex-1" />
-        <span className="text-xs text-default-500">{t("login_modal.or")}</span>
-        <Divider className="flex-1" />
-      </div>
+      {hasSocialLogin && (
+        <>
+          <div className={`flex items-center gap-3 ${compact ? "my-4" : "my-6"}`}>
+            <Divider className="flex-1" />
+            <span className="text-xs text-default-500">{t("login_modal.or")}</span>
+            <Divider className="flex-1" />
+          </div>
 
-      <div className="flex flex-col gap-3">
-        <GoogleLoginBtn
-          context="register"
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          onOpenChange={onSuccess}
-        />
-        <AppleLoginBtn
-          context="register"
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          onOpenChange={onSuccess}
-        />
-      </div>
+          <div className="flex flex-col gap-3">
+            {socialLogin.google && (
+              <GoogleLoginBtn
+                context="register"
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                onOpenChange={onSuccess}
+              />
+            )}
+            {socialLogin.apple && (
+              <AppleLoginBtn
+                context="register"
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                onOpenChange={onSuccess}
+              />
+            )}
+          </div>
+        </>
+      )}
 
       <p className={`text-center text-small text-default-500 ${compact ? "mt-4" : "mt-6"}`}>
         {t("auth.have_account")}{" "}
