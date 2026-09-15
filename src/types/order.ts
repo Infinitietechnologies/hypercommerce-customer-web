@@ -56,6 +56,7 @@ export interface PaymentInitiationResponse {
 }
 
 export interface Order {
+  refunds?: OrderRefund[];
   id: number;
   uuid: string;
   slug: string;
@@ -147,6 +148,25 @@ export interface Order {
 }
 
 /** One event inside a tracker step (order/item/return timeline). */
+export interface OrderRefund {
+  id: number;
+  amount: number;
+  currency_code: string | null;
+  method: string;
+  status: string;
+  settled_by_refund_id: number | null;
+  shipping_refund_amount: number;
+  created_at: string | null;
+  issued_at: string | null;
+  items: {
+    order_item_id: number;
+    title: string;
+    variant_title: string | null;
+    quantity: number;
+    amount: number;
+  }[];
+}
+
 export interface TimelineEvent {
   code: string;
   label: string;

@@ -95,6 +95,7 @@ function generateHtaccess() {
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), interest-cohort=()"
     Header always set Cross-Origin-Resource-Policy "cross-origin"
+    Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
     Header always set X-DNS-Prefetch-Control "on"
 
     # Report-only first: the storefront loads gateway SDKs (Razorpay, Stripe,

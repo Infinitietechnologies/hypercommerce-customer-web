@@ -1,4 +1,5 @@
 {
+  "refundDetails": {"title":"Refunds for this order","completed":"Refund completed","pending":"Refund pending","failed":"Refund unsuccessful","wallet":"your wallet","originalPayment":"your original payment method","offline":"an offline payment","sentTo":"Sent to {{method}}"},
   "about_us": "About Us",
   "account": "Account",
   "add": "Add",

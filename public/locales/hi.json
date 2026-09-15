@@ -1,4 +1,5 @@
 {
+  "refundDetails": {"title":"इस ऑर्डर के रिफंड","completed":"रिफंड पूरा हुआ","pending":"रिफंड लंबित है","failed":"रिफंड असफल रहा","wallet":"आपके वॉलेट","originalPayment":"आपके मूल भुगतान माध्यम","offline":"ऑफलाइन भुगतान","sentTo":"{{method}} में भेजा गया"},
   "about_us": "हमारे बारे में",
   "account": "खाता",
   "add": "जोड़ें",

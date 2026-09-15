@@ -33,7 +33,8 @@ import FilePreview from "@/components/FilePreview";
 import ShippingInfo from "./ShippingInfo";
 import DeliveryInfo from "./DeliveryInfo";
 import ReturnSheet from "./ReturnSheet";
-import { flattenTimeline } from "./timeline";
+import Refunds from "./Refunds";
+import { compactTimeline, flattenTimeline } from "./timeline";
 
 /** Amber/success/grey dot for a main tracker step. */
 function stepTone(step: TimelineStep): { dot: string; line: string } {
@@ -54,12 +55,12 @@ function StepTimeline({ steps }: { steps: TimelineStep[] }) {
         return (
           <div
             key={`${s.key}-${i}`}
-            className="relative flex min-w-[92px] flex-1 flex-col items-center text-center"
+            className="relative flex min-w-[120px] flex-1 flex-col items-center text-center"
           >
             {i > 0 && (
               <span
-                className={`absolute right-1/2 top-[6px] h-0.5 w-full ${
-                  s.done ? tone.line : "bg-default-200"
+                className={`absolute end-1/2 top-[6px] h-0.5 w-full ${
+                  s.done || s.current ? tone.line : "bg-default-200"
                 }`}
               />
             )}
@@ -70,7 +71,7 @@ function StepTimeline({ steps }: { steps: TimelineStep[] }) {
               {s.label || s.key}
             </span>
             {s.at && (
-              <span className="text-[10px] text-default-500">
+              <span className="mt-1 px-2 text-[10px] leading-relaxed text-default-500">
                 {getFormattedDate(s.at)}
               </span>
             )}
@@ -182,19 +183,9 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
   const activeReturn = selected.returns?.find(
     (r) => r.return_status !== "cancelled" && r.return_status !== "declined",
   );
-  const allSteps = selected.timeline ?? [];
-  const confirmedDone =
-    allSteps.find((s) => s.key === "confirmed")?.done ?? false;
   // Short view = main statuses only. Regular: confirmed→shipped→delivered;
   // cancel+unpaid: placed→cancelled; cancel-after-pay: confirmed→cancelled→refunded.
-  const mainSteps = allSteps.filter((s) => {
-    if (s.key === "preparing") return false;
-    if (s.key === "placed") return !confirmedDone;
-    if (s.key === "confirmed") return confirmedDone;
-    return ["shipped", "delivered", "cancelled", "returned", "refunded"].includes(
-      s.key,
-    );
-  });
+  const mainSteps = compactTimeline(selected.timeline);
   const timelineEvents = flattenTimeline(selected.timeline);
   const currentStatus = selected.customer_status;
   const addons = selected.addons ?? [];
@@ -359,16 +350,10 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 </div>
               </div>
               <div className="p-4 space-y-1">
-                <LabelValue
+                {order.refunds === undefined && <LabelValue
                   label={t("pages.order.refundAmount", "Total refund amount")}
                   value={formatPrice(activeReturn.refund_amount)}
-                />
-                {order.payment_method && (
-                  <LabelValue
-                    label={t("pages.order.refundedTo", "Refunded to")}
-                    value={order.payment_method.toUpperCase()}
-                  />
-                )}
+                />}
                 {activeReturn.reason && (
                   <LabelValue
                     label={t("pages.order.reason", "Reason")}
@@ -388,6 +373,8 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               </div>
             </Card>
           )}
+
+          <Refunds order={order} />
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
