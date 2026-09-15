@@ -47,6 +47,7 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
   );
 
   const [reasonCode, setReasonCode] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [remark, setRemark] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -55,6 +56,7 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
 
   const reset = () => {
     setReasonCode("");
+    setQuantity(1);
     setRemark("");
     setImages([]);
   };
@@ -99,6 +101,7 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
       setSubmitting(true);
       const res = await returnOrderItem({
         orderItemId: String(item.id),
+        quantity: Math.min(quantity, item.quantity),
         reason_code: reasonCode,
         reason: remark.trim() || undefined,
         images: images.length ? images : undefined,
@@ -143,6 +146,24 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
         <div className="text-sm text-default-500 line-clamp-2">
           {item.product?.name || item.title}
         </div>
+
+        {item.quantity > 1 && (
+          <Select
+            label={t("quantity")}
+            labelPlacement="outside"
+            selectedKeys={[String(Math.min(quantity, item.quantity))]}
+            onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+            disallowEmptySelection
+            isRequired
+            isDisabled={submitting}
+          >
+            {Array.from({ length: item.quantity }, (_, i) => i + 1).map((qty) => (
+              <SelectItem key={String(qty)} textValue={String(qty)}>
+                {qty}
+              </SelectItem>
+            ))}
+          </Select>
+        )}
 
         <Select
           label={t("pages.order.returnReason", "Return reason")}

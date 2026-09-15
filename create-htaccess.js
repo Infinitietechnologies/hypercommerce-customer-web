@@ -106,9 +106,11 @@ function generateHtaccess() {
     Header always set Content-Security-Policy-Report-Only "${csp}"
   </IfModule>`;
 
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
   // Write the content to .htaccess file
   fs.writeFileSync(outputPath, htaccessContent.trim());
-  console.log(".htaccess file has been generated successfully.");
+  console.log(`.htaccess generated at ${outputPath}`);
 }
 
 // Call the function to generate .htaccess
