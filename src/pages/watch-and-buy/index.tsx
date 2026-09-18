@@ -36,10 +36,19 @@ export const getServerSideProps:
       const slug =
         typeof context.query.slug === "string" ? context.query.slug : undefined;
 
+      if (slug) {
+        return {
+          redirect: {
+            destination: `/watch-and-buy/${encodeURIComponent(slug)}/`,
+            permanent: true,
+          },
+        };
+      }
+
       const [settingsResponse, reelsResponse, statusesResponse] =
         await Promise.all([
           getSettings({ access_token, market }),
-          getWatchBuyReels({ access_token, market, per_page: 10, slug }),
+          getWatchBuyReels({ access_token, market, per_page: 10 }),
           getWatchBuyStatuses({ access_token, market, per_page: 20 }),
         ]);
 
@@ -48,7 +57,6 @@ export const getServerSideProps:
           initialReels: reelsResponse,
           initialSettings: settingsResponse.data ?? null,
           initialStatuses: statusesResponse,
-          ...(slug ? { slug } : {}),
         },
       };
     }

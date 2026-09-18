@@ -23,6 +23,7 @@ import {
   generateBreadcrumbSchema,
 } from "@/helpers/seo";
 import { useRouter } from "next/router";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface BrandsPageProps {
   initialBrands: PaginatedResponse<Brand[]> | null;
@@ -33,6 +34,7 @@ const PER_PAGE = 24;
 
 const BrandsPage: NextPageWithLayout<BrandsPageProps> = ({ initialBrands }) => {
   const router = useRouter();
+  const { webSettings } = useSettings();
   const {
     data: brands,
     isLoading,
@@ -60,13 +62,17 @@ const BrandsPage: NextPageWithLayout<BrandsPageProps> = ({ initialBrands }) => {
   const collectionSchema = generateCollectionSchema(
     t("pageTitle.brands"),
     t("pages.brands.subtitle"),
-    "/brands"
+    "/brands",
+    webSettings?.customerWebUrl,
   );
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: t("pageTitle.brands"), url: "/brands" },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: "Home", url: "/" },
+      { name: t("pageTitle.brands"), url: "/brands" },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>

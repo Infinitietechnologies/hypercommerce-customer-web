@@ -1,5 +1,10 @@
-import { getProductBySlug, getProducts, getSettings } from "@/routes/api";
-import { Product, Settings } from "@/types/ApiResponse";
+import {
+  getProductBySlug,
+  getProductReviews,
+  getProducts,
+  getSettings,
+} from "@/routes/api";
+import { Product, ProductReviews, Settings } from "@/types/ApiResponse";
 
 /**
  * Input parameters for fetching product detail page data
@@ -26,10 +31,12 @@ export interface ProductDetailPageData {
   initialProduct: Product | null; // replace `any` with your Product type
   initialSimilarProducts: Product[]; // replace `any` with your Product type
   initialSettings: Settings | null; // replace `any` with your Settings type
+  initialReviews: ProductReviews | null;
   errors: {
     productDetail: string | null;
     similarProducts: string | null;
     settings: string | null;
+    reviews: string | null;
   };
 }
 
@@ -45,7 +52,7 @@ export interface ProductDetailPageData {
  * @returns {Promise<ProductDetailPageData>} - The fetched data and any errors
  */
 export async function fetchProductDetailPageData(
-  params: ProductDetailPageParams
+  params: ProductDetailPageParams,
 ): Promise<ProductDetailPageData> {
   const { slug, access_token, PER_PAGE = 20, market, country_iso2 } = params;
 
@@ -53,49 +60,42 @@ export async function fetchProductDetailPageData(
   console.log("Slug:", slug);
 
   // Concurrent API calls
-  const [productDetailResult, similarProductsResult, settingsResult] =
-    await Promise.allSettled([
-      getProductBySlug({
-        slug,
-        access_token,
-        market,
-        country_iso2,
-      }),
-      getProducts({
-        exclude_product: slug,
-        per_page: PER_PAGE,
-        access_token,
-        market,
-        include_child_categories: 0,
-      }),
-      getSettings({ market }),
-    ]);
+  const [
+    productDetailResult,
+    similarProductsResult,
+    settingsResult,
+    reviewsResult,
+  ] = await Promise.allSettled([
+    getProductBySlug({
+      slug,
+      access_token,
+      market,
+      country_iso2,
+    }),
+    getProducts({
+      exclude_product: slug,
+      per_page: PER_PAGE,
+      access_token,
+      market,
+      include_child_categories: 0,
+    }),
+    getSettings({ market }),
+    getProductReviews({ slug, page: 1, per_page: 9, access_token }),
+  ]);
 
-  console.log(
-    "Product Detail Status:",
-    productDetailResult.status
-  );
+  console.log("Product Detail Status:", productDetailResult.status);
 
   if (productDetailResult.status === "fulfilled") {
-    console.log(
-      "Fetched Product:",
-      productDetailResult.value?.data
-    );
+    console.log("Fetched Product:", productDetailResult.value?.data);
+
+    console.log("Fetched Product Slug:", productDetailResult.value?.data?.slug);
 
     console.log(
-      "Fetched Product Slug:",
-      productDetailResult.value?.data?.slug
+      "Fetched Product Full:",
+      JSON.stringify(productDetailResult.value?.data, null, 2),
     );
-
-   console.log(
-  "Fetched Product Full:",
-  JSON.stringify(productDetailResult.value?.data, null, 2)
-);
   } else {
-    console.error(
-      "Product Fetch Failed:",
-      productDetailResult.reason
-    );
+    console.error("Product Fetch Failed:", productDetailResult.reason);
   }
 
   return {
@@ -117,6 +117,11 @@ export async function fetchProductDetailPageData(
         ? (settingsResult.value.data ?? null)
         : null,
 
+    initialReviews:
+      reviewsResult.status === "fulfilled" && reviewsResult.value.success
+        ? (reviewsResult.value.data?.data ?? null)
+        : null,
+
     errors: {
       productDetail:
         productDetailResult.status === "rejected"
@@ -130,8 +135,11 @@ export async function fetchProductDetailPageData(
           : null,
       settings:
         settingsResult.status === "rejected"
-          ? settingsResult.reason?.message ||
-            "Failed to fetch settings"
+          ? settingsResult.reason?.message || "Failed to fetch settings"
+          : null,
+      reviews:
+        reviewsResult.status === "rejected"
+          ? reviewsResult.reason?.message || "Failed to fetch product reviews"
           : null,
     },
   };

@@ -7,7 +7,8 @@ import { isSSR } from "@/helpers/getters";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import HTMLRenderer from "@/components/Functional/HTMLRenderer";
 import { loadTranslations } from "../../../i18n";
-import PageHead from "@/SEO/PageHead";
+import DynamicSEO from "@/SEO/DynamicSEO";
+import { generateBreadcrumbSchema, getCanonicalUrl } from "@/helpers/seo";
 import { useTranslation } from "react-i18next";
 
 interface ReturnRefundPolicyPageProps {
@@ -23,7 +24,7 @@ const ReturnRefundPolicyPage: NextPage<ReturnRefundPolicyPageProps> = () => {
     title: t("pages.returnRefundPolicy.title", "Return & Refund Policy"),
     description: t(
       "pages.returnRefundPolicy.description",
-      "Learn about our return process and refund conditions."
+      "Learn about our return process and refund conditions.",
     ),
     content:
       webSettings?.returnRefundPolicy || t("notAvailable", "Not Available"),
@@ -31,7 +32,31 @@ const ReturnRefundPolicyPage: NextPage<ReturnRefundPolicyPageProps> = () => {
 
   return (
     <>
-      <PageHead pageTitle={t("pageTitle.return-refund-policy")} />
+      <DynamicSEO
+        title={policyContent.title}
+        description={policyContent.description}
+        canonical="/return-refund-policy"
+        ogType="article"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: policyContent.title,
+            description: policyContent.description,
+            url: getCanonicalUrl(
+              "/return-refund-policy/",
+              webSettings?.customerWebUrl,
+            ),
+          },
+          generateBreadcrumbSchema(
+            [
+              { name: "Home", url: "/" },
+              { name: policyContent.title, url: "/return-refund-policy" },
+            ],
+            webSettings?.customerWebUrl,
+          ),
+        ]}
+      />
 
       <div className="min-h-screen">
         <MyBreadcrumbs

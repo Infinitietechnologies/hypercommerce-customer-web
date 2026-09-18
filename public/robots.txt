@@ -22,10 +22,9 @@ Allow: /images/
 Allow: /logos/
 Allow: /locales/
 Allow: /sitemap.xml
+Allow: /sitemaps/
+Allow: /feeds/
 Allow: /robots.txt
-
-# Block Next.js static files (but allow images above)
-Disallow: /_next/static/
 
 # Block aggressive crawlers
 User-agent: MJ12bot

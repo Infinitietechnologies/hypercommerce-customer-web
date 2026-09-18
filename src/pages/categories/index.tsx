@@ -24,6 +24,7 @@ import {
 } from "@/helpers/seo";
 import { Button } from "@heroui/react";
 import { useRouter } from "next/router";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface CategoriesPageProps {
   initialCategories: PaginatedResponse<Category[]> | null;
@@ -37,6 +38,7 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
+  const { webSettings } = useSettings();
 
   const {
     data: categories,
@@ -63,13 +65,17 @@ const CategoriesPage: NextPageWithLayout<CategoriesPageProps> = ({
   const collectionSchema = generateCollectionSchema(
     t("pageTitle.categories"),
     t("pages.categories.subtitle"),
-    "/categories"
+    "/categories",
+    webSettings?.customerWebUrl,
   );
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: t("pageTitle.categories"), url: "/categories" },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: "Home", url: "/" },
+      { name: t("pageTitle.categories"), url: "/categories" },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>

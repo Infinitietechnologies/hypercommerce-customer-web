@@ -32,6 +32,7 @@ import ProductFilter, {
   SortOption,
 } from "@/components/Products/ProductFilter";
 import DynamicSEO from "@/SEO/DynamicSEO";
+import { useSettings } from "@/contexts/SettingsContext";
 import {
   generateCollectionMeta,
   generateCollectionSchema,
@@ -106,6 +107,7 @@ const BrandProductsPage: NextPageWithLayout<BrandProductsPageProps> = ({
   brandSlug,
   initialBrand,
 }) => {
+  const { webSettings } = useSettings();
   const router = useRouter();
   const { t } = useTranslation();
   const slug = brandSlug || (router.query.slug as string);
@@ -254,23 +256,33 @@ const BrandProductsPage: NextPageWithLayout<BrandProductsPageProps> = ({
 
   const seoMeta = generateCollectionMeta(
     initialBrand?.title || formatString(slug || ""),
-    initialBrand?.description || t("pages.brandProducts.subtitle", { brand: formatString(slug || "") }),
+    initialBrand?.description ||
+      t("pages.brandProducts.subtitle", { brand: formatString(slug || "") }),
     initialBrand?.logo,
     initialBrand?.metadata,
-    initialProducts?.data?.keywords
+    initialProducts?.data?.keywords,
   );
 
   const collectionSchema = generateCollectionSchema(
     seoMeta.title,
     seoMeta.description,
-    `/brands/${slug}`
+    `/brands/${slug}`,
+    webSettings?.customerWebUrl,
+    (initialProducts?.data?.data || []).map((product) => ({
+      name: product.title,
+      url: `/products/${product.slug}`,
+      image: product.main_image,
+    })),
   );
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: t("home_title"), url: "/" },
-    { name: t("pageTitle.brands"), url: "/brands" },
-    { name: seoMeta.title, url: `/brands/${slug}` },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: t("home_title"), url: "/" },
+      { name: t("pageTitle.brands"), url: "/brands" },
+      { name: seoMeta.title, url: `/brands/${slug}` },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>

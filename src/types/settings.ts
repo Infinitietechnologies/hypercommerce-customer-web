@@ -201,6 +201,7 @@ export type NotificationSettings = {
 
 export type WebSettings = {
   siteName: string;
+  customerWebUrl: string;
   siteCopyright: string;
   supportNumber: string;
   supportEmail: string;
@@ -238,6 +239,21 @@ export type WebSettings = {
   supportFeatureSectionDescription: string;
   metaKeywords: string;
   metaDescription: string;
+  alternateSiteName: string;
+  businessLegalName: string;
+  defaultSeoImage: string;
+  googleSiteVerification: string;
+  bingSiteVerification: string;
+  merchantFeedEnabled: boolean;
+  merchantTargetCountry: string;
+  merchantContentLanguage: string;
+  merchantAdultContent: boolean;
+  returnPolicyCountry: string;
+  returnPolicyCategory: "" | "finite" | "unlimited" | "not_permitted";
+  returnPolicyDays: number | null;
+  returnPolicyMethod: "" | "mail" | "in_store" | "kiosk";
+  returnFees: "" | "free" | "customer_responsibility" | "fixed";
+  returnShippingFee: number | null;
   defaultLatitude: string;
   defaultLongitude: string;
   enableCountryValidation: boolean;

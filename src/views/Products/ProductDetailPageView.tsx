@@ -7,7 +7,7 @@ import {
   ProductImgSection,
   SimilarProductsSection,
 } from "@/components/Products/ProductDetailPage";
-import { Product, ProductVariant } from "@/types/ApiResponse";
+import { Product, ProductReviews, ProductVariant } from "@/types/ApiResponse";
 import ProductDetailSectionSkeleton from "@/components/Skeletons/ProductDetailSectionSkeleton";
 import { toast, useDisclosure } from "@/components/ui";
 import dynamic from "next/dynamic";
@@ -25,6 +25,7 @@ interface ProductPageProps {
   initialSimilarProducts: Product[];
   isLoading: boolean;
   isSimilarProductsLoading: boolean;
+  initialReviews?: ProductReviews | null;
 }
 
 const ProductDetailPageView: FC<ProductPageProps> = ({
@@ -32,6 +33,7 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
   initialSimilarProducts,
   isLoading,
   isSimilarProductsLoading,
+  initialReviews,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   // Get initial variant
@@ -197,7 +199,7 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
         </section>
       )}
       <section id="productPage-bottom-section" className="rd-fade">
-        <BottomSection initialProduct={initialProduct} />
+        <BottomSection initialProduct={initialProduct} initialReviews={initialReviews} />
       </section>
 
       {isOpen && (

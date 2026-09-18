@@ -66,6 +66,13 @@ export interface ProductVariant {
   is_default: boolean;
   price: number;
   special_price: number;
+  price_base?: number;
+  special_price_base?: number;
+  currency_code: string;
+  currency_symbol: string;
+  fx_rate?: number;
+  fx_fallback?: boolean;
+  format?: string | null;
   /** Backend market-formatted price strings (rounded, with symbol). */
   formatted?: string | null;
   formatted_special_price?: string | null;
@@ -137,6 +144,10 @@ export interface Product {
   category_id: number;
   brand_id: number | null;
   brand_name: string | null;
+  product_condition: {
+    title: string;
+    slug: string;
+  } | null;
   seller_id: number;
   title: string;
   slug: string;
@@ -155,6 +166,14 @@ export interface Product {
     min: number | null;
     max: number | null;
     unit: string;
+  } | null;
+  shipping_details?: {
+    country: string;
+    rate: number;
+    currency_code: string;
+    eta_min?: number | null;
+    eta_max?: number | null;
+    eta_unit?: string | null;
   } | null;
   ratings: number;
   rating_count: number;
@@ -182,11 +201,14 @@ export interface Product {
   is_sponsored?: boolean;
   campaign_id?: number;
   visitor_key?: string;
-  metadata: {
-    seo_title?: string;
-    seo_description?: string;
-    seo_keywords?: string[];
-  } | string | null;
+  metadata:
+    | {
+        seo_title?: string;
+        seo_description?: string;
+        seo_keywords?: string[];
+      }
+    | string
+    | null;
   item_count_in_cart?: string;
   seller_ratings?: {
     total_reviews: number | null;

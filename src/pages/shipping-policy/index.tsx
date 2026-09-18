@@ -7,7 +7,8 @@ import { isSSR } from "@/helpers/getters";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import HTMLRenderer from "@/components/Functional/HTMLRenderer";
 import { loadTranslations } from "../../../i18n";
-import PageHead from "@/SEO/PageHead";
+import DynamicSEO from "@/SEO/DynamicSEO";
+import { generateBreadcrumbSchema, getCanonicalUrl } from "@/helpers/seo";
 import { useTranslation } from "react-i18next";
 
 interface ShippingPolicyPageProps {
@@ -23,14 +24,38 @@ const ShippingPolicyPage: NextPage<ShippingPolicyPageProps> = () => {
     title: t("pages.shippingPolicy.title", "Shipping Policy"),
     description: t(
       "pages.shippingPolicy.description",
-      "Learn about our shipping methods, delivery times, and costs."
+      "Learn about our shipping methods, delivery times, and costs.",
     ),
     content: webSettings?.shippingPolicy || t("notAvailable", "Not Available"),
   };
 
   return (
     <>
-      <PageHead pageTitle={t("pageTitle.shipping-policy")} />
+      <DynamicSEO
+        title={policyContent.title}
+        description={policyContent.description}
+        canonical="/shipping-policy"
+        ogType="article"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: policyContent.title,
+            description: policyContent.description,
+            url: getCanonicalUrl(
+              "/shipping-policy/",
+              webSettings?.customerWebUrl,
+            ),
+          },
+          generateBreadcrumbSchema(
+            [
+              { name: "Home", url: "/" },
+              { name: policyContent.title, url: "/shipping-policy" },
+            ],
+            webSettings?.customerWebUrl,
+          ),
+        ]}
+      />
 
       <div className="min-h-screen">
         <MyBreadcrumbs

@@ -117,7 +117,7 @@ const StoreProductsPage: NextPageWithLayout<StoreProductsPageProps> = ({
 }) => {
   const router = useRouter();
   const { t } = useTranslation();
-  const { isSingleVendor } = useSettings();
+  const { isSingleVendor, webSettings } = useSettings();
   const slug = storeSlug || (router.query.slug as string);
 
   // Initialize filters from URL query params when SSR is false
@@ -314,13 +314,26 @@ const StoreProductsPage: NextPageWithLayout<StoreProductsPageProps> = ({
   if (isSingleVendor) return null;
 
   // Generate SEO data for store
-  const storeMeta = store ? generateStoreMeta(store, initialProducts?.data?.keywords) : null;
-  const storeSchema = store ? generateStoreSchema(store) : null;
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: t("home_title"), url: "/" },
-    { name: t("pages.storeProductsPage.breadcrumbs.stores"), url: "/stores" },
-    { name: storeMeta?.title || store?.name || formatString(slug), url: `/stores/${slug}` },
-  ]);
+  const storeMeta = store
+    ? generateStoreMeta(store, initialProducts?.data?.keywords)
+    : null;
+  const storeSchema = store
+    ? generateStoreSchema(store, webSettings?.customerWebUrl)
+    : null;
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: t("home_title"), url: "/" },
+      {
+        name: t("pages.storeProductsPage.breadcrumbs.stores"),
+        url: "/stores",
+      },
+      {
+        name: storeMeta?.title || store?.name || formatString(slug),
+        url: `/stores/${slug}`,
+      },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>

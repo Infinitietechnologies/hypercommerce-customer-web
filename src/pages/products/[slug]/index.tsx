@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import { getSlugFromContext, isSSR } from "@/helpers/getters";
+import { getSlugFromContext, getWebSettings, isSSR } from "@/helpers/getters";
 import { getAccessTokenFromContext } from "@/helpers/auth";
 import {
   getMarketFromContext,
@@ -8,7 +8,7 @@ import {
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import ProductDetailPageView from "@/views/Products/ProductDetailPageView";
 import { ArrowRight, Package, ShoppingCart } from "lucide-react";
-import { Product, Settings } from "@/types/ApiResponse";
+import { Product, ProductReviews, Settings } from "@/types/ApiResponse";
 import { NextPageWithLayout } from "@/types";
 import { getProductBySlug, getProducts } from "@/routes/api";
 import useSWR from "swr";
@@ -34,6 +34,7 @@ export interface ProductPageProps {
   initialProduct?: Product;
   initialSettings?: Settings | null;
   initialSimilarProducts?: Product[];
+  initialReviews?: ProductReviews | null;
   slug?: string;
   error?: string;
 }
@@ -71,6 +72,8 @@ const similarProductsFetcher = async (slug: string) => {
 const ProductPage: NextPageWithLayout<ProductPageProps> = ({
   initialProduct,
   initialSimilarProducts,
+  initialReviews,
+  initialSettings,
   slug,
 }) => {
   const router = useRouter();
@@ -109,41 +112,59 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
 
   const isProductMissing =
     !product || (Array.isArray(product) && product.length === 0);
+  const seoWebSettings = initialSettings
+    ? getWebSettings(initialSettings)
+    : null;
+  const seoBaseUrl = seoWebSettings?.customerWebUrl;
 
   // --- SSR SEO: use initialProduct so og:image is in the raw HTML for crawlers ---
   const ssrMeta = initialProduct ? generateProductMeta(initialProduct) : null;
   const ssrProductSchema = initialProduct
-    ? generateProductSchema(initialProduct)
+    ? generateProductSchema(initialProduct, seoBaseUrl, {
+        reviews: initialReviews?.reviews || [],
+        webSettings: seoWebSettings,
+      })
     : null;
   const ssrBreadcrumbSchema = initialProduct
-    ? generateBreadcrumbSchema([
-        { name: "Home", url: "/" },
-        { name: "Categories", url: "/categories" },
-        {
-          name: initialProduct.category_name,
-          url: `/categories/${initialProduct.category}`,
-        },
-        {
-          name: initialProduct.title,
-          url: `/products/${initialProduct.slug}`,
-        },
-      ])
+    ? generateBreadcrumbSchema(
+        [
+          { name: "Home", url: "/" },
+          { name: "Categories", url: "/categories" },
+          {
+            name: initialProduct.category_name,
+            url: `/categories/${initialProduct.category}`,
+          },
+          {
+            name: initialProduct.title,
+            url: `/products/${initialProduct.slug}`,
+          },
+        ],
+        seoBaseUrl,
+      )
     : null;
   const ssrJsonLd = [ssrProductSchema, ssrBreadcrumbSchema].filter(Boolean);
 
   // --- Client SEO: update tags dynamically after SWR re-fetches ---
   const productMeta = product ? generateProductMeta(product) : null;
-  const productSchema = product ? generateProductSchema(product) : null;
+  const productSchema = product
+    ? generateProductSchema(product, seoBaseUrl, {
+        reviews: initialReviews?.reviews || [],
+        webSettings: seoWebSettings,
+      })
+    : null;
   const breadcrumbSchema = product
-    ? generateBreadcrumbSchema([
-        { name: "Home", url: "/" },
-        { name: "Categories", url: "/categories" },
-        {
-          name: product.category_name,
-          url: `/categories/${product.category}`,
-        },
-        { name: product.title, url: `/products/${product.slug}` },
-      ])
+    ? generateBreadcrumbSchema(
+        [
+          { name: "Home", url: "/" },
+          { name: "Categories", url: "/categories" },
+          {
+            name: product.category_name,
+            url: `/categories/${product.category}`,
+          },
+          { name: product.title, url: `/products/${product.slug}` },
+        ],
+        seoBaseUrl,
+      )
     : null;
 
   const jsonLdSchemas = [productSchema, breadcrumbSchema].filter(Boolean);
@@ -177,13 +198,19 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
             initialProduct.variants?.[0]?.special_price?.toString() ||
             initialProduct.variants?.[0]?.price?.toString()
           }
-          productCurrency="USD"
+          productCurrency={initialProduct.variants?.[0]?.currency_code}
           productAvailability={
             initialProduct.variants?.some((v) => v.stock > 0)
               ? "in stock"
               : "out of stock"
           }
-          productCondition="new"
+          productCondition={
+            initialProduct.product_condition?.slug?.includes("used")
+              ? "used"
+              : initialProduct.product_condition?.slug?.includes("refurb")
+                ? "refurbished"
+                : "new"
+          }
           jsonLd={ssrJsonLd}
         />
       ) : !initialProduct ? (
@@ -214,13 +241,19 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
             product.variants?.[0]?.special_price?.toString() ||
             product.variants?.[0]?.price?.toString()
           }
-          productCurrency="USD"
+          productCurrency={product.variants?.[0]?.currency_code}
           productAvailability={
             product.variants?.some((v) => v.stock > 0)
               ? "in stock"
               : "out of stock"
           }
-          productCondition="new"
+          productCondition={
+            product.product_condition?.slug?.includes("used")
+              ? "used"
+              : product.product_condition?.slug?.includes("refurb")
+                ? "refurbished"
+                : "new"
+          }
           jsonLd={jsonLdSchemas}
         />
       )}
@@ -281,6 +314,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
             initialSimilarProducts={similarProducts || []}
             isLoading={isLoading}
             isSimilarProductsLoading={isSimilarProductsLoading}
+            initialReviews={initialReviews ?? null}
           />
         )}
       </div>
@@ -291,8 +325,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
 export const getServerSideProps: GetServerSideProps | undefined = isSSR()
   ? async (context) => {
       try {
-        const access_token =
-          (await getAccessTokenFromContext(context)) || "";
+        const access_token = (await getAccessTokenFromContext(context)) || "";
         const market = getMarketFromContext(context);
         const country_iso2 = getCountryIso2FromContext(context);
 
@@ -308,12 +341,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         });
 
         if (!data?.initialProduct) {
-          console.error(
-            "No Product Found For Slug:",
-            slug
-          );
-
-          
+          console.error("No Product Found For Slug:", slug);
 
           return {
             notFound: true,
@@ -327,10 +355,7 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
           },
         };
       } catch (err) {
-        console.error(
-          "Unexpected error in getServerSideProps:",
-          err
-        );
+        console.error("Unexpected error in getServerSideProps:", err);
 
         return {
           props: {

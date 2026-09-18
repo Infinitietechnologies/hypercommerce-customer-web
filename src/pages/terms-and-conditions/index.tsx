@@ -10,6 +10,7 @@ import { loadTranslations } from "../../../i18n";
 import DynamicSEO from "@/SEO/DynamicSEO";
 import {
   generateBreadcrumbSchema,
+  getCanonicalUrl,
   generateMetaDescription,
   stripHtmlTags,
 } from "@/helpers/seo";
@@ -33,13 +34,19 @@ const TermsPage: NextPage<TermsPageProps> = () => {
 
   const metaDescription = generateMetaDescription(
     stripHtmlTags(termsContent.content),
-    160
+    160,
   );
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: t("pageTitle.terms-and-conditions"), url: "/terms-and-conditions" },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: "Home", url: "/" },
+      {
+        name: t("pageTitle.terms-and-conditions"),
+        url: "/terms-and-conditions",
+      },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>
@@ -49,7 +56,19 @@ const TermsPage: NextPage<TermsPageProps> = () => {
         keywords="terms and conditions, terms of service, legal terms, user agreement"
         canonical="/terms-and-conditions"
         ogType="article"
-        jsonLd={breadcrumbSchema}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: termsContent.title,
+            description: metaDescription,
+            url: getCanonicalUrl(
+              "/terms-and-conditions/",
+              webSettings?.customerWebUrl,
+            ),
+          },
+          breadcrumbSchema,
+        ]}
       />
 
       <div className="min-h-screen">

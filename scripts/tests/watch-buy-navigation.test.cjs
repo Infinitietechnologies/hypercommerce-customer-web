@@ -55,7 +55,7 @@ test("story completion advances to the next active profile", () => {
 test("reel share URLs deep-link to the selected slug", () => {
   assert.equal(
     getReelShareUrl("https://shop.example.com/catalog", "reel/with spaces"),
-    "https://shop.example.com/watch-and-buy/?slug=reel%2Fwith+spaces",
+    "https://shop.example.com/watch-and-buy/reel%2Fwith%20spaces/",
   );
 });
 

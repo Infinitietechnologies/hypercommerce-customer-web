@@ -15,7 +15,7 @@ import { loadTranslations } from "../../i18n";
 import { useTranslation } from "react-i18next";
 import DynamicSEO from "@/SEO/DynamicSEO";
 import {
-  generateOrganizationSchema,
+  generateOnlineStoreSchema,
   generateWebsiteSchema,
 } from "@/helpers/seo";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -43,14 +43,17 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
   const siteDescription =
     webSettings?.metaDescription || siteConfig.metaDescription;
   const siteLogo = webSettings?.siteHeaderDarkLogo || "/logo.png";
+  const seoBaseUrl = webSettings?.customerWebUrl;
 
-  const organizationSchema = generateOrganizationSchema(
+  const organizationSchema = webSettings
+    ? generateOnlineStoreSchema(webSettings, seoBaseUrl)
+    : null;
+
+  const websiteSchema = generateWebsiteSchema(
     siteName,
-    siteDescription,
-    siteLogo,
+    seoBaseUrl,
+    webSettings?.alternateSiteName,
   );
-
-  const websiteSchema = generateWebsiteSchema(siteName);
 
   return (
     <>
@@ -63,7 +66,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
         ogTitle={siteName}
         ogDescription={siteDescription}
         ogImage={siteLogo}
-        jsonLd={[organizationSchema, websiteSchema]}
+        jsonLd={[organizationSchema, websiteSchema].filter(Boolean) as object[]}
       />
       <HomeBuilder initialLayout={initialLayout} />
     </>

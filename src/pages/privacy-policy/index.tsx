@@ -10,6 +10,7 @@ import { loadTranslations } from "../../../i18n";
 import DynamicSEO from "@/SEO/DynamicSEO";
 import {
   generateBreadcrumbSchema,
+  getCanonicalUrl,
   generateMetaDescription,
   stripHtmlTags,
 } from "@/helpers/seo";
@@ -33,13 +34,16 @@ const PrivacyPolicyPage: NextPage<PrivacyPolicyPageProps> = ({}) => {
 
   const metaDescription = generateMetaDescription(
     stripHtmlTags(policyContent.content),
-    160
+    160,
   );
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: t("pageTitle.privacy-policy"), url: "/privacy-policy" },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: "Home", url: "/" },
+      { name: t("pageTitle.privacy-policy"), url: "/privacy-policy" },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>
@@ -49,7 +53,19 @@ const PrivacyPolicyPage: NextPage<PrivacyPolicyPageProps> = ({}) => {
         keywords="privacy policy, data protection, privacy terms, user privacy"
         canonical="/privacy-policy"
         ogType="article"
-        jsonLd={breadcrumbSchema}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: policyContent.title,
+            description: metaDescription,
+            url: getCanonicalUrl(
+              "/privacy-policy/",
+              webSettings?.customerWebUrl,
+            ),
+          },
+          breadcrumbSchema,
+        ]}
       />
 
       <div className="min-h-screen">

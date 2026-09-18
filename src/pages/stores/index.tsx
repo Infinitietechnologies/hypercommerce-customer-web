@@ -15,7 +15,9 @@ import { NextPageWithLayout } from "@/types";
 import InfiniteScrollStatus from "@/components/Functional/InfiniteScrollStatus";
 import { loadTranslations } from "../../../i18n";
 import { useTranslation } from "react-i18next";
-import PageHead from "@/SEO/PageHead";
+import DynamicSEO from "@/SEO/DynamicSEO";
+import { generateCollectionSchema } from "@/helpers/seo";
+import { getPageSEOConfig } from "@/config/seo";
 import { Input } from "@heroui/react";
 import { Search } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -33,7 +35,8 @@ const PER_PAGE = 24;
 const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { isSingleVendor } = useSettings();
+  const { isSingleVendor, webSettings } = useSettings();
+  const seo = getPageSEOConfig("stores");
 
   const isFirstRender = useRef(true);
   const [searchQuery, setSearchQuery] = useState(
@@ -90,7 +93,18 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
 
   return (
     <>
-      <PageHead pageTitle={t("pageTitle.stores")} />
+      <DynamicSEO
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        canonical={seo.canonical}
+        jsonLd={generateCollectionSchema(
+          seo.title,
+          seo.description,
+          seo.canonical || "/stores",
+          webSettings?.customerWebUrl,
+        )}
+      />
       <button
         id="refetch-store-page"
         className="hidden"
@@ -136,21 +150,13 @@ const StoresPage: NextPageWithLayout<StoresPageProps> = ({ initialStores }) => {
       </div>
 
       {listError && (
-
         <ErrorState
-
           title={t("errors.listing_load_failed")}
-
           description={t("errors.try_again_later")}
-
           retryLabel={t("common.retry")}
-
           onRetry={() => refetch()}
-
         />
-
       )}
-
 
       <InfiniteScroll
         hasMore={hasMore}

@@ -22,6 +22,7 @@ import { loadTranslations } from "../../../i18n";
 import DynamicSEO from "@/SEO/DynamicSEO";
 import { generateFAQSchema, generateBreadcrumbSchema } from "@/helpers/seo";
 import { useTranslation } from "react-i18next";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface FAQsPageProps {
   fallbackFaqs: PaginatedResponse<FAQ[]>;
@@ -45,10 +46,11 @@ const FAQsPage: NextPageWithLayout<FAQsPageProps> = ({
 }: FAQsPageProps) => {
   const router = useRouter();
   const { t } = useTranslation();
+  const { webSettings } = useSettings();
 
   const currentPage = parseInt((router.query.page as string) || "1", 10);
   const [searchValue, setSearchValue] = useState(
-    (router.query.search as string) || ""
+    (router.query.search as string) || "",
   );
   const searchTerm = (router.query.search as string) || "";
 
@@ -59,7 +61,7 @@ const FAQsPage: NextPageWithLayout<FAQsPageProps> = ({
       fallbackData: fallbackFaqs,
       revalidateOnFocus: false,
       revalidateOnMount: !isSSR(),
-    }
+    },
   );
 
   const totalPages = Math.ceil((faqsData?.data?.total || 0) / PER_PAGE);
@@ -70,10 +72,10 @@ const FAQsPage: NextPageWithLayout<FAQsPageProps> = ({
         router.push(
           { pathname: router.pathname, query: { search: value, page: 1 } },
           undefined,
-          { shallow: true }
+          { shallow: true },
         );
       }, 500),
-    [router]
+    [router],
   );
 
   const handleSearchChange = useCallback(
@@ -81,7 +83,7 @@ const FAQsPage: NextPageWithLayout<FAQsPageProps> = ({
       debouncedSearch(value);
       setSearchValue(value);
     },
-    [debouncedSearch]
+    [debouncedSearch],
   );
 
   const handlePageChange = useCallback(
@@ -89,10 +91,10 @@ const FAQsPage: NextPageWithLayout<FAQsPageProps> = ({
       router.push(
         { pathname: router.pathname, query: { search: searchTerm, page } },
         undefined,
-        { shallow: true }
+        { shallow: true },
       );
     },
-    [router, searchTerm]
+    [router, searchTerm],
   );
 
   // Generate FAQ schema for SEO
@@ -101,14 +103,17 @@ const FAQsPage: NextPageWithLayout<FAQsPageProps> = ({
         faqsData.data.data.map((faq) => ({
           question: faq.question,
           answer: faq.answer,
-        }))
+        })),
       )
     : null;
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: t("pageTitle.faqs"), url: "/faqs" },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: "Home", url: "/" },
+      { name: t("pageTitle.faqs"), url: "/faqs" },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>

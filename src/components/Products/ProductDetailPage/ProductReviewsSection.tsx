@@ -8,13 +8,16 @@ import useSWR from "swr";
 import ProductReviewsSectionSkeleton from "@/components/Skeletons/ProductReviewsSectionSkeleton";
 import { useTranslation } from "react-i18next";
 import ReviewCard from "@/components/Cards/ReviewCard";
+import type { ProductReviews } from "@/types/ApiResponse";
 
 interface ProductReviewsSectionProps {
   productSlug: string;
+  initialReviews?: ProductReviews | null;
 }
 
 const ProductReviewsSection: FC<ProductReviewsSectionProps> = ({
   productSlug,
+  initialReviews,
 }) => {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
@@ -40,7 +43,10 @@ const ProductReviewsSection: FC<ProductReviewsSectionProps> = ({
   } = useSWR(
     productSlug ? ["product-reviews", productSlug, page] : null,
     fetcher,
-    { revalidateOnFocus: false }
+    {
+      revalidateOnFocus: false,
+      fallbackData: page === 1 ? initialReviews ?? undefined : undefined,
+    }
   );
 
   const totalReviews = reviewsData?.total_reviews || 0;

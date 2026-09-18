@@ -348,7 +348,7 @@ const WatchBuyView = ({
     : t("watchBuy.metaDescription");
   const seoImage = seoReel ? getReelShareImageUrl(seoReel) : null;
   const canonical = effectiveSlug
-    ? `/watch-and-buy/?slug=${encodeURIComponent(effectiveSlug)}`
+    ? `/watch-and-buy/${encodeURIComponent(effectiveSlug)}/`
     : "/watch-and-buy/";
   const viewerReels =
     activeReelProfileId == null

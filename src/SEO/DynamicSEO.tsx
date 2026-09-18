@@ -1,9 +1,11 @@
 import NextHead from "next/head";
 import Script from "next/script";
 import React from "react";
+import { useRouter } from "next/router";
 import { useSettings } from "@/contexts/SettingsContext";
 import { siteConfig } from "@/config/site";
 import {
+  defaultRobotsForUrl,
   getCanonicalUrl,
   ensureAbsoluteUrl,
   serializeJsonLd,
@@ -20,7 +22,7 @@ export interface SEOProps {
   canonical?: string;
 
   // Open Graph
-  ogType?: "website" | "article" | "product" | "profile";
+  ogType?: "website" | "article" | "product" | "profile" | "video.other";
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
@@ -49,6 +51,12 @@ export interface SEOProps {
   productCurrency?: string;
   productAvailability?: "in stock" | "out of stock" | "preorder";
   productCondition?: "new" | "used" | "refurbished";
+
+  // Video Specific
+  videoUrl?: string;
+  videoWidth?: string | number;
+  videoHeight?: string | number;
+  videoType?: string;
 
   // Structured Data (JSON-LD)
   jsonLd?: object | object[];
@@ -80,24 +88,36 @@ const DynamicSEO: React.FC<SEOProps> = ({
   twitterImageAlt,
   twitterSite,
   twitterCreator,
-  robots = "index, follow",
+  robots,
   googlebot,
   productPrice,
   productCurrency,
   productAvailability,
   productCondition,
+  videoUrl,
+  videoWidth,
+  videoHeight,
+  videoType,
   jsonLd,
   children,
 }) => {
   const { webSettings } = useSettings();
+  const router = useRouter();
 
   // Get defaults from settings or config
   const siteName = webSettings?.siteName || siteConfig.name;
   const siteDescription =
     webSettings?.metaDescription || siteConfig.metaDescription;
   const siteKeywords = webSettings?.metaKeywords || siteConfig.metaKeywords;
-  const siteLogo = ensureAbsoluteUrl(webSettings?.siteHeaderLogo || "/logo.png");
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").trim();
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    webSettings?.customerWebUrl ||
+    ""
+  ).trim();
+  const siteLogo = ensureAbsoluteUrl(
+    webSettings?.defaultSeoImage || webSettings?.siteHeaderLogo || "/logo.png",
+    baseUrl,
+  );
 
   // Compute final values
   const finalTitle = title ? `${title} | ${siteName}` : siteName;
@@ -117,13 +137,16 @@ const DynamicSEO: React.FC<SEOProps> = ({
   const finalTwitterTitle = twitterTitle || finalOgTitle;
   const finalTwitterDescription = twitterDescription || finalOgDescription;
   const finalTwitterImage = twitterImage || finalOgImage;
+  const finalRobots = robots || defaultRobotsForUrl(router.asPath);
 
   return (
     <NextHead>
       {/* Basic Meta Tags */}
       <title>{finalTitle}</title>
       <meta name="description" content={finalDescription} key="description" />
-      {finalKeywords && <meta name="keywords" content={finalKeywords} key="keywords" />}
+      {finalKeywords && (
+        <meta name="keywords" content={finalKeywords} key="keywords" />
+      )}
       {finalAuthor && <meta name="author" content={finalAuthor} key="author" />}
 
       {/* Mobile */}
@@ -132,21 +155,50 @@ const DynamicSEO: React.FC<SEOProps> = ({
       <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
       {/* Robots */}
-      <meta name="robots" content={robots} key="robots" />
-      {googlebot && <meta name="googlebot" content={googlebot} key="googlebot" />}
+      <meta name="robots" content={finalRobots} key="robots" />
+      <meta
+        name="googlebot"
+        content={googlebot || finalRobots}
+        key="googlebot"
+      />
+      {webSettings?.googleSiteVerification && (
+        <meta
+          name="google-site-verification"
+          content={webSettings.googleSiteVerification}
+          key="google-site-verification"
+        />
+      )}
+      {webSettings?.bingSiteVerification && (
+        <meta
+          name="msvalidate.01"
+          content={webSettings.bingSiteVerification}
+          key="msvalidate.01"
+        />
+      )}
 
       {/* Canonical URL */}
-      {finalCanonical && <link rel="canonical" href={finalCanonical} />}
+      {finalCanonical && (
+        <link rel="canonical" href={finalCanonical} key="canonical" />
+      )}
 
       {/* Favicon */}
       {webSettings?.siteFavicon && (
-        <link rel="icon" href={webSettings.siteFavicon} type="image/x-icon" key="favicon" />
+        <link
+          rel="icon"
+          href={webSettings.siteFavicon}
+          type="image/x-icon"
+          key="favicon"
+        />
       )}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} key="og:type" />
       <meta property="og:title" content={finalOgTitle} key="og:title" />
-      <meta property="og:description" content={finalOgDescription} key="og:description" />
+      <meta
+        property="og:description"
+        content={finalOgDescription}
+        key="og:description"
+      />
       {finalOgImage && (
         <>
           <meta property="og:image" content={finalOgImage} key="og:image" />
@@ -158,48 +210,167 @@ const DynamicSEO: React.FC<SEOProps> = ({
             />
           )}
           {ogImageType ? (
-            <meta property="og:image:type" content={ogImageType} key="og:image:type" />
-          ) : (
-             finalOgImage.endsWith(".png") ? <meta property="og:image:type" content="image/png" key="og:image:type" /> :
-             finalOgImage.endsWith(".jpg") || finalOgImage.endsWith(".jpeg") ? <meta property="og:image:type" content="image/jpeg" key="og:image:type" /> :
-             finalOgImage.endsWith(".webp") ? <meta property="og:image:type" content="image/webp" key="og:image:type" /> : null
+            <meta
+              property="og:image:type"
+              content={ogImageType}
+              key="og:image:type"
+            />
+          ) : finalOgImage.endsWith(".png") ? (
+            <meta
+              property="og:image:type"
+              content="image/png"
+              key="og:image:type"
+            />
+          ) : finalOgImage.endsWith(".jpg") ||
+            finalOgImage.endsWith(".jpeg") ? (
+            <meta
+              property="og:image:type"
+              content="image/jpeg"
+              key="og:image:type"
+            />
+          ) : finalOgImage.endsWith(".webp") ? (
+            <meta
+              property="og:image:type"
+              content="image/webp"
+              key="og:image:type"
+            />
+          ) : null}
+          {ogImageWidth && (
+            <meta
+              property="og:image:width"
+              content={ogImageWidth.toString()}
+              key="og:image:width"
+            />
           )}
-          {ogImageWidth && <meta property="og:image:width" content={ogImageWidth.toString()} key="og:image:width" />}
-          {ogImageHeight && <meta property="og:image:height" content={ogImageHeight.toString()} key="og:image:height" />}
+          {ogImageHeight && (
+            <meta
+              property="og:image:height"
+              content={ogImageHeight.toString()}
+              key="og:image:height"
+            />
+          )}
         </>
       )}
-      {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} key="og:image:alt" />}
-      {finalOgUrl && <meta property="og:url" content={finalOgUrl} key="og:url" />}
-      <meta property="og:site_name" content={finalOgSiteName} key="og:site_name" />
-      <meta property="og:locale" content="en_US" key="og:locale" />
+      {ogImageAlt && (
+        <meta property="og:image:alt" content={ogImageAlt} key="og:image:alt" />
+      )}
+      {finalOgUrl && (
+        <meta property="og:url" content={finalOgUrl} key="og:url" />
+      )}
+      <meta
+        property="og:site_name"
+        content={finalOgSiteName}
+        key="og:site_name"
+      />
+      <meta
+        property="og:locale"
+        content={(webSettings?.merchantContentLanguage || "en").replace(
+          "-",
+          "_",
+        )}
+        key="og:locale"
+      />
+      {videoUrl && (
+        <>
+          <meta
+            property="og:video"
+            content={ensureAbsoluteUrl(videoUrl, baseUrl)}
+            key="og:video"
+          />
+          <meta
+            property="og:video:secure_url"
+            content={ensureAbsoluteUrl(videoUrl, baseUrl)}
+            key="og:video:secure_url"
+          />
+          {videoType && (
+            <meta
+              property="og:video:type"
+              content={videoType}
+              key="og:video:type"
+            />
+          )}
+          {videoWidth && (
+            <meta
+              property="og:video:width"
+              content={String(videoWidth)}
+              key="og:video:width"
+            />
+          )}
+          {videoHeight && (
+            <meta
+              property="og:video:height"
+              content={String(videoHeight)}
+              key="og:video:height"
+            />
+          )}
+        </>
+      )}
 
       {/* Twitter Card */}
       <meta name="twitter:card" content={twitterCard} key="twitter:card" />
-      <meta name="twitter:title" content={finalTwitterTitle} key="twitter:title" />
-      <meta name="twitter:description" content={finalTwitterDescription} key="twitter:description" />
+      <meta
+        name="twitter:title"
+        content={finalTwitterTitle}
+        key="twitter:title"
+      />
+      <meta
+        name="twitter:description"
+        content={finalTwitterDescription}
+        key="twitter:description"
+      />
       {finalTwitterImage && (
-        <meta name="twitter:image" content={finalTwitterImage} key="twitter:image" />
+        <meta
+          name="twitter:image"
+          content={finalTwitterImage}
+          key="twitter:image"
+        />
       )}
       {twitterImageAlt && (
-        <meta name="twitter:image:alt" content={twitterImageAlt} key="twitter:image:alt" />
+        <meta
+          name="twitter:image:alt"
+          content={twitterImageAlt}
+          key="twitter:image:alt"
+        />
       )}
-      {twitterSite && <meta name="twitter:site" content={twitterSite} key="twitter:site" />}
+      {twitterSite && (
+        <meta name="twitter:site" content={twitterSite} key="twitter:site" />
+      )}
       {twitterCreator && (
-        <meta name="twitter:creator" content={twitterCreator} key="twitter:creator" />
+        <meta
+          name="twitter:creator"
+          content={twitterCreator}
+          key="twitter:creator"
+        />
       )}
 
       {/* Product Meta Tags (for ecommerce) */}
       {productPrice && productCurrency && (
         <>
-          <meta property="product:price:amount" content={productPrice} key="product:price:amount" />
-          <meta property="product:price:currency" content={productCurrency} key="product:price:currency" />
+          <meta
+            property="product:price:amount"
+            content={productPrice}
+            key="product:price:amount"
+          />
+          <meta
+            property="product:price:currency"
+            content={productCurrency}
+            key="product:price:currency"
+          />
         </>
       )}
       {productAvailability && (
-        <meta property="product:availability" content={productAvailability} key="product:availability" />
+        <meta
+          property="product:availability"
+          content={productAvailability}
+          key="product:availability"
+        />
       )}
       {productCondition && (
-        <meta property="product:condition" content={productCondition} key="product:condition" />
+        <meta
+          property="product:condition"
+          content={productCondition}
+          key="product:condition"
+        />
       )}
 
       {/* Copyright */}

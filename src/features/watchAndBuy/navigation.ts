@@ -21,8 +21,7 @@ export const getReelWheelDirection = (
 };
 
 export const getReelShareUrl = (origin: string, slug: string) => {
-  const url = new URL("/watch-and-buy/", origin);
-  url.searchParams.set("slug", slug);
+  const url = new URL(`/watch-and-buy/${encodeURIComponent(slug)}/`, origin);
   return url.toString();
 };
 

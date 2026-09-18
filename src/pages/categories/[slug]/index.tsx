@@ -33,6 +33,7 @@ import ProductFilter, {
   SortOption,
 } from "@/components/Products/ProductFilter";
 import DynamicSEO from "@/SEO/DynamicSEO";
+import { useSettings } from "@/contexts/SettingsContext";
 import {
   generateCollectionMeta,
   generateCollectionSchema,
@@ -110,6 +111,7 @@ const CategoryProductsPage: NextPageWithLayout<CategoryProductsPageProps> = ({
   categorySlug,
   initialCategory,
 }) => {
+  const { webSettings } = useSettings();
   const { t } = useTranslation();
   const router = useRouter();
   const slug = categorySlug || (router.query.slug as string);
@@ -308,23 +310,33 @@ const CategoryProductsPage: NextPageWithLayout<CategoryProductsPageProps> = ({
 
   const seoMeta = generateCollectionMeta(
     initialCategory?.title || formatString(slug || ""),
-    initialCategory?.description || t("pages.categoryProducts.subtitle", { category: formatString(slug) }),
+    initialCategory?.description ||
+      t("pages.categoryProducts.subtitle", { category: formatString(slug) }),
     initialCategory?.image,
     initialCategory?.metadata,
-    initialProducts?.data?.keywords
+    initialProducts?.data?.keywords,
   );
 
   const collectionSchema = generateCollectionSchema(
     seoMeta.title,
     seoMeta.description,
-    `/categories/${slug}`
+    `/categories/${slug}`,
+    webSettings?.customerWebUrl,
+    (initialProducts?.data?.data || []).map((product) => ({
+      name: product.title,
+      url: `/products/${product.slug}`,
+      image: product.main_image,
+    })),
   );
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: t("home_title"), url: "/" },
-    { name: t("pageTitle.categories"), url: "/categories" },
-    { name: seoMeta.title, url: `/categories/${slug}` },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: t("home_title"), url: "/" },
+      { name: t("pageTitle.categories"), url: "/categories" },
+      { name: seoMeta.title, url: `/categories/${slug}` },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>
@@ -521,13 +533,18 @@ export const getServerSideProps: GetServerSideProps | undefined = isSSR()
         // array — which is truthy — so check for a real record before trusting it.
         const mainCategory = categoryRes?.data?.main_category_data;
         const found =
-          mainCategory && !Array.isArray(mainCategory) && Boolean(mainCategory.id);
+          mainCategory &&
+          !Array.isArray(mainCategory) &&
+          Boolean(mainCategory.id);
 
         if (!found) {
           return { notFound: true };
         }
 
-        const initialCategory = { ...mainCategory, slug } as unknown as Category;
+        const initialCategory = {
+          ...mainCategory,
+          slug,
+        } as unknown as Category;
 
         return {
           props: {

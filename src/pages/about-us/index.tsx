@@ -10,6 +10,7 @@ import { loadTranslations } from "../../../i18n";
 import DynamicSEO from "@/SEO/DynamicSEO";
 import {
   generateBreadcrumbSchema,
+  getCanonicalUrl,
   generateMetaDescription,
   stripHtmlTags,
 } from "@/helpers/seo";
@@ -33,13 +34,16 @@ const AboutUsPage: NextPage<AboutUsPageProps> = ({}) => {
   // Generate SEO meta description from content
   const metaDescription = generateMetaDescription(
     stripHtmlTags(pageContent.content),
-    160
+    160,
   );
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: t("pageTitle.about-us"), url: "/about-us" },
-  ]);
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: "Home", url: "/" },
+      { name: t("pageTitle.about-us"), url: "/about-us" },
+    ],
+    webSettings?.customerWebUrl,
+  );
 
   return (
     <>
@@ -49,7 +53,16 @@ const AboutUsPage: NextPage<AboutUsPageProps> = ({}) => {
         keywords="about us, about our company, who we are, our story"
         canonical="/about-us"
         ogType="website"
-        jsonLd={breadcrumbSchema}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            name: pageContent.title,
+            description: metaDescription,
+            url: getCanonicalUrl("/about-us/", webSettings?.customerWebUrl),
+          },
+          breadcrumbSchema,
+        ]}
       />
 
       <div className="min-h-screen">
