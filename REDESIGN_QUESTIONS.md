@@ -1,5 +1,10 @@
 # Redesign decisions and data gaps
 
+## Order details
+
+- The referenced `src/redesign/`, `THEME_REDESIGN.md` and `GAP_ANALYSIS.md` are absent from this checkout. The existing storefront components and slate theme are the visual baseline for the approved combined product/timeline/return/refund card.
+- Customer order responses add an optional `refunds` collection without changing existing fields. Item displays use refund allocations, not the order-wide refund amount or original payment method. Settled obligations retain their allocated quantity/amount and resolve their payment status and destination through `settled_by_refund_id`.
+
 ## Seller registration
 
 - There is no `src/redesign/` counterpart for the seller registration landing page. The existing storefront layout and design tokens therefore remain authoritative while section titles, subtitles, labels, item copy, and media are populated from the seller landing API. Benefit images are optional and fall back to the existing static icons when no uploaded image is configured.

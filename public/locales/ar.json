@@ -1,4 +1,12 @@
 {
+  "orderUpdates": {"adjustments":"تحديثات المنتج","deliveryQuantity":"التوصيل · الكمية: {{count}}","quantityProgress":"{{count}} من {{total}}"},
+  "orderTimeline": {"confirmed":"تم تأكيد الطلب","return_requested":"تم طلب الإرجاع","return_approved":"تمت الموافقة على الإرجاع","return_picked_up":"تم استلام المرتجع للشحن","return_received":"استلم البائع المرتجع","return_cancelled":"تم إلغاء طلب الإرجاع","return_declined":"تم رفض طلب الإرجاع","refunded":"تم إرسال المبلغ إلى المحفظة","preparing":"قيد التجهيز","shipped":"تم الشحن","delivered":"تم التسليم","cancelled":"ملغى","shipmentCancelled":"تم إلغاء الشحنة"},
+  "orderCancellation": {"quantity":"الكمية المراد إلغاؤها: {{count}}","hint":"سيتم إلغاء الوحدات المؤهلة لهذا المنتج فقط. الوحدات المشحونة لن تتغير."},
+  "orderAttachments": {"preview":"معاينة","open":"فتح أو تنزيل","pdfHint":"إذا لم تتوفر المعاينة، افتح الملف أو نزّله من الرابط أعلاه."},
+  "orderQuantities": {"ordered":"الكمية المطلوبة","cancelled":"ملغى","returnRequested":"مطلوب للإرجاع","returnReceived":"استلمها البائع مجدداً"},
+  "orderReturns": {"heading":"طلبات الإرجاع","request":"طلب إرجاع"},
+  "orderMoneySummary": {"heading":"ملخص الطلب","checkoutNote":"للطلب كاملاً كما تم تقديمه","currentNote":"للطلب كاملاً","total":"إجمالي الطلب","adjustments":"تعديلات الطلب","updatedTotal":"الإجمالي المحدّث","refunded":"المبالغ المستردة المرسلة","pending":"المبالغ المستردة المعلقة","platformFee":"رسوم المنصة","codFee":"رسوم الدفع عند الاستلام"},
+  "orderRefunds": {"heading":"تحديثات الاسترداد","quantity":"الكمية: {{count}}","returnAmount":"مبلغ طلب الإرجاع","status":{"owed":"الاسترداد قيد الانتظار","issued":"تم إرسال المبلغ المسترد","failed":"الاسترداد يحتاج إلى متابعة"},"method":{"wallet":"المحفظة","gateway":"طريقة الدفع الأصلية","manual":"استرداد يدوي"}},
   "about_us": "معلومات عنا",
   "account": "الحساب",
   "add": "إضافة",

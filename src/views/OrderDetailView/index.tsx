@@ -1,8 +1,6 @@
 import type {
   Order,
   OrderItem,
-  TimelineEvent,
-  TimelineStep,
 } from "@/types/ApiResponse";
 
 import { useMemo, useState } from "react";
@@ -26,60 +24,19 @@ import PageHead from "@/SEO/PageHead";
 import { useCurrency } from "@/components/Functional/Price";
 import { getFormattedDate } from "@/helpers/getters";
 import { orderStatusColorMap } from "@/config/constants";
-import CancelOrderItemModal from "@/components/Modals/CancelOrderItemModal";
+import CancelItemSheet from "./CancelItemSheet";
 import RatingModal from "@/components/Modals/RatingModal";
 import OrderItemReviewCard from "@/components/Modals/OrderItemReviewCard";
-import FilePreview from "@/components/FilePreview";
+import OrderAttachments from "./OrderAttachments";
 import ShippingInfo from "./ShippingInfo";
 import DeliveryInfo from "./DeliveryInfo";
 import ReturnSheet from "./ReturnSheet";
-import { flattenTimeline } from "./timeline";
-
-/** Amber/success/grey dot for a main tracker step. */
-function stepTone(step: TimelineStep): { dot: string; line: string } {
-  const exception = step.events?.some((e) => e.is_exception && e.done);
-  if (exception) return { dot: "bg-warning border-warning", line: "bg-warning" };
-  if (step.marker === "current")
-    return { dot: "bg-primary border-primary", line: "bg-success" };
-  if (step.done) return { dot: "bg-success border-success", line: "bg-success" };
-  return { dot: "bg-content1 border-default-300", line: "bg-default-200" };
-}
-
-/** Compact horizontal main-status timeline (steps only). */
-function StepTimeline({ steps }: { steps: TimelineStep[] }) {
-  return (
-    <div className="rd-hscroll flex items-start gap-0 overflow-x-auto pb-1 scrollbar-hide">
-      {steps.map((s, i) => {
-        const tone = stepTone(s);
-        return (
-          <div
-            key={`${s.key}-${i}`}
-            className="relative flex min-w-[92px] flex-1 flex-col items-center text-center"
-          >
-            {i > 0 && (
-              <span
-                className={`absolute right-1/2 top-[6px] h-0.5 w-full ${
-                  s.done ? tone.line : "bg-default-200"
-                }`}
-              />
-            )}
-            <span
-              className={`relative z-10 h-3.5 w-3.5 rounded-full border-2 ${tone.dot}`}
-            />
-            <span className="mt-1.5 px-1 text-[11px] font-semibold leading-tight">
-              {s.label || s.key}
-            </span>
-            {s.at && (
-              <span className="text-[10px] text-default-500">
-                {getFormattedDate(s.at)}
-              </span>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+import { deliveryTimeline, deliveryMilestones, flattenTimeline, getItemTimeline } from "./timeline";
+import OrderTimeline from "./OrderTimeline";
+import { timelineLabels } from "./timeline";
+import ItemAdjustmentDetails from "./ItemAdjustmentDetails";
+import ItemQuantityDetails from "./ItemQuantityDetails";
+import OrderSummaryCard from "./OrderSummaryCard";
 
 interface OrderDetailPageViewProps {
   order: Order;
@@ -144,7 +101,6 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
       { shallow: true, scroll: true },
     );
 
-  const [breakupOpen, setBreakupOpen] = useState(false);
   const [reordering, setReordering] = useState(false);
   const timelineSheet = useDisclosure();
   const cancelSheet = useDisclosure();
@@ -182,20 +138,11 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
   const activeReturn = selected.returns?.find(
     (r) => r.return_status !== "cancelled" && r.return_status !== "declined",
   );
-  const allSteps = selected.timeline ?? [];
-  const confirmedDone =
-    allSteps.find((s) => s.key === "confirmed")?.done ?? false;
-  // Short view = main statuses only. Regular: confirmed→shipped→delivered;
-  // cancel+unpaid: placed→cancelled; cancel-after-pay: confirmed→cancelled→refunded.
-  const mainSteps = allSteps.filter((s) => {
-    if (s.key === "preparing") return false;
-    if (s.key === "placed") return !confirmedDone;
-    if (s.key === "confirmed") return confirmedDone;
-    return ["shipped", "delivered", "cancelled", "returned", "refunded"].includes(
-      s.key,
-    );
-  });
-  const timelineEvents = flattenTimeline(selected.timeline);
+  const allSteps = getItemTimeline(selected, order.refunds, (key) => t(key, { defaultValue: timelineLabels[key] || key }), order.payment_method);
+  const deliverySteps = deliveryTimeline(allSteps, selected);
+  const mainSteps = selected.tracking?.milestones ?? deliveryMilestones(deliverySteps);
+  const showQuantity = selected.quantity_summary?.ordered !== 1;
+  const timelineEvents = selected.tracking?.history ?? flattenTimeline(deliverySteps);
   const currentStatus = selected.customer_status;
   const addons = selected.addons ?? [];
   const attachments = selected.attachments ?? [];
@@ -271,8 +218,11 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                   </div>
                 )}
                 <div className="text-xs text-default-500 mt-0.5">
-                  {t("qty") || "Qty"}: {selected.quantity}
+                  {selected.quantity_summary?.ordered != null
+                    ? `${t("orderQuantities.ordered", "Quantity ordered")}: ${selected.quantity_summary.ordered}`
+                    : `${t("qty")}: ${selected.quantity}`}
                 </div>
+                <ItemQuantityDetails item={selected} />
                 <div className="mt-1 text-sm font-bold">
                   {formatPrice(selected.subtotal)}
                 </div>
@@ -296,7 +246,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                     <div className="text-[10px] font-bold uppercase text-default-500">
                       {t("attachments")}
                     </div>
-                    <FilePreview attachments={attachments} />
+                    <OrderAttachments attachments={attachments} />
                   </div>
                 )}
               </div>
@@ -307,25 +257,19 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 color={orderStatusColorMap(currentStatus?.code)}
                 classNames={{ content: "text-[11px] font-semibold" }}
               >
-                {currentStatus?.label || selected.status_label}
+                {selected.tracking?.status.label || currentStatus?.label || selected.status_label}
               </Chip>
             </div>
-          </Card>
-
           {/* Main-status timeline (short) + view full */}
           {mainSteps.length > 0 && (
-            <Card shadow="none" radius="lg" className="border border-divider p-4">
+            <section className="border-t border-divider p-4">
               {currentStatus && (
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <div className="text-sm font-semibold">
-                      {currentStatus.label}
+                      {selected.tracking?.status.label || [...mainSteps].reverse().find((step) => step.done)?.label || currentStatus.label}
                     </div>
-                    {currentStatus.description && (
-                      <div className="text-xs text-default-500 line-clamp-1">
-                        {currentStatus.description}
-                      </div>
-                    )}
+                    {showQuantity && <div className="text-xs text-default-500">{t("orderUpdates.deliveryQuantity", { count: selected.quantity_summary?.current ?? selected.quantity, defaultValue: "Delivery · Qty: {{count}}" })}</div>}
                   </div>
                   <button
                     type="button"
@@ -337,59 +281,15 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                   </button>
                 </div>
               )}
-              <StepTimeline steps={mainSteps} />
-            </Card>
+              <OrderTimeline key={selected.id} steps={mainSteps} showQuantity={showQuantity} />
+              {selected.tracking?.exceptions.map((exception) => <p key={exception.code} role="status" className={`mt-3 rounded-small p-3 text-xs ${exception.tone === "danger" ? "bg-danger-50 text-danger" : "bg-warning-50 text-warning-700"}`}>{exception.label}</p>)}
+            </section>
           )}
 
           {/* Refund / return */}
-          {activeReturn && (
-            <Card shadow="none" radius="lg" className="border border-divider overflow-hidden">
-              <div className="flex items-center gap-2 bg-success-50 px-4 py-3">
-                <Icon icon="solar:box-bold" className="text-success" width={18} height={18} />
-                <div>
-                  <div className="text-sm font-semibold text-success-700">
-                    {activeReturn.customer_status?.label ||
-                      t("pages.order.refund", "Refund")}
-                  </div>
-                  {activeReturn.refund_processed_at && (
-                    <div className="text-[11px] text-success-700/80">
-                      {getFormattedDate(activeReturn.refund_processed_at)}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="p-4 space-y-1">
-                <LabelValue
-                  label={t("pages.order.refundAmount", "Total refund amount")}
-                  value={formatPrice(activeReturn.refund_amount)}
-                />
-                {order.payment_method && (
-                  <LabelValue
-                    label={t("pages.order.refundedTo", "Refunded to")}
-                    value={order.payment_method.toUpperCase()}
-                  />
-                )}
-                {activeReturn.reason && (
-                  <LabelValue
-                    label={t("pages.order.reason", "Reason")}
-                    value={activeReturn.reason}
-                  />
-                )}
+          <div className="px-4 pb-4"><ItemAdjustmentDetails item={selected} refunds={order.refunds} steps={allSteps} formatPrice={formatPrice} /></div>
+          </Card>
 
-                {activeReturn.return_timeline &&
-                  activeReturn.return_timeline.length > 0 && (
-                    <div className="pt-3">
-                      <div className="mb-2 text-xs font-semibold text-foreground">
-                        {t("pages.order.refundProgress", "Refund progress")}
-                      </div>
-                      <StepTimeline steps={activeReturn.return_timeline} />
-                    </div>
-                  )}
-              </div>
-            </Card>
-          )}
-
-          {/* Actions */}
           <div className="flex flex-wrap gap-2">
             <Button
               size="md"
@@ -456,76 +356,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             )}
           </div>
 
-          {/* Price breakup */}
-          <Card shadow="none" radius="lg" className="border border-divider">
-            <button
-              type="button"
-              onClick={() => setBreakupOpen((v) => !v)}
-              className="flex w-full items-center justify-between gap-3 p-4"
-            >
-              <span className="text-sm font-semibold">
-                {t("pages.order.totalItemPrice", "Total item price")}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="text-base font-bold">
-                  {formatPrice(selected.subtotal)}
-                </span>
-                <Icon
-                  icon={breakupOpen ? "solar:alt-arrow-up-linear" : "solar:alt-arrow-down-linear"}
-                  width={16}
-                  height={16}
-                  className="text-default-500"
-                />
-              </span>
-            </button>
-            {breakupOpen && (
-              <div className="border-t border-divider p-4 space-y-1">
-                <LabelValue label={t("subtotal")} value={formatPrice(order.subtotal)} />
-                <LabelValue
-                  label={t("deliveryCharge")}
-                  value={formatPrice(order.delivery_charge)}
-                />
-                {Number(order.platform_fee) > 0 && (
-                  <LabelValue
-                    label={t("checkout.platformFee", { defaultValue: "Platform fee" })}
-                    value={formatPrice(order.platform_fee)}
-                  />
-                )}
-                {Number(order.cod_fee) > 0 && (
-                  <LabelValue
-                    label={t("checkout.codFee", { defaultValue: "COD fee" })}
-                    value={formatPrice(order.cod_fee)}
-                  />
-                )}
-                {Number(order.promo_discount) > 0 && (
-                  <LabelValue
-                    label={t("discountAmount")}
-                    value={`- ${formatPrice(order.promo_discount)}`}
-                  />
-                )}
-                {Number(order.gift_card_discount) > 0 && (
-                  <LabelValue
-                    label={t("giftCardApplied")}
-                    value={`- ${formatPrice(order.gift_card_discount)}`}
-                  />
-                )}
-                {Number(order.wallet_balance) > 0 && (
-                  <LabelValue
-                    label={t("walletAmountUsed")}
-                    value={`- ${formatPrice(order.wallet_balance)}`}
-                  />
-                )}
-                <div className="mt-2 flex items-center justify-between border-t border-divider pt-2">
-                  <span className="text-sm font-bold">
-                    {t("finalTotal") || "Order total"}
-                  </span>
-                  <span className="text-base font-bold text-primary-600">
-                    {formatPrice(order.final_total)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </Card>
+          <OrderSummaryCard order={order} formatPrice={formatPrice} />
 
           {/* Payment + sold by */}
           <Card shadow="none" radius="lg" className="border border-divider p-4 space-y-1">
@@ -653,57 +484,26 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               {t("pages.order.noUpdates", "No updates yet.")}
             </p>
           ) : (
-            <ol className="relative ms-2">
-              {timelineEvents.map((ev: TimelineEvent, i: number) => {
-                const done = ev.done;
-                const dot = ev.is_exception
-                  ? "bg-warning border-warning"
-                  : done
-                    ? "bg-success border-success"
-                    : "bg-content1 border-default-300";
-                const line = i < timelineEvents.length - 1;
-                return (
-                  <li key={`${ev.code}-${i}`} className="relative ps-6 pb-5">
-                    {line && (
-                      <span
-                        className={`absolute left-[5px] top-3 h-full w-0.5 ${
-                          done ? "bg-success" : "bg-default-200"
-                        }`}
-                      />
-                    )}
-                    <span
-                      className={`absolute left-0 top-1 h-3 w-3 rounded-full border-2 ${dot}`}
-                    />
-                    <div className="text-sm font-semibold text-foreground">
-                      {ev.label}
-                    </div>
-                    {ev.at && (
-                      <div className="text-xs text-default-500">
-                        {getFormattedDate(ev.at)}
-                      </div>
-                    )}
-                    {ev.meta?.tracking_id && (
-                      <div className="mt-0.5 text-xs text-default-500">
-                        {ev.meta.courier ? `${ev.meta.courier} · ` : ""}
-                        {ev.meta.tracking_id}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
+            timelineSheet.isOpen && <div className="space-y-4">
+              {selected.tracking && <p className="text-sm font-semibold">{selected.tracking.status.label}</p>}
+              <OrderTimeline key={selected.id} events={timelineEvents} formatPrice={formatPrice} showQuantity={showQuantity} />
+              {selected.tracking?.exceptions.map((exception) => <p key={exception.code} role="status" className={`rounded-small p-3 text-xs ${exception.tone === "danger" ? "bg-danger-50 text-danger" : "bg-warning-50 text-warning-700"}`}>{exception.label}</p>)}
+              <ItemAdjustmentDetails item={selected} refunds={order.refunds} steps={allSteps} formatPrice={formatPrice} />
+            </div>
           )}
         </div>
       </Sheet>
 
       {/* Mutations reuse the existing sheets/modals (services already wired). */}
-      <CancelOrderItemModal
+      <CancelItemSheet
+        key={selected.id}
         isOpen={cancelSheet.isOpen}
         onClose={cancelSheet.onClose}
-        order={order}
-        onItemCancelled={cancelSheet.onClose}
+        item={selected}
+        onDone={() => { cancelSheet.onClose(); router.replace(router.asPath); }}
       />
       <ReturnSheet
+        key={`return-${selected.id}`}
         isOpen={returnSheet.isOpen}
         onClose={returnSheet.onClose}
         item={selected}

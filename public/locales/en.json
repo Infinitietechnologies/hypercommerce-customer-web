@@ -1,4 +1,12 @@
 {
+  "orderUpdates": {"adjustments":"Item updates","deliveryQuantity":"Delivery · Qty: {{count}}","quantityProgress":"{{count}} of {{total}}"},
+  "orderTimeline": {"confirmed":"Order confirmed","return_requested":"Return requested","return_approved":"Return approved","return_picked_up":"Return picked up","return_received":"Received back by seller","return_cancelled":"Return request cancelled","return_declined":"Return request declined","refunded":"Refund sent to wallet","preparing":"Preparing","shipped":"Shipped","delivered":"Delivered","cancelled":"Cancelled","shipmentCancelled":"Shipment cancelled"},
+  "orderCancellation": {"quantity":"Quantity to cancel: {{count}}","hint":"Only the eligible units of this item will be cancelled. Shipped units stay unchanged."},
+  "orderAttachments": {"preview":"Preview","open":"Open or download","pdfHint":"If the preview is unavailable, open or download the file above."},
+  "orderQuantities": {"ordered":"Quantity ordered","cancelled":"Cancelled","returnRequested":"Requested for return","returnReceived":"Received back by seller"},
+  "orderReturns": {"heading":"Return requests","request":"Return request"},
+  "orderMoneySummary": {"heading":"Order summary","checkoutNote":"For the whole order, as placed","currentNote":"For the whole order","total":"Order total","adjustments":"Order adjustments","updatedTotal":"Updated total","refunded":"Refunds sent","pending":"Refunds pending","platformFee":"Platform fee","codFee":"Cash on delivery fee"},
+  "orderRefunds": {"heading":"Refund updates","quantity":"Qty: {{count}}","returnAmount":"Return request amount","status":{"owed":"Refund pending","issued":"Refund sent","failed":"Refund needs attention"},"method":{"wallet":"Wallet","gateway":"Original payment method","manual":"Manual refund"}},
   "about_us": "About Us",
   "account": "Account",
   "add": "Add",

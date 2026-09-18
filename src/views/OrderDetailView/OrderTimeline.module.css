@@ -1,0 +1,21 @@
+.timeline { display: flex; flex-direction: column; padding: 0; margin: 0; list-style: none; }
+.entry { position: relative; display: flex; gap: 12px; min-width: 0; padding-block: 0 20px; }
+.entry:last-child { padding-block-end: 0; }
+.dot { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; flex: 0 0 18px; width: 18px; height: 18px; border-width: 2px; border-radius: 50%; color: white; font-size: 11px; line-height: 1; }
+.content { min-width: 0; overflow-wrap: anywhere; }
+.connector { position: absolute; inset-inline-start: 8px; top: 9px; width: 2px; height: 100%; overflow: hidden; }
+.fill { display: block; width: 100%; height: 100%; transform-origin: top; animation: fill-vertical var(--duration) ease-out var(--delay) both; }
+.entry[data-state="completed"] .dot { animation: reveal-dot var(--duration) ease-out var(--delay) both; }
+@keyframes reveal-dot { from { transform: scale(.75); opacity: .5; } to { transform: scale(1); opacity: 1; } }
+@keyframes fill-vertical { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes fill-horizontal { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (min-width: 769px) {
+  .compact { flex-direction: row; }
+  .compact .entry { flex: 1; flex-direction: column; align-items: center; gap: 6px; padding: 0 4px; text-align: center; }
+  .compact .connector { inset-inline-start: 50%; top: 8px; width: 100%; height: 2px; }
+  .compact .fill { transform-origin: left; animation-name: fill-horizontal; }
+  :global([dir="rtl"]) .compact .fill { transform-origin: right; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill, .entry[data-state="completed"] .dot { animation: none; }
+}

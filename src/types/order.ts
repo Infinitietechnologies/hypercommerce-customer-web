@@ -55,7 +55,40 @@ export interface PaymentInitiationResponse {
   expires_at?: string | null;
 }
 
+export interface OrderMoneyBreakdown {
+  items_total?: number;
+  delivery_charge?: number;
+  platform_fee?: number;
+  cod_fee?: number;
+  promo_discount?: number;
+  gift_card_discount?: number;
+  wallet_amount_used?: number;
+  order_total: number;
+  payable_amount?: number;
+}
+
+export interface OrderRefund {
+  id: number;
+  amount: number;
+  shipping_refund_amount: number;
+  currency_code: string;
+  status: "owed" | "issued" | "failed";
+  method: "wallet" | "gateway" | "manual";
+  settled_by_refund_id: number | null;
+  created_at: string | null;
+  issued_at: string | null;
+  items: { order_item_id: number; quantity: number; amount: number }[];
+}
+
 export interface Order {
+  money_summary?: {
+    original: OrderMoneyBreakdown | null;
+    current: OrderMoneyBreakdown;
+    total_changed: boolean;
+    refund_issued: number;
+    refund_owed: number;
+  };
+  refunds?: OrderRefund[];
   id: number;
   uuid: string;
   slug: string;
@@ -157,11 +190,18 @@ export interface TimelineEvent {
     courier?: string;
     tracking_id?: string;
     tracking_url?: string;
+    quantity?: number;
+    amount?: number;
+    refund_method?: string;
+    status?: string;
   };
 }
 
 /** A tracker step — a main status (e.g. "Shipped", "Delivered") + its events. */
 export interface TimelineStep {
+  inferred?: boolean;
+  quantity?: number;
+  completed_quantity?: number | null;
   key: string;
   /** Step-level label, e.g. "Shipped" (labels.step_<key>). */
   label?: string;
@@ -182,6 +222,8 @@ export interface OrderItemReturnRequest {
   delivery_boy_id: number | null;
   quantity?: number;
   reason: string;
+  reason_code?: string | null;
+  reason_label?: string | null;
   seller_comment: string | null;
   images: string[];
   refund_amount: number;
@@ -226,6 +268,13 @@ export interface OrderItem {
   quantity: number;
   price: string;
   subtotal: string;
+  quantity_summary?: {
+    ordered: number | null;
+    current: number;
+    cancelled: number | null;
+    return_requested: number;
+    return_received: number;
+  };
 
   status: OrderStatus;
   status_label: string;
@@ -233,6 +282,18 @@ export interface OrderItem {
   customer_status: CustomerStatus;
   /** Per-item tracker steps (scoped to this item's parcel + return/refund). */
   timeline?: TimelineStep[];
+  delivery_timeline?: TimelineStep[];
+  tracking?: {
+    version: 1;
+    status: { code: string; label: string };
+    milestones: TimelineStep[];
+    history: TimelineEvent[];
+    exceptions: { code: string; label: string; at: string | null; tone: "warning" | "danger" }[];
+    adjustments: TimelineStep[];
+    cancellation: { allowed: boolean; quantity: number; reason: string | null };
+    quantities: { ordered: number | null; current: number; cancelled: number | null; allocated: number; committed: number; shipped: number; delivered: number; unshipped: number; return_requested: number; return_received: number; on_hold: boolean; preparing: boolean };
+  };
+  activity?: TimelineEvent[];
   can_cancel: boolean;
   cancelable_quantity: number;
   /** Snapshot ETA + upcoming delivery-date window. */

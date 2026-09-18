@@ -1,4 +1,12 @@
 {
+  "orderUpdates": {"adjustments":"आइटम अपडेट","deliveryQuantity":"डिलीवरी · मात्रा: {{count}}","quantityProgress":"{{total}} में से {{count}}"},
+  "orderTimeline": {"confirmed":"ऑर्डर की पुष्टि हुई","return_requested":"वापसी का अनुरोध किया गया","return_approved":"वापसी स्वीकृत","return_picked_up":"वापसी का सामान ले लिया गया","return_received":"विक्रेता को सामान वापस मिला","return_cancelled":"वापसी का अनुरोध रद्द","return_declined":"वापसी का अनुरोध अस्वीकृत","refunded":"रिफ़ंड वॉलेट में भेजा गया","preparing":"तैयारी जारी है","shipped":"भेज दिया गया","delivered":"डिलीवर हुआ","cancelled":"रद्द","shipmentCancelled":"शिपमेंट रद्द"},
+  "orderCancellation": {"quantity":"रद्द की जाने वाली मात्रा: {{count}}","hint":"केवल इस आइटम की पात्र इकाइयाँ रद्द होंगी। भेजी गई इकाइयाँ अपरिवर्तित रहेंगी।"},
+  "orderAttachments": {"preview":"पूर्वावलोकन","open":"खोलें या डाउनलोड करें","pdfHint":"पूर्वावलोकन उपलब्ध न होने पर ऊपर दिए लिंक से फ़ाइल खोलें या डाउनलोड करें।"},
+  "orderQuantities": {"ordered":"ऑर्डर की गई मात्रा","cancelled":"रद्द","returnRequested":"वापसी के लिए अनुरोध","returnReceived":"विक्रेता को वापस प्राप्त"},
+  "orderReturns": {"heading":"वापसी अनुरोध","request":"वापसी अनुरोध"},
+  "orderMoneySummary": {"heading":"ऑर्डर का सारांश","checkoutNote":"ऑर्डर करते समय पूरे ऑर्डर का विवरण","currentNote":"पूरे ऑर्डर का विवरण","total":"ऑर्डर कुल","adjustments":"ऑर्डर समायोजन","updatedTotal":"अपडेट किया गया कुल","refunded":"भेजे गए रिफंड","pending":"लंबित रिफंड","platformFee":"प्लेटफ़ॉर्म शुल्क","codFee":"कैश ऑन डिलीवरी शुल्क"},
+  "orderRefunds": {"heading":"रिफंड अपडेट","quantity":"मात्रा: {{count}}","returnAmount":"वापसी अनुरोध राशि","status":{"owed":"रिफंड लंबित है","issued":"रिफंड भेज दिया गया","failed":"रिफंड पर ध्यान देने की आवश्यकता है"},"method":{"wallet":"वॉलेट","gateway":"मूल भुगतान विधि","manual":"मैन्युअल रिफंड"}},
   "about_us": "हमारे बारे में",
   "account": "खाता",
   "add": "जोड़ें",

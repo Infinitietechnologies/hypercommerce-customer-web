@@ -1,0 +1,105 @@
+import { useTranslation } from "react-i18next";
+import type { Order } from "@/types/order";
+import { Card } from "@/components/ui";
+
+interface Props {
+  order: Order;
+  formatPrice: (amount: number | string | null | undefined) => string;
+}
+
+export default function OrderSummaryCard({ order, formatPrice }: Props) {
+  const { t } = useTranslation();
+  const summary = order.money_summary;
+  const breakdown = summary?.original ?? summary?.current ?? {
+    items_total: Number(order.subtotal),
+    delivery_charge: Number(order.delivery_charge),
+    platform_fee: Number(order.platform_fee),
+    cod_fee: Number(order.cod_fee),
+    promo_discount: Number(order.promo_discount),
+    gift_card_discount: Number(order.gift_card_discount),
+    order_total: Number(order.final_total),
+  };
+  const lines = [
+    { key: "items_total", label: t("subtotal"), amount: breakdown.items_total, always: true },
+    { key: "delivery_charge", label: t("deliveryCharge"), amount: breakdown.delivery_charge },
+    { key: "platform_fee", label: t("orderMoneySummary.platformFee", "Platform fee"), amount: breakdown.platform_fee },
+    { key: "cod_fee", label: t("orderMoneySummary.codFee", "Cash on delivery fee"), amount: breakdown.cod_fee },
+    { key: "promo_discount", label: t("discountAmount"), amount: breakdown.promo_discount, discount: true },
+    { key: "gift_card_discount", label: t("giftCardApplied"), amount: breakdown.gift_card_discount, discount: true },
+  ];
+  const adjustments = summary ? lines.map((line) => ({
+    ...line,
+    change: ((summary.current[line.key as keyof typeof summary.current] ?? 0) - (line.amount ?? 0)) * (line.discount ? -1 : 1),
+  })).filter((line) => Math.abs(line.change) >= 0.005) : [];
+
+  return (
+    <Card shadow="none" radius="lg" className="border border-divider p-4">
+      <h2 className="text-sm font-semibold">{t("orderMoneySummary.heading", "Order summary")}</h2>
+      <p className="mt-1 text-xs text-default-500">
+        {summary?.original
+          ? t("orderMoneySummary.checkoutNote", "For the whole order, as placed")
+          : t("orderMoneySummary.currentNote", "For the whole order")}
+      </p>
+      <dl className="mt-3 space-y-2 text-sm">
+        {lines.filter((line) => line.amount != null && (line.always || line.amount > 0)).map((line) => (
+          <div key={line.label} className="flex justify-between gap-4">
+            <dt className="text-default-500">{line.label}</dt>
+            <dd className="text-end font-medium">{line.discount ? "− " : ""}{formatPrice(line.amount)}</dd>
+          </div>
+        ))}
+        <div className="flex justify-between gap-4 border-t border-divider pt-3 font-semibold">
+          <dt>{t("orderMoneySummary.total", "Order total")}</dt>
+          <dd>{formatPrice(breakdown.order_total)}</dd>
+        </div>
+        {summary?.total_changed && (
+          <>
+            <div>
+              <dt>
+                <details className="rounded-small bg-default-50 p-3">
+                  <summary className="cursor-pointer text-sm font-medium">
+                    <span className="ms-1">{t("orderMoneySummary.adjustments", "Order adjustments")}</span>
+                    <span className="float-end font-medium">{formatPrice(summary.current.order_total - breakdown.order_total)}</span>
+                  </summary>
+                  <ul className="mt-3 space-y-2 border-t border-divider pt-3 text-xs">
+                    {adjustments.length === 0 && <li className="flex justify-between gap-4">
+                      <span>{t("orderMoneySummary.total", "Order total")}</span>
+                      <span>{formatPrice(summary.current.order_total - breakdown.order_total)}</span>
+                    </li>}
+                    {adjustments.map((line) => <li key={line.key} className="flex justify-between gap-4">
+                      <span className="text-default-500">{line.label}</span>
+                      <span>{line.change > 0 ? "+ " : ""}{formatPrice(line.change)}</span>
+                    </li>)}
+                    {(order.items ?? []).filter((item) => (item.quantity_summary?.cancelled ?? 0) > 0).map((item) => <li key={item.id} className="text-default-500">
+                      {item.title} · {t("orderQuantities.cancelled", "Cancelled")}: {item.quantity_summary?.cancelled}
+                    </li>)}
+                  </ul>
+                </details>
+              </dt>
+              <dd className="sr-only">{formatPrice(summary.current.order_total - breakdown.order_total)}</dd>
+            </div>
+            <div className="flex justify-between gap-4 font-semibold">
+              <dt>{t("orderMoneySummary.updatedTotal", "Updated total")}</dt>
+              <dd>{formatPrice(summary.current.order_total)}</dd>
+            </div>
+          </>
+        )}
+      </dl>
+      {summary && (summary.refund_issued > 0 || summary.refund_owed > 0) && (
+        <dl className="mt-3 space-y-2 border-t border-divider pt-3 text-sm">
+          {summary.refund_issued > 0 && (
+            <div className="flex justify-between gap-4">
+              <dt>{t("orderMoneySummary.refunded", "Refunds sent")}</dt>
+              <dd className="font-medium">{formatPrice(summary.refund_issued)}</dd>
+            </div>
+          )}
+          {summary.refund_owed > 0 && (
+            <div className="flex justify-between gap-4">
+              <dt>{t("orderMoneySummary.pending", "Refunds pending")}</dt>
+              <dd className="font-medium">{formatPrice(summary.refund_owed)}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </Card>
+  );
+}
