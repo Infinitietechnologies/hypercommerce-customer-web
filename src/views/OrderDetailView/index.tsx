@@ -31,7 +31,7 @@ import OrderAttachments from "./OrderAttachments";
 import ShippingInfo from "./ShippingInfo";
 import DeliveryInfo from "./DeliveryInfo";
 import ReturnSheet from "./ReturnSheet";
-import { deliveryTimeline, deliveryMilestones, flattenTimeline, getItemTimeline } from "./timeline";
+import { backendTimelineViews, getItemTimeline } from "./timeline";
 import OrderTimeline from "./OrderTimeline";
 import { timelineLabels } from "./timeline";
 import ItemAdjustmentDetails from "./ItemAdjustmentDetails";
@@ -139,10 +139,8 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
     (r) => r.return_status !== "cancelled" && r.return_status !== "declined",
   );
   const allSteps = getItemTimeline(selected, order.refunds, (key) => t(key, { defaultValue: timelineLabels[key] || key }), order.payment_method);
-  const deliverySteps = deliveryTimeline(allSteps, selected);
-  const mainSteps = selected.tracking?.milestones ?? deliveryMilestones(deliverySteps);
+  const { main: mainSteps, details: timelineEvents } = backendTimelineViews(selected);
   const showQuantity = selected.quantity_summary?.ordered !== 1;
-  const timelineEvents = selected.tracking?.history ?? flattenTimeline(deliverySteps);
   const currentStatus = selected.customer_status;
   const addons = selected.addons ?? [];
   const attachments = selected.attachments ?? [];
@@ -254,7 +252,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 size="sm"
                 radius="full"
                 variant="flat"
-                color={orderStatusColorMap(currentStatus?.code)}
+                color={orderStatusColorMap(selected.tracking?.status.code || currentStatus?.code)}
                 classNames={{ content: "text-[11px] font-semibold" }}
               >
                 {selected.tracking?.status.label || currentStatus?.label || selected.status_label}
@@ -269,7 +267,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                     <div className="text-sm font-semibold">
                       {selected.tracking?.status.label || [...mainSteps].reverse().find((step) => step.done)?.label || currentStatus.label}
                     </div>
-                    {showQuantity && <div className="text-xs text-default-500">{t("orderUpdates.deliveryQuantity", { count: selected.quantity_summary?.current ?? selected.quantity, defaultValue: "Delivery · Qty: {{count}}" })}</div>}
+                    {showQuantity && (selected.quantity_summary?.current ?? selected.quantity) > 0 && <div className="text-xs text-default-500">{t("orderUpdates.deliveryQuantity", { count: selected.quantity_summary?.current ?? selected.quantity, defaultValue: "Delivery · Qty: {{count}}" })}</div>}
                   </div>
                   <button
                     type="button"
@@ -487,7 +485,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             timelineSheet.isOpen && <div className="space-y-4">
               {selected.tracking && <p className="text-sm font-semibold">{selected.tracking.status.label}</p>}
               <OrderTimeline key={selected.id} events={timelineEvents} formatPrice={formatPrice} showQuantity={showQuantity} />
-              {selected.tracking?.exceptions.map((exception) => <p key={exception.code} role="status" className={`rounded-small p-3 text-xs ${exception.tone === "danger" ? "bg-danger-50 text-danger" : "bg-warning-50 text-warning-700"}`}>{exception.label}</p>)}
+              {selected.tracking?.exceptions.filter((exception) => !timelineEvents.some((event) => event.code === exception.code && event.done)).map((exception) => <p key={exception.code} role="status" className={`rounded-small p-3 text-xs ${exception.tone === "danger" ? "bg-danger-50 text-danger" : "bg-warning-50 text-warning-700"}`}>{exception.label}</p>)}
               <ItemAdjustmentDetails item={selected} refunds={order.refunds} steps={allSteps} formatPrice={formatPrice} />
             </div>
           )}

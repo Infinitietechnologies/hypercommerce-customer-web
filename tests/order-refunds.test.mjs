@@ -328,6 +328,49 @@ test("adjustment disclosure shows individual subtotal and discount changes", () 
   assert.match(html, /\+ INR 10/);
 });
 
+test("full backend timeline includes future events in backend order despite history-only tracking", () => {
+  const steps = [
+    { key: "placed", done: true, at: "2026-09-15", events: [{ code: "order_placed", label: "Placed", done: true, at: "2026-09-15", is_exception: false }] },
+    ...["confirmed", "preparing", "shipped", "delivered"].map((key) => ({ key, label: key, done: false, at: null,
+      events: [{ code: key, label: key, done: false, at: null, is_exception: false }] })),
+    { key: "cancelled", done: true, at: "2026-09-14", events: [{ code: "cancelled", label: "Cancelled", done: true, at: "2026-09-14", is_exception: false }] },
+  ];
+  const result = timeline.backendTimelineViews({ timeline: steps, tracking: { history: [steps[0].events[0]], milestones: [] } });
+  assert.equal(JSON.stringify(result.details), JSON.stringify(steps.flatMap((step) => step.events)));
+  assert.equal(JSON.stringify(result.main.map((step) => step.key)), JSON.stringify(["confirmed", "preparing", "shipped", "delivered"]));
+  assert.equal(result.main[0], steps[1]);
+  assert.equal(result.details.at(-1).code, "cancelled");
+});
+
+test("cancelled outside tracker keeps placed confirmed and the red cancellation milestone", () => {
+  const steps = ["placed", "confirmed", "cancelled"].map((key) => ({ key, label: key, done: true, at: "2026-09-15", events: [] }));
+  const result = timeline.backendTimelineViews({ status: "cancelled", timeline: steps });
+  assert.equal(JSON.stringify(result.main.map((step) => step.key)), JSON.stringify(["placed", "confirmed", "cancelled"]));
+  assert.equal(result.main[2], steps[2]);
+  assert.equal(timeline.timelineTone(result.main[2].key, result.main[2].done, false), "cancelled");
+  assert.equal(result.details.length, 3);
+});
+
+test("cancelled compact tracker includes backend refund and stays within four milestones", () => {
+  const steps = ["placed", "confirmed", "preparing", "shipped", "cancelled", "refunded"].map((key) => ({ key, done: key !== "refunded", at: null, events: [] }));
+  const cancelled = timeline.backendTimelineViews({ quantity_summary: { current: 0 }, timeline: steps });
+  assert.equal(cancelled.main.length, 4);
+  assert.equal(cancelled.main.at(-2).key, "cancelled");
+  assert.equal(cancelled.main.at(-1).key, "refunded");
+  assert.equal(cancelled.main.at(-1).done, false);
+  assert.equal(cancelled.details.length, 6);
+  const partial = timeline.backendTimelineViews({ status: "active", quantity_summary: { current: 1, cancelled: 1 }, timeline: steps });
+  assert.equal(partial.main.some((step) => step.key === "cancelled"), false);
+});
+
+test("backend steps without events remain visible and empty backend timelines stay empty", () => {
+  const result = timeline.backendTimelineViews({ timeline: [{ key: "preparing", label: "Preparing", done: false, at: null, events: [] }] });
+  assert.equal(result.details[0].label, "Preparing");
+  assert.equal(result.details[0].done, false);
+  assert.equal(timeline.backendTimelineViews({ timeline: [], tracking: { history: [{ code: "stale" }] } }).details.length, 0);
+  assert.equal(timeline.backendTimelineViews({ delivery_timeline: [{ key: "shipped", done: true, at: null, events: [] }] }).main.length, 1);
+});
+
 test("API-owned tracking bypasses legacy timeline reconstruction", () => {
   const adjustments = [{ key: "cancelled", label: "Cancelled", done: true, at: null, events: [] }];
   const result = timeline.getItemTimeline({
@@ -363,6 +406,7 @@ test("rendered timeline keeps future labels visible and completed terminal nodes
     "./OrderTimeline.module.css": { default: {} },
   }).default;
   const pending = renderToStaticMarkup(React.createElement(Component, { steps: timeline.compactTimeline(progress()) }));
+  assert.doesNotMatch(pending, /border-primary|border-warning/);
   assert.match(pending, /shipped/);
   assert.match(pending, /delivered/);
   assert.equal((pending.match(/data-state="upcoming"/g) || []).length, 2);
@@ -380,6 +424,7 @@ test("rendered timeline keeps future labels visible and completed terminal nodes
   assert.doesNotMatch(single, /orderRefunds.quantity/);
   assert.match(single, /INR 100/);
   assert.match(single, /orderRefunds.method.wallet/);
+  assert.match(single, /--duration:1500ms/);
 });
 
 test("legacy timelines do not promise return receipt or refunds for abandoned requests", () => {

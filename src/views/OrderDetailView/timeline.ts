@@ -198,6 +198,29 @@ export function deliveryMilestones(steps: TimelineStep[]): TimelineStep[] {
   return steps.filter((step) => ["confirmed", "preparing", "shipped", "delivered"].includes(step.key));
 }
 
+export function backendTimelineViews(item: OrderItem): { main: TimelineStep[]; details: TimelineEvent[] } {
+  const steps = item.timeline ?? item.delivery_timeline ?? item.tracking?.milestones;
+  if (!steps) return { main: [], details: item.tracking?.history ?? [] };
+  const fullyCancelled = item.status === "cancelled" || item.quantity_summary?.current === 0 || item.tracking?.status?.code === "cancelled";
+  const cancellationIndex = steps.findIndex((step) => step.key === "cancelled" && step.done);
+  let main = deliveryMilestones(steps);
+  if (fullyCancelled && cancellationIndex >= 0) {
+    const ending = steps.slice(cancellationIndex).filter((step) => ["cancelled", "refunded"].includes(step.key)).slice(0, 2);
+    const completed = steps.slice(0, cancellationIndex).filter((step) => step.done && ["placed", "confirmed", "preparing", "shipped", "delivered"].includes(step.key));
+    main = [...completed.slice(-(4 - ending.length)), ...ending];
+  }
+  return {
+    main,
+    details: steps.flatMap((step) => step.events?.length ? step.events : [{
+      code: step.key,
+      label: step.label || step.key,
+      done: step.done,
+      at: step.at,
+      is_exception: false,
+    }]),
+  };
+}
+
 /**
  * Flatten the backend's grouped tracker steps into a single ordered event list
  * for the vertical timeline. Each step carries one or more events (e.g. the

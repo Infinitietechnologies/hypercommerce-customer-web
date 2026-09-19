@@ -8,7 +8,7 @@ import styles from "./OrderTimeline.module.css";
 const tones = {
   completed: "border-success bg-success",
   upcoming: "border-default-300 bg-content1",
-  active: "border-primary bg-content1",
+  active: "border-default-300 bg-content1",
   cancelled: "border-danger bg-danger",
   failed: "border-danger bg-danger",
   warning: "border-warning bg-warning",
@@ -40,7 +40,7 @@ export default function OrderTimeline({ steps, events, formatPrice, showQuantity
         const active = status === "upcoming" && (milestone?.current ?? index === activeIndex);
         const tone = active ? "active" : status;
         return (
-          <li key={entry.code} className={styles.entry} aria-current={active ? "step" : undefined} data-state={tone}
+          <li key={`${entry.code}-${index}`} className={styles.entry} aria-current={active ? "step" : undefined} data-state={tone}
             style={{ "--duration": `${1500 / Math.max(lastDone + 1, 1)}ms`, "--delay": `${index * 1500 / Math.max(lastDone + 1, 1)}ms` } as CSSProperties}>
             {index < entries.length - 1 && <span className={`${styles.connector} bg-default-200`} aria-hidden="true">
               {entry.done && entries[index + 1].done && <span className={`${styles.fill} ${status === "completed" ? "bg-success" : "bg-danger"}`} />}
