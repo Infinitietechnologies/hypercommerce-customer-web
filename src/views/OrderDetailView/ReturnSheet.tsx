@@ -48,6 +48,10 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
 
   const [reasonCode, setReasonCode] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const shipments = item.returnable_shipments ?? [];
+  const [shipmentId, setShipmentId] = useState<number | null>(shipments.length === 1 ? shipments[0].id : null);
+  const selectedShipment = shipments.find((shipment) => shipment.id === shipmentId);
+  const availableQuantity = shipments.length ? (selectedShipment?.quantity ?? 0) : item.quantity;
   const [remark, setRemark] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -57,6 +61,7 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
   const reset = () => {
     setReasonCode("");
     setQuantity(1);
+    setShipmentId(shipments.length === 1 ? shipments[0].id : null);
     setRemark("");
     setImages([]);
   };
@@ -84,6 +89,10 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
   };
 
   const submit = async () => {
+    if (availableQuantity < 1) {
+      toastError(t("pages.order.selectReturnShipment", "Select a delivered shipment to return."));
+      return;
+    }
     if (!reasonCode) {
       toastError(t("pages.order.selectReason", "Please select a return reason."));
       return;
@@ -101,7 +110,8 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
       setSubmitting(true);
       const res = await returnOrderItem({
         orderItemId: String(item.id),
-        quantity: Math.min(quantity, item.quantity),
+        shipment_id: shipmentId ?? undefined,
+        quantity: Math.min(quantity, availableQuantity),
         reason_code: reasonCode,
         reason: remark.trim() || undefined,
         images: images.length ? images : undefined,
@@ -147,17 +157,39 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
           {item.product?.name || item.title}
         </div>
 
-        {item.quantity > 1 && (
+        {shipments.some((shipment) => shipment.id !== null) && (
+          <Select
+            label={t("pages.order.returnShipment", "Shipment to return")}
+            labelPlacement="outside"
+            placeholder={t("pages.order.selectReturnShipment", "Select a delivered shipment to return")}
+            selectedKeys={shipmentId !== null ? [String(shipmentId)] : []}
+            onChange={(e) => {
+              setShipmentId(e.target.value ? Number(e.target.value) : null);
+              setQuantity(1);
+            }}
+            disallowEmptySelection
+            isRequired
+            isDisabled={submitting}
+          >
+            {shipments.filter((shipment) => shipment.id !== null).map((shipment) => (
+              <SelectItem key={String(shipment.id)} textValue={`Shipment #${shipment.id}`}>
+                {`Shipment #${shipment.id}`}{shipment.carrier_name ? ` · ${shipment.carrier_name}` : ""}{shipment.tracking_number ? ` · ${shipment.tracking_number}` : ""} · {t("qty")}: {shipment.quantity}
+              </SelectItem>
+            ))}
+          </Select>
+        )}
+
+        {availableQuantity > 1 && (
           <Select
             label={t("quantity")}
             labelPlacement="outside"
-            selectedKeys={[String(Math.min(quantity, item.quantity))]}
+            selectedKeys={[String(Math.min(quantity, availableQuantity))]}
             onChange={(e) => setQuantity(Number(e.target.value) || 1)}
             disallowEmptySelection
             isRequired
             isDisabled={submitting}
           >
-            {Array.from({ length: item.quantity }, (_, i) => i + 1).map((qty) => (
+            {Array.from({ length: availableQuantity }, (_, i) => i + 1).map((qty) => (
               <SelectItem key={String(qty)} textValue={String(qty)}>
                 {qty}
               </SelectItem>

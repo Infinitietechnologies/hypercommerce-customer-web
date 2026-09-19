@@ -194,6 +194,8 @@ export interface TimelineEvent {
     amount?: number;
     refund_method?: string;
     status?: string;
+    shipment_id?: number;
+    return_id?: number;
   };
 }
 
@@ -215,6 +217,8 @@ export interface TimelineStep {
 export interface OrderItemReturnRequest {
   id: number;
   order_item_id: number;
+  source_shipment_id?: number | null;
+  source_shipment?: { id: number; tracking_number: string | null; carrier_name: string | null } | null;
   order_id: number;
   user_id: number;
   seller_id: number;
@@ -346,6 +350,7 @@ export interface OrderItem {
 
   return_eligible: boolean;
   can_return: boolean;
+  returnable_shipments?: { id: number | null; quantity: number; carrier_name: string | null; tracking_number: string | null }[];
   return_deadline: string | null;
   returns: OrderItemReturnRequest[];
   attachments: string[];

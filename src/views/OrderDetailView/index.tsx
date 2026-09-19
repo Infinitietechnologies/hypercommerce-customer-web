@@ -102,6 +102,8 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
     );
 
   const [reordering, setReordering] = useState(false);
+  const [cancelItemId, setCancelItemId] = useState<number | null>(null);
+  const [returnItemId, setReturnItemId] = useState<number | null>(null);
   const timelineSheet = useDisclosure();
   const cancelSheet = useDisclosure();
   const returnSheet = useDisclosure();
@@ -135,9 +137,8 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
     );
   }
 
-  const activeReturn = selected.returns?.find(
-    (r) => r.return_status !== "cancelled" && r.return_status !== "declined",
-  );
+  const cancelItem = items.find((item) => item.id === cancelItemId);
+  const returnItem = items.find((item) => item.id === returnItemId);
   const allSteps = getItemTimeline(selected, order.refunds, (key) => t(key, { defaultValue: timelineLabels[key] || key }), order.payment_method);
   const { main: mainSteps, details: timelineEvents } = backendTimelineViews(selected);
   const showQuantity = selected.quantity_summary?.ordered !== 1;
@@ -311,17 +312,23 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 size="md"
                 variant="bordered"
                 startContent={<Icon icon="solar:close-circle-linear" />}
-                onPress={cancelSheet.onOpen}
+                onPress={() => {
+                  setCancelItemId(selected.id);
+                  cancelSheet.onOpen();
+                }}
               >
                 {t("cancel")}
               </Button>
             )}
-            {selected.can_return && !activeReturn && (
+            {selected.can_return && (
               <Button
                 size="md"
                 variant="bordered"
                 startContent={<Icon icon="solar:refresh-linear" />}
-                onPress={returnSheet.onOpen}
+                onPress={() => {
+                  setReturnItemId(selected.id);
+                  returnSheet.onOpen();
+                }}
               >
                 {t("return")}
               </Button>
@@ -493,20 +500,20 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
       </Sheet>
 
       {/* Mutations reuse the existing sheets/modals (services already wired). */}
-      <CancelItemSheet
-        key={selected.id}
+      {cancelItem && <CancelItemSheet
+        key={cancelItem.id}
         isOpen={cancelSheet.isOpen}
-        onClose={cancelSheet.onClose}
-        item={selected}
-        onDone={() => { cancelSheet.onClose(); router.replace(router.asPath); }}
-      />
-      <ReturnSheet
-        key={`return-${selected.id}`}
+        onClose={() => { cancelSheet.onClose(); setCancelItemId(null); }}
+        item={cancelItem}
+        onDone={() => { cancelSheet.onClose(); setCancelItemId(null); router.replace(router.asPath); }}
+      />}
+      {returnItem && <ReturnSheet
+        key={`return-${returnItem.id}`}
         isOpen={returnSheet.isOpen}
-        onClose={returnSheet.onClose}
-        item={selected}
+        onClose={() => { returnSheet.onClose(); setReturnItemId(null); }}
+        item={returnItem}
         onDone={() => router.replace(router.asPath)}
-      />
+      />}
       {selected.product_id && (
         <RatingModal
           isOpen={ratingSheet.isOpen}

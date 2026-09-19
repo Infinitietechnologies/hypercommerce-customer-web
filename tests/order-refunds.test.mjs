@@ -342,6 +342,20 @@ test("full backend timeline includes future events in backend order despite hist
   assert.equal(result.details.at(-1).code, "cancelled");
 });
 
+test("recorded split-shipment returns stay at quantity one and follow event time", () => {
+  const event = (code, at, shipment_id) => ({ code, label: code, done: true, at, is_exception: false, meta: { quantity: 1, shipment_id } });
+  const activity = [
+    event("return_104_requested", "2026-09-19T10:17:43+05:30", 104),
+    event("refund_1", "2026-09-19T10:09:55+05:30", 102),
+    event("return_102_approved", "2026-09-19T10:09:15+05:30", 102),
+    event("return_102_requested", "2026-09-19T10:07:56+05:30", 102),
+  ];
+  const result = timeline.backendTimelineViews({ timeline: [], activity });
+  assert.equal(JSON.stringify(result.details.map((entry) => entry.code)), JSON.stringify(["return_102_requested", "return_102_approved", "refund_1", "return_104_requested"]));
+  assert.equal(JSON.stringify(result.details.map((entry) => entry.meta.quantity)), JSON.stringify([1, 1, 1, 1]));
+  assert.equal(JSON.stringify(result.details.map((entry) => entry.meta.shipment_id)), JSON.stringify([102, 102, 102, 104]));
+});
+
 test("cancelled outside tracker keeps placed confirmed and the red cancellation milestone", () => {
   const steps = ["placed", "confirmed", "cancelled"].map((key) => ({ key, label: key, done: true, at: "2026-09-15", events: [] }));
   const result = timeline.backendTimelineViews({ status: "cancelled", timeline: steps });
@@ -396,6 +410,42 @@ test("backend current flags are respected on hold and partial progress", () => {
   steps[1].current = true;
   assert.match(renderToStaticMarkup(React.createElement(Component, { steps })), /aria-current="step"/);
   assert.doesNotMatch(renderToStaticMarkup(React.createElement(Component, { steps, showQuantity: false })), /1 of 3/);
+});
+
+test("split shipment details retain both parcels and their safe tracking links", () => {
+  const Component = load("../src/views/OrderDetailView/OrderTimeline.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key, values) => values?.defaultValue?.replace("{{count}}", values.count) || key }) },
+    "@/helpers/getters": { getFormattedDate: (value) => value },
+    "./timeline": timeline,
+    "./OrderTimeline.module.css": { default: {} },
+  }).default;
+  const events = ["first", "second"].map((parcel) => ({ code: "shipped", label: "Shipped", done: true, at: null, is_exception: false,
+    meta: { quantity: 1, courier: parcel, tracking_id: parcel.toUpperCase(), tracking_url: `https://example.test/${parcel}` } }));
+  const html = renderToStaticMarkup(React.createElement(Component, { events }));
+  assert.match(html, /first · FIRST/);
+  assert.match(html, /second · SECOND/);
+  assert.equal((html.match(/Qty: 1/g) || []).length, 2);
+  assert.match(html, /href="https:\/\/example.test\/first"/);
+  assert.match(html, /href="https:\/\/example.test\/second"/);
+  assert.equal((html.match(/rel="noopener noreferrer"/g) || []).length, 2);
+  events[0].meta.tracking_url = "javascript:alert(1)";
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Component, { events })), /javascript:/);
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Component, { events, showQuantity: false })), /Qty:/);
+});
+
+test("recorded shipment activity keeps its tracking link in full updates", () => {
+  const Component = load("../src/views/OrderDetailView/OrderTimeline.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
+    "@/helpers/getters": { getFormattedDate: (value) => value },
+    "./timeline": timeline,
+    "./OrderTimeline.module.css": { default: {} },
+  }).default;
+  const activity = [{ code: "shipment_42_confirmed", label: "Shipped", done: true, at: "2026-09-19T10:00:00+05:30", is_exception: false,
+    meta: { shipment_id: 42, quantity: 1, courier: "UPS", tracking_id: "123", tracking_url: "https://example.test/track/123" } }];
+  const { details } = timeline.backendTimelineViews({ timeline: [], activity });
+  const html = renderToStaticMarkup(React.createElement(Component, { events: details }));
+  assert.match(html, /Shipment #42/);
+  assert.match(html, /href="https:\/\/example.test\/track\/123"/);
 });
 
 test("rendered timeline keeps future labels visible and completed terminal nodes are not active", () => {
@@ -458,7 +508,7 @@ test("return history keeps declined and cancelled requests and shows their indiv
   }).default;
   const html = renderToStaticMarkup(React.createElement(Component, {
     returns: [
-      { id: 1, quantity: 1, return_status: "declined", customer_status: { label: "Declined" }, created_at: "first-date", reason: "Wrong size" },
+      { id: 1, quantity: 1, source_shipment_id: 31, source_shipment: { id: 31, carrier_name: "Carrier A", tracking_number: "TRACK-A" }, return_status: "declined", customer_status: { label: "Declined" }, created_at: "first-date", reason: "Wrong size" },
       { id: 2, quantity: 2, return_status: "cancelled", customer_status: { label: "Cancelled" }, created_at: "second-date", reason: "Changed mind" },
     ], showRefundAmount: false, formatPrice: String,
   }));
@@ -467,7 +517,10 @@ test("return history keeps declined and cancelled requests and shows their indiv
   assert.match(html, /qty: 1/);
   assert.match(html, /qty: 2/);
   assert.match(html, /Wrong size/);
+  assert.match(html, /Shipment.*#31/);
+  assert.match(html, /TRACK-A/);
   assert.equal((html.match(/<details/g) || []).length, 2);
+  assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
 });
 
 test("cancellation confirmation submits only the selected item and displays eligible quantity", async () => {

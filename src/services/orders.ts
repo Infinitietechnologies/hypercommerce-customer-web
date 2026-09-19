@@ -73,6 +73,7 @@ export const returnOrderItem = async (
     reason_code?: string;
     reason?: string;
     quantity?: number;
+    shipment_id?: number;
     images?: File[];
   } = {},
 ): Promise<ApiResponse<[]>> => {
@@ -90,6 +91,9 @@ export const returnOrderItem = async (
     }
     if (params.quantity != null) {
       formData.append("quantity", String(params.quantity));
+    }
+    if (params.shipment_id != null) {
+      formData.append("shipment_id", String(params.shipment_id));
     }
 
     if (params?.images && params.images.length > 0) {
@@ -118,12 +122,14 @@ export const returnOrderItem = async (
 export const cancelReturnReq = async (
   params: {
     orderItemId?: string;
+    returnId?: number;
   } = {},
 ): Promise<ApiResponse<[]>> => {
   try {
-    const { orderItemId } = params;
+    const { orderItemId, returnId } = params;
     const response = await api.post(
       `/user/orders/items/${orderItemId}/return-cancel`,
+      returnId ? { return_id: returnId } : {},
     );
     return response.data;
   } catch (error) {

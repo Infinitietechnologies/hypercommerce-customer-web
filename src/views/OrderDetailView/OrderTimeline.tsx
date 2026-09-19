@@ -59,9 +59,15 @@ export default function OrderTimeline({ steps, events, formatPrice, showQuantity
                   !compact && entry.meta.refund_method ? t(`orderRefunds.method.${entry.meta.refund_method}`) : null,
                 ].filter(Boolean).join(" · ")}
               </div>}
-              {!compact && entry.meta?.tracking_id && <div className="break-all text-xs text-default-500">
-                {entry.meta.courier ? `${entry.meta.courier} · ` : ""}{entry.meta.tracking_id}
+              {!compact && (entry.meta?.shipment_id || entry.meta?.tracking_id || entry.meta?.courier) && <div className="break-all text-xs text-default-500">
+                {[entry.meta.shipment_id ? `${t("pages.order.returnShipment", "Shipment")} #${entry.meta.shipment_id}` : null, entry.meta.courier, entry.meta.tracking_id].filter(Boolean).join(" · ")}
               </div>}
+              {!compact && entry.meta?.tracking_url && /^https?:\/\//i.test(entry.meta.tracking_url) && <a
+                href={entry.meta.tracking_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex text-xs font-medium text-primary underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              >{t("track")}</a>}
             </div>
           </li>
         );

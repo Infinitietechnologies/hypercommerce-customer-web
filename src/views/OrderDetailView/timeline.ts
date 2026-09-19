@@ -209,16 +209,19 @@ export function backendTimelineViews(item: OrderItem): { main: TimelineStep[]; d
     const completed = steps.slice(0, cancellationIndex).filter((step) => step.done && ["placed", "confirmed", "preparing", "shipped", "delivered"].includes(step.key));
     main = [...completed.slice(-(4 - ending.length)), ...ending];
   }
-  return {
-    main,
-    details: steps.flatMap((step) => step.events?.length ? step.events : [{
+  const recorded = item.activity;
+  const details = recorded?.length ? [...recorded].sort((a, b) => {
+    if (!a.at) return 1;
+    if (!b.at) return -1;
+    return Date.parse(a.at) - Date.parse(b.at);
+  }) : steps.flatMap((step) => step.events?.length ? step.events : [{
       code: step.key,
       label: step.label || step.key,
       done: step.done,
       at: step.at,
       is_exception: false,
-    }]),
-  };
+    }]);
+  return { main, details };
 }
 
 /**
