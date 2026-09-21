@@ -46,7 +46,7 @@ const mocks = {
   "./ShippingInfo": { default: stub },
   "./DeliveryInfo": { default: stub },
   "./ReturnSheet": { default: ReturnSheet },
-  "./timeline": { backendTimelineViews: () => ({ main: [], details: [] }), getItemTimeline: () => [], timelineLabels: {} },
+  "./timeline": { backendTimelineViews: () => ({ main: [], details: [] }), getItemTimeline: () => [] },
   "./OrderTimeline": { default: stub },
   "./ItemAdjustmentDetails": { default: stub },
   "./ItemQuantityDetails": { default: stub },

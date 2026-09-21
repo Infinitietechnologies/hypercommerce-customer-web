@@ -10,30 +10,17 @@ export interface CustomerStatus {
   is_exception: boolean;
 }
 
-/** A parcel/shipment on a seller-order (replaces delivery-boy live tracking). */
-
-/** A parcel/shipment on a seller-order (replaces delivery-boy live tracking). */
 export interface OrderShipment {
   id: number;
-  seller_order_id: number;
   status: string;
-  status_label: string;
   customer_status: string;
   customer_status_label: string;
-  customer_status_stage: string;
-  provider_code: string | null;
   carrier_name: string | null;
   tracking_number: string | null;
   tracking_url: string | null;
-  fulfillment_status: string;
+  quantity: number;
   picked_up_at: string | null;
   delivered_at: string | null;
-  products: {
-    order_item_id: number;
-    title: string | null;
-    variant: string | null;
-    quantity: number;
-  }[];
 }
 
 export interface PaymentInitiationResponse {
@@ -68,6 +55,19 @@ export interface OrderMoneyBreakdown {
   payable_amount?: number;
 }
 
+export interface OrderSummarySnapshot {
+  base_currency?: OrderMoneyBreakdown;
+  converted_currency?: OrderMoneyBreakdown;
+  fx_settings?: {
+    market_id?: number | null;
+    market_name?: string | null;
+    currency_code?: string;
+    currency_rate?: number;
+    currency_symbol?: string;
+    format_rules?: MarketFormat | null;
+  };
+}
+
 export interface OrderRefund {
   id: number;
   amount: number;
@@ -82,13 +82,7 @@ export interface OrderRefund {
 }
 
 export interface Order {
-  money_summary?: {
-    original: OrderMoneyBreakdown | null;
-    current: OrderMoneyBreakdown;
-    total_changed: boolean;
-    refund_issued: number;
-    refund_owed: number;
-  };
+  order_summary?: OrderSummarySnapshot | null;
   refunds?: OrderRefund[];
   id: number;
   uuid: string;
@@ -110,8 +104,6 @@ export interface Order {
   fulfillment_status_label: string;
   /** Customer-friendly headline + canonical tracker (derived). */
   customer_status: CustomerStatus;
-  /** Per-shipment tracking, flattened across the order's seller orders. */
-  shipments?: OrderShipment[];
   invoice: string;
   /** @deprecated delivery-boy model removed — null stubs from the backend. */
   fulfillment_type?: string;
@@ -236,8 +228,6 @@ export interface OrderItemReturnRequest {
   return_status: string;
   /** Shopper-facing return status (code/label/stage). */
   customer_status?: CustomerStatus;
-  /** Return-specific tracker steps. */
-  return_timeline?: TimelineStep[];
   seller_approved_at: string | null;
   picked_up_at: string | null;
   received_at: string | null;
@@ -285,20 +275,13 @@ export interface OrderItem {
   status_label: string;
   /** Shopper-facing derived status for this item. */
   customer_status: CustomerStatus;
-  /** Per-item tracker steps (scoped to this item's parcel + return/refund). */
-  timeline?: TimelineStep[];
-  delivery_timeline?: TimelineStep[];
   tracking?: {
     version: 1;
-    status: { code: string; label: string };
     milestones: TimelineStep[];
     history: TimelineEvent[];
     exceptions: { code: string; label: string; at: string | null; tone: "warning" | "danger" }[];
-    adjustments: TimelineStep[];
-    cancellation: { allowed: boolean; quantity: number; reason: string | null };
-    quantities: { ordered: number | null; current: number; cancelled: number | null; allocated: number; committed: number; shipped: number; delivered: number; unshipped: number; return_requested: number; return_received: number; on_hold: boolean; preparing: boolean };
   };
-  activity?: TimelineEvent[];
+  shipments?: OrderShipment[];
   can_cancel: boolean;
   cancelable_quantity: number;
   /** Snapshot ETA + upcoming delivery-date window. */
@@ -309,18 +292,6 @@ export interface OrderItem {
     from: string;
     to: string;
     unit: string;
-  } | null;
-  /** Active (non-cancelled) shipment for this item; null when not yet shipped. */
-  shipment?: {
-    id: number;
-    status: string;
-    customer_status: string | null;
-    customer_status_label: string | null;
-    carrier_name: string | null;
-    tracking_number: string | null;
-    tracking_url: string | null;
-    picked_up_at: string | null;
-    delivered_at: string | null;
   } | null;
   otp: string | null;
   otp_verified: number;

@@ -1,4 +1,4 @@
-import { Order, OrderShipment } from "@/types/ApiResponse";
+import type { OrderItem } from "@/types/ApiResponse";
 import { Card, CardBody, CardHeader, Chip, Divider } from "@/components/ui";
 import { Icon } from "@iconify/react";
 import { getFormattedDate } from "@/helpers/getters";
@@ -7,23 +7,13 @@ import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
 
 interface DeliveryInfoProps {
-  order: Order;
-  itemId: number;
-}
-
-export function shipmentsForItem(shipments: OrderShipment[], itemId: number): OrderShipment[] {
-  return shipments
-    .filter((shipment) => shipment.products.some((product) => product.order_item_id === itemId))
-    .map((shipment) => ({
-      ...shipment,
-      products: shipment.products.filter((product) => product.order_item_id === itemId),
-    }));
+  item: OrderItem;
 }
 
 // DeliveryInfo — per-shipment tracking view (replaces delivery-boy tracking).
-const DeliveryInfo: FC<DeliveryInfoProps> = ({ order, itemId }) => {
+const DeliveryInfo: FC<DeliveryInfoProps> = ({ item }) => {
   const { t } = useTranslation();
-  const shipments = shipmentsForItem(order.shipments ?? [], itemId);
+  const shipments = item.shipments ?? [];
 
   return (
     <Card shadow="none" radius="lg" className="border border-divider">
@@ -48,7 +38,7 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order, itemId }) => {
           <div className="space-y-3">
             {shipments.map((shipment) => {
               const statusText =
-                shipment.customer_status_label || shipment.status_label;
+                shipment.customer_status_label || shipment.status;
               return (
                 <div
                   key={shipment.id}
@@ -84,25 +74,13 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order, itemId }) => {
                     </Chip>
                   </div>
 
-                  {/* Parcel products */}
-                  {shipment.products.length > 0 && (
-                    <div className="space-y-1">
-                      {shipment.products.map((product, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between gap-3 text-sm leading-5 text-default-600"
-                        >
-                          <div className="min-w-0 break-words">
-                            <p className="font-medium text-foreground">{product.title || t("na")}</p>
-                            {product.variant && <p className="mt-0.5 text-xs text-default-500">{product.title && product.variant.startsWith(product.title) ? product.variant.slice(product.title.length).replace(/^\s*[-–—]\s*/, "") : product.variant}</p>}
-                          </div>
-                          <span className="shrink-0 text-xs font-medium text-default-500">
-                            × {product.quantity}
-                          </span>
-                        </div>
-                      ))}
+                  <div className="flex items-center justify-between gap-3 text-sm leading-5 text-default-600">
+                    <div className="min-w-0 break-words">
+                      <p className="font-medium text-foreground">{item.product?.name || item.title}</p>
+                      {item.variant_title && <p className="mt-0.5 text-xs text-default-500">{item.variant_title}</p>}
                     </div>
-                  )}
+                    <span className="shrink-0 text-xs font-medium text-default-500">× {shipment.quantity}</span>
+                  </div>
 
                   {/* Timestamps */}
                   {(shipment.picked_up_at || shipment.delivered_at) && (

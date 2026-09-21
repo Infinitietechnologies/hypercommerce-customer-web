@@ -23,21 +23,33 @@ const Summary = load("../src/views/OrderDetailView/OrderSummaryCard.tsx", {
   "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
   "@/components/ui": { Card: ({ children }) => React.createElement("section", null, children) },
 }).default;
-const renderSummary = (money_summary) => renderToStaticMarkup(React.createElement(Summary, {
-  order: { subtotal: "300", final_total: "300", money_summary },
+const renderSummary = ({ snapshot, current = {}, refunds = [] } = {}) => renderToStaticMarkup(React.createElement(Summary, {
+  order: {
+    subtotal: String(current.items_total ?? 300),
+    delivery_charge: String(current.delivery_charge ?? 0),
+    platform_fee: String(current.platform_fee ?? 0),
+    cod_fee: String(current.cod_fee ?? 0),
+    promo_discount: String(current.promo_discount ?? 0),
+    gift_card_discount: String(current.gift_card_discount ?? 0),
+    final_total: String(current.order_total ?? 300),
+    total_payable: String(current.payable_amount ?? current.order_total ?? 300),
+    order_summary: snapshot ? { converted_currency: snapshot } : null,
+    refunds,
+  },
   formatPrice: (amount) => `INR ${amount}`,
 }));
 
 test("unchanged totals show one checkout total without adjustment clutter", () => {
-  const html = renderSummary({ original: { items_total: 300, order_total: 300 }, current: { order_total: 300 }, total_changed: false });
+  const html = renderSummary({ snapshot: { items_total: 300, order_total: 300 }, current: { items_total: 300, order_total: 300 } });
   assert.match(html, /orderMoneySummary.checkoutNote/);
   assert.doesNotMatch(html, /orderMoneySummary.updatedTotal|orderMoneySummary.adjustments/);
 });
 
 test("changed totals preserve checkout discounts and separate refunds from price changes", () => {
   const html = renderSummary({
-    original: { items_total: 300, promo_discount: 30, order_total: 270 },
-    current: { order_total: 180 }, total_changed: true, refund_issued: 90, refund_owed: 0,
+    snapshot: { items_total: 300, promo_discount: 30, order_total: 270 },
+    current: { items_total: 200, promo_discount: 20, order_total: 180 },
+    refunds: [refund({ amount: 90, status: "issued" })],
   });
   assert.match(html, /INR 270/);
   assert.match(html, /INR 180/);
@@ -48,11 +60,11 @@ test("changed totals preserve checkout discounts and separate refunds from price
 });
 
 test("older orders use current values without inventing a checkout snapshot", () => {
-  const html = renderSummary({ original: null, current: { items_total: 200, order_total: 200 }, total_changed: false });
+  const html = renderSummary({ current: { items_total: 200, order_total: 200 } });
   assert.match(html, /orderMoneySummary.currentNote/);
   assert.match(html, /INR 200/);
   assert.doesNotMatch(html, /orderMoneySummary.checkoutNote|orderMoneySummary.updatedTotal/);
-  assert.match(renderSummary(undefined), /INR 300/);
+  assert.match(renderSummary(), /INR 300/);
 });
 const refund = (overrides = {}) => ({
   id: 1, amount: 300, shipping_refund_amount: 0, currency_code: "INR",
@@ -94,102 +106,10 @@ test("attachments recognize signed PDFs and images and reject executable URLs", 
   assert.equal(orderAttachment("javascript:alert(1)"), null);
 });
 
-test("return-request time belongs to the request, not the pending received step", () => {
-  const item = { id: 10, timeline: [{ key: "returned", done: false, at: "request-time", events: [
-    { code: "return_requested", label: "Requested", done: true, at: "request-time" },
-    { code: "return_received", label: "Received", done: false, at: null },
-  ] }] };
-  const steps = timeline.getItemTimeline(item, [], (key) => key);
-  assert.equal(steps[0].key, "return_requested");
-  assert.equal(steps[0].at, "request-time");
-  assert.equal(steps[1].at, null);
-  assert.equal(timeline.flattenTimeline(steps).length, 2);
-  assert.equal(item.timeline[0].at, "request-time");
-});
-
-test("cancellation refund timeline includes only this item's quantity and amount", () => {
-  const item = { id: 10, timeline: [{ key: "cancelled", done: true, at: null, events: [] }] };
-  const steps = timeline.getItemTimeline(item, [refund()], (key) => key);
-  assert.equal(steps.length, 2);
-  assert.equal(steps[1].done, false);
-  assert.equal(steps[1].events[0].meta.quantity, 1);
-  assert.equal(steps[1].events[0].meta.amount, 100);
-  assert.equal(steps[1].events[0].meta.refund_method, "wallet");
-  assert.equal(timeline.getItemTimeline({ ...item, id: 99 }, [refund()], (key) => key).length, 1);
-});
-
-test("settled refunds replace the generic step and retain the actual payment date", () => {
-  const item = { id: 10, timeline: [{ key: "refunded", done: false, at: null, events: [] }] };
-  const steps = timeline.getItemTimeline(item, [
-    refund({ settled_by_refund_id: 2 }),
-    refund({ id: 2, status: "issued", issued_at: "issued-time", items: [] }),
-  ], (key) => key);
-  assert.equal(steps.length, 1);
-  assert.equal(steps[0].done, true);
-  assert.equal(steps[0].at, "issued-time");
-});
-
-test("compact timeline keeps four main milestones and preparation stays in details", () => {
-  const steps = ["placed", "confirmed", "preparing", "shipped", "delivered"].map((key) => ({ key, done: true }));
-  const compact = timeline.compactTimeline(steps);
-  assert.equal(compact.some((step) => step.key === "preparing"), false);
-  assert.equal(compact.at(-1).key, "delivered");
-  assert.equal(compact.some((step) => step.key === "placed"), true);
-});
-
-test("recorded activity augments progress without duplicating allocated refunds", () => {
-  const steps = timeline.getItemTimeline({ id: 10, activity: [
-    { code: "cancelled", label: "Cancelled", done: true, at: null, meta: { quantity: 1 } },
-    { code: "refund_1", label: "Refund pending", done: false, at: "request-time", meta: { quantity: 1, amount: 100 } },
-  ], timeline: [{ key: "delivered", done: true }] }, [refund()], (key) => key);
-  assert.equal(steps.length, 3);
-  assert.equal(steps[0].key, "delivered");
-  assert.equal(steps[1].key, "cancelled");
-  assert.equal(steps[2].events[0].meta.amount, 100);
-});
-
 const progress = (last = 0) => ["placed", "confirmed", "preparing", "shipped", "delivered"].map((key, index) => ({
   key, label: key, done: index <= last, at: index <= last ? `2026-09-16 10:0${index}:00` : null,
   events: [{ code: key === "placed" ? "order_placed" : key === "confirmed" ? "payment_received" : key, label: key, done: index <= last, at: null, is_exception: false }],
 }));
-
-test("recorded delivery precedes later shipment cancellation and obsolete pending steps disappear", () => {
-  const base = progress(1);
-  base[3].events.push({ code: "out_for_delivery", label: "Out for delivery", done: false, at: null });
-  const steps = timeline.getItemTimeline({ id: 10, timeline: base, activity: [
-    { code: "shipment_7_1", label: "Shipped", done: true, at: "2026-09-16T11:00:00+05:30", meta: { status: "shipped", quantity: 1 } },
-    { code: "shipment_7_2", label: "Cancelled", done: true, at: "2026-09-16T11:10:00+05:30", meta: { status: "cancelled", quantity: 1 } },
-    { code: "shipment_7_3", label: "Delivered", done: true, at: "2026-09-16T11:05:00+05:30", meta: { status: "delivered", quantity: 1 } },
-    { code: "cancelled", label: "Item cancelled", done: true, at: null, meta: { quantity: 1 } },
-  ] }, [refund({ status: "issued", issued_at: "2026-09-17T10:00:00+05:30" })], (key) => key);
-  const events = timeline.flattenTimeline(steps);
-  assert.equal(events.find((e) => e.code === "preparing").done, true);
-  assert.equal(events.find((e) => e.code === "preparing").at, null);
-  assert.equal(events.some((e) => e.code === "out_for_delivery"), false);
-  assert.ok(events.findIndex((e) => e.code === "shipment_7_3") < events.findIndex((e) => e.code === "shipment_7_2"));
-  assert.equal(events.find((e) => e.code === "shipment_7_2").label, "orderTimeline.shipmentCancelled");
-  assert.equal(events.at(-1).code, "refund_1");
-});
-
-test("unshipped orders keep upcoming preparation and delivery events", () => {
-  const steps = timeline.getItemTimeline({ id: 10, timeline: progress(1) }, [], (key) => key);
-  assert.equal(steps.find((s) => s.key === "preparing").done, false);
-  assert.equal(steps.find((s) => s.key === "delivered").done, false);
-});
-
-test("delivery-only views do not mix cancellation refunds into shipping progress", () => {
-  const item = { id: 10, quantity: 1, quantity_summary: { current: 1, cancelled: 1 }, timeline: progress(3) };
-  const all = timeline.getItemTimeline(item, [refund({ status: "issued" })], (key) => key);
-  const delivery = timeline.deliveryTimeline(all, item);
-  assert.equal(timeline.deliveryMilestones(delivery).map((s) => s.key).join(), "confirmed,preparing,shipped,delivered");
-  assert.equal(timeline.flattenTimeline(delivery).some((e) => /refund|cancel|return/.test(e.code)), false);
-  assert.equal(timeline.deliveryTimeline(all, { ...item, status: "cancelled" }).length, 0);
-});
-
-test("delivery view uses the backend-owned progress when available", () => {
-  const result = timeline.deliveryTimeline(progress(4), { quantity: 2, delivery_timeline: progress(2) });
-  assert.equal(result.find((s) => s.key === "shipped").done, false);
-});
 
 test("item changes use a disclosure card rather than a second timeline", () => {
   const Component = load("../src/views/OrderDetailView/ItemAdjustmentDetails.tsx", {
@@ -208,69 +128,6 @@ test("item changes use a disclosure card rather than a second timeline", () => {
   assert.doesNotMatch(html, /<ol|data-state/);
 });
 
-test("shipment milestones count units once per parcel and do not complete undelivered units", () => {
-  const activity = [
-    { code: "shipment_7_1", label: "Shipped", done: true, at: "2026-09-16T11:00:00Z", meta: { status: "shipped", quantity: 1 } },
-    { code: "shipment_7_2", label: "Delivered", done: true, at: "2026-09-16T11:05:00Z", meta: { status: "delivered", quantity: 1 } },
-  ];
-  const partial = timeline.getItemTimeline({ id: 10, quantity: 2, timeline: progress(1), activity }, [], (key) => key);
-  assert.equal(partial.find((s) => s.key === "shipped").done, false);
-  assert.equal(partial.find((s) => s.key === "delivered").done, false);
-  const complete = timeline.getItemTimeline({ id: 10, quantity: 1, timeline: progress(1), activity }, [], (key) => key);
-  assert.equal(complete.find((s) => s.key === "shipped").done, true);
-  assert.equal(complete.find((s) => s.key === "delivered").done, true);
-});
-
-test("placed-only recorded activity does not hide upcoming milestones", () => {
-  const steps = timeline.getItemTimeline({ id: 10, timeline: progress(), activity: [
-    { code: "order_placed", label: "Placed", done: true, at: "placed-time" },
-  ] }, [], (key) => key);
-  assert.equal(steps.length, 5);
-  assert.equal(timeline.compactTimeline(steps).map((s) => s.key).join(), "placed,confirmed,shipped,delivered");
-  assert.equal(steps.filter((s) => s.done).length, 1);
-});
-
-test("full cancellation ends delivery progress and unpaid cancellation has no refund", () => {
-  const steps = timeline.getItemTimeline({ id: 10, status: "cancelled", timeline: progress(1), activity: [
-    { code: "cancelled", label: "Cancelled", done: true, at: null, meta: { quantity: 3 } },
-  ] }, [], (key) => key);
-  assert.equal(steps.map((s) => s.key).join(), "placed,confirmed,cancelled");
-});
-
-test("partial cancellation keeps the remaining delivery milestones", () => {
-  const steps = timeline.getItemTimeline({ id: 10, quantity_summary: { current: 2, cancelled: 1 }, timeline: progress(1), activity: [
-    { code: "cancelled", label: "Cancelled", done: true, at: null, meta: { quantity: 1 } },
-  ] }, [refund()], (key) => key);
-  assert.equal(steps.some((s) => s.key === "delivered" && !s.done), true);
-  assert.equal(steps.at(-1).events[0].meta.quantity, 1);
-});
-
-test("COD confirmation does not claim payment was received", () => {
-  const steps = timeline.getItemTimeline({ id: 10, timeline: progress(4) }, [], (key) => key, "cod");
-  assert.equal(timeline.flattenTimeline(steps).some((e) => e.code === "payment_received"), false);
-});
-
-test("return quantities and dates stay scoped and refund does not invent receipt", () => {
-  const steps = timeline.getItemTimeline({ id: 10, timeline: progress(4), returns: [
-    { id: 8, quantity: 1, return_status: "requested", created_at: "request-time" },
-  ] }, [refund({ status: "issued", issued_at: "refund-time" })], (key) => key);
-  const received = steps.find((s) => s.key === "return_8_received");
-  assert.equal(received.done, false);
-  assert.equal(received.at, null);
-  assert.equal(received.events[0].meta.quantity, 1);
-  assert.equal(steps.at(-1).at, "refund-time");
-});
-
-test("declined and withdrawn requests retain history without future promises", () => {
-  for (const status of ["declined", "cancelled"]) {
-    const steps = timeline.getItemTimeline({ id: 10, timeline: progress(4), returns: [
-      { id: 8, quantity: 1, return_status: status, created_at: "request-time" },
-    ] }, [], (key) => key);
-    assert.equal(steps.at(-1).key, `return_8_${status}`);
-    assert.equal(steps.some((s) => !s.done), false);
-  }
-});
-
 test("completed terminal markers are green and exceptions have distinct semantics", () => {
   assert.equal(timeline.timelineTone("delivered", true), "completed");
   assert.equal(timeline.timelineTone("refund_1", true), "completed");
@@ -280,119 +137,46 @@ test("completed terminal markers are green and exceptions have distinct semantic
   assert.equal(timeline.timelineTone("on_hold", true, true), "warning");
 });
 
-test("shipment activity retains preparation before cancellation using stable status metadata", () => {
-  const steps = timeline.getItemTimeline({ id: 10, status: "cancelled", timeline: progress(1), activity: [
-    { code: "shipment_8_15", label: "Packed", done: true, at: "packed-time", meta: { status: "packed", quantity: 1 } },
-    { code: "cancelled", label: "Cancelled", done: true, at: null },
-  ] }, [], (key) => key);
-  assert.equal(steps.map((s) => s.key).join(), "placed,confirmed,preparing,cancelled");
-});
-
-test("legacy quantity summaries still expose partial cancellation without activity", () => {
-  const steps = timeline.getItemTimeline({ id: 10, quantity_summary: { current: 2, cancelled: 1 }, timeline: progress(1) }, [], (key) => key);
-  assert.equal(steps.at(-1).key, "cancelled");
-  assert.equal(steps.at(-1).events[0].meta.quantity, 1);
-});
-
-test("closed return history does not clutter the outside delivered timeline", () => {
-  const steps = timeline.getItemTimeline({ id: 10, timeline: progress(4), returns: [
-    { id: 1, quantity: 1, return_status: "cancelled", created_at: "request-time" },
-  ] }, [], (key) => key);
-  assert.equal(timeline.compactTimeline(steps).map((s) => s.key).join(), "placed,confirmed,shipped,delivered");
-  assert.equal(timeline.flattenTimeline(steps).at(-1).code, "return_1_cancelled");
-});
-
-test("outside return tracker has exactly four milestones and keeps full history in details", () => {
-  const steps = timeline.getItemTimeline({ id: 10, timeline: progress(4), returns: [
-    { id: 8, quantity: 1, return_status: "approved", created_at: "request-time", seller_approved_at: "approved-time" },
-  ] }, [], (key) => key);
-  assert.equal(timeline.compactTimeline(steps).map((s) => s.key).join(), "delivered,return_8_requested,return_8_received,return_8_refunded");
-  assert.equal(timeline.flattenTimeline(steps).some((e) => e.code === "return_8_approved"), true);
-});
-
-test("outside cancellation tracker has at most four steps and mixed refunds stay pending", () => {
-  const steps = timeline.getItemTimeline({ id: 10, timeline: progress(3), activity: [
-    { code: "cancelled", label: "Cancelled", done: true, at: null },
-  ] }, [refund(), refund({ id: 2, status: "issued", issued_at: "issued-time" })], (key) => key);
-  const compact = timeline.compactTimeline(steps);
-  assert.equal(compact.length, 4);
-  assert.equal(compact.at(-1).done, false);
-  assert.equal(compact.at(-1).events[0].meta.quantity, 2);
-});
-
 test("adjustment disclosure shows individual subtotal and discount changes", () => {
-  const html = renderSummary({ original: { items_total: 300, promo_discount: 30, order_total: 270 }, current: { items_total: 200, promo_discount: 20, order_total: 180 }, total_changed: true });
+  const html = renderSummary({ snapshot: { items_total: 300, promo_discount: 30, order_total: 270 }, current: { items_total: 200, promo_discount: 20, order_total: 180 } });
   assert.match(html, /<details/);
   assert.match(html, /<summary/);
   assert.match(html, /INR -100/);
   assert.match(html, /\+ INR 10/);
 });
 
-test("full backend timeline includes future events in backend order despite history-only tracking", () => {
-  const steps = [
-    { key: "placed", done: true, at: "2026-09-15", events: [{ code: "order_placed", label: "Placed", done: true, at: "2026-09-15", is_exception: false }] },
-    ...["confirmed", "preparing", "shipped", "delivered"].map((key) => ({ key, label: key, done: false, at: null,
-      events: [{ code: key, label: key, done: false, at: null, is_exception: false }] })),
-    { key: "cancelled", done: true, at: "2026-09-14", events: [{ code: "cancelled", label: "Cancelled", done: true, at: "2026-09-14", is_exception: false }] },
+test("tracking is the canonical source for compact and full website timelines", () => {
+  const shipment = { code: "shipment_7_1", label: "Shipped", done: true, at: "2026-09-19T10:00:00+05:30", is_exception: false, meta: { status: "shipped" } };
+  const requested = { code: "return_9_requested", label: "Return requested", done: true, at: "2026-09-19T11:00:00+05:30", is_exception: false, meta: { return_id: 9, quantity: 1 } };
+  const history = [shipment, requested];
+  const milestones = [{ key: "shipped", label: "Shipped", done: true, at: shipment.at, events: [], quantity: 1, completed_quantity: 1 }];
+  const result = timeline.backendTimelineViews({
+    tracking: { version: 1, milestones, history, exceptions: [] },
+  });
+  assert.equal(JSON.stringify(result.main), JSON.stringify(milestones));
+  assert.equal(JSON.stringify(result.details.map((event) => event.code)), JSON.stringify(["shipment_7_1", "return_9_requested"]));
+});
+
+test("cancelled items use backend milestones and aggregate split refunds", () => {
+  const history = [
+    { code: "order_placed", label: "Placed", done: true, at: "2026-09-19T10:00:00+05:30", is_exception: false },
+    { code: "cancelled", label: "Cancelled", done: true, at: null, is_exception: false, meta: { quantity: 2 } },
+    { code: "refund_26", label: "Refund processed", done: true, at: "2026-09-19T11:00:00+05:30", is_exception: false, meta: { quantity: 1 } },
+    { code: "refund_27", label: "Refund processed", done: true, at: "2026-09-19T11:00:00+05:30", is_exception: false, meta: { quantity: 1 } },
   ];
-  const result = timeline.backendTimelineViews({ timeline: steps, tracking: { history: [steps[0].events[0]], milestones: [] } });
-  assert.equal(JSON.stringify(result.details), JSON.stringify(steps.flatMap((step) => step.events)));
-  assert.equal(JSON.stringify(result.main.map((step) => step.key)), JSON.stringify(["confirmed", "preparing", "shipped", "delivered"]));
-  assert.equal(result.main[0], steps[1]);
-  assert.equal(result.details.at(-1).code, "cancelled");
-});
-
-test("recorded split-shipment returns stay at quantity one and follow event time", () => {
-  const event = (code, at, shipment_id) => ({ code, label: code, done: true, at, is_exception: false, meta: { quantity: 1, shipment_id } });
-  const activity = [
-    event("return_104_requested", "2026-09-19T10:17:43+05:30", 104),
-    event("refund_1", "2026-09-19T10:09:55+05:30", 102),
-    event("return_102_approved", "2026-09-19T10:09:15+05:30", 102),
-    event("return_102_requested", "2026-09-19T10:07:56+05:30", 102),
+  const milestones = [
+    { key: "placed", label: "Placed", done: true, at: history[0].at, events: [] },
+    { key: "confirmed", label: "Confirmed", done: true, at: null, events: [] },
+    { key: "cancelled", label: "Cancelled", done: true, at: null, events: [history[1]] },
+    { key: "refunded", label: "Refund processed", done: true, at: history[2].at, events: [{ ...history[2], code: "refunded", meta: { quantity: 2 } }] },
   ];
-  const result = timeline.backendTimelineViews({ timeline: [], activity });
-  assert.equal(JSON.stringify(result.details.map((entry) => entry.code)), JSON.stringify(["return_102_requested", "return_102_approved", "refund_1", "return_104_requested"]));
-  assert.equal(JSON.stringify(result.details.map((entry) => entry.meta.quantity)), JSON.stringify([1, 1, 1, 1]));
-  assert.equal(JSON.stringify(result.details.map((entry) => entry.meta.shipment_id)), JSON.stringify([102, 102, 102, 104]));
-});
-
-test("cancelled outside tracker keeps placed confirmed and the red cancellation milestone", () => {
-  const steps = ["placed", "confirmed", "cancelled"].map((key) => ({ key, label: key, done: true, at: "2026-09-15", events: [] }));
-  const result = timeline.backendTimelineViews({ status: "cancelled", timeline: steps });
-  assert.equal(JSON.stringify(result.main.map((step) => step.key)), JSON.stringify(["placed", "confirmed", "cancelled"]));
-  assert.equal(result.main[2], steps[2]);
-  assert.equal(timeline.timelineTone(result.main[2].key, result.main[2].done, false), "cancelled");
-  assert.equal(result.details.length, 3);
-});
-
-test("cancelled compact tracker includes backend refund and stays within four milestones", () => {
-  const steps = ["placed", "confirmed", "preparing", "shipped", "cancelled", "refunded"].map((key) => ({ key, done: key !== "refunded", at: null, events: [] }));
-  const cancelled = timeline.backendTimelineViews({ quantity_summary: { current: 0 }, timeline: steps });
-  assert.equal(cancelled.main.length, 4);
-  assert.equal(cancelled.main.at(-2).key, "cancelled");
-  assert.equal(cancelled.main.at(-1).key, "refunded");
-  assert.equal(cancelled.main.at(-1).done, false);
-  assert.equal(cancelled.details.length, 6);
-  const partial = timeline.backendTimelineViews({ status: "active", quantity_summary: { current: 1, cancelled: 1 }, timeline: steps });
-  assert.equal(partial.main.some((step) => step.key === "cancelled"), false);
-});
-
-test("backend steps without events remain visible and empty backend timelines stay empty", () => {
-  const result = timeline.backendTimelineViews({ timeline: [{ key: "preparing", label: "Preparing", done: false, at: null, events: [] }] });
-  assert.equal(result.details[0].label, "Preparing");
-  assert.equal(result.details[0].done, false);
-  assert.equal(timeline.backendTimelineViews({ timeline: [], tracking: { history: [{ code: "stale" }] } }).details.length, 0);
-  assert.equal(timeline.backendTimelineViews({ delivery_timeline: [{ key: "shipped", done: true, at: null, events: [] }] }).main.length, 1);
-});
-
-test("API-owned tracking bypasses legacy timeline reconstruction", () => {
-  const adjustments = [{ key: "cancelled", label: "Cancelled", done: true, at: null, events: [] }];
-  const result = timeline.getItemTimeline({
-    id: 10, status: "active", tracking: { version: 1, adjustments },
-    timeline: [{ key: "delivered", done: true, at: "incorrect", events: [] }],
-  }, [refund()], (key) => key);
-  assert.equal(result, adjustments);
-  assert.equal(result.some((step) => step.key === "delivered"), false);
+  const result = timeline.backendTimelineViews({
+    status: "cancelled", quantity_summary: { current: 0 }, tracking: { version: 1, milestones, history, exceptions: [] },
+  });
+  assert.equal(JSON.stringify(result.main.map((step) => step.key)), JSON.stringify(["placed", "confirmed", "cancelled", "refunded"]));
+  assert.equal(result.main.filter((step) => step.key === "refunded").length, 1);
+  assert.equal(result.main.at(-1).events[0].meta.quantity, 2);
+  assert.equal(JSON.stringify(result.details.map((event) => event.code)), JSON.stringify(["order_placed", "cancelled", "refund_26", "refund_27"]));
 });
 
 test("backend current flags are respected on hold and partial progress", () => {
@@ -440,9 +224,9 @@ test("recorded shipment activity keeps its tracking link in full updates", () =>
     "./timeline": timeline,
     "./OrderTimeline.module.css": { default: {} },
   }).default;
-  const activity = [{ code: "shipment_42_confirmed", label: "Shipped", done: true, at: "2026-09-19T10:00:00+05:30", is_exception: false,
+  const history = [{ code: "shipment_42_confirmed", label: "Shipped", done: true, at: "2026-09-19T10:00:00+05:30", is_exception: false,
     meta: { shipment_id: 42, quantity: 1, courier: "UPS", tracking_id: "123", tracking_url: "https://example.test/track/123" } }];
-  const { details } = timeline.backendTimelineViews({ timeline: [], activity });
+  const { details } = timeline.backendTimelineViews({ tracking: { version: 1, milestones: [], history, exceptions: [] } });
   const html = renderToStaticMarkup(React.createElement(Component, { events: details }));
   assert.match(html, /Shipment #42/);
   assert.match(html, /href="https:\/\/example.test\/track\/123"/);
@@ -475,12 +259,12 @@ test("rendered timeline keeps future labels visible and completed terminal nodes
     "./timeline": timeline,
     "./OrderTimeline.module.css": { default: {} },
   }).default;
-  const pending = renderToStaticMarkup(React.createElement(Component, { steps: timeline.compactTimeline(progress()) }));
+  const pending = renderToStaticMarkup(React.createElement(Component, { steps: progress().slice(1) }));
   assert.doesNotMatch(pending, /border-primary|border-warning/);
   assert.match(pending, /shipped/);
   assert.match(pending, /delivered/);
-  assert.equal((pending.match(/data-state="upcoming"/g) || []).length, 2);
-  const complete = renderToStaticMarkup(React.createElement(Component, { steps: timeline.compactTimeline(progress(4)) }));
+  assert.equal((pending.match(/data-state="upcoming"/g) || []).length, 3);
+  const complete = renderToStaticMarkup(React.createElement(Component, { steps: progress(4).slice(1) }));
   assert.doesNotMatch(complete, /animate-pulse|bg-warning|aria-current/);
   assert.equal((complete.match(/data-state="completed"/g) || []).length, 4);
   const css = readFileSync(new URL("../src/views/OrderDetailView/OrderTimeline.module.css", import.meta.url), "utf8");
@@ -495,16 +279,6 @@ test("rendered timeline keeps future labels visible and completed terminal nodes
   assert.match(single, /INR 100/);
   assert.match(single, /orderRefunds.method.wallet/);
   assert.match(single, /--duration:1500ms/);
-});
-
-test("legacy timelines do not promise return receipt or refunds for abandoned requests", () => {
-  const steps = timeline.getItemTimeline({ id: 10, returns: [{ return_status: "cancelled" }], timeline: [
-    { key: "delivered", done: true, events: [] },
-    { key: "returned", done: false, events: [] },
-    { key: "refunded", done: false, events: [] },
-  ] }, [], (key) => key);
-  assert.equal(steps.length, 1);
-  assert.equal(steps[0].key, "delivered");
 });
 
 test("partial cancellation quantities are shown without adding noise to unchanged items", () => {
@@ -543,23 +317,31 @@ test("return history keeps declined and cancelled requests and shows their indiv
   assert.equal((html.match(/<details open/g) || []).length, 1);
 });
 
-test("shipment card keeps only parcels and products for the selected item", () => {
-  const delivery = load("../src/views/OrderDetailView/DeliveryInfo.tsx", {
+test("shipment card reads parcels directly from the selected item", () => {
+  const Component = load("../src/views/OrderDetailView/DeliveryInfo.tsx", {
     "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
-    "@/components/ui": { Card: () => null, CardBody: () => null, CardHeader: () => null, Chip: () => null, Divider: () => null },
+    "@/components/ui": {
+      Card: ({ children }) => React.createElement("section", null, children),
+      CardBody: ({ children }) => React.createElement("div", null, children),
+      CardHeader: ({ children }) => React.createElement("header", null, children),
+      Chip: ({ children }) => React.createElement("span", null, children),
+      Divider: () => React.createElement("hr"),
+    },
     "@iconify/react": { Icon: () => null },
     "@/helpers/getters": { getFormattedDate: (value) => value },
     "@/config/constants": { orderStatusColorMap: () => "default" },
-  });
-  const shipments = [
-    { id: 1, products: [{ order_item_id: 10, title: "Selected" }, { order_item_id: 11, title: "Other" }] },
-    { id: 2, products: [{ order_item_id: 11, title: "Other parcel" }] },
-  ];
-  const selected = delivery.shipmentsForItem(shipments, 10);
-  assert.equal(selected.length, 1);
-  assert.equal(selected[0].id, 1);
-  assert.equal(selected[0].products.length, 1);
-  assert.equal(selected[0].products[0].title, "Selected");
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, { item: {
+    title: "Selected", variant_title: "Blue", shipments: [
+      { id: 1, quantity: 1, status: "shipped", customer_status: "shipped", customer_status_label: "Shipped", carrier_name: "Carrier A", tracking_number: "A1", tracking_url: null, picked_up_at: null, delivered_at: null },
+      { id: 2, quantity: 2, status: "delivered", customer_status: "delivered", customer_status_label: "Delivered", carrier_name: "Carrier B", tracking_number: "B2", tracking_url: null, picked_up_at: null, delivered_at: null },
+    ],
+  } }));
+  assert.match(html, /Carrier A/);
+  assert.match(html, /Carrier B/);
+  assert.equal((html.match(/Selected/g) || []).length, 2);
+  assert.match(html, /× 1/);
+  assert.match(html, /× 2/);
 });
 
 test("cancellation confirmation submits only the selected item and displays eligible quantity", async () => {

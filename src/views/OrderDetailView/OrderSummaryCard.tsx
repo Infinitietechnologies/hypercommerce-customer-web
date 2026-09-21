@@ -9,8 +9,7 @@ interface Props {
 
 export default function OrderSummaryCard({ order, formatPrice }: Props) {
   const { t } = useTranslation();
-  const summary = order.money_summary;
-  const breakdown = summary?.original ?? summary?.current ?? {
+  const current = {
     items_total: Number(order.subtotal),
     delivery_charge: Number(order.delivery_charge),
     platform_fee: Number(order.platform_fee),
@@ -18,7 +17,13 @@ export default function OrderSummaryCard({ order, formatPrice }: Props) {
     promo_discount: Number(order.promo_discount),
     gift_card_discount: Number(order.gift_card_discount),
     order_total: Number(order.final_total),
+    payable_amount: Number(order.total_payable),
   };
+  const snapshot = order.order_summary?.converted_currency;
+  const breakdown = snapshot ?? current;
+  const totalChanged = !!snapshot && Math.abs(snapshot.order_total - current.order_total) >= 0.005;
+  const refundIssued = (order.refunds ?? []).filter((refund) => refund.status === "issued").reduce((total, refund) => total + Number(refund.amount), 0);
+  const refundOwed = (order.refunds ?? []).filter((refund) => refund.status === "owed" && !refund.settled_by_refund_id).reduce((total, refund) => total + Number(refund.amount), 0);
   const lines = [
     { key: "items_total", label: t("subtotal"), amount: breakdown.items_total, always: true },
     { key: "delivery_charge", label: t("deliveryCharge"), amount: breakdown.delivery_charge },
@@ -27,16 +32,16 @@ export default function OrderSummaryCard({ order, formatPrice }: Props) {
     { key: "promo_discount", label: t("discountAmount"), amount: breakdown.promo_discount, discount: true },
     { key: "gift_card_discount", label: t("giftCardApplied"), amount: breakdown.gift_card_discount, discount: true },
   ];
-  const adjustments = summary ? lines.map((line) => ({
+  const adjustments = snapshot ? lines.map((line) => ({
     ...line,
-    change: ((summary.current[line.key as keyof typeof summary.current] ?? 0) - (line.amount ?? 0)) * (line.discount ? -1 : 1),
+    change: ((current[line.key as keyof typeof current] ?? 0) - (line.amount ?? 0)) * (line.discount ? -1 : 1),
   })).filter((line) => Math.abs(line.change) >= 0.005) : [];
 
   return (
     <Card shadow="none" radius="lg" className="border border-divider p-4">
       <h2 className="text-sm font-semibold">{t("orderMoneySummary.heading", "Order summary")}</h2>
       <p className="mt-1 text-xs text-default-500">
-        {summary?.original
+        {snapshot
           ? t("orderMoneySummary.checkoutNote", "For the whole order, as placed")
           : t("orderMoneySummary.currentNote", "For the whole order")}
       </p>
@@ -51,19 +56,19 @@ export default function OrderSummaryCard({ order, formatPrice }: Props) {
           <dt>{t("orderMoneySummary.total", "Order total")}</dt>
           <dd>{formatPrice(breakdown.order_total)}</dd>
         </div>
-        {summary?.total_changed && (
+        {totalChanged && (
           <>
             <div>
               <dt>
                 <details className="rounded-small bg-default-50 p-3">
                   <summary className="cursor-pointer text-sm font-medium">
                     <span className="ms-1">{t("orderMoneySummary.adjustments", "Order adjustments")}</span>
-                    <span className="float-end font-medium">{formatPrice(summary.current.order_total - breakdown.order_total)}</span>
+                    <span className="float-end font-medium">{formatPrice(current.order_total - breakdown.order_total)}</span>
                   </summary>
                   <ul className="mt-3 space-y-2 border-t border-divider pt-3 text-xs">
                     {adjustments.length === 0 && <li className="flex justify-between gap-4">
                       <span>{t("orderMoneySummary.total", "Order total")}</span>
-                      <span>{formatPrice(summary.current.order_total - breakdown.order_total)}</span>
+                      <span>{formatPrice(current.order_total - breakdown.order_total)}</span>
                     </li>}
                     {adjustments.map((line) => <li key={line.key} className="flex justify-between gap-4">
                       <span className="text-default-500">{line.label}</span>
@@ -75,27 +80,27 @@ export default function OrderSummaryCard({ order, formatPrice }: Props) {
                   </ul>
                 </details>
               </dt>
-              <dd className="sr-only">{formatPrice(summary.current.order_total - breakdown.order_total)}</dd>
+              <dd className="sr-only">{formatPrice(current.order_total - breakdown.order_total)}</dd>
             </div>
             <div className="flex justify-between gap-4 font-semibold">
               <dt>{t("orderMoneySummary.updatedTotal", "Updated total")}</dt>
-              <dd>{formatPrice(summary.current.order_total)}</dd>
+              <dd>{formatPrice(current.order_total)}</dd>
             </div>
           </>
         )}
       </dl>
-      {summary && (summary.refund_issued > 0 || summary.refund_owed > 0) && (
+      {(refundIssued > 0 || refundOwed > 0) && (
         <dl className="mt-3 space-y-2 border-t border-divider pt-3 text-sm">
-          {summary.refund_issued > 0 && (
+          {refundIssued > 0 && (
             <div className="flex justify-between gap-4">
               <dt>{t("orderMoneySummary.refunded", "Refunds sent")}</dt>
-              <dd className="font-medium">{formatPrice(summary.refund_issued)}</dd>
+              <dd className="font-medium">{formatPrice(refundIssued)}</dd>
             </div>
           )}
-          {summary.refund_owed > 0 && (
+          {refundOwed > 0 && (
             <div className="flex justify-between gap-4">
               <dt>{t("orderMoneySummary.pending", "Refunds pending")}</dt>
-              <dd className="font-medium">{formatPrice(summary.refund_owed)}</dd>
+              <dd className="font-medium">{formatPrice(refundOwed)}</dd>
             </div>
           )}
         </dl>
