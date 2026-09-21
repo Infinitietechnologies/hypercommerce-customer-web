@@ -8,12 +8,22 @@ import { useTranslation } from "react-i18next";
 
 interface DeliveryInfoProps {
   order: Order;
+  itemId: number;
+}
+
+export function shipmentsForItem(shipments: OrderShipment[], itemId: number): OrderShipment[] {
+  return shipments
+    .filter((shipment) => shipment.products.some((product) => product.order_item_id === itemId))
+    .map((shipment) => ({
+      ...shipment,
+      products: shipment.products.filter((product) => product.order_item_id === itemId),
+    }));
 }
 
 // DeliveryInfo — per-shipment tracking view (replaces delivery-boy tracking).
-const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
+const DeliveryInfo: FC<DeliveryInfoProps> = ({ order, itemId }) => {
   const { t } = useTranslation();
-  const shipments: OrderShipment[] = order.shipments ?? [];
+  const shipments = shipmentsForItem(order.shipments ?? [], itemId);
 
   return (
     <Card shadow="none" radius="lg" className="border border-divider">
@@ -23,6 +33,7 @@ const DeliveryInfo: FC<DeliveryInfoProps> = ({ order }) => {
           <h3 className="text-sm font-semibold text-foreground">
             {t("shipments") || t("delivery_info")}
           </h3>
+          <span className="text-xs text-default-400">{t("pages.order.selectedItem", "Selected item")}</span>
         </div>
       </CardHeader>
       <CardBody className="px-4 pb-4 pt-0">

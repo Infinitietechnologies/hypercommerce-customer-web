@@ -29,6 +29,7 @@ export interface OrderShipment {
   picked_up_at: string | null;
   delivered_at: string | null;
   products: {
+    order_item_id: number;
     title: string | null;
     variant: string | null;
     quantity: number;

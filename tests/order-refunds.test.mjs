@@ -448,6 +448,26 @@ test("recorded shipment activity keeps its tracking link in full updates", () =>
   assert.match(html, /href="https:\/\/example.test\/track\/123"/);
 });
 
+test("full updates distinguish major milestones from quiet carrier scans and place time first", () => {
+  const Component = load("../src/views/OrderDetailView/OrderTimeline.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key) => key, i18n: { language: "en-IN" } }) },
+    "@/helpers/getters": { getFormattedDate: (_value, _locale, options) => options?.hour ? "3:30 pm" : "19 Sep" },
+    "./timeline": timeline,
+    "./OrderTimeline.module.css": { default: { timestamp: "timestamp", time: "time", date: "date", majorDot: "majorDot", minorDot: "minorDot", label: "label" } },
+  }).default;
+  const events = [
+    { code: "shipment_42_1", label: "Shipped", done: true, at: "2026-09-19T10:00:00+05:30", is_exception: false, meta: { status: "shipped" } },
+    { code: "shipment_42_2", label: "Arrived at carrier facility", done: true, at: "2026-09-19T11:00:00+05:30", is_exception: false, meta: { status: "in_transit" } },
+  ];
+  const html = renderToStaticMarkup(React.createElement(Component, { events }));
+  assert.match(html, /data-major="true"/);
+  assert.match(html, /data-major="false"/);
+  assert.match(html, /class="timestamp text-default-500"[^>]*><span class="time">3:30 pm<\/span><span class="date text-default-400">19 Sep<\/span>/);
+  assert.match(html, /majorDot/);
+  assert.match(html, /minorDot/);
+  assert.ok(html.indexOf("3:30 pm") < html.indexOf("Shipped"));
+});
+
 test("rendered timeline keeps future labels visible and completed terminal nodes are not active", () => {
   const Component = load("../src/views/OrderDetailView/OrderTimeline.tsx", {
     "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
@@ -520,7 +540,26 @@ test("return history keeps declined and cancelled requests and shows their indiv
   assert.match(html, /Shipment.*#31/);
   assert.match(html, /TRACK-A/);
   assert.equal((html.match(/<details/g) || []).length, 2);
-  assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
+  assert.equal((html.match(/<details open/g) || []).length, 1);
+});
+
+test("shipment card keeps only parcels and products for the selected item", () => {
+  const delivery = load("../src/views/OrderDetailView/DeliveryInfo.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
+    "@/components/ui": { Card: () => null, CardBody: () => null, CardHeader: () => null, Chip: () => null, Divider: () => null },
+    "@iconify/react": { Icon: () => null },
+    "@/helpers/getters": { getFormattedDate: (value) => value },
+    "@/config/constants": { orderStatusColorMap: () => "default" },
+  });
+  const shipments = [
+    { id: 1, products: [{ order_item_id: 10, title: "Selected" }, { order_item_id: 11, title: "Other" }] },
+    { id: 2, products: [{ order_item_id: 11, title: "Other parcel" }] },
+  ];
+  const selected = delivery.shipmentsForItem(shipments, 10);
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].id, 1);
+  assert.equal(selected[0].products.length, 1);
+  assert.equal(selected[0].products[0].title, "Selected");
 });
 
 test("cancellation confirmation submits only the selected item and displays eligible quantity", async () => {

@@ -292,14 +292,6 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           <div className="flex flex-wrap gap-2">
             <Button
               size="md"
-              variant="bordered"
-              startContent={<Icon icon="solar:chat-round-dots-linear" />}
-              onPress={() => router.push(`/my-account/support?order=${order.id}`)}
-            >
-              {t("supportChat.getHelp")}
-            </Button>
-            <Button
-              size="md"
               color="primary"
               startContent={<Icon icon="solar:refresh-circle-linear" />}
               isLoading={reordering}
@@ -451,7 +443,24 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
 
           <ShippingInfo order={order} />
 
-          <DeliveryInfo order={order} />
+          <DeliveryInfo order={order} itemId={selected.id} />
+
+          <Card shadow="none" radius="lg" className="border border-divider p-4">
+            <button
+              type="button"
+              onClick={() => router.push(`/my-account/support?order=${order.id}`)}
+              className="flex w-full items-center gap-3 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+                <Icon icon="solar:chat-round-dots-linear" width={22} height={22} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{t("supportChat.getHelp", "Get help with this order")}</span>
+                <span className="mt-0.5 block text-xs text-default-500">{t("supportChat.orderHelpDescription", "Chat with support about this order")}</span>
+              </span>
+              <Icon icon="solar:alt-arrow-right-linear" width={18} height={18} className="shrink-0 text-default-400 rtl:rotate-180" />
+            </button>
+          </Card>
 
           <Card shadow="none" radius="lg" className="border border-divider p-4 space-y-1">
             <div className="mb-1 text-sm font-semibold">

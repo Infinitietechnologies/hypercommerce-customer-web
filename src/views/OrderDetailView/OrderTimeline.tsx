@@ -1,5 +1,6 @@
 import type { TimelineEvent, TimelineStep } from "@/types/order";
 import type { CSSProperties } from "react";
+import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { getFormattedDate } from "@/helpers/getters";
 import { timelineTone } from "./timeline";
@@ -14,13 +15,34 @@ const tones = {
   warning: "border-warning bg-warning",
 };
 
+const majorStatusCodes = new Set(["shipped", "delivered"]);
+
+export function isMajorTimelineEvent(entry: TimelineEvent): boolean {
+  return ["order_placed", "payment_received", "cancelled"].includes(entry.code)
+    || entry.code.startsWith("refund_")
+    || /^return_\d+_(requested|received|declined|cancelled)$/.test(entry.code)
+    || majorStatusCodes.has(entry.meta?.status ?? "");
+}
+
+function eventIcon(entry: TimelineEvent): string {
+  const status = entry.meta?.status ?? entry.code;
+  if (entry.code === "order_placed") return "solar:clipboard-check-linear";
+  if (entry.code === "payment_received") return "solar:card-2-linear";
+  if (status === "shipped") return "solar:delivery-linear";
+  if (status === "delivered") return "solar:box-linear";
+  if (entry.code.startsWith("refund_")) return "solar:wallet-money-linear";
+  if (entry.code === "cancelled" || /_(declined|cancelled)$/.test(entry.code)) return "solar:close-circle-linear";
+  if (entry.code.startsWith("return_")) return "solar:undo-left-round-linear";
+  return "solar:check-circle-linear";
+}
+
 export default function OrderTimeline({ steps, events, formatPrice, showQuantity = true }: {
   steps?: TimelineStep[];
   events?: TimelineEvent[];
   formatPrice?: (amount: number) => string;
   showQuantity?: boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const compact = !!steps;
   const entries = steps?.map((step) => ({
     code: step.key, label: step.label || step.key, done: step.done, at: step.at,
@@ -39,18 +61,31 @@ export default function OrderTimeline({ steps, events, formatPrice, showQuantity
         const milestone = steps?.[index];
         const active = status === "upcoming" && (milestone?.current ?? index === activeIndex);
         const tone = active ? "active" : status;
+        const major = compact || isMajorTimelineEvent(entry);
+        const markerTone = major
+          ? tones[tone]
+          : tone === "failed" || tone === "cancelled"
+            ? tones.failed
+            : tone === "warning" ? tones.warning : "border-default-400 bg-default-400";
+        const locale = i18n?.language || "en-IN";
+        const time = entry.at ? getFormattedDate(entry.at, locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" }) : null;
+        const date = entry.at ? getFormattedDate(entry.at, locale, { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" }) : null;
         return (
-          <li key={`${entry.code}-${index}`} className={styles.entry} aria-current={active ? "step" : undefined} data-state={tone}
+          <li key={`${entry.code}-${index}`} className={styles.entry} aria-current={active ? "step" : undefined} data-state={tone} data-major={major}
             style={{ "--duration": `${1500 / Math.max(lastDone + 1, 1)}ms`, "--delay": `${index * 1500 / Math.max(lastDone + 1, 1)}ms` } as CSSProperties}>
+            {!compact && <time dateTime={entry.at || undefined} className={`${styles.timestamp} text-default-500`}>
+              <span className={styles.time}>{time || "—"}</span>
+              {date && <span className={`${styles.date} text-default-400`}>{date}</span>}
+            </time>}
             {index < entries.length - 1 && <span className={`${styles.connector} bg-default-200`} aria-hidden="true">
               {entry.done && entries[index + 1].done && <span className={`${styles.fill} ${status === "completed" ? "bg-success" : "bg-danger"}`} />}
             </span>}
-            <span aria-hidden="true" className={`${styles.dot} ${tones[tone]}`}>
-              {tone === "completed" ? "✓" : tone === "cancelled" ? "−" : tone === "failed" || tone === "warning" ? "!" : ""}
+            <span aria-hidden="true" className={`${styles.dot} ${major ? styles.majorDot : styles.minorDot} ${markerTone}`}>
+              {major && <Icon icon={eventIcon(entry)} width={16} height={16} />}
             </span>
             <div className={styles.content}>
-              <div className="text-xs font-semibold leading-5 text-foreground">{entry.label}</div>
-              {entry.at && <div className="text-xs leading-5 text-default-500">{getFormattedDate(entry.at)}</div>}
+              <div className={`${styles.label} ${major ? "font-semibold text-foreground" : "font-normal text-default-500"}`}>{entry.label}</div>
+              {compact && entry.at && <div className="text-xs leading-5 text-default-500">{getFormattedDate(entry.at)}</div>}
               {showQuantity && milestone?.completed_quantity != null && milestone.quantity != null && milestone.completed_quantity > 0 && <div className="text-xs leading-5 text-default-500">{t("orderUpdates.quantityProgress", { count: milestone.completed_quantity, total: milestone.quantity, defaultValue: "{{count}} of {{total}}" })}</div>}
               {entry.meta && <div className="text-xs leading-5 text-default-500">
                 {[
