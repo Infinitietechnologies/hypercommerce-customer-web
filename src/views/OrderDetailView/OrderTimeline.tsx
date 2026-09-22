@@ -45,23 +45,37 @@ export default function OrderTimeline({ steps, events, formatPrice, showQuantity
   const { t, i18n } = useTranslation();
   const compact = !!steps;
   const entries = steps?.map((step) => ({
-    code: step.key, label: step.label || step.key, done: step.done, at: step.at,
+    code: step.key,
+    status_code: step.status_code || step.key,
+    label: step.label || step.key,
+    done: step.done,
+    at: step.at,
     current: step.current,
     quantity: step.quantity,
     completed_quantity: step.completed_quantity,
     is_exception: step.events?.at(-1)?.is_exception ?? false,
     meta: ["placed", "confirmed", "shipped", "delivered"].includes(step.key) ? undefined : step.events?.[0]?.meta,
-  })) ?? events ?? [];
+  })) ?? events?.map((event) => ({
+    code: event.code,
+    status_code: event.status_code || event.meta?.status || event.code,
+    label: event.label,
+    done: event.done,
+    at: event.at,
+    current: (event as { current?: boolean }).current,
+    is_exception: event.is_exception,
+    meta: event.meta,
+  })) ?? [];
   const lastDone = entries.reduce((last, entry, index) => entry.done ? index : last, -1);
   const activeIndex = entries.findIndex((entry, index) => !entry.done && index > lastDone);
   return (
     <ol className={`${styles.timeline} ${compact ? styles.compact : ""}`}>
       {entries.map((entry, index) => {
-        const status = timelineTone(entry.meta?.status || entry.code, entry.done, entry.is_exception);
+        const statusCode = entry.status_code || entry.meta?.status || entry.code;
+        const status = timelineTone(statusCode, entry.done, entry.is_exception);
         const milestone = steps?.[index];
-        const active = status === "upcoming" && (milestone?.current ?? index === activeIndex);
+        const active = status === "upcoming" && (entry.current ?? milestone?.current ?? index === activeIndex);
         const tone = active ? "active" : status;
-        const major = compact || isMajorTimelineEvent(entry);
+        const major = compact || isMajorTimelineEvent(entry as TimelineEvent);
         const markerTone = major
           ? tones[tone]
           : tone === "failed" || tone === "cancelled"
@@ -71,7 +85,7 @@ export default function OrderTimeline({ steps, events, formatPrice, showQuantity
         const time = entry.at ? getFormattedDate(entry.at, locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" }) : null;
         const date = entry.at ? getFormattedDate(entry.at, locale, { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" }) : null;
         return (
-          <li key={`${entry.code}-${index}`} className={styles.entry} aria-current={active ? "step" : undefined} data-state={tone} data-major={major}
+          <li key={`${entry.code}-${index}`} className={styles.entry} aria-current={active ? "step" : undefined} data-state={tone} data-major={major} data-status-code={statusCode}
             style={{ "--duration": `${1500 / Math.max(lastDone + 1, 1)}ms`, "--delay": `${index * 1500 / Math.max(lastDone + 1, 1)}ms` } as CSSProperties}>
             {!compact && <time dateTime={entry.at || undefined} className={`${styles.timestamp} text-default-500`}>
               <span className={styles.time}>{time || "—"}</span>

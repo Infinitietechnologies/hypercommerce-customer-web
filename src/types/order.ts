@@ -166,6 +166,67 @@ export interface Order {
   items: OrderItem[];
   seller_feedbacks: SellerFeedbackItem[];
 
+  /** @deprecated delivery-boy model removed — null stubs from the backend. */
+  fulfillment_type?: string;
+  estimated_delivery_time?: number | null;
+  delivery_time_slot_id?: number | null;
+  delivery_boy_id?: number | null;
+  delivery_boy_name?: string;
+  delivery_boy_phone?: number | string;
+  delivery_boy_profile?: string;
+  is_delivery_feedback_given?: boolean;
+
+  delivery_feedback?: {
+    id: number;
+    title: string;
+    slug: string;
+    description: string;
+    rating: number;
+    created_at: string;
+  } | null;
+
+  wallet_balance: string;
+  promo_code: string | null;
+  promo_discount: string;
+  promo_line: null | {
+    cashback_flag: boolean;
+    created_at: string;
+    discount_amount: string;
+    id: number;
+    is_awarded: boolean;
+    order_id: number;
+    promo_code: string;
+    promo_id: number;
+    updated_at: string;
+  };
+  gift_card: string | null;
+  gift_card_discount: string;
+  delivery_charge: string | number;
+  platform_fee: string | number;
+  cod_fee: string | number;
+
+  subtotal: string;
+  total_payable: string;
+  final_total: string;
+
+  shipping_name: string;
+  shipping_address_1: string;
+  shipping_address_2: string | null;
+  shipping_landmark: string;
+  shipping_zip: string;
+  shipping_phone: string;
+  shipping_address_type: string;
+  shipping_latitude: string;
+  shipping_longitude: string;
+  shipping_city: string;
+  shipping_state: string;
+  shipping_country: string;
+  shipping_country_code: string;
+  order_note: string;
+
+  items: OrderItem[];
+  seller_feedbacks: SellerFeedbackItem[];
+
   created_at: string;
   updated_at: string;
 
@@ -175,6 +236,7 @@ export interface Order {
 /** One event inside a tracker step (order/item/return timeline). */
 export interface TimelineEvent {
   code: string;
+  status_code?: string;
   label: string;
   done: boolean;
   at: string | null;
@@ -198,6 +260,7 @@ export interface TimelineStep {
   quantity?: number;
   completed_quantity?: number | null;
   key: string;
+  status_code?: string;
   /** Step-level label, e.g. "Shipped" (labels.step_<key>). */
   label?: string;
   done: boolean;
@@ -276,7 +339,8 @@ export interface OrderItem {
   /** Shopper-facing derived status for this item. */
   customer_status: CustomerStatus;
   tracking?: {
-    version: 1;
+    status_code?: string;
+    status?: { code: string; label: string; status_code?: string };
     milestones: TimelineStep[];
     history: TimelineEvent[];
     exceptions: { code: string; label: string; at: string | null; tone: "warning" | "danger" }[];

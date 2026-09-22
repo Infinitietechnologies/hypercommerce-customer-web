@@ -151,10 +151,62 @@ test("tracking is the canonical source for compact and full website timelines", 
   const history = [shipment, requested];
   const milestones = [{ key: "shipped", label: "Shipped", done: true, at: shipment.at, events: [], quantity: 1, completed_quantity: 1 }];
   const result = timeline.backendTimelineViews({
-    tracking: { version: 1, milestones, history, exceptions: [] },
+    customer_status: { code: "return_requested", label: "Return requested", description: "", stage: "1", is_exception: false },
+    tracking: { status_code: "return_9_requested", milestones, history, exceptions: [] },
   });
   assert.equal(JSON.stringify(result.main), JSON.stringify(milestones));
-  assert.equal(JSON.stringify(result.details.map((event) => event.code)), JSON.stringify(["shipment_7_1", "return_9_requested"]));
+  assert.equal(
+    JSON.stringify(result.details.map((event) => event.code)),
+    JSON.stringify(["shipment_7_1", "return_9_requested", "return_9_approved", "return_9_received", "refund_pending_9"])
+  );
+  assert.equal(result.details.find((ev) => ev.code === "return_9_approved")?.done, false);
+  assert.equal(result.details.find((ev) => ev.code === "return_9_approved")?.current, true);
+});
+
+test("future steps and status_code are generated for delivery flow in progress", () => {
+  const history = [
+    { code: "order_placed", label: "Placed", done: true, at: "2026-09-19T10:00:00+05:30", is_exception: false },
+    { code: "payment_received", label: "Payment received", done: true, at: "2026-09-19T10:05:00+05:30", is_exception: false },
+  ];
+  const milestones = [
+    { key: "confirmed", label: "Confirmed", done: true, at: "2026-09-19T10:05:00+05:30", events: [] },
+    { key: "preparing", label: "Preparing", done: false, at: null, events: [] },
+    { key: "shipped", label: "Shipped", done: false, at: null, events: [] },
+    { key: "delivered", label: "Delivered", done: false, at: null, events: [] },
+  ];
+  const result = timeline.backendTimelineViews({
+    customer_status: { code: "preparing", label: "Preparing", description: "", stage: "3", is_exception: false },
+    tracking: { version: 1, milestones, history, exceptions: [] },
+  });
+  const codes = result.details.map((ev) => ev.code);
+  assert.equal(JSON.stringify(codes), JSON.stringify(["order_placed", "payment_received", "preparing", "shipped", "delivered"]));
+  assert.equal(result.details.find((ev) => ev.code === "preparing")?.done, false);
+  assert.equal(result.details.find((ev) => ev.code === "preparing")?.current, true);
+  assert.equal(result.details.find((ev) => ev.code === "preparing")?.status_code, "preparing");
+});
+
+test("partially delivered order generates future delivered step and marks pending delivered step as current", () => {
+  const history = [
+    { code: "order_placed", label: "Placed", done: true, at: "2026-09-19T12:52:16+05:30", is_exception: false },
+    { code: "payment_received", label: "Payment received", done: true, at: "2026-09-19T12:52:16+05:30", is_exception: false },
+    { code: "shipment_98_203", label: "Shipped", done: true, at: "2026-09-19T14:05:49+05:30", is_exception: false, meta: { quantity: 1, status: "shipped" } },
+    { code: "shipment_98_215", label: "Delivered", done: true, at: "2026-09-19T15:06:16+05:30", is_exception: false, meta: { quantity: 1, status: "delivered" } },
+  ];
+  const milestones = [
+    { key: "confirmed", label: "Confirmed", done: true, current: false, at: "2026-09-19T12:52:16+05:30", quantity: 2, completed_quantity: null, events: [] },
+    { key: "preparing", label: "Preparing", done: true, current: false, at: null, quantity: 2, completed_quantity: null, events: [] },
+    { key: "shipped", label: "Shipped", done: true, current: false, at: "2026-09-19T14:08:50+05:30", quantity: 2, completed_quantity: 2, events: [] },
+    { key: "delivered", label: "Delivered", done: false, current: true, at: null, quantity: 2, completed_quantity: 1, events: [] },
+  ];
+  const result = timeline.backendTimelineViews({
+    customer_status: { code: "partially_delivered", label: "Partially Delivered", description: "", stage: "4", is_exception: false },
+    tracking: { status_code: "shipment_98_215", milestones, history, exceptions: [] },
+  });
+  const codes = result.details.map((ev) => ev.code);
+  assert.equal(JSON.stringify(codes), JSON.stringify(["order_placed", "payment_received", "shipment_98_203", "shipment_98_215", "delivered"]));
+  const pendingDelivered = result.details.find((ev) => ev.code === "delivered");
+  assert.equal(pendingDelivered?.done, false);
+  assert.equal(pendingDelivered?.current, true);
 });
 
 test("cancelled items use backend milestones and aggregate split refunds", () => {
