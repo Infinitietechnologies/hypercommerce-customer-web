@@ -37,8 +37,8 @@ export default function CancelItemSheet({ item, isOpen, onClose, onDone }: Props
   return (
     <Sheet isOpen={isOpen} onClose={close} title={t("confirm_cancel_item")} size="md" footer={
       <div className="flex w-full gap-2">
-        <Button variant="bordered" className="flex-1" onPress={close} isDisabled={submitting}>{t("close")}</Button>
-        <Button color="danger" className="flex-1" onPress={submit} isLoading={submitting} isDisabled={quantity < 1}>{t("yes_cancel")}</Button>
+        <Button variant="bordered" className="flex-1 text-xs sm:text-sm font-semibold" onPress={close} isDisabled={submitting}>{t("close")}</Button>
+        <Button color="danger" className="flex-1 text-xs sm:text-sm font-semibold" onPress={submit} isLoading={submitting} isDisabled={quantity < 1}>{t("yes_cancel")}</Button>
       </div>
     }>
       <div className="space-y-3 pb-3">

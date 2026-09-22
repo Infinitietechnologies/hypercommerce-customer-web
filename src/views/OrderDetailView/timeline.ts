@@ -40,7 +40,7 @@ export function backendTimelineViews(item: OrderItem): { main: TimelineStep[]; d
   const historyEvents = flattenTimeline([{ key: "activity", done: true, at: null, events: tracking.history }]).map((event) => ({
     ...event,
     status_code: extractStatusCode(event),
-    done: true,
+    done: event.done !== undefined ? Boolean(event.done) : true,
   }));
 
   const futureEvents: TimelineEvent[] = [];
@@ -113,12 +113,13 @@ export function backendTimelineViews(item: OrderItem): { main: TimelineStep[]; d
     }
   }
 
-  // Delivery milestones future steps
+  // Delivery milestones future steps (fallback if not already in history)
   if (!fullyCancelled) {
     const uncompletedMilestones = tracking.milestones.filter((m) => !m.done);
     for (const milestone of uncompletedMilestones) {
+      const existsInHistory = historyEvents.some((ev) => ev.code === milestone.key && !ev.done);
       const existsInFuture = futureEvents.some((ev) => ev.status_code === milestone.key);
-      if (!existsInFuture) {
+      if (!existsInHistory && !existsInFuture) {
         futureEvents.push({
           code: milestone.key,
           status_code: milestone.key,

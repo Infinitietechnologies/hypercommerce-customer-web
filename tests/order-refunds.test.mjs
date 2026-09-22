@@ -351,6 +351,7 @@ test("return history keeps declined and cancelled requests and shows their indiv
   const Component = load("../src/views/OrderDetailView/ItemReturnDetails.tsx", {
     "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
     "@/helpers/getters": { getFormattedDate: (value) => value },
+    "@/components/ui": { Button: () => null },
   }).default;
   const html = renderToStaticMarkup(React.createElement(Component, {
     returns: [

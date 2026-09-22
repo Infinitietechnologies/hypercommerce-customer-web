@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
+import { mutate } from "swr";
 
 import {
   Button,
@@ -18,7 +19,7 @@ import {
   toastError,
   toastSuccess,
 } from "@/components/ui";
-import { reorderOrder } from "@/routes/api";
+import { cancelReturnReq, reorderOrder } from "@/routes/api";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import PageHead from "@/SEO/PageHead";
 import { useCurrency } from "@/components/Functional/Price";
@@ -103,10 +104,44 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
   const [reordering, setReordering] = useState(false);
   const [cancelItemId, setCancelItemId] = useState<number | null>(null);
   const [returnItemId, setReturnItemId] = useState<number | null>(null);
+  const [cancellingReturnId, setCancellingReturnId] = useState<number | null>(null);
   const timelineSheet = useDisclosure();
   const cancelSheet = useDisclosure();
   const returnSheet = useDisclosure();
   const ratingSheet = useDisclosure();
+
+  const activeReturns = useMemo(
+    () => selected?.returns?.filter((r) => ["requested", "approved"].includes(r.return_status)) ?? [],
+    [selected?.returns],
+  );
+
+  const refreshData = async () => {
+    const slug = (router.query.slug as string) || String(order.id);
+    if (slug) {
+      await mutate(`/api/orders/detail/${slug}`);
+    }
+    await mutate((key) => typeof key === "string" && key.includes("/api/orders"));
+    await router.replace(router.asPath, undefined, { scroll: false });
+  };
+
+  const handleCancelReturn = async (returnId?: number) => {
+    const targetReturnId = returnId ?? activeReturns[0]?.id;
+    if (!targetReturnId || !selected) return;
+    setCancellingReturnId(targetReturnId);
+    try {
+      const res = await cancelReturnReq({ orderItemId: selected.id, returnId: targetReturnId });
+      if (res.success) {
+        toastSuccess(res.message || t("pages.order.returnCancelSuccess", "Return request cancelled"));
+        await refreshData();
+      } else {
+        toastError(res.message || t("pages.order.returnCancelFailed", "Couldn't cancel return request"));
+      }
+    } catch {
+      toastError(t("pages.order.returnCancelFailed", "Couldn't cancel return request"));
+    } finally {
+      setCancellingReturnId(null);
+    }
+  };
 
   const handleReorder = async () => {
     setReordering(true);
@@ -285,7 +320,16 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           )}
 
           {/* Refund / return */}
-          <div className="px-4 pb-4"><ItemAdjustmentDetails item={selected} refunds={order.refunds} steps={allSteps} formatPrice={formatPrice} /></div>
+          <div className="px-4 pb-4">
+            <ItemAdjustmentDetails
+              item={selected}
+              refunds={order.refunds}
+              steps={allSteps}
+              formatPrice={formatPrice}
+              onCancelReturn={handleCancelReturn}
+              cancellingReturnId={cancellingReturnId}
+            />
+          </div>
           </Card>
 
           <div className="flex flex-wrap gap-2">
@@ -302,6 +346,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               <Button
                 size="md"
                 variant="bordered"
+                className="text-xs sm:text-sm font-semibold"
                 startContent={<Icon icon="solar:close-circle-linear" />}
                 onPress={() => {
                   setCancelItemId(selected.id);
@@ -315,6 +360,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               <Button
                 size="md"
                 variant="bordered"
+                className="text-xs sm:text-sm font-semibold"
                 startContent={<Icon icon="solar:refresh-linear" />}
                 onPress={() => {
                   setReturnItemId(selected.id);
@@ -322,6 +368,19 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
                 }}
               >
                 {t("return")}
+              </Button>
+            )}
+            {activeReturns.length > 0 && (
+              <Button
+                size="md"
+                variant="bordered"
+                color="danger"
+                className="text-xs sm:text-sm font-semibold"
+                startContent={<Icon icon="solar:close-circle-linear" />}
+                isLoading={cancellingReturnId !== null}
+                onPress={() => handleCancelReturn(activeReturns[0]?.id)}
+              >
+                {t("cancelReturnRequestButton", "Cancel Return Request")}
               </Button>
             )}
             {selected.customer_status?.code === "delivered" && !selected.is_user_review_given && (
@@ -337,7 +396,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             {selected.is_user_review_given && (
               <OrderItemReviewCard
                 userReview={selected.user_review}
-                onUpdated={() => router.replace(router.asPath)}
+                onUpdated={() => void refreshData()}
               />
             )}
             {order.invoice && order.status !== "cancelled" && (
@@ -501,7 +560,14 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               {selected.tracking && <p className="text-sm font-semibold">{currentStatus.label}</p>}
               <OrderTimeline key={selected.id} events={timelineEvents} formatPrice={formatPrice} showQuantity={showQuantity} />
               {selected.tracking?.exceptions.filter((exception) => !timelineEvents.some((event) => event.code === exception.code && event.done)).map((exception) => <p key={exception.code} role="status" className={`rounded-small p-3 text-xs ${exception.tone === "danger" ? "bg-danger-50 text-danger" : "bg-warning-50 text-warning-700"}`}>{exception.label}</p>)}
-              <ItemAdjustmentDetails item={selected} refunds={order.refunds} steps={allSteps} formatPrice={formatPrice} />
+              <ItemAdjustmentDetails
+                item={selected}
+                refunds={order.refunds}
+                steps={allSteps}
+                formatPrice={formatPrice}
+                onCancelReturn={handleCancelReturn}
+                cancellingReturnId={cancellingReturnId}
+              />
             </div>
           )}
         </div>
@@ -513,14 +579,14 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
         isOpen={cancelSheet.isOpen}
         onClose={() => { cancelSheet.onClose(); setCancelItemId(null); }}
         item={cancelItem}
-        onDone={() => { cancelSheet.onClose(); setCancelItemId(null); router.replace(router.asPath); }}
+        onDone={() => { cancelSheet.onClose(); setCancelItemId(null); void refreshData(); }}
       />}
       {returnItem && <ReturnSheet
         key={`return-${returnItem.id}`}
         isOpen={returnSheet.isOpen}
         onClose={() => { returnSheet.onClose(); setReturnItemId(null); }}
         item={returnItem}
-        onDone={() => router.replace(router.asPath)}
+        onDone={() => { void refreshData(); }}
       />}
       {selected.product_id && (
         <RatingModal
@@ -528,7 +594,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           onClose={ratingSheet.onClose}
           productId={selected.product_id}
           orderItemId={selected.id}
-          onSuccess={() => router.replace(router.asPath)}
+          onSuccess={() => { void refreshData(); }}
           type="product"
         />
       )}

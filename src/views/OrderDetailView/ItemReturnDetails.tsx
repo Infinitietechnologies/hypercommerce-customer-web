@@ -1,6 +1,7 @@
 import type { OrderItemReturnRequest } from "@/types/order";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui";
 import { getFormattedDate } from "@/helpers/getters";
 
 interface Props {
@@ -8,6 +9,8 @@ interface Props {
   showRefundAmount: boolean;
   formatPrice: (amount: number) => string;
   embedded?: boolean;
+  onCancelReturn?: (returnId: number) => void;
+  cancellingReturnId?: number | null;
 }
 
 function returnTone(status: string) {
@@ -24,7 +27,7 @@ function latestActivity(request: OrderItemReturnRequest) {
   return request.refund_processed_at || request.received_at || request.picked_up_at || request.seller_approved_at || request.created_at;
 }
 
-export default function ItemReturnDetails({ returns, showRefundAmount, formatPrice, embedded = false }: Props) {
+export default function ItemReturnDetails({ returns, showRefundAmount, formatPrice, embedded = false, onCancelReturn, cancellingReturnId }: Props) {
   const { t } = useTranslation();
   if (!returns?.length) return null;
   const ordered = [...returns].sort((a, b) => Date.parse(latestActivity(b)) - Date.parse(latestActivity(a)));
@@ -39,6 +42,7 @@ export default function ItemReturnDetails({ returns, showRefundAmount, formatPri
         {ordered.map((request, index) => {
           const tone = returnTone(request.return_status);
           const shipment = request.source_shipment;
+          const canCancelReturn = ["requested", "approved"].includes(request.return_status);
           return (
             <details key={request.id} open={index === 0} className="group overflow-hidden rounded-medium border border-divider bg-content1">
               <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-default-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
@@ -74,6 +78,21 @@ export default function ItemReturnDetails({ returns, showRefundAmount, formatPri
                   <dd className="mt-1 font-medium">{getFormattedDate(request.created_at)}</dd>
                   {showRefundAmount && <dd className="mt-2 text-default-500">{t("orderRefunds.returnAmount", "Return amount")}: <span className="font-semibold text-foreground">{formatPrice(request.refund_amount)}</span></dd>}
                 </div>
+                {onCancelReturn && canCancelReturn && (
+                  <div className="mt-2 border-t border-divider pt-2 sm:col-span-3 flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      color="danger"
+                      className="text-xs font-semibold"
+                      isLoading={cancellingReturnId === request.id}
+                      startContent={<Icon icon="solar:close-circle-linear" width={14} height={14} />}
+                      onPress={() => onCancelReturn(request.id)}
+                    >
+                      {t("cancelReturnRequestButton", "Cancel Return Request")}
+                    </Button>
+                  </div>
+                )}
               </dl>
             </details>
           );

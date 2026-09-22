@@ -6,11 +6,13 @@ import ItemReturnDetails from "./ItemReturnDetails";
 import ItemRefundDetails from "./ItemRefundDetails";
 import { getItemRefunds } from "./refunds";
 
-export default function ItemAdjustmentDetails({ item, refunds, steps, formatPrice }: {
+export default function ItemAdjustmentDetails({ item, refunds, steps, formatPrice, onCancelReturn, cancellingReturnId }: {
   item: OrderItem;
   refunds?: OrderRefund[];
   steps: TimelineStep[];
   formatPrice: (amount: number) => string;
+  onCancelReturn?: (returnId: number) => void;
+  cancellingReturnId?: number | null;
 }) {
   const { t } = useTranslation();
   const rows = getItemRefunds(refunds, item.id);
@@ -39,7 +41,7 @@ export default function ItemAdjustmentDetails({ item, refunds, steps, formatPric
           <dd>{cancellation.at ? getFormattedDate(cancellation.at) : "—"}</dd>
         </div>
       </dl>}
-      <ItemReturnDetails returns={item.returns} showRefundAmount={!rows.length} formatPrice={formatPrice} embedded />
+      <ItemReturnDetails returns={item.returns} showRefundAmount={!rows.length} formatPrice={formatPrice} embedded onCancelReturn={onCancelReturn} cancellingReturnId={cancellingReturnId} />
       <ItemRefundDetails refunds={refunds} itemId={item.id} formatPrice={formatPrice} />
     </details>
   );
