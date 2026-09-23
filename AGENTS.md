@@ -293,6 +293,14 @@ Full spec — look **and** behaviour — is the `src/redesign/` sandbox
 
 Do not hand-roll a component HeroUI already ships.
 
+### 4.5 Button & modal font and icon sizing (CRITICAL)
+
+- **Never render buttons with tiny, unstyled text**: Default HeroUI `size="sm"` or unstyled buttons shrink font down to `text-tiny` (~12px), making text unreadable. Whenever adding or generating a `Button` (especially modal close buttons, dialog triggers, actions), always ensure proper typography: minimum `text-xs sm:text-sm font-semibold` (or `text-sm font-semibold` / `font-medium`), with balanced height (min `h-9` or `h-10` / `size="app"` / `size="md"`) and appropriate padding (`px-4`).
+- **Icon sizing in buttons & modals**: Icons inside or alongside buttons must never be tiny or shrunken. Always provide explicit width and height: minimum `16px` to `18px` for compact buttons, and `18px` to `20px` for standard buttons and modal headers.
+- **Modal close & action buttons**:
+  - Top-right close button: style with `classNames={{ closeButton: "text-base p-2 top-3 end-3 hover:bg-default-100 rounded-medium text-default-500 hover:text-foreground" }}` so the icon and tap target are comfortable.
+  - Modal footer close/cancel/confirm buttons: use `className="h-9 px-4 text-xs sm:text-sm font-semibold"` or `size="md"` — never raw `size="sm"` with default tiny text.
+
 ---
 
 ## 5. Coding standards

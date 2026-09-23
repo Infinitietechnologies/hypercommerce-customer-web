@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Order } from "@/types/order";
-import { Card } from "@/components/ui";
+import { Card, useDisclosure } from "@/components/ui";
+import OrderRefundsModal from "./OrderRefundsModal";
 
 interface Props {
   order: Order;
@@ -9,6 +10,7 @@ interface Props {
 
 export default function OrderSummaryCard({ order, formatPrice }: Props) {
   const { t } = useTranslation();
+  const refundModal = useDisclosure();
   const current = {
     items_total: Number(order.subtotal),
     delivery_charge: Number(order.delivery_charge),
@@ -92,8 +94,16 @@ export default function OrderSummaryCard({ order, formatPrice }: Props) {
       {(refundIssued > 0 || refundOwed > 0) && (
         <dl className="mt-3 space-y-2 border-t border-divider pt-3 text-sm">
           {refundIssued > 0 && (
-            <div className="flex justify-between gap-4">
-              <dt>{t("orderMoneySummary.refunded", "Refunds sent")}</dt>
+            <div className="flex items-center justify-between gap-4">
+              <dt>
+                <button
+                  type="button"
+                  onClick={refundModal.onOpen}
+                  className="cursor-pointer text-start font-medium text-primary underline decoration-primary/40 underline-offset-2 transition-colors hover:text-primary-700 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 rounded-xs"
+                >
+                  {t("orderMoneySummary.refunded", "Refunds sent")}
+                </button>
+              </dt>
               <dd className="font-medium">{formatPrice(refundIssued)}</dd>
             </div>
           )}
@@ -104,6 +114,14 @@ export default function OrderSummaryCard({ order, formatPrice }: Props) {
             </div>
           )}
         </dl>
+      )}
+      {refundIssued > 0 && (
+        <OrderRefundsModal
+          isOpen={refundModal.isOpen}
+          onClose={refundModal.onClose}
+          order={order}
+          formatPrice={formatPrice}
+        />
       )}
     </Card>
   );

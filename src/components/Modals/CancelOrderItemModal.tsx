@@ -267,10 +267,9 @@ const CancelOrderItemModal: FC<CancelOrderItemModalProps> = ({
 
           <ModalFooter>
             <Button
-              size="sm"
               color="default"
               variant="bordered"
-              className="text-xs"
+              className="h-9 px-4 text-xs sm:text-sm font-semibold"
               onPress={onClose}
             >
               {t("close")}

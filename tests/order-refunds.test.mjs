@@ -19,9 +19,34 @@ function load(file, mocks = {}) {
 const helpers = load("../src/views/OrderDetailView/refunds.ts");
 const timeline = load("../src/views/OrderDetailView/timeline.ts", { "./refunds": helpers });
 const { orderAttachment } = load("../src/views/OrderDetailView/attachments.ts");
+const RefundsModal = load("../src/views/OrderDetailView/OrderRefundsModal.tsx", {
+  "react-i18next": {
+    useTranslation: () => ({
+      t: (key, options) => {
+        if (typeof options === "string") return options;
+        if (options?.amount) return `Includes ${options.amount} shipping`;
+        return options?.defaultValue || key;
+      },
+    }),
+  },
+  "@/helpers/getters": { getFormattedDate: (value) => value },
+  "@iconify/react": { Icon: () => null },
+  "@/components/ui": {
+    Modal: ({ children, isOpen }) => isOpen ? React.createElement("div", { role: "dialog" }, typeof children === "function" ? children() : children) : null,
+    ModalContent: ({ children }) => React.createElement("div", null, typeof children === "function" ? children() : children),
+    ModalHeader: ({ children }) => React.createElement("header", null, children),
+    ModalBody: ({ children }) => React.createElement("div", null, children),
+    ModalFooter: ({ children }) => React.createElement("footer", null, children),
+    Button: ({ children, onPress, onClick, className }) => React.createElement("button", { onClick: onPress || onClick, className }, children),
+  },
+}).default;
 const Summary = load("../src/views/OrderDetailView/OrderSummaryCard.tsx", {
   "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
-  "@/components/ui": { Card: ({ children }) => React.createElement("section", null, children) },
+  "@/components/ui": {
+    Card: ({ children }) => React.createElement("section", null, children),
+    useDisclosure: () => ({ isOpen: false, onOpen: () => {}, onClose: () => {} }),
+  },
+  "./OrderRefundsModal": { default: RefundsModal },
 }).default;
 const renderSummary = ({ snapshot, current = {}, refunds = [] } = {}) => renderToStaticMarkup(React.createElement(Summary, {
   order: {
@@ -55,7 +80,8 @@ test("changed totals preserve checkout discounts and separate refunds from price
   assert.match(html, /INR 180/);
   assert.match(html, /INR -90/);
   assert.match(html, /discountAmount/);
-  assert.match(html, /orderMoneySummary.refunded/);
+  assert.match(html, /<button[^>]*>[^<]*orderMoneySummary\.refunded[^<]*<\/button>/);
+  assert.doesNotMatch(html, /<button[^>]*>[^<]*details[^<]*<\/button>/i);
   assert.doesNotMatch(html, /orderMoneySummary.pending/);
 });
 
@@ -432,4 +458,76 @@ test("item refund section renders quantity, destination, amount and status", () 
   assert.doesNotMatch(html, /INR 300/);
   assert.match(html, /orderRefunds.status.owed/);
   assert.match(html, /orderRefunds.method.wallet/);
+});
+
+test("order refunds modal lists only issued refunds for item attached and custom manual refunds", () => {
+  const order = {
+    items: [
+      { id: 10, title: "Premium Headphones", quantity: 2 },
+      { id: 20, title: "Phone Case", quantity: 1 },
+    ],
+    refunds: [
+      // 1. Attached with item (status: issued)
+      {
+        id: 101,
+        amount: 250,
+        shipping_refund_amount: 0,
+        currency_code: "INR",
+        status: "issued",
+        method: "gateway",
+        settled_by_refund_id: null,
+        created_at: "2026-09-20T10:00:00Z",
+        issued_at: "2026-09-20T10:30:00Z",
+        items: [{ order_item_id: 10, quantity: 1, amount: 250 }],
+      },
+      // 2. Custom amount manual refund by admin (status: issued, items is empty)
+      {
+        id: 102,
+        amount: 50,
+        shipping_refund_amount: 50,
+        currency_code: "INR",
+        status: "issued",
+        method: "manual",
+        settled_by_refund_id: null,
+        created_at: "2026-09-21T11:00:00Z",
+        issued_at: "2026-09-21T11:05:00Z",
+        items: [],
+      },
+      // 3. Pending/owed refund (should NOT be shown in issued details modal)
+      {
+        id: 103,
+        amount: 100,
+        shipping_refund_amount: 0,
+        currency_code: "INR",
+        status: "owed",
+        method: "wallet",
+        settled_by_refund_id: null,
+        created_at: "2026-09-22T12:00:00Z",
+        issued_at: null,
+        items: [],
+      },
+    ],
+  };
+
+  const html = renderToStaticMarkup(React.createElement(RefundsModal, {
+    isOpen: true,
+    onClose: () => {},
+    order,
+    formatPrice: (amount) => `INR ${amount}`,
+  }));
+
+  // Both issued refunds appear
+  assert.match(html, /INR 250/);
+  assert.match(html, /INR 50/);
+  assert.match(html, /INR 300/); // Total refunded 250 + 50
+  // Item-attached refund displays item info
+  assert.match(html, /Premium Headphones/);
+  assert.match(html, /×1/);
+  // Custom manual refund displays manual adjustment label and shipping included
+  assert.match(html, /Custom \/ manual order adjustment/);
+  assert.match(html, /Includes INR 50 shipping/);
+  // Owed refund (id 103) is excluded
+  assert.doesNotMatch(html, /#103/);
+  // Modal close button has appropriate font styling
+  assert.match(html, /<button[^>]*class="[^"]*font-semibold[^"]*"[^>]*>[^<]*Close[^<]*<\/button>/);
 });
