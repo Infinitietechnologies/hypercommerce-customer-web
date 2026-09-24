@@ -8,7 +8,7 @@ interface QtyInputProps {
   min?: number;
   step?: number;
   max?: number;
-  stock?: number;
+  stock?: number | null;
 }
 
 const QtyInput: FC<QtyInputProps> = ({
@@ -40,7 +40,7 @@ const QtyInput: FC<QtyInputProps> = ({
       return;
     }
 
-    if (newQty > stock) {
+    if (stock !== null && stock !== undefined && newQty > stock) {
       toast({
         title: t("stock_limit_error_title"),
         description: t("stock_limit_error_description", { stock }),

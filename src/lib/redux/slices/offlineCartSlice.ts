@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { stockLimit } from "@/helpers/stock";
 
 export type OfflineCartItem = {
   id: string;
@@ -12,7 +13,7 @@ export type OfflineCartItem = {
   minQuantity: number;
   maxQuantity: number;
   stepSize: number;
-  stock: number;
+  stock: number | null;
   product_variant_id: number;
   store_id: number;
   addons?: {
@@ -56,7 +57,7 @@ const clampQuantity = (item: OfflineCartItem, desiredQuantity: number) => {
   const minQuantity = item.minQuantity || 1;
   const stepSize = item.stepSize || 1;
   const maxQuantity = item.maxQuantity || Number.MAX_SAFE_INTEGER;
-  const stock = item.stock || Number.MAX_SAFE_INTEGER;
+  const stock = stockLimit(item.stock, Number.MAX_SAFE_INTEGER);
 
   let qty = Math.max(
     minQuantity,
@@ -136,7 +137,7 @@ const offlineCartSlice = createSlice({
         stepSize?: number;
         minQuantity?: number;
         maxQuantity?: number;
-        stock?: number;
+        stock?: number | null;
       }>
     ) => {
       const targetItem = state.items.find(

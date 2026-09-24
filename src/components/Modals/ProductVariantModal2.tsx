@@ -18,6 +18,11 @@ import { handleAddToCart } from "@/helpers/functionalHelpers";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { getDiscountPercent } from "@/helpers/getters";
+import {
+  hasFiniteStock,
+  isVariantInStock,
+  stockLimit,
+} from "@/helpers/stock";
 
 interface ProductVariantModalProps {
   isOpen: boolean;
@@ -68,13 +73,16 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
     Number.isNaN(lowStockLimitRaw) || lowStockLimitRaw <= 0
       ? null
       : lowStockLimitRaw;
-  const isLowStock = (stock: number) =>
-    lowStockLimit !== null && stock > 0 && stock <= lowStockLimit;
+  const isLowStock = (stock: number | null) =>
+    lowStockLimit !== null &&
+    hasFiniteStock(stock) &&
+    stock > 0 &&
+    stock <= lowStockLimit;
 
   const minQuantity = product.minimum_order_quantity || 1;
-  const maxQuantity = Math.min(
+  const maxQuantity = stockLimit(
+    selectedVariant.stock,
     product.total_allowed_quantity || 9999,
-    selectedVariant.stock
   );
   const stepSize = product.quantity_step_size || 1;
 
@@ -118,7 +126,10 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
       return;
     }
 
-    if (newQuantity > selectedVariant.stock) {
+    if (
+      hasFiniteStock(selectedVariant.stock) &&
+      newQuantity > selectedVariant.stock
+    ) {
       addToast({
         title: t("stock_limit_error_title"),
         description: t("stock_limit_error_description", {
@@ -138,13 +149,18 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
       return;
     }
 
-    setQuantity(Math.min(newQuantity, maxQuantity, selectedVariant.stock));
+    setQuantity(Math.min(newQuantity, maxQuantity));
   };
 
   const handleVariantSelect = (variant: ProductVariant) => {
     setSelectedVariant(variant);
     // Reset quantity if it exceeds new variant's stock
-    setQuantity((prev) => Math.min(prev, variant.stock, maxQuantity));
+    setQuantity((prev) =>
+      Math.min(
+        prev,
+        stockLimit(variant.stock, product.total_allowed_quantity || 9999),
+      ),
+    );
   };
 
   const AddToCart = async () => {
@@ -286,6 +302,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                 const variantPrice = getVariantPrice(variant);
                 const discountPercentage = getDiscountPercentage(variant);
                 const showLowStock = isLowStock(variant.stock);
+                const isUnavailable = !isVariantInStock(variant);
 
                 return (
                   <div
@@ -295,7 +312,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                       isSelected
                         ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
                         : "border-gray-200 dark:border-gray-700 hover:border-primary-300"
-                    } ${variant.stock === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                    } ${isUnavailable ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <div className="flex items-center gap-2">
                       {variant.image ? (
@@ -333,12 +350,12 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                           )}
                         </div>
                         <div className="flex flex-col gap-0.5">
-                          {variant.stock === 0 && (
+                          {isUnavailable && (
                             <span className="text-[10px] text-red-500">
                               {t("product_modal.out_of_stock")}
                             </span>
                           )}
-                          {showLowStock && variant.stock > 0 && (
+                          {showLowStock && (
                             <span className="text-[10px] text-orange-500 font-semibold">
                               {t("product_modal.low_stock_alert", {
                                 stock: variant.stock,
@@ -381,7 +398,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                     isDisabled={
                       quantity <= minQuantity ||
                       loading ||
-                      selectedVariant.stock === 0
+                      !isVariantInStock(selectedVariant)
                     }
                     onPress={handleQuantityDecrease}
                     className="w-8 h-8 min-w-8"
@@ -398,9 +415,9 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                     variant="flat"
                     isDisabled={
                       quantity >= maxQuantity ||
-                      quantity >= selectedVariant.stock ||
+                      quantity >= maxQuantity ||
                       loading ||
-                      selectedVariant.stock === 0
+                      !isVariantInStock(selectedVariant)
                     }
                     onPress={handleQuantityIncrease}
                     className="w-8 h-8 min-w-8"
@@ -409,9 +426,11 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                   </Button>
                 </div>
                 <span className="text-xs text-center text-foreground/50">
-                  {t("product_modal.stock", {
-                    stock: selectedVariant.stock,
-                  })}
+                  {hasFiniteStock(selectedVariant.stock)
+                    ? t("product_modal.stock", {
+                        stock: selectedVariant.stock,
+                      })
+                    : t("product_modal.unlimited_stock")}
                 </span>
                 {isLowStock(selectedVariant.stock) && (
                   <span className="text-xs text-orange-500 font-semibold">
@@ -439,13 +458,13 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
             <Button
               color="primary"
               onPress={AddToCart}
-              isDisabled={selectedVariant.stock === 0}
+              isDisabled={!isVariantInStock(selectedVariant)}
               className="flex-1 text-sm"
               size="sm"
               startContent={<ShoppingCart size={16} />}
               isLoading={loading}
             >
-              {selectedVariant.stock === 0
+              {!isVariantInStock(selectedVariant)
                 ? t("product_modal.out_of_stock")
                 : formatPrice(totalPrice)}
             </Button>

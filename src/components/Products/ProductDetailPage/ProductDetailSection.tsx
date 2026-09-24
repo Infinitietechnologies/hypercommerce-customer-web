@@ -19,6 +19,11 @@ import RatingStars from "@/components/RatingStars";
 import { formatDeliveryByDate } from "@/helpers/delivery";
 import { getDiscountPercent } from "@/helpers/getters";
 import clsx from "clsx";
+import {
+  hasFiniteStock,
+  isVariantInStock,
+  stockLimit,
+} from "@/helpers/stock";
 
 interface ProductDetailSectionProps {
   initialProduct: Product;
@@ -72,7 +77,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
 
   const { formatPrice, systemSettings } = useSettings();
   const isOutOfStock = selectedVariant
-    ? !selectedVariant.availability || selectedVariant.stock <= 0
+    ? !isVariantInStock(selectedVariant)
     : false;
 
   const price = Number(selectedVariant?.price) || 0;
@@ -86,10 +91,11 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   // (Settings → lowStockLimit), shown as an urgency warning rather than the
   // raw count at all times.
   const lowStockLimit = Number(systemSettings?.lowStockLimit) || 0;
-  const currentStock = selectedVariant?.stock ?? 0;
+  const currentStock = selectedVariant?.stock;
   const isLowStock =
     !!selectedVariant &&
     !isOutOfStock &&
+    hasFiniteStock(currentStock) &&
     lowStockLimit > 0 &&
     currentStock <= lowStockLimit;
 
@@ -117,12 +123,25 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       if (matchingVariant) {
         setSelectedVariant(matchingVariant);
         // Reset quantity if it exceeds new variant's stock
-        setQuantity((prev) => Math.min(prev, matchingVariant.stock));
+        setQuantity((prev) =>
+          Math.min(
+            prev,
+            stockLimit(
+              matchingVariant.stock,
+              initialProduct.total_allowed_quantity || 9999,
+            ),
+          ),
+        );
         // Notify parent component about variant change
         onVariantChange?.(matchingVariant);
       }
     }
-  }, [selectedAttributes, variants, onVariantChange]);
+  }, [
+    selectedAttributes,
+    variants,
+    onVariantChange,
+    initialProduct.total_allowed_quantity,
+  ]);
 
   const handleAttributeChange = (attributeSlug: string, value: string) => {
     setSelectedAttributes((prev) => ({

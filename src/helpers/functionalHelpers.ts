@@ -39,6 +39,7 @@ import {
   updateOfflineCartItem,
 } from "@/lib/redux/slices/offlineCartSlice";
 import { trackPurchase } from "@/lib/analytics";
+import { stockLimit } from "@/helpers/stock";
 
 type OfflineCartItemWithVariant = OfflineCartItem & {
   variantTitle?: string;
@@ -321,8 +322,8 @@ export const handleOfflineAddToCart = (params: {
   const minQuantity = product.minimum_order_quantity || 1;
   const stepSize = product.quantity_step_size || 1;
   const maxAllowed = product.total_allowed_quantity || 1;
-  const stock = variant.stock || 0;
-  const maxQuantity = Math.min(maxAllowed, stock);
+  const stock = variant.stock;
+  const maxQuantity = stockLimit(stock, maxAllowed);
   const finalPrice =
     Number(variant.special_price) > 0 &&
     Number(variant.special_price) < Number(variant.price)
@@ -402,8 +403,8 @@ export const handleUpdateOfflineCartItem = (params: {
   const minQuantity = product.minimum_order_quantity || 1;
   const stepSize = product.quantity_step_size || 1;
   const maxAllowed = product.total_allowed_quantity || 1;
-  const stock = variant.stock || 0;
-  const maxQuantity = Math.min(maxAllowed, stock);
+  const stock = variant.stock;
+  const maxQuantity = stockLimit(stock, maxAllowed);
   const finalPrice =
     Number(variant.special_price) > 0 &&
     Number(variant.special_price) < Number(variant.price)

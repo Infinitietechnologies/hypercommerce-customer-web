@@ -13,6 +13,7 @@ import { resolveProductCardStyle } from "@/config/productCard";
 import { useSettings } from "@/contexts/SettingsContext";
 import { handleOfflineAddToCart } from "@/helpers/functionalHelpers";
 import { getDiscountPercent } from "@/helpers/getters";
+import { isVariantInStock } from "@/helpers/stock";
 import { updateCartData } from "@/helpers/updators";
 import { useAdTracking } from "@/hooks/useAdTracking";
 import { RootState } from "@/lib/redux/store";
@@ -67,8 +68,7 @@ const ProductCard: FC<ProductCardProps> = ({
   const isWishlistMode = typeof onWishlistRemove === "function";
   const hasMultipleVariants = variants.length > 1;
   const hasAddons = (defaultVariant.addon_groups?.length ?? 0) > 0;
-  const isOutOfStock =
-    defaultVariant.availability === false || Number(defaultVariant.stock) <= 0;
+  const isOutOfStock = !isVariantInStock(defaultVariant);
 
   const price = Number(defaultVariant.price) || 0;
   const specialPrice = Number(defaultVariant.special_price) || 0;

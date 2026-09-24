@@ -79,7 +79,8 @@ export interface ProductVariant {
   store_id: number;
   store_slug: string;
   store_name: string;
-  stock: number;
+  stock: number | null;
+  is_in_stock?: boolean;
   sku: string;
   attributes: Record<string, string>;
   addon_groups?: AddonGroup[];

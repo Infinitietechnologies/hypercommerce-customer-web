@@ -1690,6 +1690,7 @@
     "select_options": "Select Options",
     "sku": "SKU: {{sku}}",
     "stock": "Stock: {{stock}} available",
+    "unlimited_stock": "Unlimited stock",
     "subtotal": "Subtotal ({{count}} items)",
     "total_savings": "Total Savings",
     "untitled": "Untitled Product",

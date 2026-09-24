@@ -12,6 +12,7 @@ import {
 } from "@/components/ui";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
+import { hasFiniteStock } from "@/helpers/stock";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -90,7 +91,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
     direction: "inc" | "dec",
     minQuantity?: number,
     maxQuantity?: number,
-    stock?: number,
+    stock?: number | null,
   ) => {
     const delta = direction === "inc" ? step : -step;
     const newQuantity = currentQuantity + delta;
@@ -110,7 +111,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
     }
 
     // Check stock limit
-    if (stock && newQuantity > stock) {
+    if (hasFiniteStock(stock) && newQuantity > stock) {
       toast({
         title: t("stock_limit_error_title"),
         description: t("stock_limit_error_description", {
@@ -246,6 +247,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                       (item.price + addonsTotal) * item.quantity;
                     const isLowStock =
                       lowStockLimit > 0 &&
+                      hasFiniteStock(item.stock) &&
                       item.stock > 0 &&
                       item.stock <= lowStockLimit;
                     const variantOptions = Object.entries(

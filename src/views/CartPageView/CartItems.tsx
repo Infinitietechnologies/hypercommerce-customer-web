@@ -27,6 +27,7 @@ import { formatDeliveryByDate } from "@/helpers/delivery";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
 import { useTranslation } from "react-i18next";
+import { hasFiniteStock } from "@/helpers/stock";
 import Lightbox from "yet-another-react-lightbox";
 import { mutate } from "swr";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -411,7 +412,8 @@ const CartItems: FC<CartItemsProps> = ({
         {items.map((item) => {
           const isLowStock =
             lowStockLimit !== null &&
-            item.variant.stock > 0 &&
+          hasFiniteStock(item.variant.stock) &&
+          item.variant.stock > 0 &&
             item.variant.stock <= lowStockLimit;
 
           const { lineOriginal, shownPrice, hasDiscount, saving, discountPct } =
@@ -576,6 +578,7 @@ const CartItems: FC<CartItemsProps> = ({
                 const line = getLineAmounts(item);
                 const isLowStock =
                   lowStockLimit !== null &&
+                  hasFiniteStock(item.variant.stock) &&
                   item.variant.stock > 0 &&
                   item.variant.stock <= lowStockLimit;
 

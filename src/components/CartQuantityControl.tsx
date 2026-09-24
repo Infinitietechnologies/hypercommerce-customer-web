@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCartLoading } from "@/lib/redux/slices/cartSlice";
 import { RootState } from "@/lib/redux/store";
 import { useTranslation } from "react-i18next";
+import { hasFiniteStock } from "@/helpers/stock";
 
 interface CartQuantityControlProps {
   item: CartItem;
@@ -16,7 +17,7 @@ interface CartQuantityControlProps {
   minQuantity?: number;
   maxQuantity?: number;
   quantityStep?: number;
-  stock?: number;
+  stock?: number | null;
 }
 
 const CartQuantityControl: React.FC<CartQuantityControlProps> = ({
@@ -99,7 +100,7 @@ const CartQuantityControl: React.FC<CartQuantityControlProps> = ({
         return;
       }
 
-      if (newQuantity > stock) {
+      if (hasFiniteStock(stock) && newQuantity > stock) {
         addToast({
           title: t("stock_limit_error_title"),
           description: t("stock_limit_error_description", { stock }),

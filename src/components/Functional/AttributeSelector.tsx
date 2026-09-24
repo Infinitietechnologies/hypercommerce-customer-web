@@ -31,9 +31,12 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
           if (swatche_type === "image") {
             return (
               <button
+                type="button"
                 key={swatch.value}
+                aria-label={`${name}: ${swatch.value}`}
+                aria-pressed={isSelected}
                 onClick={() => onChange(slug, swatch.value)}
-                className={`h-9 w-9 overflow-hidden rounded-small border transition-colors ${
+                className={`h-16 w-20 overflow-hidden rounded-small border bg-content1 transition-colors ${
                   isSelected
                     ? "border-primary"
                     : "border-divider hover:border-default-400"
@@ -42,17 +45,20 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
                 <Image
                   src={swatch.swatch}
                   alt={swatch.value}
-                  className="w-full h-full object-fill rounded-none"
-                  classNames={{ wrapper: "h-full w-full" }}
+                  removeWrapper
+                  className="h-full w-full rounded-none object-contain p-1"
                 />
               </button>
             );
           } else if (swatche_type == "color") {
             return (
               <button
+                type="button"
                 key={swatch.value}
+                aria-label={`${name}: ${swatch.value}`}
+                aria-pressed={isSelected}
                 onClick={() => onChange(slug, swatch.value)}
-                className={`flex items-center rounded-small border p-0 transition-colors ${
+                className={`flex items-center rounded-small border bg-content1 p-1 shadow-sm transition-colors ${
                   isSelected
                     ? "border-primary"
                     : "border-divider hover:border-default-400"
@@ -60,7 +66,7 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
               >
                 {/* Color box */}
                 <span
-                  className="h-8 w-8 rounded-small"
+                  className="h-8 w-8 rounded-small shadow-sm ring-1 ring-inset ring-foreground/15"
                   style={{ backgroundColor: swatch.value }}
                 />
               </button>
@@ -68,7 +74,9 @@ const AttributeSelector: FC<AttributeSelectorProps> = ({
           } else {
             return (
               <button
+                type="button"
                 key={swatch.value}
+                aria-pressed={isSelected}
                 onClick={() => onChange(slug, swatch.value)}
                 className={`rounded-small border px-3 py-2 text-xs font-semibold transition-colors ${
                   isSelected

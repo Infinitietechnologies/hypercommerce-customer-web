@@ -34,6 +34,11 @@ import { RootState } from "@/lib/redux/store";
 import { addRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { trackProductView } from "@/lib/analytics";
 import { getDiscountPercent } from "@/helpers/getters";
+import {
+  hasFiniteStock,
+  isVariantInStock,
+  stockLimit,
+} from "@/helpers/stock";
 
 const Lightbox = dynamic(() => import("yet-another-react-lightbox"), {
   ssr: false,
@@ -148,8 +153,11 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
     Number.isNaN(lowStockLimitRaw) || lowStockLimitRaw <= 0
       ? null
       : lowStockLimitRaw;
-  const isLowStock = (stock: number) =>
-    lowStockLimit !== null && stock > 0 && stock <= lowStockLimit;
+  const isLowStock = (stock: number | null) =>
+    lowStockLimit !== null &&
+    hasFiniteStock(stock) &&
+    stock > 0 &&
+    stock <= lowStockLimit;
 
   // ── Two-step Addon Change ───────────────────────────────────────────
   const handleAddonChange = (
@@ -805,7 +813,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                     const v = product.variants.find(
                       (v) => v.id.toString() === val,
                     );
-                    if (v && !(!v.availability || v.stock === 0)) {
+                    if (v && isVariantInStock(v)) {
                       setSelectedVariant(v);
                     }
                   }}
@@ -819,7 +827,7 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                       const discPct = getDiscountPct(v);
                       const qty = variantQuantities[v.id] || minQuantity;
                       const isSelected = selectedVariant?.id === v.id;
-                      const isUnavailable = !v.availability || v.stock === 0;
+                      const isUnavailable = !isVariantInStock(v);
 
                       return (
                         <div
@@ -876,9 +884,11 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                               <div className="flex flex-col gap-1 mt-1">
                                 <div className="flex items-center gap-2">
                                   <p className="text-xs text-foreground/50">
-                                    {t("product_modal.stock", {
-                                      stock: v.stock,
-                                    })}
+                                    {hasFiniteStock(v.stock)
+                                      ? t("product_modal.stock", {
+                                          stock: v.stock,
+                                        })
+                                      : t("product_modal.unlimited_stock")}
                                   </p>
                                   <Divider orientation="vertical" />
                                   <p className="text-xs text-foreground/50">
@@ -964,7 +974,11 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                       setVariantQuantities((p) => ({
                                         ...p,
                                         [v.id]: Math.min(
-                                          v.stock,
+                                          stockLimit(
+                                            v.stock,
+                                            product.total_allowed_quantity ||
+                                              9999,
+                                          ),
                                           qty + stepSize,
                                         ),
                                       }))
@@ -979,11 +993,11 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                                 color="primary"
                                 size="sm"
                                 onPress={() => handleAddToCartFn(v, qty)}
-                                isDisabled={v.stock === 0}
+                                isDisabled={!isVariantInStock(v)}
                                 isLoading={loadingVariantId === v.id}
                                 className="text-xs px-2 sm:px-4"
                               >
-                                {v.stock === 0
+                                {!isVariantInStock(v)
                                   ? t("product_modal.out_of_stock")
                                   : `${t("product_modal.add_to_cart_title")} • ${formatPrice(price * qty)}`}
                               </Button>
@@ -1052,7 +1066,10 @@ const ProductVariantModal: FC<ProductVariantModalProps> = ({
                         onPress={() =>
                           setQuantity((q) =>
                             Math.min(
-                              selectedVariant?.stock || 999,
+                              stockLimit(
+                                selectedVariant?.stock,
+                                product.total_allowed_quantity || 9999,
+                              ),
                               q + stepSize,
                             ),
                           )

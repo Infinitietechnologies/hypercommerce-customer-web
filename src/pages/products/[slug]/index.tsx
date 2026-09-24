@@ -29,6 +29,7 @@ import { useDispatch } from "react-redux";
 import { loadTranslations } from "../../../../i18n";
 import { getCookie } from "@/lib/cookies";
 import type { UserLocation } from "@/components/Location/types/LocationAutoComplete.types";
+import { isVariantInStock } from "@/helpers/stock";
 
 export interface ProductPageProps {
   initialProduct?: Product;
@@ -200,7 +201,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
           }
           productCurrency={initialProduct.variants?.[0]?.currency_code}
           productAvailability={
-            initialProduct.variants?.some((v) => v.stock > 0)
+            initialProduct.variants?.some(isVariantInStock)
               ? "in stock"
               : "out of stock"
           }
@@ -243,7 +244,7 @@ const ProductPage: NextPageWithLayout<ProductPageProps> = ({
           }
           productCurrency={product.variants?.[0]?.currency_code}
           productAvailability={
-            product.variants?.some((v) => v.stock > 0)
+            product.variants?.some(isVariantInStock)
               ? "in stock"
               : "out of stock"
           }

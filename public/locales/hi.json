@@ -1690,6 +1690,7 @@
     "select_options": "विकल्प चुनें",
     "sku": "SKU: {{sku}}",
     "stock": "स्टॉक: {{stock}} उपलब्ध",
+    "unlimited_stock": "असीमित स्टॉक",
     "subtotal": "उप-योग ({{count}} आइटम)",
     "total_savings": "कुल बचत",
     "untitled": "बिना नाम का उत्पाद",

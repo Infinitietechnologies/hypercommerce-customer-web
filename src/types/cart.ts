@@ -54,7 +54,7 @@ export interface CartSyncData {
       price: number;
       special_price: number;
       cost: string;
-      stock: number;
+      stock: number | null;
     };
   }[];
   failed_items: FailedCartItem[];
@@ -101,7 +101,7 @@ export interface CartItem {
     image: string;
     price: string | number;
     special_price: string | number;
-    stock: number;
+    stock: number | null;
     sku: string;
     is_addons?: boolean;
     /** Structured option map for variant products, e.g. { finish: "Walnut" }. */

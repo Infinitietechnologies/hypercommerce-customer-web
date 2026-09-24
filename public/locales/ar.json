@@ -1690,6 +1690,7 @@
     "select_options": "اختر الخيارات",
     "sku": "رمز المنتج: {{sku}}",
     "stock": "المخزون: {{stock}} متاح",
+    "unlimited_stock": "مخزون غير محدود",
     "subtotal": "المجموع الفرعي ({{count}} عناصر)",
     "total_savings": "إجمالي التوفير",
     "untitled": "منتج بدون اسم",

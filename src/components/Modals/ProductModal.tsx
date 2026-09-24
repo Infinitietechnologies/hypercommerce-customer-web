@@ -41,6 +41,11 @@ import { addRecentlyViewed } from "@/lib/redux/slices/recentlyViewedSlice";
 import { trackProductView } from "@/lib/analytics";
 import { motion, AnimatePresence } from "framer-motion";
 import { getDiscountPercent } from "@/helpers/getters";
+import {
+  hasFiniteStock,
+  isVariantInStock,
+  stockLimit,
+} from "@/helpers/stock";
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -152,7 +157,15 @@ const SimpleProductModal: FC<ProductModalProps> = ({
           (product?.quantity_step_size > 1
             ? product.quantity_step_size
             : product?.minimum_order_quantity || 1);
-        setQuantity(() => Math.min(newQuantity, matchingVariant.stock));
+        setQuantity(() =>
+          Math.min(
+            newQuantity,
+            stockLimit(
+              matchingVariant.stock,
+              product.total_allowed_quantity || 9999,
+            ),
+          ),
+        );
       }
     }
   }, [selectedAttributes, cartData, product]);
@@ -172,13 +185,16 @@ const SimpleProductModal: FC<ProductModalProps> = ({
       ? null
       : lowStockLimitRaw;
 
-  const isLowStock = (stock: number) =>
-    lowStockLimit !== null && stock > 0 && stock <= lowStockLimit;
+  const isLowStock = (stock: number | null) =>
+    lowStockLimit !== null &&
+    hasFiniteStock(stock) &&
+    stock > 0 &&
+    stock <= lowStockLimit;
 
   const minQuantity = product.minimum_order_quantity || 1;
-  const maxQuantity = Math.min(
-    product.total_allowed_quantity || 9999,
+  const maxQuantity = stockLimit(
     selectedVariant.stock,
+    product.total_allowed_quantity || 9999,
   );
   const stepSize = product.quantity_step_size || 1;
 
@@ -231,7 +247,10 @@ const SimpleProductModal: FC<ProductModalProps> = ({
       return;
     }
 
-    if (newQuantity > selectedVariant.stock) {
+    if (
+      hasFiniteStock(selectedVariant.stock) &&
+      newQuantity > selectedVariant.stock
+    ) {
       addToast({
         title: t("stock_limit_error_title"),
         description: t("stock_limit_error_description", {
@@ -260,7 +279,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
       return;
     }
 
-    setQuantity(Math.min(newQuantity, maxQuantity, selectedVariant.stock));
+    setQuantity(Math.min(newQuantity, maxQuantity));
   };
 
   const AddToCart = async () => {
@@ -536,7 +555,11 @@ const SimpleProductModal: FC<ProductModalProps> = ({
           <div className="flex items-center justify-between text-xxs sm:text-xs">
             <div className="flex flex-col">
               <span className="text-foreground/50">
-                {t("product_modal.stock", { stock: selectedVariant.stock })}
+                {hasFiniteStock(selectedVariant.stock)
+                  ? t("product_modal.stock", {
+                      stock: selectedVariant.stock,
+                    })
+                  : t("product_modal.unlimited_stock")}
               </span>
               <div className="flex flex-col gap-0.5">
                 {stepSize > 1 ? (
@@ -592,7 +615,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                   aria-label={t("a11y.decrease_quantity")}
                   size="sm"
                   variant="flat"
-                  isDisabled={loading || selectedVariant.stock === 0}
+                  isDisabled={loading || !isVariantInStock(selectedVariant)}
                   onPress={handleQuantityDecrease}
                   className="w-8 h-8 min-w-8"
                 >
@@ -606,7 +629,7 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                   aria-label={t("a11y.increase_quantity")}
                   size="sm"
                   variant="flat"
-                  isDisabled={loading || selectedVariant.stock === 0}
+                  isDisabled={loading || !isVariantInStock(selectedVariant)}
                   onPress={handleQuantityIncrease}
                   className="w-8 h-8 min-w-8"
                 >
@@ -1004,13 +1027,13 @@ const SimpleProductModal: FC<ProductModalProps> = ({
             <Button
               color="primary"
               onPress={AddToCart}
-              isDisabled={selectedVariant.stock === 0}
+              isDisabled={!isVariantInStock(selectedVariant)}
               className="flex-1 text-sm"
               size="sm"
               startContent={<ShoppingCart size={16} />}
               isLoading={loading}
             >
-              {selectedVariant.stock === 0
+              {!isVariantInStock(selectedVariant)
                 ? t("product_modal.out_of_stock")
                 : editingCartItemId
                   ? `${t("product_modal.update_cart_item")} • ${formatPrice(totalPrice)}`

@@ -17,6 +17,7 @@ import {
   removeOfflineCartItem,
 } from "@/lib/redux/slices/offlineCartSlice";
 import { debounce } from "lodash";
+import { hasFiniteStock } from "@/helpers/stock";
 
 interface ProductCardAddButtonProps {
   product: Product;
@@ -194,7 +195,7 @@ const ProductCardAddButton: FC<ProductCardAddButtonProps> = ({
         return;
       }
 
-      if (newQuantity > stock) {
+      if (hasFiniteStock(stock) && newQuantity > stock) {
         addToast({
           title: t("stock_limit_error_title"),
           description: t("stock_limit_error_description", { stock }),
