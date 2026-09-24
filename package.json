@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "npm run lint && node scripts/update-manifest.mjs && node scripts/update-robots.mjs && node scripts/generate-sitemap.mjs && next build",
+    "build": "npm run lint && node scripts/update-manifest.mjs && node scripts/update-robots.mjs && node scripts/generate-sitemap.mjs && next build --webpack",
     "deploy": "npm install && npm run build && node create-htaccess.js && node ftp.js",
     "start": "next start -p 3002",
     "lint": "eslint --fix",
