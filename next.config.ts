@@ -68,7 +68,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     scrollRestoration: true,
-    optimizePackageImports: ["@heroui/react", "lucide-react", "react-icons"],
+    // HeroUI compound components share React context through the package barrel.
+    // Rewriting Card/CardBody into separate optimized entrypoints breaks that
+    // shared context during Pages Router SSR (refreshes then render the 500 page).
+    optimizePackageImports: ["lucide-react", "react-icons"],
   },
   allowedDevOrigins: ["localhost", "127.0.0.1", "*.localhost"],
   env: {
