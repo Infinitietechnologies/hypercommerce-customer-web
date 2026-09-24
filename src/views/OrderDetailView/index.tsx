@@ -30,7 +30,6 @@ import RatingModal from "@/components/Modals/RatingModal";
 import OrderItemReviewCard from "@/components/Modals/OrderItemReviewCard";
 import OrderAttachments from "./OrderAttachments";
 import ShippingInfo from "./ShippingInfo";
-import DeliveryInfo from "./DeliveryInfo";
 import ReturnSheet from "./ReturnSheet";
 import { backendTimelineViews, getItemTimeline } from "./timeline";
 import OrderTimeline from "./OrderTimeline";
@@ -129,7 +128,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
     if (!targetReturnId || !selected) return;
     setCancellingReturnId(targetReturnId);
     try {
-      const res = await cancelReturnReq({ orderItemId: selected.id, returnId: targetReturnId });
+      const res = await cancelReturnReq({ orderItemId: String(selected.id), returnId: targetReturnId });
       if (res.success) {
         toastSuccess(res.message || t("pages.order.returnCancelSuccess", "Return request cancelled"));
         await refreshData();
@@ -500,8 +499,6 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           )}
 
           <ShippingInfo order={order} />
-
-          <DeliveryInfo item={selected} />
 
           <Card shadow="none" radius="lg" className="border border-divider p-4">
             <button
