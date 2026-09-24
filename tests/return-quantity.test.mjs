@@ -14,6 +14,7 @@ const mocks = {
   "@iconify/react": { Icon: () => null },
   "@/contexts/SettingsContext": { useSettings: () => ({ systemSettings: {} }) },
   "@/helpers/imageUpload": {},
+  "@/helpers/getters": { getFormattedDate: (value) => value },
   "@/services/orders": {},
   "@/components/ui": {
     Button: wrapper, Sheet: wrapper, Textarea: () => null, SelectItem: wrapper,

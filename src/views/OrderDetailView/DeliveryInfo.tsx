@@ -1,8 +1,6 @@
-import type { OrderItem } from "@/types/ApiResponse";
-import { Card, CardBody, CardHeader, Chip, Divider } from "@/components/ui";
+import type { OrderItem, OrderShipment } from "@/types/ApiResponse";
+
 import { Icon } from "@iconify/react";
-import { getFormattedDate } from "@/helpers/getters";
-import { orderStatusColorMap } from "@/config/constants";
 import React, { FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -10,118 +8,105 @@ interface DeliveryInfoProps {
   item: OrderItem;
 }
 
-// DeliveryInfo — per-shipment tracking view (replaces delivery-boy tracking).
+const terminalItemStatuses = new Set([
+  "delivered",
+  "cancelled",
+  "returned",
+  "refunded",
+]);
+
+const isDelivered = (shipment: OrderShipment) =>
+  shipment.customer_status === "delivered" || shipment.status === "delivered";
+
+const safeTrackingUrl = (url: string | null) =>
+  url && /^https?:\/\//i.test(url) ? url : null;
+
+// Each parcel independently shows either a compact carrier action or the
+// availability notice. Delivered parcels disappear from the order card.
 const DeliveryInfo: FC<DeliveryInfoProps> = ({ item }) => {
   const { t } = useTranslation();
-  const shipments = item.shipments ?? [];
+  const allShipments = item.shipments ?? [];
+  const openShipments = allShipments.filter((shipment) => !isDelivered(shipment));
+  const itemStatus = item.customer_status?.code;
+
+  if (
+    (itemStatus && terminalItemStatuses.has(itemStatus)) ||
+    (allShipments.length > 0 && openShipments.length === 0)
+  ) {
+    return null;
+  }
+
+  const trackableShipments = openShipments
+    .map((shipment) => ({
+      shipment,
+      trackingUrl: safeTrackingUrl(shipment.tracking_url),
+    }))
+    .filter(
+      (entry): entry is { shipment: OrderShipment; trackingUrl: string } =>
+        Boolean(entry.trackingUrl),
+    );
+  const hasUnavailableTracking =
+    openShipments.length === 0 || trackableShipments.length < openShipments.length;
+  const showShipmentMeta = allShipments.length > 1;
 
   return (
-    <Card shadow="none" radius="lg" className="border border-divider">
-      <CardHeader className="px-4 pt-4 pb-3">
-        <div className="flex items-center gap-2">
-          <Icon icon="solar:delivery-linear" className="w-4 h-4 text-default-500" />
-          <h3 className="text-sm font-semibold text-foreground">
-            {t("shipments") || t("delivery_info")}
-          </h3>
-          <span className="text-xs text-default-400">{t("pages.order.selectedItem", "Selected item")}</span>
+    <section
+      className="space-y-2 px-4 pb-4"
+      aria-label={t("trackingDetails", "Tracking details")}
+    >
+      {trackableShipments.map(({ shipment, trackingUrl }) => (
+        <div
+          key={shipment.id}
+          className="flex items-center gap-3 rounded-medium bg-primary-50 px-3 py-2.5"
+        >
+          <div className="min-w-0 flex-1">
+            {showShipmentMeta && (
+              <div className="mb-0.5 text-[10px] font-medium text-default-500">
+                {t("shipmentNumber", {
+                  id: shipment.id,
+                  defaultValue: "Shipment #{{id}}",
+                })}{" "}
+                · {t("qty")}: {shipment.quantity}
+              </div>
+            )}
+            <div className="truncate text-sm font-semibold text-foreground">
+              {shipment.carrier_name || t("carrier", "Carrier")}
+            </div>
+            <div className="mt-0.5 truncate text-xs text-default-500">
+              {t("trackingNumber", "Tracking number")}: {shipment.tracking_number || t("notAvailable", "Not available")}
+            </div>
+          </div>
+
+          <a
+            href={trackingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-content1 text-primary-600 shadow-sm transition-colors hover:bg-primary-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label={t("trackOrder", "Track order")}
+            title={t("trackOrder", "Track order")}
+          >
+            <Icon icon="solar:map-arrow-square-linear" width={20} height={20} />
+          </a>
         </div>
-      </CardHeader>
-      <CardBody className="px-4 pb-4 pt-0">
-        {shipments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-            <Icon icon="solar:box-linear" className="w-6 h-6 text-foreground/30" />
-            <p className="text-xs text-default-500">
-              {t("notYetShipped") || "Not yet shipped"}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {shipments.map((shipment) => {
-              const statusText =
-                shipment.customer_status_label || shipment.status;
-              return (
-                <div
-                  key={shipment.id}
-                  className="rounded-medium border border-divider p-3 space-y-3"
-                >
-                  {/* Carrier + status */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <Icon icon="solar:delivery-linear" className="w-3.5 h-3.5 text-default-500 shrink-0" />
-                        <span className="text-sm font-semibold text-foreground break-words">
-                          {shipment.carrier_name || t("na")}
-                        </span>
-                      </div>
-                      {shipment.tracking_number && (
-                        <p className="text-xs text-default-500 mt-1 break-all">
-                          {t("trackingNumber") || "Tracking #"}:{" "}
-                          <span className="font-medium text-default-600">
-                            {shipment.tracking_number}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      radius="sm"
-                      color={orderStatusColorMap(shipment.customer_status || shipment.status)}
-                      classNames={{ content: "text-xs" }}
-                      title={statusText}
-                    >
-                      {statusText}
-                    </Chip>
-                  </div>
+      ))}
 
-                  <div className="flex items-center justify-between gap-3 text-sm leading-5 text-default-600">
-                    <div className="min-w-0 break-words">
-                      <p className="font-medium text-foreground">{item.product?.name || item.title}</p>
-                      {item.variant_title && <p className="mt-0.5 text-xs text-default-500">{item.variant_title}</p>}
-                    </div>
-                    <span className="shrink-0 text-xs font-medium text-default-500">× {shipment.quantity}</span>
-                  </div>
-
-                  {/* Timestamps */}
-                  {(shipment.picked_up_at || shipment.delivered_at) && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-default-500">
-                      {shipment.picked_up_at && (
-                        <span>
-                          {t("pickedUp") || "Picked up"}:{" "}
-                          {getFormattedDate(shipment.picked_up_at)}
-                        </span>
-                      )}
-                      {shipment.delivered_at && (
-                        <span>
-                          {t("delivered") || "Delivered"}:{" "}
-                          {getFormattedDate(shipment.delivered_at)}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Track link (external) */}
-                  {shipment.tracking_url && (
-                    <>
-                      <Divider className="opacity-50" />
-                      <a
-                        href={shipment.tracking_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                      >
-                        {t("track") || "Track"}
-                        <Icon icon="solar:arrow-right-up-linear" className="w-3 h-3" />
-                      </a>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardBody>
-    </Card>
+      {hasUnavailableTracking && (
+        <div className="flex items-start gap-2 rounded-medium bg-content2 px-3 py-2.5 text-xs leading-5 text-default-600">
+          <Icon
+            icon="solar:info-circle-linear"
+            width={18}
+            height={18}
+            className="mt-px shrink-0"
+          />
+          <span>
+            {t(
+              "trackingLinkNotAvailable",
+              "Tracking details will be available once the carrier provides them.",
+            )}
+          </span>
+        </div>
+      )}
+    </section>
   );
 };
 

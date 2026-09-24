@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { useSettings } from "@/contexts/SettingsContext";
 import { imageRejectionKeys, rejectImage } from "@/helpers/imageUpload";
+import { getFormattedDate } from "@/helpers/getters";
 import { returnOrderItem } from "@/services/orders";
 
 /** Reasons that require a written remark + at least one photo (backend enforces). */
@@ -24,6 +25,13 @@ const EVIDENCE_REQUIRED = new Set([
   "wrong_item",
   "not_as_described",
 ]);
+
+const EVIDENCE_HINTS: Record<string, string> = {
+  damaged: "pages.order.photoHintDamaged",
+  defective: "pages.order.photoHintDefective",
+  wrong_item: "pages.order.photoHintWrongItem",
+  not_as_described: "pages.order.photoHintNotAsDescribed",
+};
 
 interface ReturnSheetProps {
   isOpen: boolean;
@@ -49,9 +57,14 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
   const [reasonCode, setReasonCode] = useState("");
   const [quantity, setQuantity] = useState(1);
   const shipments = item.returnable_shipments ?? [];
-  const [shipmentId, setShipmentId] = useState<number | null>(shipments.length === 1 ? shipments[0].id : null);
-  const selectedShipment = shipments.find((shipment) => shipment.id === shipmentId);
-  const availableQuantity = shipments.length ? (selectedShipment?.quantity ?? 0) : item.quantity;
+  const selectableShipments = shipments.filter((shipment) => shipment.id !== null);
+  const singleShipment = shipments.length === 1 ? shipments[0] : null;
+  const [shipmentId, setShipmentId] = useState<number | null>(
+    selectableShipments.length === 1 ? selectableShipments[0].id : null,
+  );
+  const selectedShipment =
+    shipments.find((shipment) => shipment.id === shipmentId) ?? singleShipment;
+  const availableQuantity = selectedShipment?.quantity ?? item.quantity;
   const [remark, setRemark] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -61,7 +74,7 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
   const reset = () => {
     setReasonCode("");
     setQuantity(1);
-    setShipmentId(shipments.length === 1 ? shipments[0].id : null);
+    setShipmentId(selectableShipments.length === 1 ? selectableShipments[0].id : null);
     setRemark("");
     setImages([]);
   };
@@ -90,7 +103,7 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
 
   const submit = async () => {
     if (availableQuantity < 1) {
-      toastError(t("pages.order.selectReturnShipment", "Select a delivered shipment to return."));
+      toastError(t("pages.order.selectReturnDelivery", "Select a delivered quantity to return."));
       return;
     }
     if (!reasonCode) {
@@ -157,11 +170,11 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
           {item.product?.name || item.title}
         </div>
 
-        {shipments.some((shipment) => shipment.id !== null) && (
+        {selectableShipments.length > 1 && (
           <Select
-            label={t("pages.order.returnShipment", "Shipment to return")}
+            label={t("pages.order.returnDelivery", "Choose delivery to return")}
             labelPlacement="outside"
-            placeholder={t("pages.order.selectReturnShipment", "Select a delivered shipment to return")}
+            placeholder={t("pages.order.selectReturnDelivery", "Select a delivered quantity")}
             selectedKeys={shipmentId !== null ? [String(shipmentId)] : []}
             onChange={(e) => {
               setShipmentId(e.target.value ? Number(e.target.value) : null);
@@ -171,9 +184,12 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
             isRequired
             isDisabled={submitting}
           >
-            {shipments.filter((shipment) => shipment.id !== null).map((shipment) => (
-              <SelectItem key={String(shipment.id)} textValue={`Shipment #${shipment.id}`}>
-                {`Shipment #${shipment.id}`}{shipment.carrier_name ? ` · ${shipment.carrier_name}` : ""}{shipment.tracking_number ? ` · ${shipment.tracking_number}` : ""} · {t("qty")}: {shipment.quantity}
+            {selectableShipments.map((shipment) => (
+              <SelectItem
+                key={String(shipment.id)}
+                textValue={`${t("pages.order.deliveredOn", "Delivered on")} ${shipment.delivered_at ? getFormattedDate(shipment.delivered_at) : ""} · ${t("qty")}: ${shipment.quantity}`}
+              >
+                {t("pages.order.deliveredOn", "Delivered on")} {shipment.delivered_at ? getFormattedDate(shipment.delivered_at) : "—"} · {t("qty")}: {shipment.quantity}
               </SelectItem>
             ))}
           </Select>
@@ -265,8 +281,8 @@ const ReturnSheet: React.FC<ReturnSheetProps> = ({
           {needsEvidence && (
             <p className="mt-1 text-xs text-default-500">
               {t(
-                "pages.order.evidenceHint",
-                "This reason needs a remark and at least one photo.",
+                EVIDENCE_HINTS[reasonCode] || "pages.order.evidenceHint",
+                "Upload a clear photo that shows the issue and the full item.",
               )}
             </p>
           )}

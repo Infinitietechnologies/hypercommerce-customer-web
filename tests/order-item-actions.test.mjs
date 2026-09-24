@@ -10,6 +10,7 @@ const require = createRequire(import.meta.url);
 const Button = () => null;
 const CancelItemSheet = () => null;
 const ReturnSheet = () => null;
+const SellerFeedbacks = () => null;
 const stub = () => null;
 const router = { query: { item: "1" }, pathname: "/orders/[slug]", push: () => {}, replace: () => {} };
 const state = [];
@@ -30,7 +31,7 @@ const ui = {
 const mocks = {
   react: hooks,
   "next/router": { useRouter: () => router },
-  "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
+  "react-i18next": { useTranslation: () => ({ t: (key, options) => typeof options === "string" ? options : options?.defaultValue ? options.defaultValue.replace("{{provider}}", options.provider || "") : key }) },
   "@iconify/react": { Icon: stub },
   "@/components/ui": ui,
   "@/routes/api": { reorderOrder: () => {} },
@@ -51,6 +52,7 @@ const mocks = {
   "./ItemAdjustmentDetails": { default: stub },
   "./ItemQuantityDetails": { default: stub },
   "./OrderSummaryCard": { default: stub },
+  "./SellerFeedbacks": { default: SellerFeedbacks },
 };
 const output = ts.transpileModule(readFileSync(new URL("../src/views/OrderDetailView/index.tsx", import.meta.url), "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
@@ -99,4 +101,25 @@ test("return stays bound to the item selected when opened", () => {
   action(render(2), "return").props.onPress();
   const sheet = render(1).find((node) => node.type === ReturnSheet);
   assert.equal(sheet.props.item.id, 2);
+});
+
+test("seller feedback is available from the redesigned order detail page", () => {
+  state.length = 0;
+  const feedback = render(1).find((node) => node.type === SellerFeedbacks);
+  assert.ok(feedback);
+  assert.equal(feedback.props.item.id, 1);
+
+  const secondFeedback = render(2).find((node) => node.type === SellerFeedbacks);
+  assert.equal(secondFeedback.props.item.id, 2);
+});
+
+test("payment method is presented as online provider or cash on delivery", () => {
+  state.length = 0;
+  order.payment_method = "razorpayPayment";
+  let payment = render(1).find((node) => node.props.label === "paymentMethod");
+  assert.equal(payment.props.value, "Online (Razorpay)");
+
+  order.payment_method = "cod";
+  payment = render(1).find((node) => node.props.label === "paymentMethod");
+  assert.equal(payment.props.value, "Cash on delivery");
 });

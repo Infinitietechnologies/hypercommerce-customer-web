@@ -124,6 +124,43 @@ test("older API responses and orders without refunds are supported", () => {
   assert.equal(helpers.getItemRefunds([], 10).length, 0);
 });
 
+test("order listing surfaces initiated refunds and an existing product rating", () => {
+  const Component = load("../src/components/Cards/OrderCard.tsx", {
+    "next/link": { __esModule: true, default: ({ children, href, className }) => React.createElement("a", { href, className }, children) },
+    "react-i18next": { useTranslation: () => ({ t: (key, options) => typeof options === "string" ? options : key }) },
+    "@iconify/react": { Icon: () => null },
+    "@/components/ui": {
+      Chip: ({ children }) => React.createElement("span", null, children),
+      Image: ({ src, alt }) => React.createElement("img", { src, alt }),
+    },
+    "@/helpers/getters": { getFormattedDate: (value) => value },
+    "@/config/constants": { orderStatusColorMap: () => "default" },
+    "@/components/Functional/Price": { useCurrency: () => ({ formatWith: (amount) => `INR ${amount}` }) },
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, {
+    item: {
+      id: 10,
+      order_id: 7,
+      title: "Headphones",
+      subtotal: "100",
+      created_at: "2026-09-16",
+      status_label: "Delivered",
+      customer_status: { code: "delivered", label: "Delivered" },
+      is_user_review_given: true,
+      user_review: { rating: 4, title: "Good sound" },
+      refund: { amount: 100, status: "owed", method: "gateway", created_at: "2026-09-17", issued_at: null },
+      order: { slug: "order-7", order_date: "2026-09-16" },
+    },
+  }));
+  assert.match(html, /Refund initiated/);
+  assert.match(html, /INR 100/);
+  assert.match(html, /orderRefunds\.method\.gateway/);
+  assert.match(html, /2026-09-17/);
+  assert.match(html, /4\/5/);
+  assert.match(html, /Good sound/);
+  assert.match(html, />Delivered</);
+});
+
 test("attachments recognize signed PDFs and images and reject executable URLs", () => {
   assert.equal(orderAttachment("https://example.test/prescription.PDF?signature=test").type, "pdf");
   assert.equal(orderAttachment("/files/photo%20one.jpg?token=test").name, "photo one.jpg");
@@ -150,8 +187,30 @@ test("item changes use a disclosure card rather than a second timeline", () => {
     steps: [{ key: "cancelled", events: [], at: null }], formatPrice: String,
   }));
   assert.match(html, /<details/);
-  assert.match(html, /orderRefunds.status.issued/);
+  assert.match(html, /orderRefunds.completed/);
   assert.doesNotMatch(html, /<ol|data-state/);
+});
+
+test("completed item refunds replace the return request card", () => {
+  const Component = load("../src/views/OrderDetailView/ItemAdjustmentDetails.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
+    "@/helpers/getters": { getFormattedDate: (value) => value },
+    "./refunds": helpers,
+    "./ItemReturnDetails": { default: () => React.createElement("span", null, "return-card") },
+    "./ItemRefundDetails": { default: () => React.createElement("span", null, "refund-card") },
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, {
+    item: {
+      id: 10,
+      returns: [{ id: 8, return_status: "approved", customer_status: { label: "Return approved" }, created_at: "2026-09-15" }],
+    },
+    refunds: [refund({ status: "issued", issued_at: "2026-09-16T10:00:00Z" })],
+    steps: [],
+    formatPrice: String,
+  }));
+  assert.match(html, /orderRefunds.completed/);
+  assert.match(html, /refund-card/);
+  assert.doesNotMatch(html, /return-card|Return approved/);
 });
 
 test("completed terminal markers are green and exceptions have distinct semantics", () => {
@@ -373,54 +432,139 @@ test("partial cancellation quantities are shown without adding noise to unchange
   } } })), "");
 });
 
-test("return history keeps declined and cancelled requests and shows their individual quantities", () => {
+test("return card shows only the latest request with a customer-friendly status", () => {
   const Component = load("../src/views/OrderDetailView/ItemReturnDetails.tsx", {
     "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
-    "@/helpers/getters": { getFormattedDate: (value) => value },
-    "@/components/ui": { Button: () => null },
+    "@iconify/react": { Icon: () => null },
+    "@/components/ui": {
+      Button: () => null,
+      Chip: ({ children }) => React.createElement("span", null, children),
+    },
   }).default;
   const html = renderToStaticMarkup(React.createElement(Component, {
     returns: [
-      { id: 1, quantity: 1, source_shipment_id: 31, source_shipment: { id: 31, carrier_name: "Carrier A", tracking_number: "TRACK-A" }, return_status: "declined", customer_status: { label: "Declined" }, created_at: "first-date", reason: "Wrong size" },
-      { id: 2, quantity: 2, return_status: "cancelled", customer_status: { label: "Cancelled" }, created_at: "second-date", reason: "Changed mind" },
-    ], showRefundAmount: false, formatPrice: String,
+      { id: 1, return_status: "declined", customer_status: { label: "Declined", description: "Old request" }, created_at: "first-date" },
+      { id: 2, return_status: "approved", customer_status: { label: "Return approved", description: "Your return was approved." }, created_at: "second-date" },
+    ],
   }));
-  assert.match(html, /Declined/);
-  assert.match(html, /Cancelled/);
-  assert.match(html, /qty: 1/);
-  assert.match(html, /qty: 2/);
-  assert.match(html, /Wrong size/);
-  assert.match(html, /Shipment.*#31/);
-  assert.match(html, /TRACK-A/);
-  assert.equal((html.match(/<details/g) || []).length, 2);
-  assert.equal((html.match(/<details open/g) || []).length, 1);
+  assert.match(html, /orderReturns.request/);
+  assert.match(html, /Return approved/);
+  assert.match(html, /Your return was approved/);
+  assert.doesNotMatch(html, /Declined|Old request|Shipment|Reason|Qty/);
+  assert.equal((html.match(/<details/g) || []).length, 0);
 });
 
-test("shipment card reads parcels directly from the selected item", () => {
+test("return picker identifies deliveries by date and quantity instead of shipment internals", () => {
+  const Component = load("../src/views/OrderDetailView/ReturnSheet.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key, options) => typeof options === "string" ? options : key }) },
+    "@iconify/react": { Icon: () => null },
+    "@/components/ui": {
+      Button: ({ children }) => React.createElement("button", null, children),
+      Select: ({ children, label }) => React.createElement("section", null, React.createElement("h3", null, label), children),
+      SelectItem: ({ children }) => React.createElement("div", null, children),
+      Sheet: ({ children }) => React.createElement("div", null, children),
+      Textarea: () => null,
+      toastError: () => {},
+      toastSuccess: () => {},
+    },
+    "@/contexts/SettingsContext": { useSettings: () => ({ systemSettings: { returnReasonEnum: {} } }) },
+    "@/helpers/imageUpload": { imageRejectionKeys: () => ({}), rejectImage: () => null },
+    "@/helpers/getters": { getFormattedDate: () => "24 Sep 2026" },
+    "@/services/orders": { returnOrderItem: async () => ({ success: true }) },
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, {
+    isOpen: true,
+    onClose: () => {},
+    item: {
+      id: 10,
+      title: "Headphones",
+      quantity: 3,
+      returnable_shipments: [
+        { id: 31, quantity: 2, delivered_at: "2026-09-24T10:00:00Z" },
+        { id: 32, quantity: 1, delivered_at: "2026-09-25T10:00:00Z" },
+      ],
+    },
+  }));
+  assert.match(html, /Choose delivery to return/);
+  assert.match(html, /Delivered on.*24 Sep 2026.*qty.*2/);
+  assert.doesNotMatch(html, /Shipment #31|Carrier|tracking/i);
+});
+
+test("a single returnable shipment is selected without showing a redundant picker", () => {
+  const Component = load("../src/views/OrderDetailView/ReturnSheet.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key, options) => typeof options === "string" ? options : key }) },
+    "@iconify/react": { Icon: () => null },
+    "@/components/ui": {
+      Button: ({ children }) => React.createElement("button", null, children),
+      Select: ({ children, label }) => React.createElement("section", null, React.createElement("h3", null, label), children),
+      SelectItem: ({ children }) => React.createElement("div", null, children),
+      Sheet: ({ children }) => React.createElement("div", null, children),
+      Textarea: () => null,
+      toastError: () => {},
+      toastSuccess: () => {},
+    },
+    "@/contexts/SettingsContext": { useSettings: () => ({ systemSettings: { returnReasonEnum: {} } }) },
+    "@/helpers/imageUpload": { imageRejectionKeys: () => ({}), rejectImage: () => null },
+    "@/helpers/getters": { getFormattedDate: () => "24 Sep 2026" },
+    "@/services/orders": { returnOrderItem: async () => ({ success: true }) },
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, {
+    isOpen: true,
+    onClose: () => {},
+    item: {
+      id: 10,
+      title: "Headphones",
+      quantity: 1,
+      returnable_shipments: [{ id: 31, quantity: 1, delivered_at: "2026-09-24T10:00:00Z" }],
+    },
+  }));
+  assert.doesNotMatch(html, /Choose delivery to return|Delivered on/);
+});
+
+test("tracking details show each dispatched parcel until that parcel is delivered", () => {
   const Component = load("../src/views/OrderDetailView/DeliveryInfo.tsx", {
     "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
-    "@/components/ui": {
-      Card: ({ children }) => React.createElement("section", null, children),
-      CardBody: ({ children }) => React.createElement("div", null, children),
-      CardHeader: ({ children }) => React.createElement("header", null, children),
-      Chip: ({ children }) => React.createElement("span", null, children),
-      Divider: () => React.createElement("hr"),
-    },
     "@iconify/react": { Icon: () => null },
-    "@/helpers/getters": { getFormattedDate: (value) => value },
-    "@/config/constants": { orderStatusColorMap: () => "default" },
   }).default;
   const html = renderToStaticMarkup(React.createElement(Component, { item: {
     title: "Selected", variant_title: "Blue", shipments: [
-      { id: 1, quantity: 1, status: "shipped", customer_status: "shipped", customer_status_label: "Shipped", carrier_name: "Carrier A", tracking_number: "A1", tracking_url: null, picked_up_at: null, delivered_at: null },
+      { id: 1, quantity: 1, status: "confirmed", customer_status: "shipped", customer_status_label: "Shipped", carrier_name: "Carrier A", tracking_number: "A1", tracking_url: "https://example.test/A1", picked_up_at: null, delivered_at: null },
       { id: 2, quantity: 2, status: "delivered", customer_status: "delivered", customer_status_label: "Delivered", carrier_name: "Carrier B", tracking_number: "B2", tracking_url: null, picked_up_at: null, delivered_at: null },
+      { id: 3, quantity: 1, status: "in_transit", customer_status: "in_transit", customer_status_label: "In transit", carrier_name: "Carrier C", tracking_number: "C3", tracking_url: null, picked_up_at: null, delivered_at: null },
     ],
   } }));
   assert.match(html, /Carrier A/);
-  assert.match(html, /Carrier B/);
-  assert.equal((html.match(/Selected/g) || []).length, 2);
-  assert.match(html, /× 1/);
-  assert.match(html, /× 2/);
+  assert.doesNotMatch(html, /Carrier B/);
+  assert.doesNotMatch(html, /Carrier C/);
+  assert.match(html, /https:\/\/example\.test\/A1/);
+  assert.match(html, /trackingLinkNotAvailable/);
+  assert.match(html, /shipmentNumber.*qty/);
+});
+
+test("tracking availability message is shown before an item ships", () => {
+  const Component = load("../src/views/OrderDetailView/DeliveryInfo.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
+    "@iconify/react": { Icon: () => null },
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, { item: {
+    customer_status: { code: "processing" },
+    shipments: [],
+  } }));
+  assert.match(html, /trackingLinkNotAvailable/);
+  assert.doesNotMatch(html, /trackOrder/);
+});
+
+test("tracking details are removed when every shipment is delivered", () => {
+  const Component = load("../src/views/OrderDetailView/DeliveryInfo.tsx", {
+    "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
+    "@iconify/react": { Icon: () => null },
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, { item: {
+    shipments: [
+      { id: 2, quantity: 2, status: "delivered", customer_status: "delivered", customer_status_label: "Delivered", carrier_name: "Carrier B", tracking_number: "B2", tracking_url: null, picked_up_at: null, delivered_at: null },
+    ],
+  } }));
+  assert.equal(html, "");
 });
 
 test("cancellation confirmation submits only the selected item and displays eligible quantity", async () => {
@@ -444,20 +588,43 @@ test("cancellation confirmation submits only the selected item and displays elig
   assert.equal(done, true);
 });
 
-test("item refund section renders quantity, destination, amount and status", () => {
+test("single item refund renders destination, amount and status without a total", () => {
   const Component = load("../src/views/OrderDetailView/ItemRefundDetails.tsx", {
     "./refunds": helpers,
-    "react-i18next": { useTranslation: () => ({ t: (key, options) => options ? `Qty: ${options.count}` : key }) },
+    "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
     "@/helpers/getters": { getFormattedDate: (value) => value },
+    "@iconify/react": { Icon: () => null },
+    "@/components/ui": { Chip: ({ children }) => React.createElement("span", null, children) },
   }).default;
   const html = renderToStaticMarkup(React.createElement(Component, {
     refunds: [refund()], itemId: 10, formatPrice: (amount) => `INR ${amount}`,
   }));
-  assert.match(html, /Qty: 1/);
   assert.match(html, /INR 100/);
   assert.doesNotMatch(html, /INR 300/);
+  assert.doesNotMatch(html, /orderRefunds.total/);
+  assert.doesNotMatch(html, /Qty/);
   assert.match(html, /orderRefunds.status.owed/);
   assert.match(html, /orderRefunds.method.wallet/);
+});
+
+test("item refund section shows a total only when there are multiple refunds", () => {
+  const Component = load("../src/views/OrderDetailView/ItemRefundDetails.tsx", {
+    "./refunds": helpers,
+    "react-i18next": { useTranslation: () => ({ t: (key) => key }) },
+    "@/helpers/getters": { getFormattedDate: (value) => value },
+    "@iconify/react": { Icon: () => null },
+    "@/components/ui": { Chip: ({ children }) => React.createElement("span", null, children) },
+  }).default;
+  const html = renderToStaticMarkup(React.createElement(Component, {
+    refunds: [
+      refund({ id: 1, items: [{ order_item_id: 10, quantity: 1, amount: 100 }] }),
+      refund({ id: 2, items: [{ order_item_id: 10, quantity: 1, amount: 50 }] }),
+    ],
+    itemId: 10,
+    formatPrice: (amount) => `INR ${amount}`,
+  }));
+  assert.match(html, /orderRefunds.total/);
+  assert.match(html, /INR 150/);
 });
 
 test("order refunds modal lists only issued refunds for item attached and custom manual refunds", () => {

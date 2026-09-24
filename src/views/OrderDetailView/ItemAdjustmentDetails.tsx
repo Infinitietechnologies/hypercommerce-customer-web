@@ -15,34 +15,65 @@ export default function ItemAdjustmentDetails({ item, refunds, steps, formatPric
   cancellingReturnId?: number | null;
 }) {
   const { t } = useTranslation();
-  const rows = getItemRefunds(refunds, item.id);
+  const refundRows = getItemRefunds(refunds, item.id);
+  const issuedRefunds = refundRows.filter((refund) => refund.status === "issued");
+  const allRefundsIssued = refundRows.length > 0 && refundRows.every((refund) => refund.status === "issued");
+  const latestReturn = issuedRefunds.length
+    ? undefined
+    : [...(item.returns || [])].sort((a, b) => b.id - a.id)[0];
   const cancellation = steps.find((step) => step.key === "cancelled");
   const quantity = item.quantity_summary?.cancelled ?? cancellation?.events[0]?.meta?.quantity;
-  const hasReturns = !!item.returns?.length;
-  if (!cancellation && !quantity && !hasReturns && !rows.length) return null;
-  const status = rows.some((row) => row.status === "failed") ? "failed" : rows.some((row) => row.status === "owed") ? "owed" : "issued";
-  const statusRows = rows.filter((row) => row.status === status);
-  const method = statusRows.length && statusRows.every((row) => row.method === statusRows[0].method) ? statusRows[0].method : null;
-  const updateCount = hasReturns ? item.returns!.length : rows.length + (quantity ? 1 : 0);
+
+  if (!cancellation && !quantity && !latestReturn && !refundRows.length) return null;
+
+  const refundStatus = refundRows.some((refund) => refund.status === "failed")
+    ? "failed"
+    : refundRows.some((refund) => refund.status === "owed")
+      ? "owed"
+      : "issued";
+  const showsRefund = issuedRefunds.length > 0 || (!latestReturn && refundRows.length > 0);
+  const title = allRefundsIssued
+    ? t("orderRefunds.completed", "Refund completed")
+    : latestReturn
+      ? latestReturn.customer_status?.label || t("orderReturns.request", "Return request")
+      : showsRefund
+        ? t(`orderRefunds.status.${refundStatus}`)
+        : t("orderQuantities.cancelled", "Cancelled");
+  const icon = allRefundsIssued
+    ? "solar:check-circle-bold"
+    : latestReturn
+      ? "solar:refresh-circle-linear"
+      : showsRefund
+        ? "solar:wallet-money-linear"
+        : "solar:close-circle-linear";
+  const iconClass = allRefundsIssued
+    ? "bg-success-50 text-success-700"
+    : "bg-default-100 text-default-600";
+
   return (
     <details open className="group overflow-hidden rounded-medium border border-divider bg-content1">
       <summary className="flex cursor-pointer list-none items-center gap-2.5 p-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-          <Icon icon="solar:refresh-circle-linear" width={18} height={18} />
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
+          <Icon icon={icon} width={18} height={18} />
         </span>
-        <span className="min-w-0 flex-1 text-sm font-semibold">{hasReturns ? t("orderReturns.returnsAndRefunds", "Returns & refunds") : cancellation || quantity ? t("orderQuantities.cancelled", "Cancelled") : t("orderRefunds.heading", "Refund updates")}{updateCount > 0 ? ` (${updateCount})` : ""}</span>
-        {!!quantity && !hasReturns && <span className="ms-2 text-default-500">{t("orderRefunds.quantity", { count: quantity, defaultValue: "Qty: {{count}}" })}</span>}
-        {!hasReturns && rows.length > 0 && <span className="ms-2 text-xs text-default-500">{t(`orderRefunds.status.${status}`)} · {formatPrice(statusRows.reduce((total, row) => total + row.amount, 0))}{method && ` · ${t(`orderRefunds.method.${method}`)}`}</span>}
+        <span className="min-w-0 flex-1 text-sm font-semibold">{title}</span>
         <Icon icon="solar:alt-arrow-down-linear" width={17} height={17} className="shrink-0 text-default-500 transition-transform group-open:rotate-180" />
       </summary>
-      {cancellation && <dl className="border-t border-divider p-4 text-xs">
-        <div className="flex justify-between gap-3">
-          <dt className="font-medium text-danger">{t("orderQuantities.cancelled", "Cancelled")}{quantity != null ? ` · ${t("orderRefunds.quantity", { count: quantity, defaultValue: "Qty: {{count}}" })}` : ""}</dt>
-          <dd>{cancellation.at ? getFormattedDate(cancellation.at) : "—"}</dd>
+
+      {latestReturn ? (
+        <ItemReturnDetails
+          returns={[latestReturn]}
+          onCancelReturn={onCancelReturn}
+          cancellingReturnId={cancellingReturnId}
+        />
+      ) : showsRefund ? (
+        <ItemRefundDetails refunds={refunds} itemId={item.id} formatPrice={formatPrice} />
+      ) : cancellation || quantity ? (
+        <div className="flex items-center justify-between gap-3 border-t border-divider px-4 py-3 text-xs">
+          <span className="font-medium text-danger">{t("orderQuantities.cancelled", "Cancelled")}</span>
+          <span className="text-default-500">{cancellation?.at ? getFormattedDate(cancellation.at) : ""}</span>
         </div>
-      </dl>}
-      <ItemReturnDetails returns={item.returns} showRefundAmount={!rows.length} formatPrice={formatPrice} embedded onCancelReturn={onCancelReturn} cancellingReturnId={cancellingReturnId} />
-      <ItemRefundDetails refunds={refunds} itemId={item.id} formatPrice={formatPrice} />
+      ) : null}
     </details>
   );
 }

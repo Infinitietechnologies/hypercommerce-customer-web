@@ -36,10 +36,25 @@ import OrderTimeline from "./OrderTimeline";
 import ItemAdjustmentDetails from "./ItemAdjustmentDetails";
 import ItemQuantityDetails from "./ItemQuantityDetails";
 import OrderSummaryCard from "./OrderSummaryCard";
+import DeliveryInfo from "./DeliveryInfo";
+import SellerFeedbacks from "./SellerFeedbacks";
 
 interface OrderDetailPageViewProps {
   order: Order;
 }
+
+type SellerReviewTarget = {
+  sellerId: number | string;
+  sellerName?: string;
+  existingReview?: {
+    id?: number | string;
+    rating?: number;
+    title?: string;
+    comment?: string;
+    review_images?: string[];
+  };
+  itemsID?: string[];
+};
 
 /* -------------------------------------------------------------------------- */
 /* Small building blocks                                                       */
@@ -70,6 +85,16 @@ function LabelValue({ label, value }: { label: string; value: React.ReactNode })
       <span className="font-medium text-foreground text-end">{value}</span>
     </div>
   );
+}
+
+function paymentProviderName(method: string) {
+  const provider = method
+    .replace(/payment$/i, "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim();
+
+  return provider.replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 /* -------------------------------------------------------------------------- */
@@ -104,10 +129,12 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
   const [cancelItemId, setCancelItemId] = useState<number | null>(null);
   const [returnItemId, setReturnItemId] = useState<number | null>(null);
   const [cancellingReturnId, setCancellingReturnId] = useState<number | null>(null);
+  const [sellerReview, setSellerReview] = useState<SellerReviewTarget | null>(null);
   const timelineSheet = useDisclosure();
   const cancelSheet = useDisclosure();
   const returnSheet = useDisclosure();
   const ratingSheet = useDisclosure();
+  const sellerRatingSheet = useDisclosure();
 
   const activeReturns = useMemo(
     () => selected?.returns?.filter((r) => ["requested", "approved"].includes(r.return_status)) ?? [],
@@ -181,6 +208,12 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
 
   const savings =
     Number(order.promo_discount || 0) + Number(order.gift_card_discount || 0);
+  const paymentMethod = order.payment_method?.toLowerCase() === "cod"
+    ? t("paymentMethods.cashOnDelivery", "Cash on delivery")
+    : t("paymentMethods.onlineProvider", {
+        provider: paymentProviderName(order.payment_method || ""),
+        defaultValue: "Online ({{provider}})",
+      });
 
   return (
     <>
@@ -193,24 +226,35 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
       <PageHead pageTitle={`${t("order")} #${order?.id || ""}`} />
 
       {/* Back + order id */}
-      <div className="mb-4 flex items-center gap-3">
-        <Button
-          isIconOnly
-          variant="flat"
-          size="sm"
-          onPress={() => router.push("/my-account/orders")}
-          aria-label={t("pages.order.backToList")}
-        >
-          <Icon icon="solar:arrow-left-linear" className="h-4 h-4" width={18} height={18} />
-        </Button>
-        <div>
-          <h1 className="text-lg font-bold leading-tight">
-            {t("pages.order.details")}
-          </h1>
-          <p className="text-xs text-default-500">
-            {t("orderId", { id: order.id })} · {getFormattedDate(order.created_at)}
-          </p>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button
+            isIconOnly
+            variant="flat"
+            size="sm"
+            onPress={() => router.push("/my-account/orders")}
+            aria-label={t("pages.order.backToList")}
+          >
+            <Icon icon="solar:arrow-left-linear" width={18} height={18} />
+          </Button>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold leading-tight">
+              {t("pages.order.details")}
+            </h1>
+            <p className="truncate text-xs text-default-500">
+              {t("orderId", { id: order.id })} · {getFormattedDate(order.created_at)}
+            </p>
+          </div>
         </div>
+        <Button
+          size="md"
+          variant="bordered"
+          className="min-w-[96px] shrink-0 px-4 text-sm font-bold"
+          startContent={<Icon icon="solar:question-circle-bold" width={20} height={20} />}
+          onPress={() => router.push(`/my-account/support?order=${order.id}`)}
+        >
+          {t("help", "Help")}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
@@ -318,6 +362,8 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
             </section>
           )}
 
+          <DeliveryInfo item={selected} />
+
           {/* Refund / return */}
           <div className="px-4 pb-4">
             <ItemAdjustmentDetails
@@ -416,7 +462,7 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           <Card shadow="none" radius="lg" className="border border-divider p-4 space-y-1">
             <LabelValue
               label={t("paymentMethod")}
-              value={(order.payment_method || "-").toUpperCase()}
+              value={paymentMethod}
             />
             {order.payment_status && (
               <div className="flex items-center justify-between gap-3 py-1 text-sm">
@@ -455,6 +501,15 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
               </div>
             )}
           </Card>
+
+          <SellerFeedbacks
+            seller_feedbacks={order.seller_feedbacks}
+            item={selected}
+            onOpenReview={(payload) => {
+              setSellerReview(payload);
+              sellerRatingSheet.onOpen();
+            }}
+          />
         </div>
 
         {/* SIDE — item switcher + address + meta (below on mobile) */}
@@ -499,23 +554,6 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           )}
 
           <ShippingInfo order={order} />
-
-          <Card shadow="none" radius="lg" className="border border-divider p-4">
-            <button
-              type="button"
-              onClick={() => router.push(`/my-account/support?order=${order.id}`)}
-              className="flex w-full items-center gap-3 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-                <Icon icon="solar:chat-round-dots-linear" width={22} height={22} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">{t("supportChat.getHelp", "Get help with this order")}</span>
-                <span className="mt-0.5 block text-xs text-default-500">{t("supportChat.orderHelpDescription", "Chat with support about this order")}</span>
-              </span>
-              <Icon icon="solar:alt-arrow-right-linear" width={18} height={18} className="shrink-0 text-default-400 rtl:rotate-180" />
-            </button>
-          </Card>
 
           <Card shadow="none" radius="lg" className="border border-divider p-4 space-y-1">
             <div className="mb-1 text-sm font-semibold">
@@ -593,6 +631,22 @@ const OrderDetailPageView: React.FC<OrderDetailPageViewProps> = ({ order }) => {
           orderItemId={selected.id}
           onSuccess={() => { void refreshData(); }}
           type="product"
+        />
+      )}
+      {sellerReview && (
+        <RatingModal
+          isOpen={sellerRatingSheet.isOpen}
+          onClose={() => {
+            sellerRatingSheet.onClose();
+            setSellerReview(null);
+          }}
+          type="seller"
+          orderId={order.id}
+          orderItemId={sellerReview.itemsID?.[0]}
+          sellerId={sellerReview.sellerId}
+          sellerName={sellerReview.sellerName}
+          existingReview={sellerReview.existingReview}
+          onSuccess={() => { void refreshData(); }}
         />
       )}
     </>

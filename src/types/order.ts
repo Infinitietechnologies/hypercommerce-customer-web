@@ -212,31 +212,10 @@ export interface TimelineStep {
 
 export interface OrderItemReturnRequest {
   id: number;
-  order_item_id: number;
-  source_shipment_id?: number | null;
-  source_shipment?: { id: number; tracking_number: string | null; carrier_name: string | null } | null;
-  order_id: number;
-  user_id: number;
-  seller_id: number;
-  store_id: number;
-  delivery_boy_id: number | null;
-  quantity?: number;
-  reason: string;
-  reason_code?: string | null;
-  reason_label?: string | null;
-  seller_comment: string | null;
-  images: string[];
-  refund_amount: number;
-  pickup_status: string;
+  quantity: number;
   return_status: string;
-  /** Shopper-facing return status (code/label/stage). */
   customer_status?: CustomerStatus;
-  seller_approved_at: string | null;
-  picked_up_at: string | null;
-  received_at: string | null;
-  refund_processed_at: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface OrderItem {
@@ -326,7 +305,7 @@ export interface OrderItem {
 
   return_eligible: boolean;
   can_return: boolean;
-  returnable_shipments?: { id: number | null; quantity: number; carrier_name: string | null; tracking_number: string | null }[];
+  returnable_shipments?: { id: number | null; quantity: number; delivered_at: string | null }[];
   return_deadline: string | null;
   returns: OrderItemReturnRequest[];
   attachments: string[];
@@ -388,6 +367,13 @@ export interface OrderListItem {
   seller_name: string | null;
   is_user_review_given: boolean;
   user_review: OrderItem["user_review"];
+  refund?: {
+    amount: number;
+    status: "owed" | "issued" | "failed";
+    method: "wallet" | "gateway" | "manual" | null;
+    created_at: string | null;
+    issued_at: string | null;
+  } | null;
   product?: {
     id: number | null;
     name: string | null;
