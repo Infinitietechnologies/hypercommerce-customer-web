@@ -208,8 +208,7 @@ const main = async () => {
       }
 
       if (!web.merchantFeedEnabled) return;
-      const condition = conditionFor(product.product_condition?.slug);
-      if (!condition) return;
+      const condition = conditionFor(product.product_condition?.slug) || "new";
       for (const variant of product.variants || []) {
         const regularPrice = Number(variant.price || 0);
         const salePrice = Number(variant.special_price || 0);
