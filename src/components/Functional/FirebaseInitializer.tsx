@@ -212,7 +212,11 @@ export default function FirebaseInitializer({
 
       const { vapIdKey = "" } = notificationSettings || {};
 
-      if (firebaseConfig && !firebase) {
+      if (!firebaseConfig) {
+        return;
+      }
+
+      if (!firebase) {
         const firebaseInstance = initializeFirebase(firebaseConfig);
 
         if (!firebaseInstance) {

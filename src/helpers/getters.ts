@@ -96,12 +96,11 @@ export function getFirebaseConfig(settings: Settings) {
     (item) => item.variable === "authentication",
   )?.value as AuthenticationSettings;
 
-  if (!authSettings || !authSettings.firebase) {
-    console.error("Firebase is not enabled or missing configuration.");
+  if (!authSettings) {
     return null;
   }
 
-  return {
+  const config = {
     apiKey: authSettings.fireBaseApiKey,
     authDomain: authSettings.fireBaseAuthDomain,
     databaseURL: authSettings.fireBaseDatabaseURL,
@@ -111,6 +110,18 @@ export function getFirebaseConfig(settings: Settings) {
     appId: authSettings.fireBaseAppId,
     measurementId: authSettings.fireBaseMeasurementId,
   };
+
+  const required = [
+    config.apiKey,
+    config.authDomain,
+    config.projectId,
+    config.messagingSenderId,
+    config.appId,
+  ];
+
+  return required.every((value) => typeof value === "string" && value.trim() !== "")
+    ? config
+    : null;
 }
 
 export function getWebSettings(

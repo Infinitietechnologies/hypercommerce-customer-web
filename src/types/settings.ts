@@ -194,9 +194,9 @@ export type AuthenticationSettings = {
 };
 
 export type NotificationSettings = {
-  firebaseProjectId: string;
-  serviceAccountFile: string;
   vapIdKey: string;
+  enablePush?: boolean;
+  enableEmail?: boolean;
 };
 
 export type WebSettings = {
