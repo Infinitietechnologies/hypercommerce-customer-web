@@ -111,10 +111,80 @@ const conditionFor = (slug = "") => {
   return "";
 };
 
+const countryCodes = (...values) =>
+  [
+    ...new Set(
+      values
+        .flatMap((value) => (Array.isArray(value) ? value : [value]))
+        .map((value) =>
+          String(value || "")
+            .trim()
+            .toUpperCase(),
+        )
+        .filter((value) => /^[A-Z]{2}$/.test(value)),
+    ),
+  ].slice(0, 100);
+
+const variantAttribute = (attributes, names) => {
+  const entries = Object.entries(attributes || {}).map(([key, value]) => [
+    key.toLowerCase().replaceAll("_", "-"),
+    String(value || "").trim(),
+  ]);
+  for (const name of names) {
+    const exact = entries.find(([key, value]) => key === name && value);
+    if (exact) return exact[1];
+  }
+  for (const name of names) {
+    const related = entries.find(
+      ([key, value]) =>
+        value &&
+        (key.startsWith(`${name}-`) ||
+          key.endsWith(`-${name}`) ||
+          key.includes(`-${name}-`)),
+    );
+    if (related) return related[1];
+  }
+  return "";
+};
+
+const merchantGender = (attributes) => {
+  const value = variantAttribute(attributes, ["gender", "sex"]).toLowerCase();
+  if (["male", "man", "men", "men's", "boy", "boys"].includes(value))
+    return "male";
+  if (["female", "woman", "women", "women's", "girl", "girls"].includes(value))
+    return "female";
+  return ["unisex", "gender-neutral", "gender neutral"].includes(value)
+    ? "unisex"
+    : "";
+};
+
+const merchantAgeGroup = (attributes) => {
+  const value = variantAttribute(attributes, [
+    "age-group",
+    "agegroup",
+    "target-age",
+  ]).toLowerCase();
+  if (["newborn", "infant", "toddler", "kids", "adult"].includes(value))
+    return value;
+  if (["child", "children", "youth"].includes(value)) return "kids";
+  if (["adults", "teen", "teens"].includes(value)) return "adult";
+  return "";
+};
+
+const transitDays = (value, unit) => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) return null;
+  return unit === "hours" ? Math.ceil(amount / 24) : Math.ceil(amount);
+};
+
 const main = async () => {
   const settingsResponse = await axios.get(`${apiUrl}/api/settings`);
   const allSettings = settingsResponse.data?.data || [];
   const web = allSettings.find((item) => item.variable === "web")?.value || {};
+  const merchantTargetCountries = countryCodes(
+    web.merchantTargetCountries,
+    web.merchantTargetCountry,
+  );
   const market = allSettings.find((item) => item.variable === "markets")?.value
     ?.default?.code;
   const params = market ? { market } : {};
@@ -185,7 +255,11 @@ const main = async () => {
     {
       ...params,
       include_shipping: web.merchantFeedEnabled ? 1 : 0,
-      country_iso2: web.merchantTargetCountry || undefined,
+      country_iso2: merchantTargetCountries[0] || undefined,
+      country_iso2s:
+        web.merchantFeedEnabled && merchantTargetCountries.length
+          ? merchantTargetCountries
+          : undefined,
     },
     (product) => {
       if (!product.slug) return;
@@ -215,6 +289,19 @@ const main = async () => {
         const currency = variant.currency_code;
         if (!regularPrice || !currency || !product.main_image) continue;
         const validGtin = /^\d{8}$|^\d{12,14}$/.test(variant.barcode || "");
+        const color = variantAttribute(variant.attributes, [
+          "color",
+          "colour",
+          "shade",
+        ]);
+        const size = variantAttribute(variant.attributes, ["size"]);
+        const gender = merchantGender(variant.attributes);
+        const ageGroup = merchantAgeGroup(variant.attributes);
+        const prepMinutes = Number(product.base_prep_time);
+        const handlingDays =
+          Number.isFinite(prepMinutes) && prepMinutes >= 0
+            ? Math.ceil(prepMinutes / 1440)
+            : null;
         if (!validGtin) skippedIdentifiers += 1;
         const item = [
           ["g:id", `${product.uuid}-${variant.id}`],
@@ -246,21 +333,43 @@ const main = async () => {
           ["g:identifier_exists", validGtin ? "yes" : "no"],
           ["g:product_type", product.category_name || ""],
           ["g:adult", web.merchantAdultContent ? "yes" : "no"],
+          ["g:color", color],
+          ["g:size", size],
+          ["g:gender", gender],
+          ["g:age_group", ageGroup],
+          ["g:min_handling_time", handlingDays != null ? 0 : ""],
+          ["g:max_handling_time", handlingDays ?? ""],
         ];
         if (salePrice > 0 && salePrice < regularPrice) {
           item.push(["g:sale_price", `${salePrice.toFixed(2)} ${currency}`]);
         }
-        const shipping = product.shipping_details;
-        if (
-          shipping?.country &&
-          shipping.currency_code &&
-          Number.isFinite(Number(shipping.rate))
-        ) {
+        const shippingOptions = Array.isArray(product.shipping_options)
+          ? product.shipping_options
+          : product.shipping_details
+            ? [product.shipping_details]
+            : [];
+        for (const shipping of shippingOptions) {
+          if (
+            !shipping?.country ||
+            !shipping.currency_code ||
+            !Number.isFinite(Number(shipping.rate))
+          )
+            continue;
+          const etaMin = transitDays(shipping.eta_min, shipping.eta_unit);
+          const etaMax = transitDays(shipping.eta_max, shipping.eta_unit);
+          const transit = [
+            etaMin != null
+              ? `<g:min_transit_time>${xml(etaMin)}</g:min_transit_time>`
+              : "",
+            etaMax != null
+              ? `<g:max_transit_time>${xml(etaMax)}</g:max_transit_time>`
+              : "",
+          ].join("");
           item.push([
             "g:shipping",
             `<g:country>${xml(shipping.country)}</g:country><g:price>${xml(
               `${Number(shipping.rate).toFixed(2)} ${shipping.currency_code}`,
-            )}</g:price>`,
+            )}</g:price>${transit}`,
           ]);
         }
         for (const image of productImages.slice(1, 11)) {

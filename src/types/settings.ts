@@ -246,6 +246,7 @@ export type WebSettings = {
   bingSiteVerification: string;
   merchantFeedEnabled: boolean;
   merchantTargetCountry: string;
+  merchantTargetCountries: string[];
   merchantContentLanguage: string;
   merchantAdultContent: boolean;
   returnPolicyCountry: string;
