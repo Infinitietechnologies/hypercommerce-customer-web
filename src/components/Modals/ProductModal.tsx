@@ -87,6 +87,15 @@ const SimpleProductModal: FC<ProductModalProps> = ({
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null,
   );
+  const isUnavailableCombination =
+    product.variants?.length > 1 &&
+    Boolean(product.attributes?.length) &&
+    Object.keys(selectedAttributes).length > 0 &&
+    !product.variants.some((variant) =>
+      Object.entries(selectedAttributes).every(
+        ([key, value]) => variant.attributes?.[key] === value,
+      ),
+    );
   const [loading, setLoading] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState<
     Record<number, number[]>
@@ -283,6 +292,13 @@ const SimpleProductModal: FC<ProductModalProps> = ({
   };
 
   const AddToCart = async () => {
+    if (isUnavailableCombination) {
+      addToast({
+        title: t("variant_combination_unavailable"),
+        color: "warning",
+      });
+      return;
+    }
     // Validate required addon groups
     const missingRequired = (selectedVariant?.addon_groups || []).filter(
       (group) => group.is_required && !(selectedAddons[group.id]?.length > 0),
@@ -549,6 +565,11 @@ const SimpleProductModal: FC<ProductModalProps> = ({
                     onChange={handleAttributeChange}
                   />
                 ))}
+                {isUnavailableCombination && (
+                  <p role="status" className="text-sm font-medium text-danger">
+                    {t("variant_combination_unavailable")}
+                  </p>
+                )}
               </div>
             )}
 
@@ -1027,17 +1048,21 @@ const SimpleProductModal: FC<ProductModalProps> = ({
             <Button
               color="primary"
               onPress={AddToCart}
-              isDisabled={!isVariantInStock(selectedVariant)}
+              isDisabled={
+                isUnavailableCombination || !isVariantInStock(selectedVariant)
+              }
               className="flex-1 text-sm"
               size="sm"
               startContent={<ShoppingCart size={16} />}
               isLoading={loading}
             >
-              {!isVariantInStock(selectedVariant)
-                ? t("product_modal.out_of_stock")
-                : editingCartItemId
-                  ? `${t("product_modal.update_cart_item")} • ${formatPrice(totalPrice)}`
-                  : `${t("product_modal.add_to_cart_title")} • ${formatPrice(totalPrice)}`}
+              {isUnavailableCombination
+                ? t("variant_combination_unavailable")
+                : !isVariantInStock(selectedVariant)
+                  ? t("product_modal.out_of_stock")
+                  : editingCartItemId
+                    ? `${t("product_modal.update_cart_item")} • ${formatPrice(totalPrice)}`
+                    : `${t("product_modal.add_to_cart_title")} • ${formatPrice(totalPrice)}`}
             </Button>
           </div>
         </ModalFooter>

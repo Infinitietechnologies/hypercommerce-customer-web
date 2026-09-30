@@ -1627,6 +1627,7 @@
   "please_login": "Please login to continue!",
   "please_select_payment_method": "Please select the payment method!",
   "please_select_variant": "Please select a variant",
+  "variant_combination_unavailable": "This combination is not available. Please choose another option.",
   "poor_quality": "Poor quality",
   "preview": "Preview",
   "price": "Price",

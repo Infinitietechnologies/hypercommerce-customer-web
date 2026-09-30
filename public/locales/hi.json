@@ -1627,6 +1627,7 @@
   "please_login": "कृपया जारी रखने के लिए लॉगिन करें!",
   "please_select_payment_method": "कृपया भुगतान विधि चुनें!",
   "please_select_variant": "कृपया एक वेरिएंट चुनें",
+  "variant_combination_unavailable": "यह संयोजन उपलब्ध नहीं है। कृपया दूसरा विकल्प चुनें।",
   "poor_quality": "खराब गुणवत्ता",
   "preview": "पूर्वावलोकन",
   "price": "कीमत",

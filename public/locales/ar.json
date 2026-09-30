@@ -1627,6 +1627,7 @@
   "please_login": "يرجى تسجيل الدخول للمتابعة!",
   "please_select_payment_method": "يرجى اختيار طريقة الدفع!",
   "please_select_variant": "يرجى اختيار متغير",
+  "variant_combination_unavailable": "هذه المجموعة غير متوفرة. يرجى اختيار خيار آخر.",
   "poor_quality": "جودة ضعيفة",
   "preview": "معاينة",
   "price": "السعر",

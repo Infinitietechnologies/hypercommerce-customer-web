@@ -27,7 +27,7 @@ import {
 
 interface ProductDetailSectionProps {
   initialProduct: Product;
-  onVariantChange?: (variant: ProductVariant) => void;
+  onVariantChange?: (variant: ProductVariant | null) => void;
   onOpenModal?: () => void;
 }
 
@@ -86,6 +86,14 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const offPct = getDiscountPercent(price, special);
   const hasVariantOptions =
     variants?.length > 1 && Boolean(initialProduct.attributes?.length);
+  const isUnavailableCombination =
+    hasVariantOptions &&
+    Object.keys(selectedAttributes).length > 0 &&
+    !variants.some((variant) =>
+      Object.entries(selectedAttributes).every(
+        ([key, value]) => variant.attributes?.[key] === value,
+      ),
+    );
 
   // Stock is surfaced ONLY when it drops to/below the system low-stock limit
   // (Settings → lowStockLimit), shown as an urgency warning rather than the
@@ -134,6 +142,9 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         );
         // Notify parent component about variant change
         onVariantChange?.(matchingVariant);
+      } else {
+        setSelectedVariant(null);
+        onVariantChange?.(null);
       }
     }
   }, [
@@ -153,9 +164,13 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
   const AddToCart = async (buyNow = false) => {
     setLoading({ add: !buyNow, buyNow });
     try {
-      if (!selectedVariant) {
+      if (!selectedVariant || isUnavailableCombination) {
         toast({
-          title: t("please_select_variant"),
+          title: t(
+            isUnavailableCombination
+              ? "variant_combination_unavailable"
+              : "please_select_variant",
+          ),
           color: "warning",
         });
         return;
@@ -293,21 +308,23 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       )}
 
       {/* Price */}
-      <div className="mt-1 flex flex-wrap items-baseline gap-2.5">
-        <span className="text-2xl font-bold text-foreground md:text-3xl">
-          {formatPrice(hasDiscount ? special : price)}
-        </span>
-        {hasDiscount && (
-          <>
-            <span className="text-sm text-foreground/50 line-through md:text-base">
-              {formatPrice(price)}
-            </span>
-            <span className="text-sm font-bold text-success md:text-base">
-              {offPct}%
-            </span>
-          </>
-        )}
-      </div>
+      {!isUnavailableCombination && (
+        <div className="mt-1 flex flex-wrap items-baseline gap-2.5">
+          <span className="text-2xl font-bold text-foreground md:text-3xl">
+            {formatPrice(hasDiscount ? special : price)}
+          </span>
+          {hasDiscount && (
+            <>
+              <span className="text-sm text-foreground/50 line-through md:text-base">
+                {formatPrice(price)}
+              </span>
+              <span className="text-sm font-bold text-success md:text-base">
+                {offPct}%
+              </span>
+            </>
+          )}
+        </div>
+      )}
       {is_inclusive_tax && (
         <span className="text-xs text-foreground/50">{t("inclusiveTax")}</span>
       )}
@@ -396,7 +413,7 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
         )}
 
       {/* Quantity */}
-      {!isOutOfStock && (
+      {!isOutOfStock && !isUnavailableCombination && (
         <div
           className={clsx(
             "flex flex-wrap items-center gap-3 pt-4",
@@ -450,7 +467,13 @@ const ProductDetailSection: FC<ProductDetailSectionProps> = ({
       })()}
 
       {/* Actions */}
-      {isOutOfStock ? (
+      {isUnavailableCombination ? (
+        <Card shadow="none" className="border border-danger/30 p-3">
+          <p role="status" className="text-sm font-semibold text-danger">
+            {t("variant_combination_unavailable")}
+          </p>
+        </Card>
+      ) : isOutOfStock ? (
         <Card shadow="none" className="border border-divider p-3">
           <div className="flex items-start gap-3">
             <Icon

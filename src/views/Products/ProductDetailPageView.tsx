@@ -98,7 +98,7 @@ const ProductDetailPageView: FC<ProductPageProps> = ({
     : null;
 
   // Function to handle variant change and switch image
-  const handleVariantChange = (variant: ProductVariant) => {
+  const handleVariantChange = (variant: ProductVariant | null) => {
     setSelectedVariant(variant);
   };
 
