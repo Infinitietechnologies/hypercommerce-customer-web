@@ -98,6 +98,7 @@ export const Navbar: FC = () => {
     systemSettings,
     homeGeneralSettings,
     headerSettings,
+    isWatchBuyEnabled,
   } = useSettings();
   const header = useMemo(
     () => resolveHeaderSettings(headerSettings),
@@ -643,14 +644,14 @@ export const Navbar: FC = () => {
     />
   ) : null;
 
-  const WatchBuyAction = (
+  const WatchBuyAction = isWatchBuyEnabled ? (
     <HeaderAction
       icon={<Icon icon="solar:clapperboard-play-linear" className="h-5 w-5" />}
       label={t("watchBuy.title")}
       href="/watch-and-buy"
       showLabel={header.showActionLabels}
     />
-  );
+  ) : null;
 
   const CartAction = (
     <button

@@ -32,7 +32,7 @@ const BottomNavigation = () => {
   const scrollFrame = useRef<number | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
-  const { isSingleVendor } = useSettings();
+  const { isSingleVendor, isWatchBuyEnabled } = useSettings();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const cartCount =
     useSelector((state: RootState) => state.cart.cartData?.items_count) ||
@@ -146,7 +146,11 @@ const BottomNavigation = () => {
       path: "/my-account",
       protected: true,
     },
-  ].filter((item) => !(isSingleVendor && item.id === "stores"));
+  ].filter(
+    (item) =>
+      !(isSingleVendor && item.id === "stores") &&
+      (item.id !== "watch" || isWatchBuyEnabled),
+  );
 
   const handleTabClick = (
     itemId: string,

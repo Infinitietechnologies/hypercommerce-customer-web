@@ -44,6 +44,7 @@ type SettingsContextType = {
   formatPrice: (amount: number | string | null | undefined) => string;
   defaultLocation: LatLng | null;
   demoMode: boolean;
+  isWatchBuyEnabled: boolean;
 };
 
 const SettingsContext = createContext<SettingsContextType>({
@@ -65,6 +66,7 @@ const SettingsContext = createContext<SettingsContextType>({
   formatPrice: (amount) => String(amount ?? ""),
   defaultLocation: null,
   demoMode: false,
+  isWatchBuyEnabled: false,
 });
 
 export const useSettings = () => useContext(SettingsContext);
@@ -121,6 +123,12 @@ export const SettingsProvider = ({
       : null;
 
     const systemVendorType = systemSettings?.systemVendorType || "multiple";
+    const watchBuySettings = Array.isArray(settings)
+      ? ((settings as { variable: string; value: unknown }[]).find(
+          (item) => item?.variable === "watch_and_buy",
+        )?.value as { enabled?: boolean } | undefined)
+      : undefined;
+    const isWatchBuyEnabled = watchBuySettings?.enabled === true;
     const isSingleVendor = systemVendorType === "single";
 
     // Active market currency (from settings.markets.current). settings re-fetches
@@ -172,6 +180,7 @@ export const SettingsProvider = ({
       systemVendorType,
       isSingleVendor,
       demoMode,
+      isWatchBuyEnabled,
     };
   }, [settings]);
 
