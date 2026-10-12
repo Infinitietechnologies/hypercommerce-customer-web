@@ -9,45 +9,48 @@ import CartSummary from "./CartSummary";
 import CartPageEmpty from "../empty/CartPageEmpty";
 import SaveForLaterItems from "./SaveForLaterItems";
 import SimilarProductsSection from "@/components/Products/ProductDetailPage/SimilarProductsSection";
-import { Button, toastError, toastSuccess } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { Icon } from "@iconify/react";
-import { createCartShare } from "@/services/cart";
-import { getSharedCartToken, getSharedCartUrl } from "@/features/cartSharing/sharedCartPayload";
+import { createGuestCartUrl } from "@/features/cartSharing/guestCartLink";
 import CartShareSheet from "@/features/cartSharing/components/CartShareSheet";
 import { useSettings } from "@/contexts/SettingsContext";
-import type { CartResponse } from "@/types/cart";
+import type { CartShareSelectionItem } from "@/types/sharedCart";
 
 const CartPageView: FC = () => {
   const { t } = useTranslation();
   const { webSettings } = useSettings();
   const { cartData } = useSelector((state: RootState) => state.cart);
-  const [isCreatingShare, setIsCreatingShare] = useState(false);
-  const [shareLink, setShareLink] = useState("");
-  const [sharedCartSnapshot, setSharedCartSnapshot] = useState<CartResponse | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
 
-  const handleShareCart = async () => {
-    if (!cartData?.items.length || isCreatingShare) return;
-    setIsCreatingShare(true);
-    try {
-      const response = await createCartShare();
-      const token = response.success ? getSharedCartToken(response.data) : null;
-      if (!token) {
-        toastError(t("cartShare.createFailed"));
-        return;
-      }
-      setShareLink(getSharedCartUrl(token, webSettings?.customerWebUrl));
-      setSharedCartSnapshot(cartData);
-      setIsShareOpen(true);
-      toastSuccess(t("cartShare.linkReady"));
-    } catch {
-      toastError(t("cartShare.createFailed"));
-    } finally {
-      setIsCreatingShare(false);
-    }
-  };
-
   const items = cartData?.items ?? [];
+  const shareItems: CartShareSelectionItem[] = items.map((item) => ({
+    id: String(item.id),
+    name: item.product.name || item.variant.title,
+    image: item.product.image || null,
+    productSlug: item.product.slug,
+    variant: item.variant.title,
+    store: null,
+    quantity: item.quantity,
+    variantId: item.product_variant_id,
+    storeId: item.store_id,
+    addons: (item.addons ?? []).map((addon) => ({
+      groupId: addon.addon_group_id,
+      itemId: addon.addon_item_id,
+    })),
+  }));
+
+  const createShareLink = (selected: CartShareSelectionItem[]) =>
+    createGuestCartUrl(selected.map((item) => ({
+      slug: item.productSlug,
+      product_variant_id: item.variantId,
+      store_id: item.storeId,
+      quantity: item.quantity,
+      addons: item.addons.map((addon) => ({
+        addon_group_id: addon.groupId,
+        addon_item_id: addon.itemId,
+      })),
+    })), webSettings?.customerWebUrl);
+
   const productSlugs = items
     .map((item) => item?.product?.slug)
     .filter((slug): slug is string => !!slug)
@@ -72,11 +75,10 @@ const CartPageView: FC = () => {
       <Button
         variant="bordered"
         size="md"
-        isLoading={isCreatingShare}
-        isDisabled={!items.length || isCreatingShare}
+        isDisabled={!items.length}
         className="h-10 px-4 text-sm font-semibold"
         startContent={<Icon icon="solar:share-linear" width={18} height={18} />}
-        onPress={() => void handleShareCart()}
+        onPress={() => setIsShareOpen(true)}
       >
         {t("cartShare.shareCart")}
       </Button>
@@ -114,14 +116,12 @@ const CartPageView: FC = () => {
         title={t("youMightAlsoLike") || "You might also like"}
         page="cart"
       />
-      {shareLink && sharedCartSnapshot ? (
-        <CartShareSheet
-          cart={sharedCartSnapshot}
-          link={shareLink}
-          isOpen={isShareOpen}
-          onOpenChange={setIsShareOpen}
-        />
-      ) : null}
+      <CartShareSheet
+        items={shareItems}
+        isOpen={isShareOpen}
+        onOpenChange={setIsShareOpen}
+        onCreateLink={createShareLink}
+      />
     </div>
   );
 };

@@ -1,19 +1,59 @@
 import { Icon } from "@iconify/react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, Sheet, toastError, toastSuccess } from "@/components/ui";
+import { Button, Sheet, Tooltip, toastError, toastSuccess } from "@/components/ui";
+import CartItemSelectionList from "@/features/cartSharing/components/CartItemSelectionList";
 import { copyTextToClipboard } from "@/features/watchAndBuy/reelSharing";
-import type { CartResponse } from "@/types/cart";
+import type { CartShareSelectionItem } from "@/types/sharedCart";
 
 interface CartShareSheetProps {
-  cart: CartResponse;
-  link: string;
+  items: CartShareSelectionItem[];
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreateLink: (items: CartShareSelectionItem[]) => Promise<string> | string;
 }
 
-const CartShareSheet = ({ cart, link, isOpen, onOpenChange }: CartShareSheetProps) => {
+const CartShareSheet = ({
+  items,
+  isOpen,
+  onOpenChange,
+  onCreateLink,
+}: CartShareSheetProps) => {
   const { t } = useTranslation();
+  const [selectedIds, setSelectedIds] = useState<string[] | null>(null);
+  const [link, setLink] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const allIds = items.map((item) => item.id);
+  const selected = selectedIds ?? allIds;
+  const selectedItems = items.filter((item) => selected.includes(item.id));
+
+  const changeSelection = (next: string[]) => {
+    setSelectedIds(next);
+    setLink("");
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setSelectedIds(null);
+      setLink("");
+    }
+    onOpenChange(open);
+  };
+
+  const createLink = async () => {
+    if (!selectedItems.length || isCreating) return;
+    setIsCreating(true);
+    try {
+      const created = await onCreateLink(selectedItems);
+      setLink(created);
+      toastSuccess(t("cartShare.linkReady"));
+    } catch {
+      toastError(t("cartShare.createFailed"));
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const copyLink = async () => {
     if (await copyTextToClipboard(link)) {
@@ -37,10 +77,12 @@ const CartShareSheet = ({ cart, link, isOpen, onOpenChange }: CartShareSheetProp
     }
   };
 
+  const displayLink = link ? `${new URL(link).host}/shared-cart/…` : "";
+
   return (
     <Sheet
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       size="lg"
       backdrop="blur"
       classNames={{
@@ -53,24 +95,40 @@ const CartShareSheet = ({ cart, link, isOpen, onOpenChange }: CartShareSheetProp
         <div className="pe-8">
           <h2 className="text-xl font-bold text-foreground">{t("cartShare.title")}</h2>
           <p className="mt-1 text-sm font-normal text-default-500">
-            {t("cartShare.description")}
+            {t("cartShare.selectItems")}
           </p>
         </div>
       }
       footer={
-        <div className="grid w-full gap-2 sm:grid-cols-2">
-          <Button
-            fullWidth
-            variant="bordered"
-            startContent={<Icon icon="solar:copy-linear" width={18} height={18} />}
-            onPress={() => void copyLink()}
-          >
-            {t("cartShare.copyLink")}
-          </Button>
-          {typeof navigator !== "undefined" && typeof navigator.share === "function" ? (
+        <div className="flex w-full flex-col gap-2 sm:flex-row">
+          {link ? (
             <Button
               fullWidth
               color="primary"
+              className="text-sm font-semibold"
+              startContent={<Icon icon="solar:copy-linear" width={18} height={18} />}
+              onPress={() => void copyLink()}
+            >
+              {t("cartShare.copyLink")}
+            </Button>
+          ) : (
+            <Button
+              fullWidth
+              color="primary"
+              isLoading={isCreating}
+              isDisabled={!selectedItems.length}
+              className="text-sm font-semibold"
+              startContent={<Icon icon="solar:link-linear" width={18} height={18} />}
+              onPress={() => void createLink()}
+            >
+              {t("cartShare.createLink")}
+            </Button>
+          )}
+          {link && typeof navigator !== "undefined" && typeof navigator.share === "function" ? (
+            <Button
+              fullWidth
+              variant="bordered"
+              className="text-sm font-semibold"
               startContent={<Icon icon="solar:share-linear" width={18} height={18} />}
               onPress={() => void shareLink()}
             >
@@ -81,45 +139,37 @@ const CartShareSheet = ({ cart, link, isOpen, onOpenChange }: CartShareSheetProp
       }
     >
       <div className="space-y-4 pb-2">
-        <div className="rounded-large border border-divider bg-content1 p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-default-500">
-            {t("cartShare.previewLabel")}
-          </p>
-          <ul className="mt-3 space-y-3">
-            {cart.items.slice(0, 3).map((item) => (
-              <li key={item.id} className="flex items-center gap-3">
-                {item.product.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.product.image}
-                    alt=""
-                    className="size-12 shrink-0 rounded-medium bg-content2 object-contain"
-                  />
-                ) : (
-                  <div className="grid size-12 shrink-0 place-items-center rounded-medium bg-content2">
-                    <Icon icon="solar:box-linear" width={20} height={20} />
-                  </div>
-                )}
-                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                  {item.product.name || item.variant.title}
-                </span>
-                <span className="text-sm text-default-500">×{item.quantity}</span>
-              </li>
-            ))}
-          </ul>
-          {cart.items.length > 3 ? (
-            <p className="mt-3 border-t border-divider pt-3 text-sm text-default-500">
-              {t("cartShare.moreItems", { count: cart.items.length - 3 })}
-            </p>
-          ) : null}
-        </div>
-        <div className="rounded-medium border border-divider bg-content2 px-3 py-2.5">
-          <p className="mb-1 text-xs font-semibold text-default-500">
-            {t("cartShare.linkLabel")}
-          </p>
-          <p className="select-all break-all text-sm font-medium text-foreground">{link}</p>
-        </div>
-        <p className="text-xs leading-5 text-default-500">{t("cartShare.linkHint")}</p>
+        <CartItemSelectionList
+          items={items}
+          selectedIds={selected}
+          onSelectionChange={changeSelection}
+        />
+
+        {link ? (
+          <div className="flex items-center gap-3 rounded-medium border border-divider bg-content2 px-3 py-3">
+            <div className="grid size-9 shrink-0 place-items-center rounded-small bg-content1 text-primary-600">
+              <Icon icon="solar:link-linear" width={18} height={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-default-500">{t("cartShare.linkLabel")}</p>
+              <p className="truncate text-sm font-medium text-foreground">{displayLink}</p>
+            </div>
+            <Tooltip content={t("cartShare.copyLink")}>
+              <Button
+                isIconOnly
+                variant="light"
+                aria-label={t("cartShare.copyLink")}
+                className="size-10 min-w-10 !p-0 text-default-600"
+                onPress={() => void copyLink()}
+              >
+                <Icon icon="solar:copy-linear" width={18} height={18} />
+              </Button>
+            </Tooltip>
+          </div>
+        ) : null}
+        <p className="text-xs leading-5 text-default-500">
+          {t("cartShare.guestLinkHint")}
+        </p>
       </div>
     </Sheet>
   );
