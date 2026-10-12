@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button, EmptyState, ErrorState, Sheet, Skeleton, toastError, toastSuccess } from "@/components/ui";
 import { useSharedCart } from "@/features/cartSharing/hooks/useSharedCart";
+import { getSharedCartTokenFromPath } from "@/features/cartSharing/sharedCartPayload";
 import { updateCartData } from "@/helpers/updators";
 import type { RootState } from "@/lib/redux/store";
 import { authSheetStore } from "@/stores/authSheetStore";
@@ -15,13 +16,14 @@ const SharedCartView = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
-  const token = typeof router.query.token === "string" ? router.query.token : "";
+  const token = getSharedCartTokenFromPath(router.asPath.split(/[?#]/, 1)[0]) ?? "";
+  const isRouteReady = router.isReady;
   const [isDismissed, setIsDismissed] = useState(false);
   const [authHandoff, setAuthHandoff] = useState(false);
-  const isOpen = router.isReady && !isDismissed && (!authHandoff || isLoggedIn);
+  const isOpen = isRouteReady && !isDismissed && (!authHandoff || isLoggedIn);
   const { status, preview, isImporting, load, importItems } = useSharedCart(
     token,
-    router.isReady && isLoggedIn,
+    isRouteReady && isLoggedIn,
   );
   const previewItems = preview?.items ?? [];
 
@@ -106,7 +108,7 @@ const SharedCartView = () => {
           </Button>
         ) : null}
       >
-        {router.isReady && !token ? (
+        {isRouteReady && !token ? (
           <ErrorState
             title={t("cartShare.invalidLinkTitle")}
             description={t("cartShare.invalidLinkDescription")}

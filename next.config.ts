@@ -87,6 +87,13 @@ const nextConfig: NextConfig = {
           }
         : false,
   },
+  ...(process.env.NODE_ENV === "development" || !isExport
+    ? {
+        rewrites: async () => [
+          { source: "/cart/shared-lists/:token/", destination: "/shared-cart/" },
+        ],
+      }
+    : {}),
   async headers() {
     // Security headers for all routes
     const securityHeaders = [

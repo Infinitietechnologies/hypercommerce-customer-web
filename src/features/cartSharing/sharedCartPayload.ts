@@ -47,9 +47,17 @@ export const getSharedCartToken = (payload: unknown): string | null => {
 };
 
 export const getSharedCartUrl = (token: string) => {
-  const url = new URL("/shared-cart/", window.location.origin);
-  url.searchParams.set("token", token);
-  return url.toString();
+  return new URL(`/cart/shared-lists/${encodeURIComponent(token)}/`, window.location.origin).toString();
+};
+
+export const getSharedCartTokenFromPath = (pathname: string): string | null => {
+  const match = /^\/cart\/shared-lists\/([^/]+)\/?$/.exec(pathname);
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
 };
 
 const toPreviewItem = (value: unknown, index: number): SharedCartPreviewItem | null => {

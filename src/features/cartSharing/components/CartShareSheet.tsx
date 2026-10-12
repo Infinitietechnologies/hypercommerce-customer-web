@@ -65,7 +65,7 @@ const CartShareSheet = ({
     }
   };
 
-  const displayLink = link ? `${new URL(link).host}/shared-cart/…` : "";
+  const displayLink = link ? `${new URL(link).host}/cart/shared-lists/…` : "";
 
   return (
     <Sheet

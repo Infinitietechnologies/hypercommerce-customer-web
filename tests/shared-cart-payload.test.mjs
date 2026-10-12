@@ -12,7 +12,7 @@ const exports = {};
 const location = { origin: "https://shop.example" };
 runInNewContext(output, { exports, URL, window: { location } });
 
-const { getSharedCartToken, getSharedCartUrl, getSharedCartPreview } = exports;
+const { getSharedCartToken, getSharedCartUrl, getSharedCartTokenFromPath, getSharedCartPreview } = exports;
 
 test("extracts a token from the documented share operation's possible link fields", () => {
   assert.equal(getSharedCartToken({ token: "abc-123" }), "abc-123");
@@ -24,10 +24,18 @@ test("extracts a token from the documented share operation's possible link field
 test("publishes the link on the current customer site origin", () => {
   location.origin = "http://localhost:3000";
   try {
-    assert.equal(getSharedCartUrl("abc-123"), "http://localhost:3000/shared-cart/?token=abc-123");
+    assert.equal(getSharedCartUrl("abc-123"), "http://localhost:3000/cart/shared-lists/abc-123/");
+    assert.equal(getSharedCartUrl("a/b"), "http://localhost:3000/cart/shared-lists/a%2Fb/");
   } finally {
     location.origin = "https://shop.example";
   }
+});
+
+test("reads tokens from the shared cart pathname", () => {
+  assert.equal(getSharedCartTokenFromPath("/cart/shared-lists/abc-123/"), "abc-123");
+  assert.equal(getSharedCartTokenFromPath("/cart/shared-lists/a%2Fb"), "a/b");
+  assert.equal(getSharedCartTokenFromPath("/shared-cart/"), null);
+  assert.equal(getSharedCartTokenFromPath("/cart/shared-lists/%ZZ/"), null);
 });
 
 test("normalizes shared cart products for the recipient preview", () => {

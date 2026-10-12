@@ -4,8 +4,8 @@
 
 - This checkout has no `/redesign` counterpart for sharing a cart. The existing cart page and `/design-system` primitives define the Share action and recipient sheet.
 - The API documentation confirms `POST /user/cart/share`, `GET /user/cart/shared-lists/{token}`, and `POST /user/cart/shared-lists/{token}/import`, all authenticated and without request bodies. Its success schemas document only `data: null`, so the exact token, preview item, and import result payloads remain unverified. The storefront validates the token and every preview item before displaying or sharing them; the live response should be checked against the panel resource when it becomes available.
-- Shared links use `/shared-cart/?token=…` so both static export and SSR deployments can open them. Signed-out recipients see a sign-in action before the authenticated preview request.
-- Backend-generated `/cart/shared-lists/{token}` links redirect to the storefront route on Vercel and Apache hosts. The redirect must live at the host because static export cannot prebuild a page for arbitrary tokens.
+- Shared links use `/cart/shared-lists/{token}/`, matching the backend-generated customer link shape. Signed-out recipients see a sign-in action before the authenticated preview request.
+- Vercel and Apache hosts rewrite the token path to the static shared-cart page while keeping the original URL in the browser. Static export cannot prebuild a page for arbitrary tokens, so the view reads the token from the visible pathname.
 - The header cart drawer is the guest/offline cart. Its share action opens sign-in and sends the customer to `/cart/` after authentication. Only the authenticated cart creates links through `POST /user/cart/share`.
 - The documented share and import endpoints accept no item selection, so links contain the whole server cart and importing adds the whole shared list. The creator sheet shows a short link label and copies the full URL on request. The link uses the current customer site origin.
 

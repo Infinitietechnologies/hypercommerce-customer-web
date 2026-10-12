@@ -1,15 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
+  "rewrites": [
     {
       "source": "/cart/shared-lists/:token",
-      "destination": "/shared-cart/?token=:token",
-      "permanent": false
+      "destination": "/shared-cart/"
     },
     {
       "source": "/cart/shared-lists/:token/",
-      "destination": "/shared-cart/?token=:token",
-      "permanent": false
+      "destination": "/shared-cart/"
     }
   ]
 }
