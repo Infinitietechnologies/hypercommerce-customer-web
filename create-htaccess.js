@@ -37,6 +37,8 @@ function generateHtaccess() {
   <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
+
+    RewriteRule ^cart/shared-lists/([^/]+)/?$ /shared-cart/?token=$1 [R=307,L,NE]
      
     # Dynamic routes (Index pages)
     RewriteRule ^brands/?$ brands/index.html [L]
