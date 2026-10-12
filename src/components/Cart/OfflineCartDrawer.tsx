@@ -47,7 +47,7 @@ type OfflineCartItemWithVariant = OfflineCartItem & {
 
 const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { formatPrice, systemSettings, webSettings } = useSettings();
+  const { formatPrice, systemSettings } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
 
@@ -547,7 +547,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
             addon_group_id: addon.groupId,
             addon_item_id: addon.itemId,
           })),
-        })), webSettings?.customerWebUrl)}
+        })))}
       />
       <ConfirmationModal
         isOpen={!!selectedItemId}

@@ -13,12 +13,10 @@ import { Button } from "@/components/ui";
 import { Icon } from "@iconify/react";
 import { createGuestCartUrl } from "@/features/cartSharing/guestCartLink";
 import CartShareSheet from "@/features/cartSharing/components/CartShareSheet";
-import { useSettings } from "@/contexts/SettingsContext";
 import type { CartShareSelectionItem } from "@/types/sharedCart";
 
 const CartPageView: FC = () => {
   const { t } = useTranslation();
-  const { webSettings } = useSettings();
   const { cartData } = useSelector((state: RootState) => state.cart);
   const [isShareOpen, setIsShareOpen] = useState(false);
 
@@ -49,7 +47,7 @@ const CartPageView: FC = () => {
         addon_group_id: addon.groupId,
         addon_item_id: addon.itemId,
       })),
-    })), webSettings?.customerWebUrl);
+    })));
 
   const productSlugs = items
     .map((item) => item?.product?.slug)

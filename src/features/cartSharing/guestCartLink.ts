@@ -30,10 +30,7 @@ const decode = (value: string) => {
   );
 };
 
-export const createGuestCartUrl = (
-  items: CartLinkSourceItem[],
-  configuredOrigin?: string,
-): string => {
+export const createGuestCartUrl = (items: CartLinkSourceItem[]): string => {
   if (!items.length || items.length > 100) throw new Error("invalid_cart_size");
 
   const payload = items.map((item) => {
@@ -61,7 +58,7 @@ export const createGuestCartUrl = (
   const encoded = encode(JSON.stringify({ v: 1, i: payload }));
   if (encoded.length > 12000) throw new Error("cart_link_too_long");
 
-  const url = new URL("/shared-cart/", configuredOrigin?.trim() || window.location.origin);
+  const url = new URL("/shared-cart/", window.location.origin);
   url.searchParams.set("guest", encoded);
   return url.toString();
 };

@@ -9,7 +9,8 @@ const output = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 const exports = {};
-runInNewContext(output, { exports, URL, process: { env: {} }, window: { location: { origin: "https://shop.example" } } });
+const location = { origin: "https://shop.example" };
+runInNewContext(output, { exports, URL, window: { location } });
 
 const { getSharedCartToken, getSharedCartUrl, getSharedCartPreview } = exports;
 
@@ -20,8 +21,13 @@ test("extracts a token from the documented share operation's possible link field
   assert.equal(getSharedCartToken(null), null);
 });
 
-test("publishes the link on the configured storefront origin", () => {
-  assert.equal(getSharedCartUrl("abc-123", "https://store.example/base"), "https://store.example/shared-cart/?token=abc-123");
+test("publishes the link on the current customer site origin", () => {
+  location.origin = "http://localhost:3000";
+  try {
+    assert.equal(getSharedCartUrl("abc-123"), "http://localhost:3000/shared-cart/?token=abc-123");
+  } finally {
+    location.origin = "https://shop.example";
+  }
 });
 
 test("normalizes shared cart products for the recipient preview", () => {

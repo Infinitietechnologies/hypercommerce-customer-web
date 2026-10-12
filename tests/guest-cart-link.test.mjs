@@ -9,9 +9,10 @@ const output = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 const exports = {};
+const location = { origin: "https://shop.example" };
 runInNewContext(output, {
   exports, URL, TextEncoder, TextDecoder, btoa, atob,
-  window: { location: { origin: "https://shop.example" } },
+  window: { location },
 });
 
 const { createGuestCartUrl, parseGuestCartLink } = exports;
@@ -36,14 +37,19 @@ test("guest cart link preserves product, variant, quantity, and addon identifier
   });
 });
 
-test("guest cart link uses the public storefront origin when configured", () => {
-  const url = createGuestCartUrl([{
-    slug: "lamp",
-    product_variant_id: 1,
-    store_id: 2,
-    quantity: 1,
-  }], "https://shop.public.example");
-  assert.equal(new URL(url).origin, "https://shop.public.example");
+test("guest cart link follows the current customer site origin", () => {
+  location.origin = "http://localhost:3000";
+  try {
+    const url = createGuestCartUrl([{
+      slug: "lamp",
+      product_variant_id: 1,
+      store_id: 2,
+      quantity: 1,
+    }]);
+    assert.equal(new URL(url).origin, "http://localhost:3000");
+  } finally {
+    location.origin = "https://shop.example";
+  }
 });
 
 test("guest cart links reject malformed item identifiers", () => {

@@ -46,12 +46,8 @@ export const getSharedCartToken = (payload: unknown): string | null => {
   return getSharedCartToken(record.shared_list ?? record.share ?? record.data);
 };
 
-export const getSharedCartUrl = (token: string, configuredOrigin?: string) => {
-  const origin =
-    configuredOrigin?.trim() ||
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-    window.location.origin;
-  const url = new URL("/shared-cart/", origin);
+export const getSharedCartUrl = (token: string) => {
+  const url = new URL("/shared-cart/", window.location.origin);
   url.searchParams.set("token", token);
   return url.toString();
 };
