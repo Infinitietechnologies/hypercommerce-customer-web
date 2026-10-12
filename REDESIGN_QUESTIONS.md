@@ -1,5 +1,11 @@
 # Redesign decisions and data gaps
 
+## Shared cart links
+
+- This checkout has no `/redesign` counterpart for sharing a cart. The existing cart page and `/design-system` primitives define the Share action and recipient sheet.
+- The API documentation confirms `POST /user/cart/share`, `GET /user/cart/shared-lists/{token}`, and `POST /user/cart/shared-lists/{token}/import`, all authenticated and without request bodies. Its success schemas document only `data: null`, so the exact token, preview item, and import result payloads remain unverified. The storefront validates the token and every preview item before displaying or sharing them; the live response should be checked against the panel resource when it becomes available.
+- Shared links use `/shared-cart/?token=…` so both static export and SSR deployments can open them. Signed-out recipients see a sign-in action before the authenticated preview request.
+
 ## Order details
 
 - The referenced `src/redesign/`, `THEME_REDESIGN.md` and `GAP_ANALYSIS.md` are absent from this checkout. The existing storefront components and slate theme are the visual baseline for the approved combined product/timeline/return/refund card.

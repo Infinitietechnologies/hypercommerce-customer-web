@@ -1,6 +1,8 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import type { GetServerSidePropsContext } from "next";
+import cloneDeep from "lodash/cloneDeep";
+import merge from "lodash/merge";
 
 import {
   DEFAULT_LANGUAGE,
@@ -23,7 +25,7 @@ const translationResources = {
 };
 
 i18n.use(initReactI18next).init({
-  resources: translationResources,
+  resources: cloneDeep(translationResources),
   lng: getCookie<string>(LANGUAGE_COOKIE_KEY) || DEFAULT_LANGUAGE,
   fallbackLng: DEFAULT_LANGUAGE,
   interpolation: {
@@ -41,7 +43,12 @@ export const applyLanguage = async (
     if (i18n.hasResourceBundle(code, "translation")) {
       i18n.removeResourceBundle(code, "translation");
     }
-    i18n.addResourceBundle(code, "translation", labels, true, true);
+    const fallback = translationResources[code as keyof typeof translationResources];
+    i18n.addResourceBundle(
+      code,
+      "translation",
+      merge({}, fallback?.translation ?? {}, labels),
+    );
   }
 
   await i18n.changeLanguage(code);

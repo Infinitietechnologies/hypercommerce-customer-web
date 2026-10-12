@@ -10,6 +10,38 @@ import {
 import {
   fallbackApiRes,
 } from "@/config/constants";
+import type { ApiResponse as TypedApiResponse } from "@/types/common";
+
+export const createCartShare = async (): Promise<TypedApiResponse<unknown>> => {
+  try {
+    const { data } = await api.post<TypedApiResponse<unknown>>("/user/cart/share");
+    return data;
+  } catch {
+    return fallbackApiRes;
+  }
+};
+
+export const getSharedCart = async (token: string): Promise<TypedApiResponse<unknown>> => {
+  try {
+    const { data } = await api.get<TypedApiResponse<unknown>>(
+      `/user/cart/shared-lists/${encodeURIComponent(token)}`,
+    );
+    return data;
+  } catch {
+    return fallbackApiRes;
+  }
+};
+
+export const importSharedCart = async (token: string): Promise<TypedApiResponse<unknown>> => {
+  try {
+    const { data } = await api.post<TypedApiResponse<unknown>>(
+      `/user/cart/shared-lists/${encodeURIComponent(token)}/import`,
+    );
+    return data;
+  } catch {
+    return fallbackApiRes;
+  }
+};
 
 // Cart Management
 export const addToCart = async (params: {
