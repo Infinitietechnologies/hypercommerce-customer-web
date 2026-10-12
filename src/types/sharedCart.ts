@@ -8,12 +8,6 @@ export interface SharedCartPreviewItem {
   quantity: number;
 }
 
-export interface CartShareSelectionItem extends SharedCartPreviewItem {
-  variantId: number;
-  storeId: number;
-  addons: { groupId: number; itemId: number }[];
-}
-
 export interface SharedCartPreview {
   items: SharedCartPreviewItem[];
   ownerName: string | null;

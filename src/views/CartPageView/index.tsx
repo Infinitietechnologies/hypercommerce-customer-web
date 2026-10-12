@@ -11,9 +11,9 @@ import SaveForLaterItems from "./SaveForLaterItems";
 import SimilarProductsSection from "@/components/Products/ProductDetailPage/SimilarProductsSection";
 import { Button } from "@/components/ui";
 import { Icon } from "@iconify/react";
-import { createGuestCartUrl } from "@/features/cartSharing/guestCartLink";
 import CartShareSheet from "@/features/cartSharing/components/CartShareSheet";
-import type { CartShareSelectionItem } from "@/types/sharedCart";
+import { getSharedCartToken, getSharedCartUrl } from "@/features/cartSharing/sharedCartPayload";
+import { createCartShare } from "@/services/cart";
 
 const CartPageView: FC = () => {
   const { t } = useTranslation();
@@ -21,33 +21,12 @@ const CartPageView: FC = () => {
   const [isShareOpen, setIsShareOpen] = useState(false);
 
   const items = cartData?.items ?? [];
-  const shareItems: CartShareSelectionItem[] = items.map((item) => ({
-    id: String(item.id),
-    name: item.product.name || item.variant.title,
-    image: item.product.image || null,
-    productSlug: item.product.slug,
-    variant: item.variant.title,
-    store: null,
-    quantity: item.quantity,
-    variantId: item.product_variant_id,
-    storeId: item.store_id,
-    addons: (item.addons ?? []).map((addon) => ({
-      groupId: addon.addon_group_id,
-      itemId: addon.addon_item_id,
-    })),
-  }));
-
-  const createShareLink = (selected: CartShareSelectionItem[]) =>
-    createGuestCartUrl(selected.map((item) => ({
-      slug: item.productSlug,
-      product_variant_id: item.variantId,
-      store_id: item.storeId,
-      quantity: item.quantity,
-      addons: item.addons.map((addon) => ({
-        addon_group_id: addon.groupId,
-        addon_item_id: addon.itemId,
-      })),
-    })));
+  const createShareLink = async () => {
+    const response = await createCartShare();
+    const token = response.success ? getSharedCartToken(response.data) : null;
+    if (!token) throw new Error("Cart share did not return a token");
+    return getSharedCartUrl(token);
+  };
 
   const productSlugs = items
     .map((item) => item?.product?.slug)
@@ -115,7 +94,7 @@ const CartPageView: FC = () => {
         page="cart"
       />
       <CartShareSheet
-        items={shareItems}
+        itemCount={cartData.total_quantity ?? items.length}
         isOpen={isShareOpen}
         onOpenChange={setIsShareOpen}
         onCreateLink={createShareLink}

@@ -7,8 +7,6 @@ import { useTranslation } from "react-i18next";
 
 import { Button, EmptyState, ErrorState, Sheet, Skeleton, toastError, toastSuccess } from "@/components/ui";
 import { useSharedCart } from "@/features/cartSharing/hooks/useSharedCart";
-import { useGuestSharedCart } from "@/features/cartSharing/hooks/useGuestSharedCart";
-import CartItemSelectionList from "@/features/cartSharing/components/CartItemSelectionList";
 import { updateCartData } from "@/helpers/updators";
 import type { RootState } from "@/lib/redux/store";
 import { authSheetStore } from "@/stores/authSheetStore";
@@ -18,23 +16,14 @@ const SharedCartView = () => {
   const { t } = useTranslation();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const token = typeof router.query.token === "string" ? router.query.token : "";
-  const isGuestLink = router.query.guest !== undefined;
-  const guestPayload = typeof router.query.guest === "string" ? router.query.guest : "";
   const [isDismissed, setIsDismissed] = useState(false);
   const [authHandoff, setAuthHandoff] = useState(false);
-  const [selection, setSelection] = useState<{ key: string; ids: string[] } | null>(null);
-  const isOpen = router.isReady && !isDismissed && (isGuestLink || !authHandoff || isLoggedIn);
-  const serverCart = useSharedCart(
+  const isOpen = router.isReady && !isDismissed && (!authHandoff || isLoggedIn);
+  const { status, preview, isImporting, load, importItems } = useSharedCart(
     token,
-    router.isReady && !isGuestLink && isLoggedIn,
+    router.isReady && isLoggedIn,
   );
-  const guestCart = useGuestSharedCart(guestPayload, router.isReady && isGuestLink);
-  const { status, preview, isImporting, load } = isGuestLink ? guestCart : serverCart;
   const previewItems = preview?.items ?? [];
-  const selected = selection?.key === guestPayload
-    ? selection.ids
-    : previewItems.map((item) => item.id);
-  const selectedItems = previewItems.filter((item) => selected.includes(item.id));
 
   const signIn = () => {
     setAuthHandoff(true);
@@ -45,23 +34,7 @@ const SharedCartView = () => {
 
   const addToCart = async () => {
     try {
-      if (isGuestLink) {
-        const result = await guestCart.importItems(isLoggedIn, selected);
-        if (!result.added) {
-          toastError(t("cartShare.importFailed"));
-          return;
-        }
-        if (isLoggedIn) await updateCartData(true, false);
-        if (result.failed) {
-          toastError(t("cartShare.importPartial", { count: result.failed }));
-        } else {
-          toastSuccess(t("cartShare.importSuccess"));
-        }
-        await router.push(isLoggedIn ? "/cart/" : "/");
-        return;
-      }
-
-      const imported = await serverCart.importItems();
+      const imported = await importItems();
       if (!imported) {
         toastError(t("cartShare.importFailed"));
         return;
@@ -116,32 +89,29 @@ const SharedCartView = () => {
             <p className="mt-1 text-sm font-normal text-default-500">
               {preview?.ownerName
                 ? t("cartShare.fromPerson", { name: preview.ownerName })
-                : t(isGuestLink ? "cartShare.chooseToAdd" : "cartShare.previewDescription")}
+                : t("cartShare.previewDescription")}
             </p>
           </div>
         }
-        footer={status === "ready" && (isGuestLink || isLoggedIn) ? (
+        footer={status === "ready" && isLoggedIn ? (
           <Button
             fullWidth
             color="primary"
             isLoading={isImporting}
-            isDisabled={isGuestLink && !selectedItems.length}
             className="font-semibold"
             startContent={<Icon icon="solar:cart-plus-linear" width={19} height={19} />}
             onPress={() => void addToCart()}
           >
-            {isGuestLink
-              ? t("cartShare.addSelected", { count: selectedItems.length })
-              : t("cartShare.addAll", { count: preview?.totalQuantity ?? 0 })}
+            {t("cartShare.addAll", { count: preview?.totalQuantity ?? 0 })}
           </Button>
         ) : null}
       >
-        {router.isReady && (!isGuestLink && !token || isGuestLink && !guestPayload) ? (
+        {router.isReady && !token ? (
           <ErrorState
             title={t("cartShare.invalidLinkTitle")}
             description={t("cartShare.invalidLinkDescription")}
           />
-        ) : !isGuestLink && !isLoggedIn ? (
+        ) : !isLoggedIn ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <div className="grid size-16 place-items-center rounded-full bg-content2 text-primary-600">
               <Icon icon="solar:lock-keyhole-linear" width={30} height={30} />
@@ -164,15 +134,10 @@ const SharedCartView = () => {
               </div>
             ))}
           </div>
-        ) : status === "invalid" ? (
-          <ErrorState
-            title={t("cartShare.invalidLinkTitle")}
-            description={t("cartShare.invalidLinkDescription")}
-          />
         ) : status === "error" ? (
           <ErrorState
-            title={t(isGuestLink ? "cartShare.guestLoadFailedTitle" : "cartShare.loadFailedTitle")}
-            description={t(isGuestLink ? "cartShare.guestLoadFailedDescription" : "cartShare.loadFailedDescription")}
+            title={t("cartShare.loadFailedTitle")}
+            description={t("cartShare.loadFailedDescription")}
             retryLabel={t("cartShare.retry")}
             onRetry={() => void load()}
           />
@@ -184,27 +149,29 @@ const SharedCartView = () => {
           />
         ) : (
           <div className="space-y-3 pb-2">
-            {isGuestLink && guestCart.unavailableCount > 0 ? (
-              <p role="status" className="flex items-start gap-2 rounded-medium bg-content2 p-3 text-xs leading-5 text-default-600">
-                <Icon icon="solar:danger-triangle-linear" width={18} height={18} className="shrink-0 text-warning-600" />
-                {t("cartShare.unavailableItems", { count: guestCart.unavailableCount })}
-              </p>
-            ) : null}
-            {isGuestLink ? (
-              <CartItemSelectionList
-                items={previewItems}
-                selectedIds={selected}
-                onSelectionChange={(ids) => setSelection({ key: guestPayload, ids })}
-              />
-            ) : (
-              <>
+            <>
                 <p className="text-sm font-semibold text-default-500">
                   {t("cartShare.itemCount", { count: preview?.totalQuantity ?? 0 })}
                 </p>
                 <ul className="max-h-96 space-y-3 overflow-y-auto pe-1">
                   {previewItems.map((item) => (
                     <li key={item.id} className="flex gap-3 rounded-large border border-divider bg-content1 p-3 shadow-sm">
-                      {item.image ? (
+                      {item.productSlug ? (
+                        <Link
+                          href={`/products/${encodeURIComponent(item.productSlug)}/`}
+                          aria-label={item.name}
+                          className="shrink-0 rounded-medium focus-visible:outline-2 focus-visible:outline-primary"
+                        >
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt="" className="size-16 rounded-medium bg-content2 object-contain" />
+                          ) : (
+                            <span className="grid size-16 place-items-center rounded-medium bg-content2 text-default-500">
+                              <Icon icon="solar:box-linear" width={24} height={24} />
+                            </span>
+                          )}
+                        </Link>
+                      ) : item.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={item.image} alt="" className="size-16 shrink-0 rounded-medium bg-content2 object-contain" />
                       ) : (
@@ -213,7 +180,16 @@ const SharedCartView = () => {
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-sm font-semibold text-foreground">{item.name}</p>
+                        {item.productSlug ? (
+                          <Link
+                            href={`/products/${encodeURIComponent(item.productSlug)}/`}
+                            className="line-clamp-2 text-sm font-semibold text-foreground underline-offset-2 hover:underline focus-visible:rounded-small focus-visible:outline-2 focus-visible:outline-primary"
+                          >
+                            {item.name}
+                          </Link>
+                        ) : (
+                          <p className="line-clamp-2 text-sm font-semibold text-foreground">{item.name}</p>
+                        )}
                         {item.variant ? <p className="mt-1 text-xs text-default-500">{item.variant}</p> : null}
                         {item.store ? <p className="mt-1 text-xs text-default-500">{item.store}</p> : null}
                         <p className="mt-2 text-xs font-semibold text-foreground">
@@ -223,8 +199,7 @@ const SharedCartView = () => {
                     </li>
                   ))}
                 </ul>
-              </>
-            )}
+            </>
             <p className="text-xs leading-5 text-default-500">{t("cartShare.importHint")}</p>
           </div>
         )}

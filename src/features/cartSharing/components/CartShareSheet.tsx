@@ -3,49 +3,37 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button, Sheet, Tooltip, toastError, toastSuccess } from "@/components/ui";
-import CartItemSelectionList from "@/features/cartSharing/components/CartItemSelectionList";
 import { copyTextToClipboard } from "@/features/watchAndBuy/reelSharing";
-import type { CartShareSelectionItem } from "@/types/sharedCart";
 
 interface CartShareSheetProps {
-  items: CartShareSelectionItem[];
+  itemCount: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateLink: (items: CartShareSelectionItem[]) => Promise<string> | string;
+  onCreateLink: () => Promise<string>;
 }
 
 const CartShareSheet = ({
-  items,
+  itemCount,
   isOpen,
   onOpenChange,
   onCreateLink,
 }: CartShareSheetProps) => {
   const { t } = useTranslation();
-  const [selectedIds, setSelectedIds] = useState<string[] | null>(null);
   const [link, setLink] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const allIds = items.map((item) => item.id);
-  const selected = selectedIds ?? allIds;
-  const selectedItems = items.filter((item) => selected.includes(item.id));
-
-  const changeSelection = (next: string[]) => {
-    setSelectedIds(next);
-    setLink("");
-  };
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setSelectedIds(null);
       setLink("");
     }
     onOpenChange(open);
   };
 
   const createLink = async () => {
-    if (!selectedItems.length || isCreating) return;
+    if (!itemCount || isCreating) return;
     setIsCreating(true);
     try {
-      const created = await onCreateLink(selectedItems);
+      const created = await onCreateLink();
       setLink(created);
       toastSuccess(t("cartShare.linkReady"));
     } catch {
@@ -95,7 +83,7 @@ const CartShareSheet = ({
         <div className="pe-8">
           <h2 className="text-xl font-bold text-foreground">{t("cartShare.title")}</h2>
           <p className="mt-1 text-sm font-normal text-default-500">
-            {t("cartShare.selectItems")}
+            {t("cartShare.description")}
           </p>
         </div>
       }
@@ -116,7 +104,7 @@ const CartShareSheet = ({
               fullWidth
               color="primary"
               isLoading={isCreating}
-              isDisabled={!selectedItems.length}
+              isDisabled={!itemCount}
               className="text-sm font-semibold"
               startContent={<Icon icon="solar:link-linear" width={18} height={18} />}
               onPress={() => void createLink()}
@@ -139,11 +127,15 @@ const CartShareSheet = ({
       }
     >
       <div className="space-y-4 pb-2">
-        <CartItemSelectionList
-          items={items}
-          selectedIds={selected}
-          onSelectionChange={changeSelection}
-        />
+        <div className="flex items-center gap-3 rounded-large border border-divider bg-content2 px-4 py-3">
+          <div className="grid size-10 shrink-0 place-items-center rounded-medium bg-content1 text-primary-600">
+            <Icon icon="solar:cart-large-2-linear" width={20} height={20} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{t("cartShare.allItems")}</p>
+            <p className="text-xs text-default-500">{t("cartShare.itemCount", { count: itemCount })}</p>
+          </div>
+        </div>
 
         {link ? (
           <div className="flex items-center gap-3 rounded-medium border border-divider bg-content2 px-3 py-3">
@@ -168,7 +160,7 @@ const CartShareSheet = ({
           </div>
         ) : null}
         <p className="text-xs leading-5 text-default-500">
-          {t("cartShare.guestLinkHint")}
+          {t("cartShare.linkHint")}
         </p>
       </div>
     </Sheet>

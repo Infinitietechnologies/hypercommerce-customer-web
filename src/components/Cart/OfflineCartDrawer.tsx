@@ -28,8 +28,7 @@ import dynamic from "next/dynamic";
 import { getProductBySlug } from "@/routes/api";
 import { Product, ProductVariant } from "@/types/ApiResponse";
 import CartAddonList from "@/components/Cart/CartAddonList";
-import CartShareSheet from "@/features/cartSharing/components/CartShareSheet";
-import { createGuestCartUrl } from "@/features/cartSharing/guestCartLink";
+import { authSheetStore } from "@/stores/authSheetStore";
 
 const ProductModal = dynamic(() => import("@/components/Modals/ProductModal"), {
   ssr: false,
@@ -49,7 +48,6 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const { formatPrice, systemSettings } = useSettings();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const dispatch = useDispatch();
   const offlineCart = useSelector((state: RootState) => state.offlineCart);
@@ -82,7 +80,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
 
   const handleShareCart = () => {
     onClose();
-    window.requestAnimationFrame(() => setIsShareOpen(true));
+    window.requestAnimationFrame(() => authSheetStore.open({ next: "/cart/" }));
   };
 
   const getStepSize = (stepSize?: number) => {
@@ -481,7 +479,7 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
                     startContent={<Icon icon="solar:share-linear" width={18} height={18} />}
                     onPress={handleShareCart}
                   >
-                    {t("cartShare.shareCart")}
+                    {t("cartShare.signInToShare")}
                   </Button>
                   <Button
                     color="primary"
@@ -520,35 +518,6 @@ const OfflineCartDrawer: FC<OfflineCartDrawerProps> = ({ isOpen, onClose }) => {
           )}
         </DrawerContent>
       </Drawer>
-      <CartShareSheet
-        items={offlineCart.items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          image: item.image ?? null,
-          productSlug: item.slug ?? null,
-          variant: (item as OfflineCartItemWithVariant).variantTitle ?? null,
-          store: item.storeName ?? null,
-          quantity: item.quantity,
-          variantId: item.product_variant_id,
-          storeId: item.store_id,
-          addons: (item.addons ?? []).map((addon) => ({
-            groupId: addon.addon_group_id,
-            itemId: addon.addon_item_id,
-          })),
-        }))}
-        isOpen={isShareOpen}
-        onOpenChange={setIsShareOpen}
-        onCreateLink={(selected) => createGuestCartUrl(selected.map((item) => ({
-          slug: item.productSlug,
-          product_variant_id: item.variantId,
-          store_id: item.storeId,
-          quantity: item.quantity,
-          addons: item.addons.map((addon) => ({
-            addon_group_id: addon.groupId,
-            addon_item_id: addon.itemId,
-          })),
-        })))}
-      />
       <ConfirmationModal
         isOpen={!!selectedItemId}
         onClose={() => setSelectedItemId(null)}
