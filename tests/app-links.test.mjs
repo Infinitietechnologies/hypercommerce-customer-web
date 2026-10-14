@@ -68,7 +68,7 @@ test("accepts the configured customer TestFlight invitation on iOS", () => {
       links.androidPackage,
       links.androidStoreUrl,
     ),
-    "intent://home#Intent;scheme=customer-hypercommerce;package=com.hyperCommerce.customer;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.hyperCommerce.customer;end",
+    "intent://products#Intent;scheme=customer-hypercommerce;package=com.hyperCommerce.customer;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.hyperCommerce.customer;end",
   );
 });
 

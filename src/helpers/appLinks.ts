@@ -118,7 +118,7 @@ export const getCustomerAppTarget = (
     return `${scheme}://products?slug=${encodeURIComponent(decodedSlug)}`;
   }
   if (segments[0] === "products") return `${scheme}://products`;
-  return `${scheme}://home`;
+  return `${scheme}://products`;
 };
 
 export const getAndroidIntentUrl = (
