@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/blogs/:slug",
+      "destination": "/blogs/[slug]/"
+    },
+    {
+      "source": "/blogs/:slug/",
+      "destination": "/blogs/[slug]/"
+    },
+    {
       "source": "/cart/shared-lists/:token",
       "destination": "/shared-cart/"
     },

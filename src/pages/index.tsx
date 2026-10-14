@@ -8,6 +8,7 @@ import { getHomeLayout, getSettings } from "@/routes/api";
 
 import { HomeLayout, Settings } from "@/types/ApiResponse";
 import HomeBuilder from "@/views/homePage/HomeBuilder";
+import HomeBlogHighlights from "@/features/blogs/components/HomeBlogHighlights";
 import { NextPageWithLayout } from "@/types";
 import { getMarketFromContext } from "@/helpers/functionalHelpers";
 import { getAccessTokenFromContext } from "@/helpers/auth";
@@ -69,6 +70,7 @@ const HomePage: NextPageWithLayout<HomePageProps> = ({
         jsonLd={[organizationSchema, websiteSchema].filter(Boolean) as object[]}
       />
       <HomeBuilder initialLayout={initialLayout} />
+      <HomeBlogHighlights />
     </>
   );
 };

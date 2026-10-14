@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { Chip, Image } from "@/components/ui";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useBlogsAvailable } from "@/features/blogs/hooks/useBlogsAvailable";
 
 /** Inline brand glyphs — rendered directly so they never depend on a runtime
  *  icon fetch. `currentColor` lets them follow the button's hover colour. */
@@ -57,6 +58,7 @@ const LinkColumn = ({
 const Footer: FC = () => {
   const { webSettings, isSingleVendor } = useSettings();
   const { t } = useTranslation();
+  const hasBlogs = useBlogsAvailable();
   const version = process.env.NEXT_PUBLIC_APP_VERSION || "0";
 
   const {
@@ -87,6 +89,7 @@ const Footer: FC = () => {
 
   const quickLinks = [
     { label: t("footer.quick_links.about_us"), href: "/about-us" },
+    ...(hasBlogs ? [{ label: t("blogs.title"), href: "/blogs/" }] : []),
     { label: t("footer.quick_links.faqs"), href: "/faqs" },
     ...(!isSingleVendor
       ? [

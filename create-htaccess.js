@@ -53,6 +53,9 @@ function generateHtaccess() {
     RewriteRule ^brands/([^/]+)/?$ brands/[slug]/index.html [L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^blogs/([^/]+)/?$ blogs/[slug]/index.html [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^categories/([^/]+)/?$ categories/[slug]/index.html [L]
 
     RewriteCond %{REQUEST_FILENAME} !-f

@@ -189,10 +189,15 @@ const main = async () => {
     ?.default?.code;
   const params = market ? { market } : {};
   const today = new Date().toISOString();
+  const blogResponse = await axios.get(`${apiUrl}/api/blogs`, {
+    params: { per_page: 1 },
+  });
+  const hasBlogs = Number(blogResponse.data?.data?.total || 0) > 0;
 
   const core = new ChunkedSitemap("core");
   [
     ["/", "1.0"],
+    ...(hasBlogs ? [["/blogs/", "0.7"]] : []),
     ["/about-us/", "0.7"],
     ["/brands/", "0.8"],
     ["/categories/", "0.9"],
@@ -228,6 +233,14 @@ const main = async () => {
         urlEntry(canonical(`/stores/${item.slug}`), item.updated_at, "0.7"),
       );
   });
+  if (hasBlogs) {
+    await fetchAllPages("/blogs", {}, (item) => {
+      if (item.slug)
+        collections.add(
+          urlEntry(canonical(`/blogs/${encodeURIComponent(item.slug)}`), item.published_at, "0.6"),
+        );
+    });
+  }
   collections.close();
 
   const products = new ChunkedSitemap("products");

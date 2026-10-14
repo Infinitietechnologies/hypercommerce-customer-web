@@ -1,5 +1,11 @@
 # Redesign decisions and data gaps
 
+## Blogs
+
+- This checkout has no `/redesign` blog counterpart. The live slate theme and the supplied blog reference define the listing, article, and home highlights: editorial hero, topic filters, search, paginated cards, article content, linked products, and related stories.
+- The public `GET /blogs` total controls all blog entry points. The dev panel currently has zero published blogs, so the header, footer, and home highlights stay hidden until an admin publishes one; categories alone do not enable them.
+- The API docs specify `search`, `category_slug`, `page`, and `per_page`. `GET /blog-categories` is wrapped as `data.data` on the dev panel but returns `data` as an array on the populated reference panel, so the service normalizes both. The article detail returns HTML, SEO metadata, linked products, and related articles. Product links lead to the market-aware product page for current price and availability.
+
 ## Storefront font setting
 
 - The web admin offers a Google Font Family field. The storefront reads `web.googleFontFamily` from the existing `GET /settings` response and applies it to body and display typography; an empty or invalid value retains the current bundled fonts.

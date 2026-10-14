@@ -26,6 +26,7 @@ import useSWR from "swr";
 import { getHomeNavbar } from "@/services/home";
 import { STALE_TIME } from "@/hooks/useInfiniteData";
 import { resolveHeaderSettings } from "@/config/header";
+import { useBlogsAvailable } from "@/features/blogs/hooks/useBlogsAvailable";
 
 type HeaderPaletteStyle = CSSProperties & {
   "--header-font-color": string;
@@ -75,6 +76,7 @@ const HeaderAction = ({
 
 export const Navbar: FC = () => {
   const { t } = useTranslation();
+  const hasBlogs = useBlogsAvailable();
   const [showDemoWarning, setShowDemoWarning] = useState(true);
   const [showHeaderAnnouncement, setShowHeaderAnnouncement] = useState(true);
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
@@ -653,6 +655,15 @@ export const Navbar: FC = () => {
     />
   ) : null;
 
+  const BlogAction = hasBlogs ? (
+    <HeaderAction
+      icon={<Icon icon="solar:book-bookmark-linear" className="h-5 w-5" />}
+      label={t("blogs.title")}
+      href="/blogs/"
+      showLabel={header.showActionLabels}
+    />
+  ) : null;
+
   const CartAction = (
     <button
       onClick={openCart}
@@ -730,6 +741,7 @@ export const Navbar: FC = () => {
           {item.label}
         </Link>
       ))}
+      {BlogAction}
       {WatchBuyAction}
       {header.showWishlist ? WishlistAction : null}
       {header.showOrders ? OrdersAction : null}
