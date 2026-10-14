@@ -10,6 +10,7 @@
 - This checkout has no `/redesign` counterpart for the open-app sheet. The existing storefront sheet and theme tokens remain the visual reference.
 - The web can open an installed customer app only when the app registers the configured `customerAppScheme` (or legacy `appScheme`); Android also uses the package ID from the configured Google Play URL. iOS accepts an Apple App Store or TestFlight fallback, and Android accepts a Google Play fallback. Confirm the native app's registered scheme and package against these settings on physical devices.
 - The dev admin's customer app and web Play Store links now both use the user-confirmed HyperCommerce package `com.hyperCommerce.customer`. The configured scheme remains `customer-hypercommerce`; confirm that the installed Android and iOS builds register it. The iOS TestFlight link remains the existing dev invite at the user's request. Native app launch still requires a physical-device check.
+- An Android user with an installed app reports that the Open in App action reaches the Play Store fallback. The web now renders Chrome's intent URI as a direct tapped link. If the fallback persists, inspect the installed build's application ID and browser-accessible intent filter for `customer-hypercommerce://home` (plus the product target); the storefront cannot register a missing native handler.
 
 ## Shared cart links
 

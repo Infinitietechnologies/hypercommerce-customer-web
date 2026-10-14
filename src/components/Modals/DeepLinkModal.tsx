@@ -29,6 +29,14 @@ const DeepLinkModal: FC = () => {
     getCustomerAppLinks(appSettings, webSettings);
   const storeUrl = platform === "ios" ? iosStoreUrl : androidStoreUrl;
   const hasRequiredConfig = platform !== "other" && !!(scheme || storeUrl);
+  const androidIntentUrl =
+    platform === "android" && scheme
+      ? getAndroidIntentUrl(
+          getCustomerAppTarget(scheme, router.pathname, router.asPath),
+          androidPackage,
+          androidStoreUrl,
+        )
+      : undefined;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -103,13 +111,6 @@ const DeepLinkModal: FC = () => {
     }
     const target = getCustomerAppTarget(scheme, router.pathname, router.asPath);
 
-    if (platform === "android") {
-      window.location.assign(
-        getAndroidIntentUrl(target, androidPackage, androidStoreUrl),
-      );
-      return;
-    }
-
     if (platform === "ios") {
       const start = Date.now();
       let appOpened = false;
@@ -182,9 +183,11 @@ const DeepLinkModal: FC = () => {
         {/* Buttons */}
         <div className="flex gap-3">
           <Button
+            as={androidIntentUrl ? "a" : undefined}
+            href={androidIntentUrl}
             color="primary"
             className="flex-1 h-11 font-semibold text-sm rounded-xl"
-            onPress={tryDeepLink}
+            onPress={androidIntentUrl ? undefined : tryDeepLink}
           >
             {scheme ? t("appLink.openInApp") : t("appLink.getApp")}
           </Button>
