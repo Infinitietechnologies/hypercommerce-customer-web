@@ -5,12 +5,15 @@ import {
   ModalBody,
   ModalContent,
   useDisclosure,
-} from "@heroui/react";
+} from "@/components/ui";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useRouter } from "next/router";
 import { getCookie } from "@/lib/cookies";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/redux/store";
+
+const CUSTOMER_ANDROID_PACKAGE = "com.hyperCommerce.customer";
+const CUSTOMER_PLAY_URL = `https://play.google.com/store/apps/details?id=${CUSTOMER_ANDROID_PACKAGE}`;
 
 const DeepLinkModal: FC = () => {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
@@ -18,6 +21,18 @@ const DeepLinkModal: FC = () => {
   const router = useRouter();
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const [isMobile, setIsMobile] = useState(false);
+  const [platform] = useState<"android" | "ios" | "other">(() => {
+    if (typeof navigator === "undefined") return "other";
+    const ua = navigator.userAgent || navigator.vendor || "";
+    if (/Android/i.test(ua)) return "android";
+    if (
+      /iPhone|iPad|iPod/i.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    ) {
+      return "ios";
+    }
+    return "other";
+  });
   const [appInteracted, setAppInteracted] = useState(() => {
     if (typeof window !== "undefined") {
       return (
@@ -32,21 +47,16 @@ const DeepLinkModal: FC = () => {
 
   const [manuallyClosed, setManuallyClosed] = useState(false);
 
-  const scheme = (
-    appSettings?.customerAppScheme || appSettings?.appScheme
-  )?.trim()?.replace(/:\/\/$/, "");
-
-  const playUrl =
-    appSettings?.customerPlaystoreLink ||
-    appSettings?.playstoreLink ||
-    webSettings?.appSectionPlaystoreLink;
-
-  const storeUrl =
-    appSettings?.customerAppstoreLink ||
-    appSettings?.appstoreLink ||
-    webSettings?.appSectionAppstoreLink;
-
-  const hasRequiredConfig = !!scheme && (!!playUrl || !!storeUrl);
+  const configuredScheme = appSettings?.customerAppScheme
+    ?.trim()
+    .replace(/:\/\/$/, "");
+  const scheme =
+    configuredScheme && /^[a-z][a-z0-9+.-]*$/i.test(configuredScheme)
+      ? configuredScheme
+      : null;
+  const storeUrl = appSettings?.customerAppstoreLink?.trim();
+  const hasRequiredConfig =
+    platform === "android" || (platform === "ios" && !!scheme && !!storeUrl);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -107,7 +117,15 @@ const DeepLinkModal: FC = () => {
 
     const interval = setInterval(checkAndOpen, 1000);
     return () => clearInterval(interval);
-  }, [isMobile, router.pathname, router.query, onOpen, isOpen, manuallyClosed, hasRequiredConfig]);
+  }, [
+    isMobile,
+    router.pathname,
+    router.query,
+    onOpen,
+    isOpen,
+    manuallyClosed,
+    hasRequiredConfig,
+  ]);
 
   const handleDismiss = () => {
     localStorage.setItem("deepLinkModalDismissed", "true");
@@ -116,17 +134,14 @@ const DeepLinkModal: FC = () => {
   };
 
   const tryDeepLink = () => {
-    if (!scheme) return;
-
-    const ua =
-      navigator.userAgent || navigator.vendor || (window as any).opera || "";
-    const isAndroid = /Android/i.test(ua);
-    const isIOS =
-      /iPhone|iPad|iPod/i.test(ua) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
     localStorage.setItem("app_link_interacted", "true");
     setAppInteracted(true);
+
+    if (platform === "android" && !scheme) {
+      window.location.href = CUSTOMER_PLAY_URL;
+      return;
+    }
+    if (!scheme) return;
 
     const path = router.asPath;
     let target = `${scheme}://home`;
@@ -156,16 +171,21 @@ const DeepLinkModal: FC = () => {
       target = `${scheme}://products`;
     }
 
-    const fallback = isAndroid ? playUrl || storeUrl : storeUrl || playUrl;
-    const timeout = isIOS ? 2500 : 1200;
+    if (platform === "android") {
+      const intentTarget = target.replace(`${scheme}://`, "intent://");
+      window.location.href = `${intentTarget}#Intent;scheme=${scheme};package=${CUSTOMER_ANDROID_PACKAGE};S.browser_fallback_url=${encodeURIComponent(CUSTOMER_PLAY_URL)};end`;
+      return;
+    }
 
-    if (isIOS) {
-      // Safari-safe approach: 
+    const timeout = 2500;
+
+    if (platform === "ios") {
+      // Safari-safe approach:
       // 1. Try to use Universal Link if domain is available (best practice)
       // 2. Fallback to window.location for scheme (if iframe is being blocked or failing)
-      
+
       const start = Date.now();
-      
+
       // Use window.location instead of iframe for modern Safari if iframe is failing
       // Many modern iOS versions show the "invalid address" even for iframes,
       // but window.location is more direct.
@@ -177,25 +197,8 @@ const DeepLinkModal: FC = () => {
           document.visibilityState === "visible" &&
           Date.now() - start < timeout + 500
         ) {
-          if (fallback) window.location.href = fallback;
+          if (storeUrl) window.location.href = storeUrl;
         } else {
-          localStorage.setItem("app_installed_confirmed", "true");
-          setAppInteracted(true);
-        }
-      }, timeout);
-    } else {
-      // Android/Chrome — original logic works fine
-      window.location.href = target;
-
-      const start = Date.now();
-      setTimeout(() => {
-        const elapsed = Date.now() - start;
-        if (
-          document.visibilityState === "visible" &&
-          elapsed >= timeout - 100
-        ) {
-          if (fallback) window.location.href = fallback;
-        } else if (document.visibilityState === "hidden") {
           localStorage.setItem("app_installed_confirmed", "true");
           setAppInteracted(true);
         }
