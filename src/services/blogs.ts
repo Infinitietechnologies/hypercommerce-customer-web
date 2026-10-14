@@ -1,6 +1,7 @@
 import { api } from "./client";
 import type {
   BlogCategory,
+  BlogDetail,
   BlogDetailResponse,
   BlogListResponse,
 } from "@/types/blogs";
@@ -38,10 +39,24 @@ export const getBlogCategories = async (): Promise<BlogCategory[] | null> => {
 
 export const getBlog = async (slug: string): Promise<BlogDetailResponse> => {
   try {
-    const { data } = await api.get<BlogDetailResponse>(
+    const { data } = await api.get<{ success: boolean; message: string; data: { blog: BlogDetail & { metadata?: { seo_title?: string; seo_description?: string; seo_keywords?: string[] } } } }>(
       `/blogs/${encodeURIComponent(slug)}`,
     );
-    return data;
+    const blog = data.data?.blog;
+    if (!data.success || !blog) return { success: false, message: data.message, data: null };
+    return {
+      success: true,
+      message: data.message,
+      data: {
+        ...blog,
+        category: blog.categories?.[0] ?? null,
+        seo: {
+          title: blog.metadata?.seo_title,
+          description: blog.metadata?.seo_description,
+          keywords: blog.metadata?.seo_keywords,
+        },
+      },
+    };
   } catch (error: unknown) {
     const status = error && typeof error === "object" && "response" in error
       ? (error.response as { status?: number } | undefined)?.status

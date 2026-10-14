@@ -58,7 +58,7 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
   const list = blogs?.data;
   const hasFilters = Boolean(search || category);
   const featured = !hasFilters && page === 1 && list?.total
-    ? list.editors_pick?.[0] ?? list.data[0]
+    ? list.data[0]
     : null;
   const cards = list?.data.filter((blog) => blog.slug !== featured?.slug) ?? [];
 
@@ -77,16 +77,13 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
           <span aria-current="page" className="text-foreground">{t("blogs.title")}</span>
         </nav>
 
-        <header className="mb-9 max-w-2xl">
-          <span className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-600">
-            <Icon aria-hidden="true" icon="solar:book-bookmark-linear" className="size-4" />
-            {t("blogs.eyebrow")}
-          </span>
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">{t("blogs.title")}</h1>
+        <header className="mb-8 max-w-3xl">
+          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-primary">{t("blogs.eyebrow")}</p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">{t("blogs.pageTitle")}</h1>
           <p className="mt-4 text-base leading-7 text-default-600">{t("blogs.description")}</p>
         </header>
 
-        <div className="mb-8 flex flex-col gap-5 border-y border-divider py-5 min-[1024px]:flex-row min-[1024px]:items-center min-[1024px]:justify-between">
+        <div className="mb-8 flex flex-col gap-5 py-3 min-[1024px]:flex-row min-[1024px]:items-center min-[1024px]:justify-between">
           <div role="group" aria-label={t("blogs.topics")} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             <button type="button" aria-pressed={!category} onClick={() => updateQuery({ category: "" })}
               className={`min-h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${!category ? "bg-primary text-primary-foreground" : "bg-content2 text-default-700 hover:bg-primary-100"}`}>
@@ -123,17 +120,15 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
           />
         ) : (
           <>
+            <p className="mb-5 text-sm text-default-600">{t("blogs.storyCount", { count: list.total })}</p>
             {featured ? <section aria-label={t("blogs.featured")} className="mb-12"><BlogCard blog={featured} featured /></section> : null}
-            <div className="mb-5 flex items-end justify-between gap-3">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">{t("blogs.latest")}</h2>
-                <p className="mt-1 text-sm text-default-500">{t("blogs.storyCount", { count: list.total })}</p>
-              </div>
-            </div>
             {cards.length > 0 ? (
-              <div className="grid gap-6 sm:grid-cols-2 min-[1024px]:grid-cols-3">
-                {cards.map((blog) => <BlogCard key={blog.id} blog={blog} />)}
-              </div>
+              <section aria-labelledby="blog-list-heading">
+                <h2 id="blog-list-heading" className="mb-5 text-2xl font-bold text-foreground">{t(featured ? "blogs.latest" : "blogs.results")}</h2>
+                <div className="grid gap-6 sm:grid-cols-2 min-[1024px]:grid-cols-3">
+                  {cards.map((blog) => <BlogCard key={blog.id} blog={blog} />)}
+                </div>
+              </section>
             ) : null}
             {list.last_page > 1 ? (
               <div className="mt-12 flex justify-center">

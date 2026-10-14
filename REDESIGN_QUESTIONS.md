@@ -3,8 +3,11 @@
 ## Blogs
 
 - This checkout has no `/redesign` blog counterpart. The live slate theme and the supplied blog reference define the listing, article, and home highlights: editorial hero, topic filters, search, paginated cards, article content, linked products, and related stories.
-- The public `GET /blogs` total controls all blog entry points. The dev panel currently has zero published blogs, so the header, footer, and home highlights stay hidden until an admin publishes one; categories alone do not enable them.
-- The API docs specify `search`, `category_slug`, `page`, and `per_page`. `GET /blog-categories` is wrapped as `data.data` on the dev panel but returns `data` as an array on the populated reference panel, so the service normalizes both. The article detail returns HTML, SEO metadata, linked products, and related articles. Product links lead to the market-aware product page for current price and availability.
+- The public `GET /blogs` total controls all blog entry points. The dev panel now has published blogs; categories alone do not enable the links when the total is zero.
+- `GET /blog-categories` is wrapped as `data.data` on the dev panel, and the service supports both that and an array response. The dev `GET /blogs/{slug}` response wraps the article in `data.blog`; SEO fields are under `blog.metadata`, and the product array is `blog.products` with market-formatted prices on each variant. The service normalizes these fields for the page.
+- The list response has no reading-time field or article content. Cards fetch article details via SWR to calculate reading time from the full text; adding `reading_time_minutes` to list items would avoid those extra requests. The current detail response has no related-articles array, so that section appears only when the API supplies it.
+- The public blog list and detail responses do not expose a view count, and the documented BlogApi has no view-tracking endpoint. An accurate public count needs the panel to define how article opens are deduplicated, store the count, and return it in the blog resource; the storefront should not invent a client-side number.
+- Article sharing uses the configured public storefront origin and offers native sharing on supported mobile browsers or a platform picker; no automatic copy action is used. The dev sample titled "12 Genius Ways" currently contains only one numbered idea and links a 6-drawer chest. Those are admin content associations and need correction in the panel for the published article to match its title and topic.
 
 ## Storefront font setting
 

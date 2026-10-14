@@ -22,7 +22,7 @@ export interface BlogSummary {
   slug: string;
   short_description: string | null;
   image: string | null;
-  is_editors_pick?: boolean;
+  editor_pick?: boolean;
   published_at: string | null;
   views_count?: number;
   categories?: BlogCategory[];
@@ -42,15 +42,22 @@ export interface BlogProduct {
   title: string;
   slug: string;
   main_image: string | null;
-  price: number;
-  special_price: number | null;
-  is_available?: boolean;
+  variants?: {
+    id: number;
+    is_default?: boolean;
+    price: number;
+    special_price: number | null;
+    formatted?: string;
+    formatted_special_price?: string | null;
+    availability?: boolean;
+    is_in_stock?: boolean;
+  }[];
 }
 
 export interface BlogDetail extends BlogSummary {
   content: string;
   seo?: BlogSeo | null;
-  linked_products?: BlogProduct[];
+  products?: BlogProduct[];
   related_blogs?: BlogSummary[];
 }
 
