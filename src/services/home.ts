@@ -27,8 +27,7 @@ export const getHomeLayout = async (
       params: { platform: "web", ...params },
     });
     return response.data;
-  } catch (error) {
-    console.error("API error:", error);
+  } catch {
     return { success: false, message: "An error occurred.", data: null };
   }
 };
@@ -44,8 +43,7 @@ export const getHomeNavbar = async (
       },
     );
     return response.data;
-  } catch (error) {
-    console.error("API error:", error);
+  } catch {
     return { success: false, message: "An error occurred.", data: [] };
   }
 };
@@ -64,8 +62,7 @@ export const getHomeLayoutSection = async (params: {
       params: rest,
     });
     return response.data;
-  } catch (error) {
-    console.error("API error:", error);
+  } catch {
     return fallbackPaginateRes;
   }
 };

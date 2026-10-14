@@ -7,7 +7,7 @@ import {
 import { store } from "@/lib/redux/store";
 import { getCart, syncOfflineCart } from "@/routes/api";
 import { ApiResponse, CartResponse, CartSyncData } from "@/types/ApiResponse";
-import { addToast } from "@heroui/react";
+import { toast } from "@/components/ui";
 import i18n from "../../i18n";
 import { resetCheckOutState } from "./functionalHelpers";
 import {
@@ -40,9 +40,9 @@ export const updateCartData = async (
     const use_wallet = state?.checkout?.useWallet || false;
     const promo_code = state?.checkout?.promoCode || "";
     const cartRes: ApiResponse<CartResponse> = await getCart({
-      address_id: customAddress ? customAddress : passAddress ? address_id : "",
+      address_id: customAddress || (passAddress ? address_id : undefined),
       use_wallet,
-      promo_code,
+      promo_code: promo_code || undefined,
     });
 
     if (cartRes.success && cartRes.data) {
@@ -52,7 +52,7 @@ export const updateCartData = async (
       store.dispatch(clearCart());
       resetCheckOutState();
       if (renderToast && emtyCartToast) {
-        addToast({
+        toast({
           title: i18n.t("cartStatus.emptyTitle"),
           description: i18n.t("cartStatus.emptyDescription"),
           color: "warning",
@@ -61,7 +61,7 @@ export const updateCartData = async (
     } else {
       store.dispatch(setError("Failed to fetch updated cart"));
       if (renderToast) {
-        addToast({
+        toast({
           title: i18n.t("cartStatus.fetchFailedTitle"),
           description: i18n.t("cartStatus.fetchFailedDescription"),
           color: "warning",
@@ -69,8 +69,8 @@ export const updateCartData = async (
       }
     }
     return cartRes;
-  } catch (error) {
-    console.error(error);
+  } catch {
+    store.dispatch(setError("Failed to fetch updated cart"));
   } finally {
     store.dispatch(setCartLoading(false));
   }
@@ -146,7 +146,7 @@ export const syncOfflineCartToServer = async (): Promise<boolean> => {
 
       // Show success message after 3 seconds
       setTimeout(() => {
-        addToast({
+        toast({
           title: i18n.t("cart.sync_success_title") || "Cart Synced",
           description:
             i18n.t("cart.sync_success_desc") ||
@@ -161,7 +161,7 @@ export const syncOfflineCartToServer = async (): Promise<boolean> => {
 
       // Show error message after 3 seconds
       setTimeout(() => {
-        addToast({
+        toast({
           title: i18n.t("cart.sync_error_title") || "Sync Failed",
           description:
             response.message || "Failed to sync your cart. Please try again.",
@@ -173,7 +173,7 @@ export const syncOfflineCartToServer = async (): Promise<boolean> => {
     }
   } catch (error) {
     console.error("Error syncing offline cart:", error);
-    addToast({
+    toast({
       title: i18n.t("cart.sync_error_title") || "Sync Error",
       description:
         i18n.t("cart.sync_error_desc") ||

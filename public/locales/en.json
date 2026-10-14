@@ -2315,7 +2315,9 @@
     "emptyTitle": "Cart is Empty",
     "emptyDescription": "Add a product to proceed.",
     "fetchFailedTitle": "Cart Fetch Failed",
-    "fetchFailedDescription": "Could not update the cart after adding the item."
+    "fetchFailedDescription": "Could not update the cart after adding the item.",
+    "pageFetchFailedDescription": "We couldn't load your cart right now. Please try again.",
+    "loading": "Loading your cart"
   },
   "firebase": {
     "errors": {

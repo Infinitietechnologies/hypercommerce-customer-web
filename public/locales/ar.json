@@ -2318,7 +2318,9 @@
     "emptyTitle": "السلة فارغة",
     "emptyDescription": "أضف منتجًا للمتابعة.",
     "fetchFailedTitle": "فشل تحميل السلة",
-    "fetchFailedDescription": "تعذر تحديث السلة بعد إضافة العنصر."
+    "fetchFailedDescription": "تعذر تحديث السلة بعد إضافة العنصر.",
+    "pageFetchFailedDescription": "تعذر تحميل سلتك الآن. يُرجى المحاولة مرة أخرى.",
+    "loading": "جارٍ تحميل سلتك"
   },
   "firebase": {
     "errors": {

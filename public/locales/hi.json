@@ -2316,7 +2316,9 @@
     "emptyTitle": "कार्ट खाली है",
     "emptyDescription": "आगे बढ़ने के लिए कोई उत्पाद जोड़ें।",
     "fetchFailedTitle": "कार्ट लोड करने में विफल",
-    "fetchFailedDescription": "आइटम जोड़ने के बाद कार्ट अपडेट नहीं हो सका।"
+    "fetchFailedDescription": "आइटम जोड़ने के बाद कार्ट अपडेट नहीं हो सका।",
+    "pageFetchFailedDescription": "अभी आपका कार्ट लोड नहीं हो सका। कृपया दोबारा कोशिश करें।",
+    "loading": "आपका कार्ट लोड हो रहा है"
   },
   "firebase": {
     "errors": {

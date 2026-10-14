@@ -9,15 +9,16 @@ import CartSummary from "./CartSummary";
 import CartPageEmpty from "../empty/CartPageEmpty";
 import SaveForLaterItems from "./SaveForLaterItems";
 import SimilarProductsSection from "@/components/Products/ProductDetailPage/SimilarProductsSection";
-import { Button } from "@/components/ui";
+import { Button, ErrorState, Skeleton } from "@/components/ui";
 import { Icon } from "@iconify/react";
 import CartShareSheet from "@/features/cartSharing/components/CartShareSheet";
 import { getSharedCartToken, getSharedCartUrl } from "@/features/cartSharing/sharedCartPayload";
 import { createCartShare } from "@/services/cart";
+import { updateCartData } from "@/helpers/updators";
 
 const CartPageView: FC = () => {
   const { t } = useTranslation();
-  const { cartData } = useSelector((state: RootState) => state.cart);
+  const { cartData, error, isLoading } = useSelector((state: RootState) => state.cart);
   const [isShareOpen, setIsShareOpen] = useState(false);
 
   const items = cartData?.items ?? [];
@@ -61,6 +62,29 @@ const CartPageView: FC = () => {
       </Button>
     </div>
   );
+
+  if (isLoading && !cartData) {
+    return (
+      <div className="space-y-6" aria-label={t("cartStatus.loading")}>
+        <Skeleton className="h-10 w-56 rounded-medium" />
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-72 rounded-large md:col-span-2" />
+          <Skeleton className="h-72 rounded-large" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title={t("cartStatus.fetchFailedTitle")}
+        description={t("cartStatus.pageFetchFailedDescription")}
+        retryLabel={t("common.retry")}
+        onRetry={() => void updateCartData(false, false, 0, false)}
+      />
+    );
+  }
 
   if (!cartData || cartData.items.length === 0) {
     return (
