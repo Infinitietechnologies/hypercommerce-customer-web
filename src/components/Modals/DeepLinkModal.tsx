@@ -39,7 +39,7 @@ const DeepLinkModal: FC = () => {
   const androidIntentUrl =
     platform === "android" && scheme
       ? getAndroidIntentUrl(
-          getCustomerAppTarget(scheme, router.pathname, router.asPath),
+          getCustomerAppTarget(scheme, router.pathname, router.asPath, "products"),
           androidPackage,
           androidStoreUrl,
         )

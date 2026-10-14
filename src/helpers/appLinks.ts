@@ -97,6 +97,7 @@ export const getCustomerAppTarget = (
   scheme: string,
   pathname: string,
   asPath: string,
+  rootDestination: "home" | "products" = "home",
 ): string => {
   const segments = asPath.split(/[?#]/)[0].split("/").filter(Boolean);
   const isProductDetail =
@@ -118,7 +119,7 @@ export const getCustomerAppTarget = (
     return `${scheme}://products?slug=${encodeURIComponent(decodedSlug)}`;
   }
   if (segments[0] === "products") return `${scheme}://products`;
-  return `${scheme}://products`;
+  return `${scheme}://${rootDestination}`;
 };
 
 export const getAndroidIntentUrl = (

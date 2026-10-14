@@ -64,11 +64,18 @@ test("accepts the configured customer TestFlight invitation on iOS", () => {
   assert.equal(links.androidPackage, "com.hyperCommerce.customer");
   assert.equal(
     getAndroidIntentUrl(
-      getCustomerAppTarget(links.scheme, "/", "/"),
+      getCustomerAppTarget(links.scheme, "/", "/", "products"),
       links.androidPackage,
       links.androidStoreUrl,
     ),
     "intent://products#Intent;scheme=customer-hypercommerce;package=com.hyperCommerce.customer;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.hyperCommerce.customer;end",
+  );
+});
+
+test("keeps the existing iOS home destination", () => {
+  assert.equal(
+    getCustomerAppTarget("customer-hypercommerce", "/", "/"),
+    "customer-hypercommerce://home",
   );
 });
 
