@@ -47,6 +47,31 @@ test("uses customer store links and never gives iOS a Play URL", () => {
   );
 });
 
+test("accepts the configured customer TestFlight invitation on iOS", () => {
+  const links = getCustomerAppLinks(
+    {
+      customerAppScheme: "customer-hypercommerce",
+      customerAppstoreLink: "https://testflight.apple.com/join/NmyU7Sa6",
+      customerPlaystoreLink:
+        "https://play.google.com/store/apps/details?id=com.hyperCommerce.customer",
+    },
+    null,
+  );
+  assert.equal(
+    links.iosStoreUrl,
+    "https://testflight.apple.com/join/NmyU7Sa6",
+  );
+  assert.equal(links.androidPackage, "com.hyperCommerce.customer");
+  assert.equal(
+    getAndroidIntentUrl(
+      getCustomerAppTarget(links.scheme, "/", "/"),
+      links.androidPackage,
+      links.androidStoreUrl,
+    ),
+    "intent://home#Intent;scheme=customer-hypercommerce;package=com.hyperCommerce.customer;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.hyperCommerce.customer;end",
+  );
+});
+
 test("preserves product slug when opening an installed app", () => {
   const target = getCustomerAppTarget(
     "hypercommerce",

@@ -23,8 +23,11 @@ const firstValidUrl = (
       const url = new URL(candidate.trim());
       if (
         store === "apple" &&
-        (url.protocol === "https:" || url.protocol === "itms-apps:") &&
-        ["apps.apple.com", "itunes.apple.com"].includes(url.hostname)
+        (((url.protocol === "https:" || url.protocol === "itms-apps:") &&
+          ["apps.apple.com", "itunes.apple.com"].includes(url.hostname)) ||
+          (url.protocol === "https:" &&
+            url.hostname === "testflight.apple.com" &&
+            /^\/join\/[A-Za-z0-9]+\/?$/.test(url.pathname)))
       ) {
         return url.toString();
       }

@@ -2,7 +2,6 @@ import React, { FC, useEffect, useState } from "react";
 import { Button, Sheet, useDisclosure } from "@/components/ui";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useRouter } from "next/router";
-import { getCookie } from "@/lib/cookies";
 import { useTranslation } from "react-i18next";
 import {
   detectMobilePlatform,
@@ -64,15 +63,6 @@ const DeepLinkModal: FC = () => {
         router.query.open_app === "1";
 
       if ((dismissed && !isSharedLink) || isOpen) return;
-
-      // For share pages: skip location & cookie gates — recipient is a new visitor
-      if (!isSharePage) {
-        const userLocation = getCookie("userLocation");
-        if (!userLocation) return;
-
-        const cookieConsent = localStorage.getItem("cookie_consent_choice");
-        if (!cookieConsent) return;
-      }
 
       const allowedPaths = ["/", "/products/search"];
       const isProductDetail = router.pathname === "/products/[slug]";
