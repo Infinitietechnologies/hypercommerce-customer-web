@@ -4,6 +4,10 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useRouter } from "next/router";
 import { useTranslation } from "react-i18next";
 import {
+  ANALYTICS_CONSENT_EVENT,
+  getAnalyticsConsent,
+} from "@/lib/analytics";
+import {
   detectMobilePlatform,
   getAndroidIntentUrl,
   getCustomerAppLinks,
@@ -25,6 +29,9 @@ const DeepLinkModal: FC = () => {
     );
   });
   const [manuallyClosed, setManuallyClosed] = useState(false);
+  const [consentResolved, setConsentResolved] = useState(
+    () => getAnalyticsConsent() !== null,
+  );
   const { scheme, iosStoreUrl, androidStoreUrl, androidPackage } =
     getCustomerAppLinks(appSettings, webSettings);
   const storeUrl = platform === "ios" ? iosStoreUrl : androidStoreUrl;
@@ -37,6 +44,22 @@ const DeepLinkModal: FC = () => {
           androidStoreUrl,
         )
       : undefined;
+
+  useEffect(() => {
+    if (consentResolved) return;
+
+    let frame = 0;
+    const onConsentChange = () => {
+      frame = requestAnimationFrame(() => {
+        setConsentResolved(getAnalyticsConsent() !== null);
+      });
+    };
+    window.addEventListener(ANALYTICS_CONSENT_EVENT, onConsentChange);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener(ANALYTICS_CONSENT_EVENT, onConsentChange);
+    };
+  }, [consentResolved]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -54,7 +77,7 @@ const DeepLinkModal: FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!isMobile || manuallyClosed || !hasRequiredConfig) return;
+    if (!isMobile || !consentResolved || manuallyClosed || !hasRequiredConfig) return;
 
     const checkAndOpen = () => {
       if (manuallyClosed || !hasRequiredConfig) return;
@@ -86,10 +109,9 @@ const DeepLinkModal: FC = () => {
 
     checkAndOpen();
 
-    const interval = setInterval(checkAndOpen, 1000);
-    return () => clearInterval(interval);
   }, [
     isMobile,
+    consentResolved,
     router.pathname,
     router.query,
     onOpen,
