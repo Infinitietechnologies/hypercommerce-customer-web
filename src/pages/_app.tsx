@@ -23,6 +23,8 @@ import { adTrackingService } from "@/services/adTrackingService";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import "@/styles/index.css";
 import { CircleX } from "lucide-react";
+import { SEOHead } from "@/SEO/SEOHead";
+import { isSSR } from "@/helpers/getters";
 
 const ToastProvider = dynamic(
   () => import("@/components/ui").then((mod) => mod.ToastProvider),
@@ -106,6 +108,9 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           <meta name="robots" content="noindex, nofollow" key="robots" />
         )}
       </Head>
+      {!isSSR() && !router.pathname.includes("[") && (
+        <SEOHead settings={null} />
+      )}
       <NextThemesProvider
         forcedTheme="light"
         defaultTheme="light"

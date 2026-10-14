@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Settings } from "@/types/ApiResponse";
 import { getWebSettings } from "@/helpers/getters";
 import { siteConfig } from "@/config/site";
+import { pageSEOConfigs } from "@/config/seo";
 import {
   defaultRobotsForUrl,
   ensureAbsoluteUrl,
@@ -12,15 +13,37 @@ import {
 import { useRouter } from "next/router";
 
 interface HeadProps {
-  settings: Settings;
+  settings: Settings | null;
 }
 
 export const SEOHead = ({ settings }: HeadProps) => {
   const router = useRouter();
-  const webSettings = getWebSettings(settings as Settings);
+  const webSettings = settings ? getWebSettings(settings) : null;
+  const pageKey = ({
+    "/": "home",
+    "/categories": "categories",
+    "/brands": "brands",
+    "/stores": "stores",
+    "/about-us": "aboutUs",
+    "/privacy-policy": "privacyPolicy",
+    "/terms-and-conditions": "termsAndConditions",
+    "/shipping-policy": "shippingPolicy",
+    "/return-refund-policy": "returnRefundPolicy",
+    "/faqs": "faqs",
+    "/cart": "cart",
+    "/seller-register": "sellerRegister",
+  } as Record<string, string>)[router.pathname];
+  const pageSEO = pageKey ? pageSEOConfigs[pageKey] : null;
   const siteName =
     webSettings?.siteName || siteConfig.name || "Default Site Name";
-  const fullTitle = siteName;
+  const fullTitle =
+    pageSEO && pageKey !== "home"
+      ? `${pageSEO.title} | ${siteName}`
+      : siteName;
+  const description =
+    (pageKey !== "home" && pageSEO?.description) ||
+    webSettings?.metaDescription ||
+    siteConfig.metaDescription;
   const baseUrl = (
     process.env.NEXT_PUBLIC_SITE_URL ||
     webSettings?.customerWebUrl ||
@@ -40,12 +63,12 @@ export const SEOHead = ({ settings }: HeadProps) => {
         <title>{fullTitle}</title>
         <meta
           name="description"
-          content={siteConfig.metaDescription}
+          content={description}
           key="description"
         />
         <meta
           name="keywords"
-          content={siteConfig.metaKeywords}
+          content={pageSEO?.keywords || siteConfig.metaKeywords}
           key="keywords"
         />
         <meta name="robots" content={robots} key="robots" />
@@ -65,13 +88,15 @@ export const SEOHead = ({ settings }: HeadProps) => {
       />
       <meta
         name="description"
-        content={webSettings.metaDescription || "Default meta description"}
+        content={description}
         key="description"
       />
 
       <meta
         name="keywords"
-        content={webSettings.metaKeywords || "default, keywords"}
+        content={
+          pageSEO?.keywords || webSettings.metaKeywords || siteConfig.metaKeywords
+        }
         key="keywords"
       />
       <meta name="copyright" content={webSettings.siteCopyright} />
@@ -96,7 +121,7 @@ export const SEOHead = ({ settings }: HeadProps) => {
       <meta property="og:title" content={webSettings.siteName} key="og:title" />
       <meta
         property="og:description"
-        content={webSettings.metaDescription || "Default meta description"}
+        content={description}
         key="og:description"
       />
       <meta property="og:image" content={siteLogo} key="og:image" />
@@ -113,7 +138,7 @@ export const SEOHead = ({ settings }: HeadProps) => {
       />
       <meta
         name="twitter:description"
-        content={webSettings.metaDescription || "Default meta description"}
+        content={description}
         key="twitter:description"
       />
       <meta name="twitter:image" content={siteLogo} key="twitter:image" />
