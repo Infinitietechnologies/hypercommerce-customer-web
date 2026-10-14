@@ -2456,6 +2456,11 @@
       "action": "Browse products"
     }
   },
+  "appLink": {
+    "description": "Get a better experience in our mobile app",
+    "openInApp": "Open in App",
+    "getApp": "Get the App"
+  },
   "a11y": {
     "add_to_wishlist": "Add to wishlist",
     "share_product": "Share this product",

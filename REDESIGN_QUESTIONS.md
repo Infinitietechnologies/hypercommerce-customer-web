@@ -1,5 +1,15 @@
 # Redesign decisions and data gaps
 
+## Storefront font setting
+
+- The web admin offers a Google Font Family field. The storefront reads `web.googleFontFamily` from the existing `GET /settings` response and applies it to body and display typography; an empty or invalid value retains the current bundled fonts.
+- The linked API documentation redirects to the admin login in this environment, the direct `GET /api/settings/web` request is blocked, and the sibling panel repository is unavailable in this checkout. Confirm the exact field name and a populated response against the panel before relying on a production font selection.
+
+## Customer app links
+
+- This checkout has no `/redesign` counterpart for the open-app sheet. The existing storefront sheet and theme tokens remain the visual reference.
+- The web can open an installed customer app only when the app registers the configured `customerAppScheme` (or legacy `appScheme`); Android also uses the package ID from the configured Google Play URL. iOS falls back only to a valid Apple App Store URL, and Android falls back only to a valid Google Play URL. Confirm the native app's registered scheme and package against these settings on physical devices.
+
 ## Shared cart links
 
 - This checkout has no `/redesign` counterpart for sharing a cart. The existing cart page and `/design-system` primitives define the Share action and recipient sheet.

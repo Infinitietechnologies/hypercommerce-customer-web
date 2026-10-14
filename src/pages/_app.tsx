@@ -6,6 +6,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import { useEffect } from "react";
+import useSWR from "swr";
 import ReduxProvider from "@/lib/redux/ReduxProvider";
 
 // The one auth sheet for the app — every trigger drives it through authSheetStore.
@@ -25,6 +26,9 @@ import "@/styles/index.css";
 import { CircleX } from "lucide-react";
 import { SEOHead } from "@/SEO/SEOHead";
 import { isSSR } from "@/helpers/getters";
+import { getSiteFontFamily, getGoogleFontUrl } from "@/helpers/siteFont";
+import { getSettings } from "@/services/settings";
+import type { Settings } from "@/types/settings";
 
 const ToastProvider = dynamic(
   () => import("@/components/ui").then((mod) => mod.ToastProvider),
@@ -62,6 +66,26 @@ const accountTabForPath = (pathname: string): string => {
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
   const router = useRouter();
+  const isSandboxRoute =
+    router.pathname.startsWith("/redesign") ||
+    router.pathname.startsWith("/design-system");
+  const initialSettings = (pageProps?.initialSettings ??
+    null) as Settings | null;
+  const { data: siteSettings } = useSWR<Settings | null>(
+    isSandboxRoute ? null : "/settings",
+    async () => {
+      const response = await getSettings();
+      return response.success ? (response.data ?? null) : null;
+    },
+    {
+      fallbackData: initialSettings,
+      revalidateOnMount: !isSSR(),
+      revalidateOnFocus: false,
+      dedupingInterval: 30 * 60 * 1000,
+    },
+  );
+  const selectedFont = isSandboxRoute ? null : getSiteFontFamily(siteSettings);
+  const selectedFontStack = selectedFont ? `"${selectedFont}", ` : "";
 
   useEffect(() => {
     adTrackingService.init();
@@ -89,10 +113,6 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     pageElement
   );
 
-  const isSandboxRoute =
-    router.pathname.startsWith("/redesign") ||
-    router.pathname.startsWith("/design-system");
-
   return (
     <HeroUIProvider navigate={router.push}>
       <GoogleAnalytics />
@@ -103,7 +123,22 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
           content="width=device-width, initial-scale=1, viewport-fit=cover"
           key="viewport"
         />
-        <style>{`:root{--font-sans:${fontSans.style.fontFamily};--font-display:${fontDisplay.style.fontFamily};}`}</style>
+        {selectedFont && (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link
+              rel="preconnect"
+              href="https://fonts.gstatic.com"
+              crossOrigin="anonymous"
+            />
+            <link
+              key="site-google-font"
+              rel="stylesheet"
+              href={getGoogleFontUrl(selectedFont)}
+            />
+          </>
+        )}
+        <style key="site-font-stack">{`:root{--font-sans:${selectedFontStack}${fontSans.style.fontFamily};--font-display:${selectedFontStack}${fontDisplay.style.fontFamily};}`}</style>
         {isSandboxRoute && (
           <meta name="robots" content="noindex, nofollow" key="robots" />
         )}

@@ -201,6 +201,7 @@ export type NotificationSettings = {
 
 export type WebSettings = {
   siteName: string;
+  googleFontFamily?: string | null;
   customerWebUrl: string;
   siteCopyright: string;
   supportNumber: string;
