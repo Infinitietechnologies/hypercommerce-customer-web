@@ -35,7 +35,7 @@ const BlogCard = ({ blog, featured = false }: BlogCardProps) => {
   return (
     <Link
       href={`/blogs/${encodeURIComponent(blog.slug)}/`}
-      className={clsx("group flex h-full cursor-pointer flex-col overflow-hidden rounded-large bg-content1 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus", featured && "min-[1024px]:grid min-[1024px]:grid-cols-2")}
+      className={clsx("group flex h-full cursor-pointer flex-col overflow-hidden rounded-large border border-divider bg-content1 shadow-sm transition-all hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus", featured && "min-[1024px]:grid min-[1024px]:grid-cols-2")}
     >
       <div className={clsx("relative aspect-[16/10] overflow-hidden bg-content2", featured && "min-[1024px]:aspect-auto min-[1024px]:min-h-80")}>
         {blog.image ? (

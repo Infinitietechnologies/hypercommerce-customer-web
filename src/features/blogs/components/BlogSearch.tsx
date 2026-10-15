@@ -23,7 +23,9 @@ const BlogSearch = ({ value, onSearch }: BlogSearchProps) => {
     <Input
       aria-label={t("blogs.search")}
       className="w-full min-[1024px]:max-w-xs"
-      placeholder={t("blogs.search")}
+      classNames={{ inputWrapper: "h-11 rounded-full px-4 data-[hover=true]:border-primary focus-within:ring-2" }}
+      placeholder={t("blogs.searchPlaceholder")}
+      radius="full"
       startContent={<Icon aria-hidden="true" icon="solar:magnifer-linear" className="size-5 text-default-500" />}
       type="search"
       value={input}

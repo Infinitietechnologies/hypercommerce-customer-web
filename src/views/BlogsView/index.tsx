@@ -2,11 +2,12 @@ import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
+import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
 import DynamicSEO from "@/SEO/DynamicSEO";
-import { EmptyState, ErrorState, Pagination, Skeleton } from "@/components/ui";
+import { Divider, EmptyState, ErrorState, Pagination, Skeleton } from "@/components/ui";
 import BlogCard from "@/features/blogs/components/BlogCard";
 import BlogSearch from "@/features/blogs/components/BlogSearch";
 import { getBlogCategories, getBlogs } from "@/services/blogs";
@@ -19,6 +20,12 @@ interface BlogsViewProps {
 }
 
 const PER_PAGE = 9;
+const topicButtonClasses = (selected: boolean) => clsx(
+  "min-h-10 shrink-0 cursor-pointer whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+  selected
+    ? "bg-primary text-primary-foreground hover:bg-primary-600"
+    : "bg-content2 text-default-700 hover:bg-primary-100 hover:text-primary-600",
+);
 
 const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewProps) => {
   const router = useRouter();
@@ -77,28 +84,29 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
           <span aria-current="page" className="text-foreground">{t("blogs.title")}</span>
         </nav>
 
-        <header className="mb-8 max-w-3xl">
-          <p className="mb-3 text-xs font-bold uppercase tracking-widest text-primary">{t("blogs.eyebrow")}</p>
-          <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">{t("blogs.pageTitle")}</h1>
+        <header className="max-w-3xl pb-8">
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">{t("blogs.title")}</h1>
           <p className="mt-4 text-base leading-7 text-default-600">{t("blogs.description")}</p>
         </header>
+        <Divider className="bg-divider" />
 
-        <div className="mb-8 flex flex-col gap-5 py-3 min-[1024px]:flex-row min-[1024px]:items-center min-[1024px]:justify-between">
+        <div className="flex flex-col gap-5 py-6 min-[1024px]:flex-row min-[1024px]:items-center min-[1024px]:justify-between">
           <div role="group" aria-label={t("blogs.topics")} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             <button type="button" aria-pressed={!category} onClick={() => updateQuery({ category: "" })}
-              className={`min-h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${!category ? "bg-primary text-primary-foreground" : "bg-content2 text-default-700 hover:bg-primary-100"}`}>
+              className={topicButtonClasses(!category)}>
               {t("blogs.allStories")}
             </button>
             {(categories ?? []).filter((item) => (item.blogs_count ?? 1) > 0).map((item) => (
               <button key={item.id} type="button" aria-pressed={category === item.slug}
                 onClick={() => updateQuery({ category: item.slug })}
-                className={`min-h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${category === item.slug ? "bg-primary text-primary-foreground" : "bg-content2 text-default-700 hover:bg-primary-100"}`}>
+                className={topicButtonClasses(category === item.slug)}>
                 {item.name}
               </button>
             ))}
           </div>
           <BlogSearch key={search} value={search} onSearch={(value) => updateQuery({ search: value, page: 1 })} />
         </div>
+        <Divider className="mb-8 bg-divider" />
 
         {isLoading && !list ? (
           <div className="space-y-6" aria-label={t("blogs.loading")}>
@@ -121,9 +129,10 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
         ) : (
           <>
             <p className="mb-5 text-sm text-default-600">{t("blogs.storyCount", { count: list.total })}</p>
-            {featured ? <section aria-label={t("blogs.featured")} className="mb-12"><BlogCard blog={featured} featured /></section> : null}
+            {featured ? <section aria-label={t("blogs.featured")} className="mb-10"><BlogCard blog={featured} featured /></section> : null}
             {cards.length > 0 ? (
               <section aria-labelledby="blog-list-heading">
+                {featured ? <Divider className="mb-8 bg-divider" /> : null}
                 <h2 id="blog-list-heading" className="mb-5 text-2xl font-bold text-foreground">{t(featured ? "blogs.latest" : "blogs.results")}</h2>
                 <div className="grid gap-6 sm:grid-cols-2 min-[1024px]:grid-cols-3">
                   {cards.map((blog) => <BlogCard key={blog.id} blog={blog} />)}
