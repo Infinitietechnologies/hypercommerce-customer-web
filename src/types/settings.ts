@@ -51,6 +51,7 @@ export type SystemSettings = {
   favicon: string;
   copyrightDetails: string;
   systemTimezone: string;
+  defaultISO2?: string;
 
   // Support
   sellerSupportNumber: string;

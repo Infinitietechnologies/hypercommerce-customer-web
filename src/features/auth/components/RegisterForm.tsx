@@ -13,8 +13,9 @@ import { resolveSocialLoginProviders } from "@/features/auth/socialLogin";
 import { usePublicSettings } from "@/features/auth/usePublicSettings";
 import { handleRegisterUser } from "@/helpers/auth";
 import { getSpecificSettings } from "@/helpers/getters";
+import { getDefaultPhoneCountry } from "@/helpers/phoneCountry";
 import { validateEmail, validatePassword } from "@/helpers/validator";
-import type { AuthenticationSettings } from "@/types/settings";
+import type { AuthenticationSettings, SystemSettings } from "@/types/settings";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -48,6 +49,9 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, compact = false }: RegisterF
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const { data: settings } = usePublicSettings();
+  const defaultPhoneCountry = getDefaultPhoneCountry(
+    getSpecificSettings(settings, "system") as SystemSettings | undefined,
+  );
   const authSettings = settings
     ? (getSpecificSettings(
         settings,
@@ -149,6 +153,7 @@ const RegisterForm = ({ onSuccess, onSwitchToLogin, compact = false }: RegisterF
 
         <div>
           <PhoneInput
+            defaultCountry={defaultPhoneCountry}
             label={t("auth.phone_number")}
             labelPlacement="outside"
             variant="faded"

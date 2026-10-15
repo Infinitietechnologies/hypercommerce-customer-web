@@ -22,6 +22,7 @@ import {
 import { FormEvent, useRef, useState, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import CountryList from "country-list-with-dial-code-and-flag";
+import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js";
 import PageHeader from "@/components/custom/PageHeader";
 import MyBreadcrumbs from "@/components/custom/MyBreadcrumbs";
 import {
@@ -58,6 +59,7 @@ import { useTranslation } from "react-i18next";
 import { getFirebaseErrorMessage } from "@/lib/firebase";
 import Lightbox from "yet-another-react-lightbox";
 import { useSettings } from "@/contexts/SettingsContext";
+import { getDefaultPhoneCountry } from "@/helpers/phoneCountry";
 import { serverSideAuthGuard } from "@/guards/authGuard";
 import { setCookie } from "@/lib/cookies";
 
@@ -75,7 +77,8 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
   error,
 }) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
-  const { demoMode, authSettings } = useSettings();
+  const { demoMode, authSettings, systemSettings } = useSettings();
+  const defaultPhoneCountry = getDefaultPhoneCountry(systemSettings);
   const { t } = useTranslation();
   const [isLightboxOpen, setLightboxOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,15 +89,16 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
   const user = userData ?? initialData;
   const initialFormUser = initialData ?? user;
   const stripDialCode = (mobile: string, iso_2: string) => {
-    if (!mobile || !iso_2) return mobile;
-    const countryData = CountryList.findOneByCountryCode(iso_2);
-    if (countryData) {
-      const dialCode = countryData.dialCode.replace("+", "");
-      if (mobile.startsWith(dialCode)) {
-        return mobile.slice(dialCode.length);
-      }
+    if (!mobile) return mobile;
+    const country = (iso_2 || defaultPhoneCountry).toUpperCase();
+    try {
+      const parsed = parsePhoneNumberFromString(mobile, country as CountryCode);
+      return parsed?.country === country && parsed.isValid()
+        ? parsed.nationalNumber
+        : mobile;
+    } catch {
+      return mobile;
     }
-    return mobile;
   };
 
   const [formData, setFormData] = useState({
@@ -129,7 +133,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
       name: user?.name || "",
       email: user?.email || "",
       mobile: stripDialCode(user?.mobile || "", user?.iso_2 || ""),
-      iso_2: user?.iso_2 || "US",
+      iso_2: user?.iso_2 || "",
       country: user?.country || "",
       friends_code: user?.friends_code || "",
     });
@@ -383,6 +387,15 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
     ).replace(/\D/g, "");
     const editedLocalNumber = (formData.mobile || "").replace(/\D/g, "");
 
+    if (editedLocalNumber.length < 8) {
+      addToast({
+        title: t("login_modal.errors.invalid_phone_title"),
+        description: t("login_modal.errors.invalid_phone_desc"),
+        color: "danger",
+      });
+      return;
+    }
+
     if (
       originalLocalNumber === normalizedDemoNumber &&
       editedLocalNumber !== normalizedDemoNumber
@@ -402,7 +415,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
     }
 
     const countryData = CountryList.findOneByCountryCode(
-      formData.iso_2 || "US",
+      formData.iso_2 || defaultPhoneCountry,
     );
     const dialCode = countryData?.dialCode || "";
     const fullPhone = dialCode.startsWith("+")
@@ -481,7 +494,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
         });
       } else {
         const countryData = CountryList.findOneByCountryCode(
-          formData.iso_2 || "US",
+          formData.iso_2 || defaultPhoneCountry,
         );
         const dialCode = countryData?.dialCode || "";
         const fullPhone = dialCode.startsWith("+")
@@ -810,7 +823,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                       label={t("pages.myAccount.labels.phone")}
                       labelPlacement="outside"
                       defaultValue={formData.mobile}
-                      defaultCountry={formData.iso_2 || "US"}
+                      defaultCountry={formData.iso_2 || defaultPhoneCountry}
                       onPhoneChange={(
                         countryCode,
                         phoneNumber,
@@ -827,7 +840,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                       }}
                       endContent={
                         <div className="flex items-center gap-2 me-1">
-                          {(formData.mobile !== user?.mobile ||
+                          {(formData.mobile.replace(/\D/g, "") !== normalizedCurrentUserNumber ||
                             formData.iso_2 !== user?.iso_2) &&
                           !isDemoPhoneLockedUser ? (
                             <Button
@@ -837,7 +850,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                               className="h-8 px-4 text-xs font-semibold shadow-sm"
                               onPress={handleUpdatePhone}
                               isLoading={isPhoneUpdating || isCheckingPhone}
-                              isDisabled={!!fieldErrors.phone}
+                              isDisabled={!!fieldErrors.phone || formData.mobile.replace(/\D/g, "").length < 8}
                             >
                               {t("pages.myAccount.labels.updatePhone") ||
                                 "Update"}
@@ -880,6 +893,7 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                                 className="h-8 min-w-8 sm:min-w-unit-20 px-2 sm:px-4 text-[11px] font-medium border-1"
                                 onPress={handleUpdatePhone}
                                 isLoading={isPhoneUpdating}
+                                isDisabled={formData.mobile.replace(/\D/g, "").length < 8}
                               >
                                 <Icon icon="solar:smartphone-linear" width={14} height={14} className="sm:hidden" />
                                 <span className="hidden sm:inline">
@@ -904,11 +918,21 @@ const MyAccount: NextPageWithLayout<MyAccountPageProps> = ({
                       </div>
                     )}
 
-                    <input type="hidden" name="iso2" value={formData.iso_2} />
+                    <input
+                      type="hidden"
+                      name="iso2"
+                      value={formData.iso_2 || defaultPhoneCountry}
+                    />
                     <input
                       type="hidden"
                       name="country"
-                      value={formData.country}
+                      value={
+                        formData.country ||
+                        CountryList.findOneByCountryCode(
+                          formData.iso_2 || defaultPhoneCountry,
+                        )?.name ||
+                        ""
+                      }
                     />
                   </div>
                 </div>

@@ -8,6 +8,10 @@ import { useTranslation } from "react-i18next";
 import { Button, InputOtp, Input, Tab, Tabs } from "@/components/ui";
 import { validatePassword } from "@/helpers/validator";
 import { useForgotPassword, type ForgotMethod } from "@/features/auth/useForgotPassword";
+import { usePublicSettings } from "@/features/auth/usePublicSettings";
+import { getSpecificSettings } from "@/helpers/getters";
+import { getDefaultPhoneCountry } from "@/helpers/phoneCountry";
+import type { SystemSettings } from "@/types/settings";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -27,6 +31,10 @@ export interface ForgotPasswordFormProps {
  */
 const ForgotPasswordForm = ({ onSwitchToLogin, compact = false }: ForgotPasswordFormProps) => {
   const { t } = useTranslation();
+  const { data: settings } = usePublicSettings();
+  const defaultPhoneCountry = getDefaultPhoneCountry(
+    getSpecificSettings(settings, "system") as SystemSettings | undefined,
+  );
   const forgot = useForgotPassword({ onSuccess: onSwitchToLogin });
 
   const [method, setMethod] = useState<ForgotMethod>("email");
@@ -101,6 +109,7 @@ const ForgotPasswordForm = ({ onSwitchToLogin, compact = false }: ForgotPassword
             <form className="flex flex-col gap-4" onSubmit={onSendSubmit}>
               <p className="text-small text-default-500">{t("auth.forgot.phone_hint")}</p>
               <PhoneInput
+                defaultCountry={defaultPhoneCountry}
                 label={t("auth.phone_number")}
                 labelPlacement="outside"
                 variant="faded"

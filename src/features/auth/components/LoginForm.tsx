@@ -24,6 +24,7 @@ import { resolveSocialLoginProviders } from "@/features/auth/socialLogin";
 import { useOtpLogin } from "@/features/auth/useOtpLogin";
 import { usePublicSettings } from "@/features/auth/usePublicSettings";
 import { getSpecificSettings } from "@/helpers/getters";
+import { getDefaultPhoneCountry } from "@/helpers/phoneCountry";
 import type {
   AuthenticationSettings,
   SystemSettings,
@@ -68,6 +69,9 @@ const LoginForm = ({
   const demoMode = Boolean(
     (getSpecificSettings(settings, "system") as SystemSettings | undefined)
       ?.demoMode,
+  );
+  const defaultPhoneCountry = getDefaultPhoneCountry(
+    getSpecificSettings(settings, "system") as SystemSettings | undefined,
   );
   const authSettings = settings
     ? (getSpecificSettings(
@@ -244,6 +248,7 @@ const LoginForm = ({
           {otp.step === "phone" ? (
             <div className="flex flex-col gap-4">
               <PhoneInput
+                defaultCountry={defaultPhoneCountry}
                 label={t("auth.phone_number")}
                 labelPlacement="outside"
                 variant="faded"

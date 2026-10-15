@@ -15,7 +15,7 @@ import {
   DropdownItem,
   Input,
   Image,
-} from "@heroui/react";
+} from "@/components/ui";
 import { ChevronDown, Search, Smartphone } from "lucide-react";
 import CountryList from "country-list-with-dial-code-and-flag";
 import { debounce } from "lodash";
@@ -54,7 +54,7 @@ interface PhoneInputProps {
 
 const PhoneInput: FC<PhoneInputProps> = ({
   onPhoneChange,
-  defaultCountry = "US",
+  defaultCountry,
   label = "Mobile",
   labelPlacement = "outside",
   variant = "flat",
@@ -64,6 +64,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
   defaultValue = "",
   endContent,
 }) => {
+  const initialCountry = (defaultCountry || "US").toUpperCase();
   const [state, setState] = useState<{
     selectedCountryCode: string;
     phoneNumber: string;
@@ -72,7 +73,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
     selectedCountry: CountryData | null;
     maxPhoneLength: number | undefined;
   }>({
-    selectedCountryCode: defaultCountry,
+    selectedCountryCode: initialCountry,
     phoneNumber: defaultValue,
     searchQuery: "",
     isDropdownOpen: false,
@@ -115,7 +116,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
     const fetchDefaultCountry = async () => {
       try {
         setIsLoading(true);
-        const country = CountryList.findOneByCountryCode(defaultCountry);
+        const country = CountryList.findOneByCountryCode(initialCountry);
         if (country) {
           setState((prev) => ({
             ...prev,
@@ -132,7 +133,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
       }
     };
     fetchDefaultCountry();
-  }, [defaultCountry]);
+  }, [initialCountry]);
 
   const prevDefaultValueRef = useRef(defaultValue);
   useEffect(() => {
@@ -159,10 +160,10 @@ const PhoneInput: FC<PhoneInputProps> = ({
         console.error("Failed to get user country code", err);
       }
     };
-    if (!defaultValue) {
+    if (!defaultValue && !defaultCountry) {
       fetchUserCountry();
     }
-  }, [defaultValue]);
+  }, [defaultCountry, defaultValue]);
 
   // Get example number for max length
   useEffect(() => {
@@ -203,7 +204,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
           }));
           onPhoneChange?.(
             code,
-            state.phoneNumber,
+            "",
             country.dialCode,
             country.name,
           );
@@ -212,7 +213,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
         setError("Failed to select country");
       }
     },
-    [onPhoneChange, state.phoneNumber],
+    [onPhoneChange],
   );
 
   const formatNumber = useCallback((num: string): string => {

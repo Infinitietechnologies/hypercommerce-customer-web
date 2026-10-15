@@ -7,9 +7,9 @@ import {
   ModalFooter,
   Button,
   Input,
-  addToast,
+  toast as addToast,
   InputOtp,
-} from "@heroui/react";
+} from "@/components/ui";
 import { TruckElectric, CheckCircle2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "react-i18next";
@@ -27,6 +27,7 @@ import {
 } from "@/helpers/auth";
 import { ConfirmationResult } from "firebase/auth";
 import { useResendCooldown } from "@/features/auth/useResendCooldown";
+import { getDefaultPhoneCountry } from "@/helpers/phoneCountry";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
@@ -47,7 +48,7 @@ export const CompleteProfileModal: FC = () => {
 
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { authSettings, demoMode } = useSettings();
+  const { authSettings, demoMode, systemSettings } = useSettings();
 
   const smsGateway =
     authSettings?.smsGateway ||
@@ -250,7 +251,7 @@ export const CompleteProfileModal: FC = () => {
               </p>
               <PhoneInput
                 onPhoneChange={handlePhoneChange}
-                defaultCountry={demoMode ? "in" : undefined}
+                defaultCountry={demoMode ? "IN" : getDefaultPhoneCountry(systemSettings)}
                 className="w-full"
               />
               {(fieldErrors.phone || isCheckingPhone) && (
