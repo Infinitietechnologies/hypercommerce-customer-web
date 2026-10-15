@@ -127,10 +127,14 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
           />
         ) : (
           <>
-            {featured ? <section aria-label={t("blogs.featured")} className="mb-10"><BlogCard blog={featured} featured /></section> : null}
+            {featured ? (
+              <section aria-labelledby="featured-blog-heading" className="mb-10">
+                <h2 id="featured-blog-heading" className="mb-4 text-sm font-bold uppercase tracking-wide text-default-500">{t("blogs.featured")}</h2>
+                <BlogCard blog={featured} featured />
+              </section>
+            ) : null}
             {cards.length > 0 ? (
               <section aria-labelledby="blog-list-heading">
-                {featured ? <Divider className="mb-8 bg-divider" /> : null}
                 <h2 id="blog-list-heading" className="mb-5 text-2xl font-bold text-foreground">{t(featured ? "blogs.latest" : "blogs.results")}</h2>
                 <div className="grid gap-6 sm:grid-cols-2 min-[1024px]:grid-cols-3">
                   {cards.map((blog) => <BlogCard key={blog.id} blog={blog} />)}
