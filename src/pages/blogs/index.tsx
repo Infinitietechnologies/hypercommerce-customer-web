@@ -1,7 +1,7 @@
 import type { GetServerSideProps } from "next";
 
 import { isSSR } from "@/helpers/getters";
-import { getBlogCategories, getBlogs, getEditorPicks } from "@/services/blogs";
+import { getBlogCategories, getBlogsWithReadingTimes, getEditorPicks } from "@/services/blogs";
 import type { BlogCategory, BlogListResponse, BlogSummary } from "@/types/blogs";
 import type { NextPageWithLayout } from "@/types";
 import BlogsView from "@/views/BlogsView";
@@ -23,7 +23,7 @@ export const getServerSideProps: GetServerSideProps<BlogsPageProps> | undefined 
       const search = typeof context.query.search === "string" ? context.query.search : undefined;
       const category_slug = typeof context.query.category === "string" ? context.query.category : undefined;
       const [initialBlogs, initialCategories, initialEditorPicks] = await Promise.all([
-        getBlogs({ page, per_page: 9, search, category_slug }),
+        getBlogsWithReadingTimes({ page, per_page: 9, search, category_slug }),
         getBlogCategories(),
         page === 1 && !search && !category_slug ? getEditorPicks() : Promise.resolve(null),
       ]);

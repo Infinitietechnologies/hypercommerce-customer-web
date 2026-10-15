@@ -30,12 +30,22 @@ const BlogDetailView = ({ initialBlog, initialSlug }: BlogDetailViewProps) => {
   const routeSlug = typeof router.query.slug === "string"
     ? router.query.slug
     : router.asPath.match(/^\/blogs\/([^/?#]+)/)?.[1];
-  let slug = initialSlug || routeSlug || "";
+  let slug = routeSlug || initialSlug || "";
   try { slug = decodeURIComponent(slug); } catch { slug = ""; }
   const { data: response, isLoading, mutate } = useSWR(
     slug ? ["blogs:detail", slug] : null,
-    () => getBlog(slug),
-    { fallbackData: initialSlug === slug ? initialBlog ?? undefined : undefined, revalidateOnFocus: false, dedupingInterval: 5 * 60_000 },
+    async () => {
+      const result = await getBlog(slug);
+      if (!result.success && result.message !== "Blog not found.") throw new Error(result.message);
+      return result;
+    },
+    {
+      fallbackData: initialSlug === slug && initialBlog?.success ? initialBlog : undefined,
+      revalidateOnFocus: false,
+      dedupingInterval: 5 * 60_000,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
+    },
   );
   const blog = response?.success ? response.data : null;
   const readingMinutes = blog?.content ? estimateReadingMinutes(blog.content) : null;
@@ -44,6 +54,7 @@ const BlogDetailView = ({ initialBlog, initialSlug }: BlogDetailViewProps) => {
     : null;
   const description = blog?.seo?.description || blog?.short_description || undefined;
   const category = blog?.category ?? blog?.categories?.[0];
+  const linkedProducts = blog?.products ?? [];
 
   const share = async () => {
     if (!blog) return;
@@ -84,7 +95,7 @@ const BlogDetailView = ({ initialBlog, initialSlug }: BlogDetailViewProps) => {
           {blog ? <><Icon aria-hidden="true" icon="solar:alt-arrow-right-linear" className="size-4 rtl:rotate-180" /><span aria-current="page" className="max-w-60 truncate text-foreground">{blog.title}</span></> : null}
         </nav>
 
-        {isLoading && !response ? (
+        {(!slug || isLoading) && !response ? (
           <div aria-label={t("blogs.loading")} className="mx-auto max-w-4xl space-y-6">
             <Skeleton className="h-8 w-28" />
             <Skeleton className="h-16 w-full" />
@@ -140,14 +151,14 @@ const BlogDetailView = ({ initialBlog, initialSlug }: BlogDetailViewProps) => {
                 </div>
               ) : null}
               <BlogContent html={blog.content || ""} />
-              {blog.products?.length ? (
+              {linkedProducts.length ? (
                 <section id="blog-products" aria-labelledby="blog-products-heading" className="mt-12 rounded-large bg-content2 p-5 sm:p-7">
                   <div className="mb-5">
                     <h2 id="blog-products-heading" className="text-2xl font-bold text-foreground">{t("blogs.shopStory")}</h2>
                     <p className="mt-1 text-sm text-default-600">{t("blogs.shopStoryDescription")}</p>
                   </div>
-                  <div className={clsx("grid gap-4", blog.products.length > 1 && "sm:grid-cols-2")}>
-                    {blog.products.map((product) => <BlogProductCard key={product.id} product={product} />)}
+                  <div className={clsx("grid gap-4", linkedProducts.length > 1 && "sm:grid-cols-2", linkedProducts.length > 2 && "min-[1024px]:grid-cols-3")}>
+                    {linkedProducts.map((product) => <BlogProductCard key={product.id} product={product} compact={linkedProducts.length > 2} />)}
                   </div>
                 </section>
               ) : null}

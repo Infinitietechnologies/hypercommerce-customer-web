@@ -16,13 +16,24 @@ interface BlogCardProps {
 
 const BlogCard = ({ blog, featured = false }: BlogCardProps) => {
   const { t, i18n } = useTranslation();
-  const { data: detail } = useSWR(["blogs:detail", blog.slug], () => getBlog(blog.slug), {
-    revalidateOnFocus: false,
-    dedupingInterval: 30 * 60_000,
-  });
-  const readingMinutes = detail?.success && detail.data?.content
-    ? estimateReadingMinutes(detail.data.content)
-    : null;
+  const { data: detail, isLoading: isReadingTimeLoading } = useSWR(
+    typeof blog.reading_minutes === "number" ? null : ["blogs:detail", blog.slug],
+    async () => {
+      const response = await getBlog(blog.slug);
+      if (!response.success) throw new Error(response.message);
+      return response;
+    },
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30 * 60_000,
+      errorRetryCount: 2,
+    },
+  );
+  const readingMinutes = blog.reading_minutes ?? (
+    detail?.success && detail.data?.content
+      ? estimateReadingMinutes(detail.data.content)
+      : null
+  );
   const category = blog.category ?? blog.categories?.[0];
   const publishedDate = blog.published_at
     ? new Intl.DateTimeFormat(i18n.language, {
@@ -56,9 +67,17 @@ const BlogCard = ({ blog, featured = false }: BlogCardProps) => {
             className="absolute inset-0 m-auto size-12 text-default-400"
           />
         )}
+        {featured ? (
+          <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-divider bg-content1 px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">
+            <Icon aria-hidden="true" icon="solar:star-bold" className="size-4 text-warning" />
+            {t("blogs.handpicked")}
+          </span>
+        ) : null}
       </div>
       <div className={clsx("flex flex-1 flex-col p-5", featured && "justify-center sm:p-8")}>
-        {category?.name ? <span className="text-xs font-bold uppercase tracking-wide text-primary">{category.name}</span> : null}
+        <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide">
+          {category?.name ? <span className="text-primary">{category.name}</span> : null}
+        </div>
         <h3 className={clsx("font-bold leading-snug text-foreground", featured ? "mt-4 text-2xl sm:text-3xl" : "mt-3 text-lg")}>
           {blog.title}
         </h3>
@@ -74,12 +93,12 @@ const BlogCard = ({ blog, featured = false }: BlogCardProps) => {
               <time dateTime={blog.published_at ?? undefined}>{t("blogs.publishedOn", { date: publishedDate })}</time>
             </span>
           ) : null}
-          {readingMinutes ? (
-            <span className="inline-flex items-center gap-1.5">
-              <Icon aria-hidden="true" icon="solar:clock-circle-linear" className="size-4" />
-              {t("blogs.readingTime", { count: readingMinutes })}
-            </span>
-          ) : null}
+          <span className="inline-flex items-center gap-1.5">
+            <Icon aria-hidden="true" icon="solar:clock-circle-linear" className="size-4" />
+            {readingMinutes
+              ? t("blogs.readingTime", { count: readingMinutes })
+              : t(isReadingTimeLoading ? "blogs.readingTimeLoading" : "blogs.readingTimeUnavailable")}
+          </span>
           {typeof blog.views_count === "number" ? (
             <span className="inline-flex items-center gap-1.5">
               <Icon aria-hidden="true" icon="solar:eye-linear" className="size-4" />
@@ -91,7 +110,7 @@ const BlogCard = ({ blog, featured = false }: BlogCardProps) => {
           "mt-5 inline-flex min-h-10 w-fit items-center justify-center gap-2 rounded-small px-4 text-sm font-semibold transition",
           featured
             ? "bg-foreground text-background group-hover:opacity-90"
-            : "border border-divider bg-content1 text-foreground group-hover:bg-content2",
+            : "border border-divider bg-content1 text-foreground group-hover:border-foreground group-hover:bg-foreground group-hover:text-background",
         )}>
           {t("blogs.readStory")}
           <Icon aria-hidden="true" icon="solar:arrow-right-linear" className="size-4 rtl:rotate-180" />

@@ -25,6 +25,7 @@ export interface BlogSummary {
   editor_pick?: boolean;
   published_at: string | null;
   views_count?: number;
+  reading_minutes?: number | null;
   categories?: BlogCategory[];
   category?: BlogCategory | null;
   tags?: string[];

@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
 import BlogCard from "@/features/blogs/components/BlogCard";
-import { getBlogs } from "@/services/blogs";
+import { getBlogsWithReadingTimes } from "@/services/blogs";
 
 const HomeBlogHighlights = () => {
   const { t } = useTranslation();
-  const { data } = useSWR("blogs:home", () => getBlogs({ per_page: 3 }), {
+  const { data } = useSWR("blogs:home", () => getBlogsWithReadingTimes({ per_page: 3 }), {
     dedupingInterval: 5 * 60_000,
     revalidateOnFocus: false,
   });

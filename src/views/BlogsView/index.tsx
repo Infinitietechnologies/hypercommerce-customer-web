@@ -11,7 +11,7 @@ import { Divider, EmptyState, ErrorState, Pagination, Skeleton } from "@/compone
 import BlogCard from "@/features/blogs/components/BlogCard";
 import BlogSearch from "@/features/blogs/components/BlogSearch";
 import FeaturedBlogCarousel from "@/features/blogs/components/FeaturedBlogCarousel";
-import { getBlogCategories, getBlogs, getEditorPicks } from "@/services/blogs";
+import { getBlogCategories, getBlogsWithReadingTimes, getEditorPicks } from "@/services/blogs";
 import type { BlogCategory, BlogListResponse, BlogSummary } from "@/types/blogs";
 
 interface BlogsViewProps {
@@ -41,7 +41,7 @@ const BlogsView = ({ initialBlogs, initialCategories, initialEditorPicks, initia
 
   const { data: blogs, isLoading, mutate } = useSWR(
     ["blogs:list", page, search, category],
-    () => getBlogs({ page, per_page: PER_PAGE, search: search || undefined, category_slug: category || undefined }),
+    () => getBlogsWithReadingTimes({ page, per_page: PER_PAGE, search: search || undefined, category_slug: category || undefined }),
     { fallbackData: matchesInitialQuery ? initialBlogs ?? undefined : undefined, revalidateOnFocus: false, dedupingInterval: 30_000 },
   );
   const { data: categories } = useSWR("blogs:categories", getBlogCategories, {
