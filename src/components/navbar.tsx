@@ -27,6 +27,7 @@ import { getHomeNavbar } from "@/services/home";
 import { STALE_TIME } from "@/hooks/useInfiniteData";
 import { resolveHeaderSettings } from "@/config/header";
 import { useBlogsAvailable } from "@/features/blogs/hooks/useBlogsAvailable";
+import clsx from "clsx";
 
 type HeaderPaletteStyle = CSSProperties & {
   "--header-font-color": string;
@@ -540,23 +541,16 @@ export const Navbar: FC = () => {
 
   const {
     siteHeaderLogo,
-    siteHeaderDarkLogo,
     siteName = "Site Logo",
   } = webSettings || {};
   const isCheckoutOrPayment =
     router.pathname === "/cart/checkout" ||
     router.pathname.startsWith("/payment");
-  const standardLogo = siteHeaderLogo || siteHeaderDarkLogo || "/logo-icon.png";
-  const inverseLogo = siteHeaderDarkLogo || siteHeaderLogo || "/logo-icon.png";
-  const desktopLogo =
-    header.logoUrl ||
-    (isCheckoutOrPayment || header.contentTone === "light"
-      ? inverseLogo
-      : standardLogo);
-  const mobileLogo = header.mobileLogoUrl || desktopLogo;
-  const displayedMobileLogo = !isCheckoutOrPayment && hasScrolledMobileSurface
-    ? siteHeaderLogo || mobileLogo
-    : mobileLogo;
+  const logoUrl = siteHeaderLogo || "/logo-icon.png";
+  const logoNeedsLightBacking =
+    header.contentTone === "light" &&
+    !hasScrolledMobileSurface &&
+    !isCheckoutOrPayment;
   const logoHeightClass =
     header.density === "compact"
       ? "h-9"
@@ -568,52 +562,26 @@ export const Navbar: FC = () => {
     <Link
       href="/"
       title={t("nav.home")}
-      className="flex shrink-0 items-center"
+      className={clsx(
+        "flex shrink-0 items-center",
+        logoNeedsLightBacking && "rounded-medium bg-content1 px-2 py-1",
+      )}
       style={{ maxWidth: header.logoMaxWidth }}
       onClick={(event) => {
         event.preventDefault();
         router.push("/");
       }}
     >
-      {displayedMobileLogo !== desktopLogo ? (
-        <>
-          <span className="min-[1024px]:hidden">
-            <Image
-              removeWrapper
-              loading="eager"
-              disableSkeleton
-              disableAnimation
-              src={displayedMobileLogo}
-              alt={siteName}
-              radius="none"
-              className={`${logoHeightClass} w-auto max-w-full object-contain`}
-            />
-          </span>
-          <span className="hidden min-[1024px]:block">
-            <Image
-              removeWrapper
-              loading="eager"
-              disableSkeleton
-              disableAnimation
-              src={desktopLogo}
-              alt={siteName}
-              radius="none"
-              className={`${logoHeightClass} w-auto max-w-full object-contain`}
-            />
-          </span>
-        </>
-      ) : (
-        <Image
-          removeWrapper
-          loading="eager"
-          disableSkeleton
-          disableAnimation
-          src={desktopLogo}
-          alt={siteName}
-          radius="none"
-          className={`${logoHeightClass} w-auto max-w-full object-contain`}
-        />
-      )}
+      <Image
+        removeWrapper
+        loading="eager"
+        disableSkeleton
+        disableAnimation
+        src={logoUrl}
+        alt={siteName}
+        radius="none"
+        className={`${logoHeightClass} w-auto max-w-full object-contain`}
+      />
     </Link>
   );
 
@@ -1173,18 +1141,18 @@ export const Navbar: FC = () => {
       : t("nav.secureCheckout", "Secure Checkout");
 
     return (
-      <header className="sticky top-0 z-50 w-full bg-ink text-ink-foreground border-b border-zinc-800">
+      <header className="sticky top-0 z-50 w-full border-b border-divider bg-content1 text-foreground">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:py-4">
           {/* Logo on the left */}
           <div className="flex items-center">{SiteLogo}</div>
 
           {/* Secure label in the center */}
-          <div className="flex items-center gap-1.5 text-zinc-300">
+          <div className="flex items-center gap-1.5 text-foreground">
             <Icon
               icon="solar:shield-keyhole-bold-duotone"
-              className="text-emerald-400 text-lg sm:text-xl shrink-0"
+              className="shrink-0 text-lg text-success sm:text-xl"
             />
-            <span className="font-display text-sm sm:text-base font-bold tracking-tight text-white leading-none">
+            <span className="font-display text-sm sm:text-base font-bold tracking-tight leading-none">
               {titleText}
             </span>
           </div>
@@ -1192,7 +1160,7 @@ export const Navbar: FC = () => {
           {/* Back Action on the right */}
           <Link
             href={backHref}
-            className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-default-500 hover:text-foreground transition-colors cursor-pointer"
           >
             <Icon
               icon="solar:alt-arrow-left-linear"

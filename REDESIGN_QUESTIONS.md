@@ -2,7 +2,11 @@
 
 ## Header logo
 
-- This checkout has no `/redesign` header counterpart. The live header's `contentTone` and the admin's separate standard/dark logo fields determine which asset is legible: use the standard logo on light surfaces and the dark-mode logo on dark surfaces. A custom header logo URL remains an explicit override.
+- This checkout has no `/redesign` header counterpart. The current light-only storefront uses the admin's Site Header Logo on every header. A header with light text gives that logo a light backing; checkout and payment use a light header surface. The admin's dark-mode and custom header logo fields are reserved for a future dark presentation.
+
+## Profile phone country
+
+- The October 9 screen recording shows an Indian delivery phone number, then `+1` beside that same number as soon as the profile form appears. The form uses `iso_2` from `GET /user/profile` and falls back to `US`; the shared phone input also defaults to `US` and skips location detection when it receives a saved number. A local mock with a saved number and blank `iso_2` reproduced `+1`. Selecting India, entering a synthetic number, and saving it in the mock kept `IN` through the mock checkout step. The recording does not show whether the API returned an empty `iso_2` or stored `US`, so inspect that field for the affected account before changing its data. A delivery address does not currently set the account phone country. The mock also exposed a separate bug: `PhoneInput.handleCountryChange` clears the displayed number but sends the previous number to `onPhoneChange`, temporarily leaving parent form state out of sync.
 
 ## Blogs
 
