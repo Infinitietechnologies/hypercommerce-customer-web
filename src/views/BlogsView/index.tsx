@@ -84,11 +84,10 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
           <span aria-current="page" className="text-foreground">{t("blogs.title")}</span>
         </nav>
 
-        <header className="max-w-3xl pb-8">
+        <header className="max-w-3xl pb-4">
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">{t("blogs.title")}</h1>
           <p className="mt-4 text-base leading-7 text-default-600">{t("blogs.description")}</p>
         </header>
-        <Divider className="bg-divider" />
 
         <div className="flex flex-col gap-5 py-6 min-[1024px]:flex-row min-[1024px]:items-center min-[1024px]:justify-between">
           <div role="group" aria-label={t("blogs.topics")} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
