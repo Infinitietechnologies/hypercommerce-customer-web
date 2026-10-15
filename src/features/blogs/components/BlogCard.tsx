@@ -35,7 +35,7 @@ const BlogCard = ({ blog, featured = false }: BlogCardProps) => {
   return (
     <Link
       href={`/blogs/${encodeURIComponent(blog.slug)}/`}
-      className={clsx("group flex h-full cursor-pointer flex-col overflow-hidden rounded-large border border-divider bg-content1 shadow-sm transition-all hover:border-primary hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus", featured && "min-[1024px]:grid min-[1024px]:grid-cols-2")}
+      className={clsx("flex h-full cursor-pointer flex-col overflow-hidden rounded-large border border-divider bg-content1 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus", featured && "min-[1024px]:grid min-[1024px]:grid-cols-2")}
     >
       <div className={clsx("relative aspect-[16/10] overflow-hidden bg-content2", featured && "min-[1024px]:aspect-auto min-[1024px]:min-h-80")}>
         {blog.image ? (
@@ -87,7 +87,7 @@ const BlogCard = ({ blog, featured = false }: BlogCardProps) => {
             </span>
           ) : null}
         </div>
-        <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-primary-100 px-3 py-2 text-sm font-semibold text-primary-600 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+        <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-primary-100 px-3 py-2 text-sm font-semibold text-primary-600">
           {t("blogs.readStory")}
           <Icon aria-hidden="true" icon="solar:arrow-right-linear" className="size-4 rtl:rotate-180" />
         </span>

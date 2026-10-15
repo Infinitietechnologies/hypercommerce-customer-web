@@ -128,7 +128,6 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
           />
         ) : (
           <>
-            <p className="mb-5 text-sm text-default-600">{t("blogs.storyCount", { count: list.total })}</p>
             {featured ? <section aria-label={t("blogs.featured")} className="mb-10"><BlogCard blog={featured} featured /></section> : null}
             {cards.length > 0 ? (
               <section aria-labelledby="blog-list-heading">
