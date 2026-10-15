@@ -1,0 +1,14 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.hyperCommerce.customer",
+      "sha256_cert_fingerprints": [
+        "BB:57:14:D8:D5:4D:18:16:D0:DE:07:73:59:D5:8B:37:49:98:3C:4C:C1:A0:33:A4:37:15:FB:5B:84:95:8A:03",
+        "48:30:80:3E:E1:41:8E:4F:FB:36:9E:77:E8:7C:1A:1D:ED:96:E8:86:42:78:E8:37:22:38:B2:30:EB:F2:57:7C",
+        "23:DF:21:53:ED:8A:E6:B0:22:20:D9:0D:8E:26:AC:1F:06:78:27:12:06:D6:9D:D0:E2:50:9A:9F:22:75:A0:CA"
+      ]
+    }
+  }
+]

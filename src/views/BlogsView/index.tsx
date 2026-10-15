@@ -10,12 +10,14 @@ import DynamicSEO from "@/SEO/DynamicSEO";
 import { Divider, EmptyState, ErrorState, Pagination, Skeleton } from "@/components/ui";
 import BlogCard from "@/features/blogs/components/BlogCard";
 import BlogSearch from "@/features/blogs/components/BlogSearch";
-import { getBlogCategories, getBlogs } from "@/services/blogs";
-import type { BlogCategory, BlogListResponse } from "@/types/blogs";
+import FeaturedBlogCarousel from "@/features/blogs/components/FeaturedBlogCarousel";
+import { getBlogCategories, getBlogs, getEditorPicks } from "@/services/blogs";
+import type { BlogCategory, BlogListResponse, BlogSummary } from "@/types/blogs";
 
 interface BlogsViewProps {
   initialBlogs?: BlogListResponse | null;
   initialCategories?: BlogCategory[] | null;
+  initialEditorPicks?: BlogSummary[] | null;
   initialQuery?: { page: number; search: string; category: string };
 }
 
@@ -27,7 +29,7 @@ const topicButtonClasses = (selected: boolean) => clsx(
     : "bg-content2 text-default-700 hover:bg-primary-100 hover:text-primary-600",
 );
 
-const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewProps) => {
+const BlogsView = ({ initialBlogs, initialCategories, initialEditorPicks, initialQuery }: BlogsViewProps) => {
   const router = useRouter();
   const { t } = useTranslation();
   const search = typeof router.query.search === "string" ? router.query.search : "";
@@ -47,6 +49,12 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
     revalidateOnFocus: false,
     dedupingInterval: 30 * 60_000,
   });
+  const showFeatured = !search && !category && page === 1;
+  const { data: editorPicks } = useSWR(showFeatured ? "blogs:editorPicks" : null, getEditorPicks, {
+    fallbackData: showFeatured ? initialEditorPicks ?? undefined : undefined,
+    revalidateOnFocus: false,
+    dedupingInterval: 2 * 60_000,
+  });
 
   const updateQuery = useCallback((next: { search?: string; category?: string; page?: number }) => {
     const nextSearch = next.search ?? search;
@@ -64,10 +72,9 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
 
   const list = blogs?.data;
   const hasFilters = Boolean(search || category);
-  const featured = !hasFilters && page === 1 && list?.total
-    ? list.data[0]
-    : null;
-  const cards = list?.data.filter((blog) => blog.slug !== featured?.slug) ?? [];
+  const featured = showFeatured ? editorPicks ?? [] : [];
+  const featuredIds = new Set(featured.map((blog) => blog.id));
+  const cards = list?.data.filter((blog) => !showFeatured || !featuredIds.has(blog.id)) ?? [];
 
   return (
     <>
@@ -127,15 +134,10 @@ const BlogsView = ({ initialBlogs, initialCategories, initialQuery }: BlogsViewP
           />
         ) : (
           <>
-            {featured ? (
-              <section aria-labelledby="featured-blog-heading" className="mb-10">
-                <h2 id="featured-blog-heading" className="mb-4 text-sm font-bold uppercase tracking-wide text-default-500">{t("blogs.featured")}</h2>
-                <BlogCard blog={featured} featured />
-              </section>
-            ) : null}
+            {featured.length > 0 ? <FeaturedBlogCarousel blogs={featured} /> : null}
             {cards.length > 0 ? (
               <section aria-labelledby="blog-list-heading">
-                <h2 id="blog-list-heading" className="mb-5 text-2xl font-bold text-foreground">{t(featured ? "blogs.latest" : "blogs.results")}</h2>
+                <h2 id="blog-list-heading" className="mb-5 text-2xl font-bold text-foreground">{t(featured.length ? "blogs.latest" : "blogs.results")}</h2>
                 <div className="grid gap-6 sm:grid-cols-2 min-[1024px]:grid-cols-3">
                   {cards.map((blog) => <BlogCard key={blog.id} blog={blog} />)}
                 </div>

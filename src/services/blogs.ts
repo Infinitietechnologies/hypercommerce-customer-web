@@ -4,6 +4,7 @@ import type {
   BlogDetail,
   BlogDetailResponse,
   BlogListResponse,
+  BlogSummary,
 } from "@/types/blogs";
 
 export interface BlogListParams {
@@ -22,6 +23,20 @@ export const getBlogs = async (
   } catch {
     return { success: false, message: "Blogs could not be loaded.", data: null };
   }
+};
+
+export const getEditorPicks = async (): Promise<BlogSummary[] | null> => {
+  const firstPage = await getBlogs({ page: 1, per_page: 100 });
+  if (!firstPage.success || !firstPage.data) return null;
+
+  const pages = [firstPage.data];
+  for (let page = 2; page <= firstPage.data.last_page; page += 1) {
+    const response = await getBlogs({ page, per_page: 100 });
+    if (!response.success || !response.data) return null;
+    pages.push(response.data);
+  }
+
+  return pages.flatMap((page) => page.data).filter((blog) => blog.editor_pick);
 };
 
 export const getBlogCategories = async (): Promise<BlogCategory[] | null> => {
