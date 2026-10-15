@@ -1,5 +1,9 @@
 # Redesign decisions and data gaps
 
+## Header logo
+
+- This checkout has no `/redesign` header counterpart. The live header's `contentTone` and the admin's separate standard/dark logo fields determine which asset is legible: use the standard logo on light surfaces and the dark-mode logo on dark surfaces. A custom header logo URL remains an explicit override.
+
 ## Blogs
 
 - This checkout has no `/redesign` blog counterpart. The live slate theme and the supplied blog reference define the listing, article, and home highlights: editorial hero, topic filters, search, paginated cards, article content, linked products, and related stories.

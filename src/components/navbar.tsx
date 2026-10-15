@@ -540,12 +540,21 @@ export const Navbar: FC = () => {
 
   const {
     siteHeaderLogo,
-    siteHeaderDarkLogo = "https://placehold.co/160x40?text=Logo",
+    siteHeaderDarkLogo,
     siteName = "Site Logo",
   } = webSettings || {};
-  const desktopLogo = header.logoUrl ?? siteHeaderDarkLogo;
-  const mobileLogo = header.mobileLogoUrl ?? desktopLogo;
-  const displayedMobileLogo = hasScrolledMobileSurface
+  const isCheckoutOrPayment =
+    router.pathname === "/cart/checkout" ||
+    router.pathname.startsWith("/payment");
+  const standardLogo = siteHeaderLogo || siteHeaderDarkLogo || "/logo-icon.png";
+  const inverseLogo = siteHeaderDarkLogo || siteHeaderLogo || "/logo-icon.png";
+  const desktopLogo =
+    header.logoUrl ||
+    (isCheckoutOrPayment || header.contentTone === "light"
+      ? inverseLogo
+      : standardLogo);
+  const mobileLogo = header.mobileLogoUrl || desktopLogo;
+  const displayedMobileLogo = !isCheckoutOrPayment && hasScrolledMobileSurface
     ? siteHeaderLogo || mobileLogo
     : mobileLogo;
   const logoHeightClass =
@@ -568,7 +577,7 @@ export const Navbar: FC = () => {
     >
       {displayedMobileLogo !== desktopLogo ? (
         <>
-          <span className="min-[640px]:hidden">
+          <span className="min-[1024px]:hidden">
             <Image
               removeWrapper
               loading="eager"
@@ -580,7 +589,7 @@ export const Navbar: FC = () => {
               className={`${logoHeightClass} w-auto max-w-full object-contain`}
             />
           </span>
-          <span className="hidden min-[640px]:block">
+          <span className="hidden min-[1024px]:block">
             <Image
               removeWrapper
               loading="eager"
@@ -1152,10 +1161,6 @@ export const Navbar: FC = () => {
       {mobileSearch}
     </div>
   ) : null;
-
-  const isCheckoutOrPayment =
-    router.pathname === "/cart/checkout" ||
-    router.pathname.startsWith("/payment");
 
   if (isCheckoutOrPayment) {
     const isPaymentPage = router.pathname.startsWith("/payment");
