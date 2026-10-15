@@ -117,7 +117,7 @@ export default function DefaultLayout({
       // a timer or window focus — otherwise the header logo & other settings-
       // driven UI visibly "reload" every few seconds. Reconnect stays on so a
       // dropped connection still recovers fresh settings.
-      revalidateOnMount: !isSSR(),
+      revalidateOnMount: !isSSR() || !initialSettings,
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
       refreshInterval: 0,

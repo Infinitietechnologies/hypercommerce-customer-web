@@ -79,7 +79,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     },
     {
       fallbackData: initialSettings,
-      revalidateOnMount: !isSSR(),
+      revalidateOnMount: !isSSR() || !initialSettings,
       revalidateOnFocus: false,
       dedupingInterval: 30 * 60 * 1000,
     },
