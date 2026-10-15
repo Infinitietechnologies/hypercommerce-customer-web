@@ -6,15 +6,30 @@ import CartAdditionalInfo from "../CartPageView/CartAdditionalInfo";
 import CheckoutSection from "../CartPageView/CheckoutSection";
 import CartPageEmpty from "../empty/CartPageEmpty";
 import ConfettiTrigger from "@/components/Functional/ConfettiTrigger";
+import { Skeleton } from "@/components/ui";
 
 /**
  * Checkout page (redesign `/redesign/checkout`): delivery address + promo on the
  * left, the order summary + payment on the right. Reached from the cart page's
  * "Proceed to Checkout".
  */
-const CheckoutPageView: FC = () => {
+const CheckoutPageView: FC<{ initializing?: boolean }> = ({
+  initializing = false,
+}) => {
   const { t } = useTranslation();
   const { cartData } = useSelector((state: RootState) => state.cart);
+
+  if (initializing) {
+    return (
+      <div className="flex w-full flex-col gap-6">
+        <Skeleton className="h-8 w-40" />
+        <div className="flex w-full flex-col gap-4 md:flex-row">
+          <Skeleton className="h-64 w-full md:w-3/5" />
+          <Skeleton className="h-64 w-full md:w-2/5" />
+        </div>
+      </div>
+    );
+  }
 
   if (!cartData || cartData.items.length === 0) {
     return <CartPageEmpty />;

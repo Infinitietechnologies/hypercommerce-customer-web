@@ -6,7 +6,12 @@
 
 ## Profile phone country
 
-- The October 9 screen recording shows an Indian delivery phone number, then `+1` beside that same number as soon as the profile form appears. The form uses `iso_2` from `GET /user/profile` and falls back to `US`; the shared phone input also defaults to `US` and skips location detection when it receives a saved number. A local mock with a saved number and blank `iso_2` reproduced `+1`. Selecting India, entering a synthetic number, and saving it in the mock kept `IN` through the mock checkout step. The recording does not show whether the API returned an empty `iso_2` or stored `US`, so inspect that field for the affected account before changing its data. A delivery address does not currently set the account phone country. The mock also exposed a separate bug: `PhoneInput.handleCountryChange` clears the displayed number but sends the previous number to `onPhoneChange`, temporarily leaving parent form state out of sync.
+- The October 9 screen recording shows an Indian delivery phone number, then `+1` beside that same number as soon as the profile form appears. The form previously used `iso_2` from `GET /user/profile` and fell back to `US`; the shared phone input also defaulted to `US` and skipped location detection when it received a saved number. A local mock with a saved number and blank `iso_2` reproduced `+1`. Selecting India, entering a synthetic number, and saving it in the mock kept `IN` through the mock checkout step. The recording does not show whether the API returned an empty `iso_2` or stored `US`, so inspect that field for the affected account before changing its data. A delivery address does not currently set the account phone country. The mock also exposed a separate bug: `PhoneInput.handleCountryChange` cleared the displayed number but sent the previous number to `onPhoneChange`, temporarily leaving parent form state out of sync.
+- Clearout's System Settings page shows Default country = India, and the public storefront receives `defaultISO2: "IN"`. Phone fields now use that setting when the customer has no saved phone country. A saved `iso_2` still takes precedence; phone verification remains a separate OTP step. The affected account's profile response has not been inspected.
+
+## Checkout address selection
+
+- This checkout has no local `/redesign` counterpart. The address API has no last-used or default marker. Checkout remembers the customer's last selected address ID in a browser cookie, validates it against the current address list, and selects the sole saved address automatically. With multiple addresses and no prior choice on that browser, the customer selects one. The checkout recalculates the cart and market after restoring a choice.
 
 ## Blogs
 

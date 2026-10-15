@@ -11,7 +11,7 @@ import { serverSideAuthGuard } from "@/guards/authGuard";
 import { loadTranslations } from "../../../../i18n";
 import PageHead from "@/SEO/PageHead";
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const CheckoutPageView = dynamic(() => import("@/views/CheckoutPageView"), {
   ssr: false,
@@ -23,13 +23,22 @@ interface CheckoutPageProps {
 
 const CheckoutPage: NextPageWithLayout<CheckoutPageProps> = () => {
   const { t } = useTranslation();
+  const [isCartReady, setIsCartReady] = useState(false);
   useEffect(() => {
-    updateCartData(false, false, 0, false);
+    let mounted = true;
+    void updateCartData(false, false, 0, false).finally(() => {
+      if (mounted) setIsCartReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
     <>
-      <PageHead pageTitle={t("pageTitle.checkout", { defaultValue: "Checkout" })} />
+      <PageHead
+        pageTitle={t("pageTitle.checkout", { defaultValue: "Checkout" })}
+      />
 
       <button
         id="refetch-cart-page"
@@ -44,7 +53,7 @@ const CheckoutPage: NextPageWithLayout<CheckoutPageProps> = () => {
             { href: "/cart/checkout", label: "Checkout" },
           ]}
         />
-        <CheckoutPageView />
+        <CheckoutPageView initializing={!isCartReady} />
       </div>
     </>
   );
