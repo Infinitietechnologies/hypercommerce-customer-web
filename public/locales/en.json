@@ -1310,6 +1310,12 @@
     },
     "sellerRegister": {
       "dynamic": {
+        "stepCount": "Step {{current}} of {{total}}",
+        "chooseImage": "Choose image",
+        "readyToUpload": "Ready to upload",
+        "replace": "Replace",
+        "remove": "Remove",
+        "fileSize": "{{size}} KiB",
         "accountTitle": "Account",
         "addressTitle": "Business address",
         "addressDescription": "Tell us where your business is based. Your country determines the bank details and documents you need.",

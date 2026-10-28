@@ -73,3 +73,5 @@
 - Story progress starts after media readiness, uses the API `duration_ms` value when supplied (with a five-second fallback), follows real video playback, and pauses while the customer holds the story or browses its product rail.
 - Comments, follows, saves, view counts, and product-filtered reels are not rendered because the customer API does not expose those contracts. The reference's view-count position uses the supported like count and heart icon rather than mislabelling likes as views.
 - Videos expose captions as visible post text, but the API does not return timed caption tracks. The player includes an empty WebVTT fallback until the contract supplies caption URLs.
+
+- Seller onboarding progress uses a compact step count and segmented bar below 1024px, with equal-width labelled steps above that breakpoint. Uploads use a single card with a real image thumbnail, filename, size, and explicit Replace/Remove actions; native file controls remain hidden.

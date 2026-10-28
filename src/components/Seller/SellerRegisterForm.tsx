@@ -439,38 +439,55 @@ export default function SellerRegisterForm({
       ref={rootRef}
     >
       <CardBody className="p-0">
-        <div className="grid min-w-0 grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div className="min-w-0">
           <nav
             aria-label={t("pages.sellerRegister.pageTitle")}
-            className="min-w-0 p-4 lg:p-6"
+            className="border-b border-divider p-4 sm:p-6"
           >
-            <div className="rounded-large border border-divider bg-primary-50 p-4 lg:h-full">
-              <h2 className="text-lg font-bold">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-base font-bold sm:text-lg">
                 {t("pages.sellerRegister.pageTitle")}
               </h2>
-              <ol className="mt-4 flex gap-3 overflow-x-auto lg:flex-col">
-                {steps.map((key, index) => (
-                  <li
-                    key={key}
-                    aria-current={step === key ? "step" : undefined}
-                    className="flex min-w-24 shrink-0 gap-2 lg:py-2"
+              <p
+                className="text-xs font-medium text-foreground/60 sm:text-sm"
+                aria-live="polite"
+              >
+                {t("pages.sellerRegister.dynamic.stepCount", {
+                  current: currentIndex + 1,
+                  total: steps.length,
+                })}
+              </p>
+            </div>
+            <ol className="mt-4 flex gap-2 sm:gap-3">
+              {steps.map((key, index) => (
+                <li
+                  key={key}
+                  aria-label={title(key)}
+                  aria-current={step === key ? "step" : undefined}
+                  className="min-w-0 flex-1"
+                >
+                  <div
+                    aria-hidden="true"
+                    className={`h-1.5 rounded-full ${index <= currentIndex ? "bg-primary" : "bg-default-100"}`}
+                  />
+                  <div
+                    aria-hidden="true"
+                    className={`mt-3 hidden items-start gap-2 text-xs min-[1024px]:flex ${step === key ? "font-bold text-foreground" : "text-foreground/60"}`}
                   >
                     <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step === key ? "bg-primary text-primary-foreground" : "border border-divider bg-content1"}`}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${step === key ? "bg-primary text-primary-foreground" : "bg-default-100"}`}
                     >
                       {index + 1}
                     </span>
-                    <span
-                      className={`text-sm ${step === key ? "font-bold" : "text-foreground/60"}`}
-                    >
+                    <span className="min-w-0 pt-1 leading-snug">
                       {title(key)}
                     </span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </nav>
-          <div className="min-w-0 p-4 lg:p-6 lg:ps-0">
+          <div className="min-w-0 p-4 sm:p-6">
             <h3 className="text-xl font-bold">{title(step)}</h3>
             <p className="mt-1 text-sm text-foreground/60">
               {description(step)}

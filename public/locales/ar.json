@@ -1310,6 +1310,12 @@
     },
     "sellerRegister": {
       "dynamic": {
+        "stepCount": "الخطوة {{current}} من {{total}}",
+        "chooseImage": "اختيار صورة",
+        "readyToUpload": "جاهز للرفع",
+        "replace": "استبدال",
+        "remove": "إزالة",
+        "fileSize": "{{size}} KiB",
         "accountTitle": "الحساب",
         "addressTitle": "عنوان النشاط التجاري",
         "addressDescription": "أخبرنا بموقع نشاطك التجاري. يحدد بلدك التفاصيل البنكية والمستندات المطلوبة.",

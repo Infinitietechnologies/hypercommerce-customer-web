@@ -1310,6 +1310,12 @@
     },
     "sellerRegister": {
       "dynamic": {
+        "stepCount": "चरण {{current}} / {{total}}",
+        "chooseImage": "तस्वीर चुनें",
+        "readyToUpload": "अपलोड के लिए तैयार",
+        "replace": "बदलें",
+        "remove": "हटाएँ",
+        "fileSize": "{{size}} KiB",
         "accountTitle": "खाता",
         "addressTitle": "व्यवसाय का पता",
         "addressDescription": "बताएँ कि आपका व्यवसाय कहाँ स्थित है। आपके देश के अनुसार बैंक विवरण और आवश्यक दस्तावेज़ तय होंगे।",
