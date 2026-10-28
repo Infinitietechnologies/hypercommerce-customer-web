@@ -53,6 +53,8 @@
 
 ## Seller registration
 
+- Country-based onboarding uses five focused steps: Account, Business address, Bank details, Documents, and Review. Empty dynamic sections are skipped. Existing storefront tokens and shared UI primitives define this form; the API owns field labels, order, types, choices, defaults, and required flags. Country changes reset dynamic answers and uploads; country lookup failures offer Retry before proceeding.
+
 - There is no `src/redesign/` counterpart for the seller registration landing page. The existing storefront layout and design tokens therefore remain authoritative while section titles, subtitles, labels, item copy, and media are populated from the seller landing API. Benefit images are optional and fall back to the existing static icons when no uploaded image is configured.
 
 ## Customer support

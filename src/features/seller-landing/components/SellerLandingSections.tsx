@@ -10,7 +10,7 @@ import {
 import { Button, Image } from "@/components/ui";
 import Reveal from "@/components/custom/Reveal";
 import RatingStars from "@/components/RatingStars";
-import SellerRegisterForm from "@/components/Seller/SellerRegisterForm";
+import SellerOnboardingView from "@/views/SellerOnboardingView";
 import type { ResolvedSellerLandingSection } from "@/types/sellerLanding";
 
 const iconNames: Record<string, string> = {
@@ -146,6 +146,6 @@ export function SellerLandingSectionRenderer({ section, previousType, logo, site
   if (section.type === "benefits") return <SellerBenefits section={section} overlapsHero={previousType === "hero"} />;
   if (section.type === "steps") return <SellerSteps section={section} />;
   if (section.type === "testimonials") return <SellerTestimonials section={section} />;
-  if (section.type === "registration_form") return <SellerRegisterForm />;
+  if (section.type === "registration_form") return <SellerOnboardingView />;
   return null;
 }
