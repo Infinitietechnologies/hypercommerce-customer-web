@@ -19,6 +19,9 @@ import { updateCartData } from "@/helpers/updators";
 const CartPageView: FC = () => {
   const { t } = useTranslation();
   const { cartData, error, isLoading } = useSelector((state: RootState) => state.cart);
+  const recentlyViewedProducts = useSelector(
+    (state: RootState) => state.recentlyViewed.products,
+  );
   const [isShareOpen, setIsShareOpen] = useState(false);
 
   const items = cartData?.items ?? [];
@@ -43,6 +46,15 @@ const CartPageView: FC = () => {
         exclude_product: productSlugs || "",
         include_child_categories: 0,
       }),
+  );
+
+  const recentlyViewedSection = (
+    <SimilarProductsSection
+      initialSimilarProducts={recentlyViewedProducts}
+      isLoading={false}
+      title={t("home.recently_viewed.title")}
+      page="cart"
+    />
   );
 
   const cartHeader = (
@@ -92,6 +104,7 @@ const CartPageView: FC = () => {
         {cartHeader}
         <CartPageEmpty />
         <SaveForLaterItems moreProductsInline={true} />
+        {recentlyViewedSection}
       </div>
     );
   }
@@ -110,6 +123,8 @@ const CartPageView: FC = () => {
       </div>
 
       <SaveForLaterItems moreProductsInline={false} />
+
+      {recentlyViewedSection}
 
       <SimilarProductsSection
         initialSimilarProducts={productsData?.data?.data || []}

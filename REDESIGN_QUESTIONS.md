@@ -75,3 +75,7 @@
 - Videos expose captions as visible post text, but the API does not return timed caption tracks. The player includes an empty WebVTT fallback until the contract supplies caption URLs.
 
 - Seller onboarding progress uses a compact step count and segmented bar below 1024px, with equal-width labelled steps above that breakpoint. Uploads use a single card with a real image thumbnail, filename, size, and explicit Replace/Remove actions; native file controls remain hidden.
+
+## Cart recently viewed products
+
+- The cart displays the same persisted, newest-first recently viewed products as search, below Saved for Later in both populated and empty carts. It reuses the existing cart product carousel, product interactions, responsive breakpoints, RTL support, and translated heading. Empty history hides the section; no new endpoint or persistence is introduced.

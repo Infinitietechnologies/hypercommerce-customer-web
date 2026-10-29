@@ -53,9 +53,9 @@ const SimilarProductsSection: FC<SimilarProductProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between w-full items-center mb-4">
-        <h1 className="text-lg font-semibold">
+        <h2 className="text-lg font-semibold">
           {title ?? t("similarProducts")}
-        </h1>
+        </h2>
       </div>
       <Swiper
         key={rtl ? "rtl-sp" : "ltr-sp"}
