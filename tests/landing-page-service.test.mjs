@@ -91,3 +91,28 @@ test("getLandingPage handles generic network error gracefully", async () => {
   assert.equal(result.message, "Unable to load the landing page.");
   assert.equal(result.data, null);
 });
+
+test("formatLandingCss properly scopes universal selector and body to avoid header/footer misalignment", async () => {
+  const landingPageViewSource = readFileSync(
+    new URL("../src/views/LandingPageView.tsx", import.meta.url),
+    "utf8"
+  );
+
+  const match = landingPageViewSource.match(/const formatLandingCss = \([\s\S]*?\n\};\n/);
+  assert.ok(match, "formatLandingCss should exist in LandingPageView.tsx");
+
+  const transpiled = ts.transpileModule(match[0] + "\nexports.formatLandingCss = formatLandingCss;", {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+
+  const testExports = {};
+  runInNewContext(transpiled, { exports: testExports });
+
+  const inputCss = `* { margin-left: 0px; margin-right: 0px; } body { margin: 0; background: red; } .swiper { width: 100%; }`;
+  const scoped = testExports.formatLandingCss(inputCss);
+
+  assert.ok(scoped.includes(".custom-landing-page * {"), "Universal selector must be scoped");
+  assert.ok(!scoped.includes("body {"), "body selector must be replaced");
+  assert.ok(scoped.includes(".custom-landing-page {"), "body must be replaced with .custom-landing-page");
+  assert.ok(scoped.includes(".custom-landing-page .swiper {"), "classes must be scoped");
+});

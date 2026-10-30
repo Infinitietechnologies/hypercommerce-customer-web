@@ -37,13 +37,69 @@ const cleanLandingHtml = (rawHtml?: string | null): string => {
 const formatLandingCss = (css?: string | null): string => {
   if (!css) return "";
 
-  // Replace 'body' selector with '.custom-landing-page' so root canvas styles
-  // (like flex centering, background color, min-height) apply to the landing page wrapper
-  // instead of leaking onto document.body and collapsing Next.js #__next layout to 0px width.
-  return css.replace(
-    /(^|[^a-zA-Z0-9_-])body(?=[^a-zA-Z0-9_-]|$)/g,
-    "$1.custom-landing-page",
-  );
+  const scope = ".custom-landing-page";
+
+  // 1. Replace root 'body' and 'html' selectors with the scope class
+  let clean = css
+    .replace(/(^|[^a-zA-Z0-9_-])(body|html)(?=[^a-zA-Z0-9_-]|$)/g, `$1${scope}`);
+
+  // 2. Prefix every selector with the scope class so that universal rules
+  // (e.g. * { margin: 0; padding: 0; }) or global classes do not leak into
+  // the site Header (Navbar) or Footer and break their `mx-auto` centering.
+  let output = "";
+  let buffer = "";
+  let depth = 0;
+  let inKeyframes = false;
+
+  for (let i = 0; i < clean.length; i++) {
+    const char = clean[i];
+
+    if (char === "{") {
+      const selector = buffer.trim();
+      buffer = "";
+
+      if (
+        selector.startsWith("@keyframes") ||
+        selector.startsWith("@-webkit-keyframes")
+      ) {
+        inKeyframes = true;
+        output += `${selector} {`;
+      } else if (selector.startsWith("@")) {
+        // @media, @supports, etc.
+        output += `${selector} {`;
+      } else if (inKeyframes) {
+        // Keyframe steps (0%, 100%, from, to)
+        output += `${selector} {`;
+      } else {
+        // Normal CSS selector rule
+        const prefixed = selector
+          .split(",")
+          .map((s) => {
+            const trimmed = s.trim();
+            if (!trimmed) return "";
+            if (trimmed === scope) return scope;
+            if (trimmed.startsWith(scope)) return trimmed;
+            return `${scope} ${trimmed}`;
+          })
+          .filter(Boolean)
+          .join(", ");
+        output += `${prefixed || selector} {`;
+      }
+      depth++;
+    } else if (char === "}") {
+      output += `${buffer}}`;
+      buffer = "";
+      depth--;
+      if (depth === 0) {
+        inKeyframes = false;
+      }
+    } else {
+      buffer += char;
+    }
+  }
+
+  output += buffer;
+  return output;
 };
 
 export default function LandingPageView({
