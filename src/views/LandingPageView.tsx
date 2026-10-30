@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Head from "next/head";
 import Script from "next/script";
 import { useRouter } from "next/router";
@@ -27,11 +27,9 @@ const cleanLandingHtml = (rawHtml?: string | null): string => {
     "",
   );
 
-  // If a full HTML document is returned, extract the contents inside <body>
-  const bodyMatch = cleaned.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-  if (bodyMatch) {
-    cleaned = bodyMatch[1];
-  }
+  // Remove outer wrapper document tags while preserving all elements, links, and scripts
+  cleaned = cleaned.replace(/<!doctype[^>]*>/gi, "");
+  cleaned = cleaned.replace(/<\/?(html|head|body)[^>]*>/gi, "");
 
   return cleaned;
 };
@@ -42,6 +40,7 @@ export default function LandingPageView({
   initialSlug,
 }: LandingPageViewProps) {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const routeSlug =
     typeof router.query.slug === "string"
@@ -75,6 +74,148 @@ export default function LandingPageView({
     () => cleanLandingHtml(landingPage?.html),
     [landingPage?.html],
   );
+
+  // Execute CDN scripts, inline scripts, and ensure external stylesheets are loaded
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !cleanedHtml) return;
+
+    let isCancelled = false;
+
+    // 1. Ensure external stylesheets (<link rel="stylesheet">) are attached to head
+    const links = Array.from(
+      container.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+    );
+    links.forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href) return;
+      try {
+        const existing = document.head.querySelector(`link[href="${CSS.escape(href)}"]`);
+        if (!existing) {
+          const headLink = document.createElement("link");
+          headLink.rel = "stylesheet";
+          headLink.href = href;
+          headLink.setAttribute("data-landing-page-asset", "true");
+          document.head.appendChild(headLink);
+        }
+      } catch (e) {
+        console.warn("Error attaching stylesheet:", e);
+      }
+    });
+
+    // 2. Extract and execute scripts in sequence
+    const scriptElements = Array.from(
+      container.querySelectorAll<HTMLScriptElement>("script"),
+    );
+
+    const executeScripts = async () => {
+      for (const oldScript of scriptElements) {
+        if (isCancelled) break;
+
+        const src = oldScript.getAttribute("src");
+        if (src && /tailwindcss/i.test(src)) {
+          continue;
+        }
+
+        if (src) {
+          await new Promise<void>((resolve) => {
+            try {
+              const existingScript = document.querySelector<HTMLScriptElement>(
+                `script[src="${CSS.escape(src)}"]`,
+              );
+              if (existingScript && existingScript.dataset.loaded === "true") {
+                resolve();
+                return;
+              }
+
+              const script = document.createElement("script");
+              Array.from(oldScript.attributes).forEach((attr) => {
+                script.setAttribute(attr.name, attr.value);
+              });
+              script.async = false;
+              script.setAttribute("data-landing-page-asset", "true");
+
+              script.onload = () => {
+                script.dataset.loaded = "true";
+                resolve();
+              };
+              script.onerror = (e) => {
+                console.error("Failed to load landing page script:", src, e);
+                resolve();
+              };
+
+              document.body.appendChild(script);
+            } catch (err) {
+              console.error("Error setting up script:", err);
+              resolve();
+            }
+          });
+        } else {
+          try {
+            const inlineScript = document.createElement("script");
+            Array.from(oldScript.attributes).forEach((attr) => {
+              inlineScript.setAttribute(attr.name, attr.value);
+            });
+            inlineScript.setAttribute("data-landing-page-asset", "true");
+            inlineScript.textContent = oldScript.textContent || "";
+            document.body.appendChild(inlineScript);
+          } catch (err) {
+            console.error("Error executing landing page inline script:", err);
+          }
+        }
+      }
+
+      // 3. Auto-initialize Swiper if markup (.swiper) exists and hasn't been initialized
+      if (!isCancelled) {
+        const swipers = container.querySelectorAll<HTMLElement>(".swiper");
+        if (swipers.length > 0) {
+          const initSwipers = () => {
+            const win = window as unknown as { Swiper?: new (el: Element, opts?: unknown) => unknown };
+            const SwiperConstructor = win.Swiper;
+            if (typeof SwiperConstructor === "function") {
+              swipers.forEach((el) => {
+                if (!el.classList.contains("swiper-initialized")) {
+                  try {
+                    new SwiperConstructor(el, {
+                      navigation: {
+                        nextEl: el.querySelector(".swiper-button-next"),
+                        prevEl: el.querySelector(".swiper-button-prev"),
+                      },
+                      pagination: {
+                        el: el.querySelector(".swiper-pagination"),
+                        clickable: true,
+                      },
+                    });
+                  } catch (e) {
+                    console.warn("Swiper init warning:", e);
+                  }
+                }
+              });
+            }
+          };
+
+          const win = window as unknown as { Swiper?: unknown };
+          if (typeof win.Swiper === "function") {
+            initSwipers();
+          } else {
+            const swiperScript = document.createElement("script");
+            swiperScript.src = "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js";
+            swiperScript.setAttribute("data-landing-page-asset", "true");
+            swiperScript.onload = () => {
+              initSwipers();
+            };
+            document.body.appendChild(swiperScript);
+          }
+        }
+      }
+    };
+
+    executeScripts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [cleanedHtml]);
 
   if (isLoading && !landingPage) {
     return (
@@ -129,6 +270,7 @@ export default function LandingPageView({
       />
 
       <div
+        ref={containerRef}
         className="w-full custom-landing-page"
         dangerouslySetInnerHTML={{ __html: cleanedHtml }}
       />

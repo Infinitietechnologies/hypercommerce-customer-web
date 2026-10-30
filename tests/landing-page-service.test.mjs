@@ -21,7 +21,6 @@ const mockLandingPage = {
   slug: "summer-sale",
   html: "<section><h1>Summer Sale</h1></section>",
   css: "h1 { color: red; }",
-  project_data: null,
   show_header_footer: true,
   is_active: true,
   updated_at: "2026-10-30T10:00:00.000000Z",
