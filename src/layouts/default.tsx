@@ -55,9 +55,13 @@ const UpdateBanner = dynamic(
 export default function DefaultLayout({
   children,
   initialSettings,
+  showHeaderFooter = true,
+  fullWidth = false,
 }: {
   children?: React.ReactNode;
   initialSettings?: Settings | null;
+  showHeaderFooter?: boolean;
+  fullWidth?: boolean;
 }) {
   const router = useRouter();
   const isWatchBuyRoute = router.pathname.startsWith("/watch-and-buy");
@@ -235,19 +239,19 @@ export default function DefaultLayout({
             ) : (
               // Show normal layout with navbar, content, and footer
               <>
-                <Navbar />
+                {showHeaderFooter && <Navbar />}
                 <main
                   className={
-                    isWatchBuyRoute
+                    isWatchBuyRoute || fullWidth
                       ? "w-full min-h-dvh grow"
                       : "w-full max-w-site mx-auto min-h-[80vh] px-4 sm:px-6 grow pb-4"
                   }
                 >
                   {children}
                 </main>
-                {isWatchBuyRoute ? null : <Footer />}
-                {isWatchBuyRoute ? null : <ScrollToTopButton />}
-                <BottomNavigation />
+                {showHeaderFooter && !isWatchBuyRoute ? <Footer /> : null}
+                {showHeaderFooter && !isWatchBuyRoute ? <ScrollToTopButton /> : null}
+                {showHeaderFooter ? <BottomNavigation /> : null}
                 <CookieConsent />
                 <RemovedItemsModal />
                 <FailedItemsModal />

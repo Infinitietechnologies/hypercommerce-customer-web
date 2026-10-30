@@ -20,7 +20,7 @@ const csp = [
   "frame-ancestors 'self'",
   // next/script and the gateway SDKs inject inline script; a static export has
   // no server to mint nonces, so 'unsafe-inline' is unavoidable here.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://js.stripe.com https://js.paystack.co https://checkout.flutterwave.com https://*.googleapis.com https://*.gstatic.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://js.stripe.com https://js.paystack.co https://checkout.flutterwave.com https://*.googleapis.com https://*.gstatic.com https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
@@ -54,6 +54,9 @@ function generateHtaccess() {
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^blogs/([^/]+)/?$ blogs/[slug]/index.html [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^go/([^/]+)/?$ go/[slug]/index.html [L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^categories/([^/]+)/?$ categories/[slug]/index.html [L]
