@@ -27,6 +27,9 @@ const cleanLandingHtml = (rawHtml?: string | null): string => {
     "",
   );
 
+  // Normalize relative image paths like src="images/..." or src="./images/..." to "/images/..."
+  cleaned = cleaned.replace(/src=["'](?:\.\/)?images\//gi, 'src="/images/');
+
   // Remove outer wrapper document tags while preserving all elements, links, and scripts
   cleaned = cleaned.replace(/<!doctype[^>]*>/gi, "");
   cleaned = cleaned.replace(/<\/?(html|head|body)[^>]*>/gi, "");
@@ -77,6 +80,10 @@ const formatLandingCss = (css?: string | null): string => {
           .map((s) => {
             const trimmed = s.trim();
             if (!trimmed) return "";
+            if (trimmed === ":root") return `:root, ${scope}`;
+            if (trimmed.startsWith(":root ")) {
+              return trimmed.replace(/^:root\s+/, `${scope} `);
+            }
             if (trimmed === scope) return scope;
             if (trimmed.startsWith(scope)) return trimmed;
             return `${scope} ${trimmed}`;
@@ -155,24 +162,32 @@ export default function LandingPageView({
 
     let isCancelled = false;
 
-    // 1. Ensure external stylesheets (<link rel="stylesheet">) are attached to head
-    const links = Array.from(
-      container.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+    // 1. Ensure external stylesheets and preconnect links are attached to head
+    const linkTags = Array.from(
+      container.querySelectorAll<HTMLLinkElement>(
+        'link[rel="stylesheet"], link[rel="preconnect"]',
+      ),
     );
-    links.forEach((link) => {
+    linkTags.forEach((link) => {
       const href = link.getAttribute("href");
+      const rel = link.getAttribute("rel") || "stylesheet";
       if (!href) return;
       try {
-        const existing = document.head.querySelector(`link[href="${CSS.escape(href)}"]`);
+        const existing = Array.from(document.head.querySelectorAll("link")).find(
+          (l) => l.getAttribute("href") === href && l.getAttribute("rel") === rel,
+        );
         if (!existing) {
           const headLink = document.createElement("link");
-          headLink.rel = "stylesheet";
+          headLink.rel = rel;
           headLink.href = href;
+          if (link.hasAttribute("crossorigin")) {
+            headLink.setAttribute("crossorigin", link.getAttribute("crossorigin") || "");
+          }
           headLink.setAttribute("data-landing-page-asset", "true");
           document.head.appendChild(headLink);
         }
       } catch (e) {
-        console.warn("Error attaching stylesheet:", e);
+        console.warn("Error attaching link asset:", e);
       }
     });
 
@@ -341,6 +356,9 @@ export default function LandingPageView({
 
     return () => {
       isCancelled = true;
+      document
+        .querySelectorAll('[data-landing-page-asset="true"]')
+        .forEach((el) => el.remove());
     };
   }, [cleanedHtml]);
 
@@ -398,7 +416,7 @@ export default function LandingPageView({
 
       <div
         ref={containerRef}
-        className="w-full min-w-0 custom-landing-page"
+        className="w-full min-w-0 min-h-screen custom-landing-page"
         dangerouslySetInnerHTML={{ __html: cleanedHtml }}
       />
     </DefaultLayout>
