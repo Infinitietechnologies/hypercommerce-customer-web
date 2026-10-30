@@ -34,6 +34,18 @@ const cleanLandingHtml = (rawHtml?: string | null): string => {
   return cleaned;
 };
 
+const formatLandingCss = (css?: string | null): string => {
+  if (!css) return "";
+
+  // Replace 'body' selector with '.custom-landing-page' so root canvas styles
+  // (like flex centering, background color, min-height) apply to the landing page wrapper
+  // instead of leaking onto document.body and collapsing Next.js #__next layout to 0px width.
+  return css.replace(
+    /(^|[^a-zA-Z0-9_-])body(?=[^a-zA-Z0-9_-]|$)/g,
+    "$1.custom-landing-page",
+  );
+};
+
 export default function LandingPageView({
   initialLandingPage,
   initialSettings,
@@ -73,6 +85,11 @@ export default function LandingPageView({
   const cleanedHtml = useMemo(
     () => cleanLandingHtml(landingPage?.html),
     [landingPage?.html],
+  );
+
+  const formattedCss = useMemo(
+    () => formatLandingCss(landingPage?.css),
+    [landingPage?.css],
   );
 
   // Execute CDN scripts, inline scripts, and ensure external stylesheets are loaded
@@ -177,6 +194,10 @@ export default function LandingPageView({
                 if (!el.classList.contains("swiper-initialized")) {
                   try {
                     new SwiperConstructor(el, {
+                      observer: true,
+                      observeParents: true,
+                      observeSlideChildren: true,
+                      resizeObserver: true,
                       navigation: {
                         nextEl: el.querySelector(".swiper-button-next"),
                         prevEl: el.querySelector(".swiper-button-prev"),
@@ -254,11 +275,11 @@ export default function LandingPageView({
       />
 
       <Head>
-        {landingPage.css ? (
+        {formattedCss ? (
           <style
             id="custom-landing-page-css"
             key="custom-landing-page-css"
-            dangerouslySetInnerHTML={{ __html: landingPage.css }}
+            dangerouslySetInnerHTML={{ __html: formattedCss }}
           />
         ) : null}
       </Head>
@@ -271,7 +292,7 @@ export default function LandingPageView({
 
       <div
         ref={containerRef}
-        className="w-full custom-landing-page"
+        className="w-full min-w-0 custom-landing-page"
         dangerouslySetInnerHTML={{ __html: cleanedHtml }}
       />
     </DefaultLayout>

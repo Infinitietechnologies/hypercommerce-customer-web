@@ -4,6 +4,13 @@
 
 /* Base styles for resetting and normalizing */
 html,
+body,
+#__next,
+[data-overlay-container="true"] {
+  width: 100%;
+}
+
+html,
 body {
   padding-right: 0 !important;
   max-width: 100vw !important;
