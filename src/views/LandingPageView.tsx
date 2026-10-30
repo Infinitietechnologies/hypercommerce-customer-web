@@ -120,12 +120,125 @@ export default function LandingPageView({
       }
     });
 
-    // 2. Extract and execute scripts in sequence
-    const scriptElements = Array.from(
-      container.querySelectorAll<HTMLScriptElement>("script"),
-    );
+    // Helper: load an external script and resolve when ready
+    const loadScript = (src: string): Promise<void> => {
+      return new Promise<void>((resolve) => {
+        try {
+          const existingScript = document.querySelector<HTMLScriptElement>(
+            `script[src="${CSS.escape(src)}"]`,
+          );
+          if (existingScript) {
+            if (existingScript.dataset.loaded === "true") {
+              resolve();
+              return;
+            }
+            existingScript.addEventListener("load", () => resolve(), { once: true });
+            existingScript.addEventListener("error", () => resolve(), { once: true });
+            return;
+          }
 
-    const executeScripts = async () => {
+          const script = document.createElement("script");
+          script.src = src;
+          script.async = false;
+          script.setAttribute("data-landing-page-asset", "true");
+
+          script.onload = () => {
+            script.dataset.loaded = "true";
+            resolve();
+          };
+          script.onerror = (e) => {
+            console.error("Failed to load landing page script:", src, e);
+            resolve();
+          };
+
+          document.body.appendChild(script);
+        } catch (err) {
+          console.error("Error setting up script:", err);
+          resolve();
+        }
+      });
+    };
+
+    // Helper: ensure Swiper JS and CSS are available
+    const ensureSwiper = async (): Promise<boolean> => {
+      const win = window as unknown as { Swiper?: unknown };
+      if (typeof win.Swiper === "function") return true;
+
+      // Ensure Swiper CSS
+      if (!document.querySelector('link[href*="swiper"]')) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css";
+        link.setAttribute("data-landing-page-asset", "true");
+        document.head.appendChild(link);
+      }
+
+      // Load Swiper bundle JS
+      await loadScript("https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js");
+      return typeof (window as unknown as { Swiper?: unknown }).Swiper === "function";
+    };
+
+    // Helper: initialize any uninitialized .swiper containers
+    const initSwiperElements = () => {
+      const swipers = container.querySelectorAll<HTMLElement>(".swiper");
+      if (swipers.length === 0) return;
+
+      const win = window as unknown as {
+        Swiper?: new (el: Element, opts?: unknown) => unknown;
+      };
+      const SwiperConstructor = win.Swiper;
+      if (typeof SwiperConstructor !== "function") return;
+
+      swipers.forEach((el) => {
+        if (el.classList.contains("swiper-initialized")) return;
+
+        try {
+          const nextBtn =
+            el.querySelector<HTMLElement>(".swiper-button-next") ||
+            el.parentElement?.querySelector<HTMLElement>(".swiper-button-next");
+          const prevBtn =
+            el.querySelector<HTMLElement>(".swiper-button-prev") ||
+            el.parentElement?.querySelector<HTMLElement>(".swiper-button-prev");
+          const paginationEl =
+            el.querySelector<HTMLElement>(".swiper-pagination") ||
+            el.parentElement?.querySelector<HTMLElement>(".swiper-pagination");
+
+          new SwiperConstructor(el, {
+            observer: true,
+            observeParents: true,
+            observeSlideChildren: true,
+            resizeObserver: true,
+            grabCursor: true,
+            loop: true,
+            navigation:
+              nextBtn && prevBtn
+                ? { nextEl: nextBtn, prevEl: prevBtn }
+                : { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+            pagination: paginationEl
+              ? { el: paginationEl, clickable: true }
+              : { el: ".swiper-pagination", clickable: true },
+          });
+        } catch (e) {
+          console.warn("Swiper auto-init warning:", e);
+        }
+      });
+    };
+
+    const runScriptsAndInitializers = async () => {
+      // If markup has .swiper elements, pre-load Swiper library so any subsequent
+      // inline scripts calling `new Swiper()` won't crash with "Swiper is not defined"
+      const hasSwiperMarkup = container.querySelectorAll(".swiper").length > 0;
+      if (hasSwiperMarkup) {
+        await ensureSwiper();
+      }
+
+      if (isCancelled) return;
+
+      // Extract and execute scripts from container in sequence
+      const scriptElements = Array.from(
+        container.querySelectorAll<HTMLScriptElement>("script"),
+      );
+
       for (const oldScript of scriptElements) {
         if (isCancelled) break;
 
@@ -135,38 +248,7 @@ export default function LandingPageView({
         }
 
         if (src) {
-          await new Promise<void>((resolve) => {
-            try {
-              const existingScript = document.querySelector<HTMLScriptElement>(
-                `script[src="${CSS.escape(src)}"]`,
-              );
-              if (existingScript && existingScript.dataset.loaded === "true") {
-                resolve();
-                return;
-              }
-
-              const script = document.createElement("script");
-              Array.from(oldScript.attributes).forEach((attr) => {
-                script.setAttribute(attr.name, attr.value);
-              });
-              script.async = false;
-              script.setAttribute("data-landing-page-asset", "true");
-
-              script.onload = () => {
-                script.dataset.loaded = "true";
-                resolve();
-              };
-              script.onerror = (e) => {
-                console.error("Failed to load landing page script:", src, e);
-                resolve();
-              };
-
-              document.body.appendChild(script);
-            } catch (err) {
-              console.error("Error setting up script:", err);
-              resolve();
-            }
-          });
+          await loadScript(src);
         } else {
           try {
             const inlineScript = document.createElement("script");
@@ -182,56 +264,24 @@ export default function LandingPageView({
         }
       }
 
-      // 3. Auto-initialize Swiper if markup (.swiper) exists and hasn't been initialized
-      if (!isCancelled) {
-        const swipers = container.querySelectorAll<HTMLElement>(".swiper");
-        if (swipers.length > 0) {
-          const initSwipers = () => {
-            const win = window as unknown as { Swiper?: new (el: Element, opts?: unknown) => unknown };
-            const SwiperConstructor = win.Swiper;
-            if (typeof SwiperConstructor === "function") {
-              swipers.forEach((el) => {
-                if (!el.classList.contains("swiper-initialized")) {
-                  try {
-                    new SwiperConstructor(el, {
-                      observer: true,
-                      observeParents: true,
-                      observeSlideChildren: true,
-                      resizeObserver: true,
-                      navigation: {
-                        nextEl: el.querySelector(".swiper-button-next"),
-                        prevEl: el.querySelector(".swiper-button-prev"),
-                      },
-                      pagination: {
-                        el: el.querySelector(".swiper-pagination"),
-                        clickable: true,
-                      },
-                    });
-                  } catch (e) {
-                    console.warn("Swiper init warning:", e);
-                  }
-                }
-              });
-            }
-          };
+      if (isCancelled) return;
 
-          const win = window as unknown as { Swiper?: unknown };
-          if (typeof win.Swiper === "function") {
-            initSwipers();
-          } else {
-            const swiperScript = document.createElement("script");
-            swiperScript.src = "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js";
-            swiperScript.setAttribute("data-landing-page-asset", "true");
-            swiperScript.onload = () => {
-              initSwipers();
-            };
-            document.body.appendChild(swiperScript);
-          }
-        }
+      // Dispatch synthetic events in case inline scripts attached listeners for DOMContentLoaded or load
+      try {
+        document.dispatchEvent(new Event("DOMContentLoaded"));
+        window.dispatchEvent(new Event("load"));
+      } catch {}
+
+      // Auto-initialize Swiper if elements exist and weren't initialized by inline scripts
+      if (hasSwiperMarkup) {
+        initSwiperElements();
+        // Retry after a small delay in case layout or styles are still adjusting
+        setTimeout(initSwiperElements, 100);
+        setTimeout(initSwiperElements, 500);
       }
     };
 
-    executeScripts();
+    runScriptsAndInitializers();
 
     return () => {
       isCancelled = true;
