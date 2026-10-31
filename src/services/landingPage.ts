@@ -7,6 +7,11 @@ export interface GetLandingPageOptions {
   market?: string;
 }
 
+export const getLandingPageAssetBaseUrl = (): string => {
+  const baseUrl = api.defaults.baseURL || "/api";
+  return baseUrl.replace(/\/api\/?$/, "/");
+};
+
 export const getLandingPage = async (
   slug: string,
   options?: GetLandingPageOptions,
@@ -16,7 +21,9 @@ export const getLandingPage = async (
       `/go/${encodeURIComponent(slug)}`,
       {
         params: {
-          ...(options?.access_token ? { access_token: options.access_token } : {}),
+          ...(options?.access_token
+            ? { access_token: options.access_token }
+            : {}),
           ...(options?.market ? { market: options.market } : {}),
         },
       },

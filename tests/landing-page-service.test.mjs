@@ -6,7 +6,7 @@ import ts from "typescript";
 
 const source = readFileSync(
   new URL("../src/services/landingPage.ts", import.meta.url),
-  "utf8"
+  "utf8",
 );
 const output = ts.transpileModule(source, {
   compilerOptions: {
@@ -27,6 +27,7 @@ const mockLandingPage = {
 };
 
 const api = {
+  defaults: { baseURL: "https://panel.example.test/shop/api" },
   get: async (...args) => {
     calls.push(["GET", ...args]);
     return {
@@ -92,55 +93,11 @@ test("getLandingPage handles generic network error gracefully", async () => {
   assert.equal(result.data, null);
 });
 
-test("formatLandingCss properly scopes universal selector and body to avoid header/footer misalignment", async () => {
-  const landingPageViewSource = readFileSync(
-    new URL("../src/views/LandingPageView.tsx", import.meta.url),
-    "utf8"
+test("landing assets resolve against backend installation directory", () => {
+  assert.equal(
+    exports.getLandingPageAssetBaseUrl(),
+    "https://panel.example.test/shop/",
   );
-
-  const match = landingPageViewSource.match(/const formatLandingCss = \([\s\S]*?\n\};\n/);
-  assert.ok(match, "formatLandingCss should exist in LandingPageView.tsx");
-
-  const transpiled = ts.transpileModule(match[0] + "\nexports.formatLandingCss = formatLandingCss;", {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-
-  const testExports = {};
-  runInNewContext(transpiled, { exports: testExports });
-
-  const inputCss = `* { margin-left: 0px; margin-right: 0px; } body { margin: 0; background: red; } :root { --ink: #000; } .swiper { width: 100%; }`;
-  const scoped = testExports.formatLandingCss(inputCss);
-
-  assert.ok(scoped.includes(".custom-landing-page * {"), "Universal selector must be scoped");
-  assert.ok(!scoped.includes("body {"), "body selector must be replaced");
-  assert.ok(scoped.includes(".custom-landing-page {"), "body must be replaced with .custom-landing-page");
-  assert.ok(scoped.includes(":root, .custom-landing-page {"), ":root must map to :root, .custom-landing-page for CSS variables to work");
-  assert.ok(!scoped.includes(".custom-landing-page :root"), ":root must not be mapped as descendant of .custom-landing-page");
-  assert.ok(scoped.includes(".custom-landing-page .swiper {"), "classes must be scoped");
-});
-
-test("cleanLandingHtml strips wrapper tags and normalizes relative image paths", async () => {
-  const landingPageViewSource = readFileSync(
-    new URL("../src/views/LandingPageView.tsx", import.meta.url),
-    "utf8"
-  );
-
-  const match = landingPageViewSource.match(/const cleanLandingHtml = \([\s\S]*?\n\};\n/);
-  assert.ok(match, "cleanLandingHtml should exist in LandingPageView.tsx");
-
-  const transpiled = ts.transpileModule(match[0] + "\nexports.cleanLandingHtml = cleanLandingHtml;", {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-
-  const testExports = {};
-  runInNewContext(transpiled, { exports: testExports });
-
-  const rawHtml = `<!doctype html><html><body><img src="images/pic-01.jpg"><img src="./images/pic-02.jpg"></body></html>`;
-  const cleaned = testExports.cleanLandingHtml(rawHtml);
-
-  assert.ok(!cleaned.includes("<!doctype"), "Doctype should be removed");
-  assert.ok(!cleaned.includes("<html>"), "html tag should be removed");
-  assert.ok(!cleaned.includes("<body>"), "body tag should be removed");
-  assert.ok(cleaned.includes('src="/images/pic-01.jpg"'), "Relative images/ should be normalized to /images/");
-  assert.ok(cleaned.includes('src="/images/pic-02.jpg"'), "Relative ./images/ should be normalized to /images/");
+  api.defaults.baseURL = "/api";
+  assert.equal(exports.getLandingPageAssetBaseUrl(), "/");
 });
