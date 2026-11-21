@@ -1,16 +1,10 @@
 import { getCookie } from "@/lib/cookies";
 import { store } from "@/lib/redux/store";
 import {
-  AppSettings,
   AuthenticationSettings,
-  HomeGeneralSettings,
-  NotificationSettings,
   OrderStatus,
-  PaymentSettings,
   Settings,
-  SystemSettings,
   WebSettings,
-  AdvertisementSettings,
 } from "@/types/ApiResponse";
 import { orderStatusPriority } from "@/config/constants";
 import { parse } from "cookie";
@@ -146,38 +140,25 @@ export function getWebSettings(
   return webSetting.value as WebSettings;
 }
 
+export function getSpecificSettings<
+  Variable extends Settings[number]["variable"],
+>(
+  settings: Settings | undefined | null,
+  variable: Variable,
+): Extract<Settings[number], { variable: Variable }>["value"] | undefined;
 export function getSpecificSettings(
   settings: Settings | undefined | null,
-  variable:
-    | "notification"
-    | "web"
-    | "authentication"
-    | "payment"
-    | "system"
-    | "app"
-    | "home_general_settings"
-    | "advertisement",
-):
-  | WebSettings
-  | SystemSettings
-  | AuthenticationSettings
-  | AppSettings
-  | PaymentSettings
-  | HomeGeneralSettings
-  | NotificationSettings
-  | AdvertisementSettings
-  | undefined {
+  variable: Settings[number]["variable"],
+): Settings[number]["value"] | undefined {
   // Check if settings is an array
   if (!Array.isArray(settings)) {
     return undefined;
   }
 
-  // Safely find the web settings
   const setting = settings.find(
     (item) => item && typeof item === "object" && item.variable === variable,
   );
 
-  // Check if webSetting and value exist
   if (!setting || typeof setting.value !== "object") {
     console.warn("settings not found or improperly formatted.");
     return undefined;

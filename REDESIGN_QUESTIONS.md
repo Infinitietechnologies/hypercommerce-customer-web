@@ -79,3 +79,7 @@
 ## Cart recently viewed products
 
 - The cart displays the same persisted, newest-first recently viewed products as search, below Saved for Later in both populated and empty carts. It reuses the existing cart product carousel, product interactions, responsive breakpoints, RTL support, and translated heading. Empty history hides the section; no new endpoint or persistence is introduced.
+
+## Demo plugin
+
+- The local `/demo-plugin/` route uses the active storefront tokens and shared primitives from `/design-system` because this checkout has no redesign counterpart. The package uses a bundled catalog fixture for the loading, empty, error, and loaded states. A demo-specific cookie keeps the saved note in the browser.

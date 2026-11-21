@@ -86,6 +86,7 @@ export default defineConfig([
 
   globalIgnores([
     "_to_delete/**",
+    "plugins/**",
     ".next/**",
     "out/**",
     "build/**",

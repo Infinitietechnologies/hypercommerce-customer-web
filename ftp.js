@@ -17,6 +17,9 @@ const rootPath = process.cwd();
 
 // Folders to exclude in SSR mode
 const SSR_EXCLUDE_FOLDERS = [".next", "node_modules", ".github", ".git"];
+const isSsrExcluded = (directory, name) =>
+  SSR_EXCLUDE_FOLDERS.includes(name) ||
+  (directory === rootPath && (name === "plugins" || name === "plugin-config.local.json"));
 
 const config = {
   host: "",
@@ -63,8 +66,7 @@ async function deploy() {
       const files = await fs.promises.readdir(localDir, { withFileTypes: true });
 
       for (const file of files) {
-        // Skip excluded folders in SSR mode
-        if (isSSRMode && file.isDirectory() && SSR_EXCLUDE_FOLDERS.includes(file.name)) {
+        if (isSSRMode && isSsrExcluded(localDir, file.name)) {
           continue;
         }
 
@@ -127,8 +129,7 @@ async function getTotalSize(dir) {
     let totalSize = 0;
 
     for (const file of files) {
-      // Skip excluded folders for SSR
-      if (isSSR && SSR_EXCLUDE_FOLDERS.includes(file)) continue;
+      if (isSSR && isSsrExcluded(dir, file)) continue;
 
       totalSize += await getTotalSize(path.join(dir, file));
     }

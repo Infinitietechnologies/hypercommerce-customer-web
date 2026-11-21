@@ -9,40 +9,22 @@ export type VersionCheckData = {
   update_url: string;
 };
 
-export type Settings = [
-  {
-    variable: "app";
-    value: AppSettings;
-  },
-  {
-    variable: "authentication";
-    value: AuthenticationSettings;
-  },
-  {
-    variable: "web";
-    value: WebSettings;
-  },
-  {
-    variable: "system";
-    value: SystemSettings;
-  },
-  {
-    variable: "payment";
-    value: PaymentSettings;
-  },
-  {
-    variable: "notification";
-    value: NotificationSettings;
-  },
-  {
-    variable: "home_general_settings";
-    value: HomeGeneralSettings;
-  },
-  {
-    variable: "advertisement";
-    value: AdvertisementSettings;
-  },
-];
+export type PluginSetting = {
+  variable: "plugins";
+  value: { name: string; enabled: boolean }[];
+};
+
+export type Settings = Array<
+  | { variable: "app"; value: AppSettings }
+  | { variable: "authentication"; value: AuthenticationSettings }
+  | { variable: "web"; value: WebSettings }
+  | { variable: "system"; value: SystemSettings }
+  | { variable: "payment"; value: PaymentSettings }
+  | { variable: "notification"; value: NotificationSettings }
+  | { variable: "home_general_settings"; value: HomeGeneralSettings }
+  | { variable: "advertisement"; value: AdvertisementSettings }
+  | PluginSetting
+>;
 
 export type SystemSettings = {
   // App basics

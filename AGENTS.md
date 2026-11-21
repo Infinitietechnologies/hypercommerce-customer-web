@@ -531,6 +531,10 @@ npm run lint         # eslint --fix
 npm run scan:i18n
 ```
 
+### Frontend plugins
+
+Store package inputs under `plugins/` and use `scripts/plugin-system/` to install them. The installer owns generated modules under `src/plugins/`, public assets under `public/plugins/`, and managed route and source contributions. Use temporary storefronts for installer tests. [Frontend plugin guide](PLUGIN_SYSTEM.md)
+
 ---
 
 ## 9. Do NOT

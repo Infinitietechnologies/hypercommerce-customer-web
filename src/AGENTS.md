@@ -18,6 +18,7 @@ src/
 ├── layouts/            # DefaultLayout (full-width), UserLayout (account sidebar)
 ├── lib/                # analytics, cookies, firebase, redux/
 ├── pages/              # FILE-BASED ROUTES (Pages Router)
+├── plugins/            # installer-managed plugin modules and registry
 ├── routes/             # interceptor.ts + api.ts (now a re-export barrel)
 ├── services/           # client.ts (the axios instance) + per-domain endpoint modules
 ├── stores/             # standalone in-memory singletons (e.g. maintenanceStore)

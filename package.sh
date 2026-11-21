@@ -16,7 +16,8 @@ INCLUDE=(
   next.config.ts next-env.d.ts postcss.config.mjs tailwind.config.ts
   eslint.config.mjs tsconfig.json
   package.json package-lock.json .npmrc
-  .env.example LICENSE README.md
+  .env.example .gitattributes .githooks LICENSE README.md PLUGIN_SYSTEM.md
+  plugin-host.json
 )
 
 # Pruned from inside the allow-listed trees.
@@ -101,7 +102,8 @@ if [ -n "$internal" ]; then echo "FAIL — internal docs in package:"; echo "$in
 
 # Everything package.json's build/deploy scripts invoke must be present.
 for f in scripts/update-manifest.mjs scripts/update-robots.mjs scripts/generate-sitemap.mjs \
-         create-htaccess.js ftp.js package.json next.config.ts .env.example; do
+         scripts/plugin-system/plugins.mjs scripts/setup-git-hooks.mjs scripts/check-plugin-commit.mjs \
+         .githooks/pre-commit plugin-host.json create-htaccess.js ftp.js package.json next.config.ts .env.example; do
   [ -e "$OUT/$f" ] || { echo "FAIL — missing $f"; fail=1; }
 done
 
