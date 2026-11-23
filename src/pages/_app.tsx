@@ -30,6 +30,12 @@ import { getSiteFontFamily, getGoogleFontUrl } from "@/helpers/siteFont";
 import { getSettings } from "@/services/settings";
 import type { Settings } from "@/types/settings";
 
+const DevInspector =
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PUBLIC_DEV_INSPECTOR === "true"
+    ? dynamic(() => import("next-dev-inspector"), { ssr: false })
+    : null;
+
 const ToastProvider = dynamic(
   () => import("@/components/ui").then((mod) => mod.ToastProvider),
   { ssr: false },
@@ -181,6 +187,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
             <ErrorBoundary>{getLayout(content)}</ErrorBoundary>
             <AuthSheetHost />
             <SupportNotificationListener />
+            {DevInspector && <DevInspector />}
           </ReduxProvider>
         </LanguageProvider>
       </NextThemesProvider>

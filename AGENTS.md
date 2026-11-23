@@ -60,6 +60,9 @@ Talks to the Laravel panel at `process.env.NEXT_PUBLIC_ADMIN_PANEL_URL + '/api/.
 
 ## 2. Tech stack
 
+Local development can enable `next-dev-inspector` with
+`NEXT_PUBLIC_DEV_INSPECTOR=true` before running `npm run dev`.
+
 Everything below is what the project **actually uses today**. Do not add to this list without recording the addition here (§9).
 
 | Concern | Choice |
