@@ -85,7 +85,7 @@
 - This checkout has no `/redesign` Flash Sales counterpart. The Hyperlocal home promotion and landing-page layout use HyperCommerce's shared theme tokens and UI primitives, with separate desktop and mobile campaign artwork for each placement. The deal list follows the current market and has no category or seller controls.
 - The homepage promotion occupies the second content slot, immediately below the lead banner. The promotion and sale page use the shared standard product card, which matches the supplied reference.
 - `GET /flash-sales/active` returns catalog products with market-formatted prices in `variants[].flash_sale`. Both placements use the variant's campaign comparison and sale prices and the standard catalog actions.
-- The landing banner uses an inset frosted strip for the sale label, title, Share action, and countdown. The end date and country appear in separate cards below it. The next product page loads as the shopper approaches the end of the grid.
+- The landing banner uses a compact, content-width frosted panel at the bottom for the sale label, title, Share action, and countdown. The end date and country appear in separate cards below it. The next product page loads as the shopper approaches the end of the grid.
 - The dev panel returned HTTP 403 for the campaign's public artwork URLs. The promotion and landing hero retain their themed backgrounds if both artwork sizes fail.
 - The flash-sale API prioritizes `X-Market` over `country`. The storefront sends the selected delivery country and only sends the market header when that market covers the selection.
 
