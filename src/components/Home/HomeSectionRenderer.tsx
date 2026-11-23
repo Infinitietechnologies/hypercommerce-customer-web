@@ -12,6 +12,7 @@ import HomeHeroSlider from "@/components/Home/HomeHeroSlider";
 import HomePlayImageGrid from "@/components/Home/HomePlayImageGrid";
 import {
   PRODUCT_CARD_GRID_CLASSES,
+  PRODUCT_CARD_SLIDER_OPTIONS,
   resolveProductCardStyle,
 } from "@/config/productCard";
 import { HomeSection } from "@/types/ApiResponse";
@@ -85,58 +86,9 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({
 
   const products = content?.products ?? [];
   const productCardStyle = resolveProductCardStyle(style);
-  const productSlider =
-    productCardStyle === "compact"
-      ? {
-          slidesPerView: 1,
-          breakpoints: {
-            375: { slidesPerView: 2, spaceBetween: 10 },
-            640: { slidesPerView: 2.4, spaceBetween: 14 },
-            1024: { slidesPerView: 3.2, spaceBetween: 16 },
-            1280: { slidesPerView: 4, spaceBetween: 16 },
-          },
-        }
-      : productCardStyle === "showcase"
-        ? {
-            slidesPerView: 1,
-            breakpoints: {
-              375: { slidesPerView: 2, spaceBetween: 10 },
-              640: { slidesPerView: 2.1, spaceBetween: 14 },
-              1024: { slidesPerView: 2.8, spaceBetween: 16 },
-              1280: { slidesPerView: 3.4, spaceBetween: 16 },
-            },
-          }
-        : productCardStyle === "minimal"
-          ? {
-              slidesPerView: 1,
-              breakpoints: {
-                375: { slidesPerView: 2.3, spaceBetween: 10 },
-                640: { slidesPerView: 3.3, spaceBetween: 14 },
-                1024: { slidesPerView: 4, spaceBetween: 16 },
-                1280: { slidesPerView: 4.8, spaceBetween: 16 },
-              },
-            }
-          : {
-              slidesPerView: 1,
-              breakpoints: {
-                375: { slidesPerView: 2, spaceBetween: 10 },
-                640: { slidesPerView: 2.5, spaceBetween: 14 },
-                1024: { slidesPerView: 3.3, spaceBetween: 16 },
-                1280: { slidesPerView: 4.1, spaceBetween: 16 },
-              },
-            };
   const categories = content?.categories ?? [];
   const brands = content?.brands ?? [];
   const items = content?.items ?? [];
-
-  if (
-    (type === "products" && !products.length) ||
-    (type === "categories" && !categories.length) ||
-    (type === "brands" && !brands.length) ||
-    (type === "hero" && !items.length)
-  ) {
-    return null;
-  }
 
   return (
     <section className="mb-6 sm:mb-9 rd-fade">
@@ -153,9 +105,7 @@ const HomeSectionRenderer: FC<HomeSectionRendererProps> = ({
         ? wrap(
             config?.orientation === "horizontal" ? (
               <CardSlider
-                slidesPerView={productSlider.slidesPerView}
-                spaceBetween={10}
-                breakpoints={productSlider.breakpoints}
+                {...PRODUCT_CARD_SLIDER_OPTIONS[productCardStyle]}
                 slides={products.map((p) => (
                   <ProductCard
                     key={p.id}

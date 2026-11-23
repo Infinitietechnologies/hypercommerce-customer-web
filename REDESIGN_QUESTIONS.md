@@ -83,7 +83,8 @@
 ## Flash Sales
 
 - This checkout has no `/redesign` Flash Sales counterpart. The Hyperlocal home promotion and landing-page layout use HyperCommerce's shared theme tokens and UI primitives, with separate desktop and mobile campaign artwork for each placement. The deal list follows the current market and has no category or seller controls.
-- `GET /flash-sales/active` returns campaign metadata and paginated products. The dev India campaign returned empty `products.data` and `prices` arrays, so the populated offer and pricing contracts remain unverified. Catalog-shaped entries link to their product pages. Sale prices and direct add-to-cart require a confirmed offer resource.
+- The homepage promotion occupies the second content slot, immediately below the lead banner. The promotion and sale page use the shared standard product card, which matches the supplied reference.
+- `GET /flash-sales/active` returns catalog products with market-formatted prices in `variants[].flash_sale`. Both placements use the variant's campaign comparison and sale prices and the standard catalog actions.
 - The dev panel returned HTTP 403 for the campaign's public artwork URLs. The promotion and landing hero retain their themed backgrounds if both artwork sizes fail.
 - The flash-sale API prioritizes `X-Market` over `country`. The storefront sends the selected delivery country and only sends the market header when that market covers the selection.
 

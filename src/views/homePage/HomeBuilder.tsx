@@ -8,6 +8,7 @@ import HomeSectionRenderer from "@/components/Home/HomeSectionRenderer";
 import HomeSectionSkeleton from "@/components/Skeletons/HomeSectionSkeleton";
 import InfiniteSentinel from "@/components/Functional/InfiniteSentinel";
 import { getActiveHomeNavbar } from "@/helpers/getters";
+import { hasHomeSectionContent } from "@/helpers/homeLayout";
 import { getHomeLayout } from "@/routes/api";
 import { HomeLayout, HomeSection } from "@/types/ApiResponse";
 
@@ -102,12 +103,17 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
     setLoading(false);
   }, [fetchPage, loading, page, lastPage]);
 
+  const [leadSection, ...remainingSections] = sections.filter(
+    hasHomeSectionContent,
+  );
+  const hasMore = page < lastPage;
+
   return (
     <section className="w-full max-w-site mx-auto" id="home-builder">
       {/* Driven by onHomeCategoryChange / onLocationChange (helpers/events). */}
       <button className="hidden" id="home-sections-refetch" onClick={refetch} />
 
-      {failed && sections.length === 0 && !loading ? (
+      {failed && !leadSection && !loading ? (
         <ErrorState
           title={t("home.error.title", "We couldn't load the home page")}
           description={t(
@@ -117,7 +123,7 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
           retryLabel={t("common.retry", "Retry")}
           onRetry={refetch}
         />
-      ) : sections.length === 0 && !loading ? (
+      ) : !leadSection && !loading && !hasMore ? (
         <EmptyState
           actionLabel={t("home.empty.action", "Continue shopping")}
           description={t(
@@ -135,22 +141,26 @@ const HomeBuilder: FC<HomeBuilderProps> = ({ initialLayout }) => {
         />
       ) : (
         <>
-          {sections.map((section, index) => (
-            <HomeSectionRenderer
-              key={section.id}
-              priority={index === 0}
-              section={section}
-            />
+          {leadSection ? (
+            <>
+              <HomeSectionRenderer
+                key={leadSection.id}
+                priority
+                section={leadSection}
+              />
+              {/* Plugin sections follow the first home section. */}
+            </>
+          ) : null}
+          {remainingSections.map((section) => (
+            <HomeSectionRenderer key={section.id} section={section} />
           ))}
           <InfiniteSentinel
-            hasMore={page < lastPage}
+            hasMore={hasMore}
             isLoading={loading}
             onLoadMore={loadMore}
           />
           {loading ? (
-            <HomeSectionSkeleton
-              variant={sections.length === 0 ? "banner" : "cards"}
-            />
+            <HomeSectionSkeleton variant={leadSection ? "cards" : "banner"} />
           ) : null}
         </>
       )}

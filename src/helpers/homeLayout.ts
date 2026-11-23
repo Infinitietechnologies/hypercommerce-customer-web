@@ -1,6 +1,30 @@
-import { Category, HomeHeroItem, HomeSectionItem } from "@/types/ApiResponse";
+import type {
+  Category,
+  HomeHeroItem,
+  HomeSection,
+  HomeSectionItem,
+} from "@/types/ApiResponse";
 
 type HomeItem = HomeHeroItem | HomeSectionItem;
+
+export const hasHomeSectionContent = ({ type, content }: HomeSection): boolean => {
+  switch (type) {
+    case "hero":
+      return Boolean(content?.items?.length);
+    case "play_image":
+      return content?.rows?.length
+        ? content.rows.some((row) => Boolean(row.items?.length))
+        : Boolean(content?.items?.length);
+    case "products":
+      return Boolean(content?.products?.length);
+    case "categories":
+      return Boolean(content?.categories?.length);
+    case "brands":
+      return Boolean(content?.brands?.length);
+    default:
+      return false;
+  }
+};
 
 /**
  * Category link target — a subcategory deep-links through its parent so the
