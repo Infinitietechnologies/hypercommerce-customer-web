@@ -243,9 +243,9 @@ export const CompleteProfileModal: FC = () => {
             </span>
           </div>
         </ModalHeader>
-        <ModalBody className="py-6">
+        <ModalBody className="py-4">
           {step === "phone" && (
-            <div className="space-y-4">
+            <div className="space-y-4 space-x-2">
               <p className="text-sm text-default-500">
                 Please provide your phone number to continue.
               </p>
