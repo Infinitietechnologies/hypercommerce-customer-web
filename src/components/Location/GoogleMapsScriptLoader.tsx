@@ -1,6 +1,7 @@
 import Script from "next/script";
 import type { Settings } from "@/types/ApiResponse";
 import { getWebSettings } from "@/helpers/getters";
+import { GOOGLE_MAPS_UNAVAILABLE_EVENT } from "./googleMapsLocation";
 
 type Props = {
   settings: Settings | null;
@@ -26,6 +27,16 @@ export default function GoogleMapsHeadScript({ settings }: Props) {
       
       // Mark as loading
       window.googleMapsLoading = true;
+      const markUnavailable = () => {
+        window.googleMapsLoading = false;
+        window.googleMapsUnavailable = true;
+        window.dispatchEvent(new Event("${GOOGLE_MAPS_UNAVAILABLE_EVENT}"));
+      };
+      const onAuthFailure = window.gm_authFailure;
+      window.gm_authFailure = () => {
+        markUnavailable();
+        onAuthFailure?.call(window);
+      };
       
       (g => {
         var h, a, k, p = "The Google Maps JavaScript API", c = "google", 

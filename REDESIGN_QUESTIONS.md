@@ -80,6 +80,17 @@
 
 - The cart displays the same persisted, newest-first recently viewed products as search, below Saved for Later in both populated and empty carts. It reuses the existing cart product carousel, product interactions, responsive breakpoints, RTL support, and translated heading. Empty history hides the section; no new endpoint or persistence is introduced.
 
+## Flash Sales
+
+- This checkout has no `/redesign` Flash Sales counterpart. The Hyperlocal home promotion and landing-page layout use HyperCommerce's shared theme tokens and UI primitives, with separate desktop and mobile campaign artwork for each placement. The deal list follows the current market and has no category or seller controls.
+- `GET /flash-sales/active` returns campaign metadata and paginated products. The dev India campaign returned empty `products.data` and `prices` arrays, so the populated offer and pricing contracts remain unverified. Catalog-shaped entries link to their product pages. Sale prices and direct add-to-cart require a confirmed offer resource.
+- The dev panel returned HTTP 403 for the campaign's public artwork URLs. The promotion and landing hero retain their themed backgrounds if both artwork sizes fail.
+- The flash-sale API prioritizes `X-Market` over `country`. The storefront sends the selected delivery country and only sends the market header when that market covers the selection.
+
+## Location lookup
+
+- This checkout has no `/redesign` location selector. When Google Maps rejects or cannot complete a location lookup, the existing location sheet stays open and surfaces a localized toast so the shopper can retry or choose a saved address.
+
 ## Demo plugin
 
 - The local `/demo-plugin/` route uses the active storefront tokens and shared primitives from `/design-system` because this checkout has no redesign counterpart. The package uses a bundled catalog fixture for the loading, empty, error, and loaded states. A demo-specific cookie keeps the saved note in the browser.

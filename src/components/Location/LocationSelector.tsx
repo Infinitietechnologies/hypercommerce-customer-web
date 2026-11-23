@@ -22,6 +22,7 @@ import { RootState } from "@/lib/redux/store";
 import { Address } from "@/types/ApiResponse";
 import { MapPin } from "lucide-react";
 import clsx from "clsx";
+import { reverseGeocodeLocation } from "./googleMapsLocation";
 
 type SelectedLocation = {
   placeName: string;
@@ -184,10 +185,13 @@ const LocationSelector = ({
             lng: position.coords.longitude,
           };
           const { placeName, countryCode } = await geocodeLatLng(latLng);
+          if (!placeName) {
+            await applyDefaultMarket();
+            return;
+          }
           await commitLocation(
             latLng,
-            placeName ||
-              t("locationSelector.currentLocation", "Current Location"),
+            placeName,
             countryCode,
             "",
             {
@@ -241,25 +245,6 @@ const LocationSelector = ({
     }
   }, [isOpen, isLoggedIn, fetchAddresses]);
 
-  // Helper: wait for the Google Maps bootstrap loader (used only for
-  // reverse-geocode + market resolve). The inline loader exposes
-  // `importLibrary` first; the Geocoder class is loaded on demand from it.
-  const waitForGoogleMaps = (timeout = 5000): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const startTime = Date.now();
-      const checkGoogleMaps = () => {
-        if (typeof window.google?.maps?.importLibrary === "function") {
-          resolve(true);
-        } else if (Date.now() - startTime > timeout) {
-          resolve(false);
-        } else {
-          setTimeout(checkGoogleMaps, 200);
-        }
-      };
-      checkGoogleMaps();
-    });
-  };
-
   // Single geocode call that returns BOTH the place name and the country code.
   // (Firing two separate geocode calls at once trips Google's rate limit and
   // makes the place-name lookup fail, so we do it once and reuse the result.)
@@ -267,23 +252,12 @@ const LocationSelector = ({
     lat: number;
     lng: number;
   }): Promise<{ placeName: string | null; countryCode?: string }> => {
-    const isLoaded = await waitForGoogleMaps();
-    if (!isLoaded) return { placeName: null, countryCode: undefined };
-    try {
-      const { Geocoder } = (await window.google.maps.importLibrary(
-        "geocoding",
-      )) as google.maps.GeocodingLibrary;
-      const geocoder = new Geocoder();
-      const result = await geocoder.geocode({ location: latLng });
-      const placeName = result?.results[0]?.formatted_address || null;
-      const countryComp = result?.results
-        ?.flatMap((r) => r.address_components || [])
-        .find((c) => c.types.includes("country"));
-      return { placeName, countryCode: countryComp?.short_name }; // ISO2, e.g. "IN"
-    } catch (error) {
-      console.error("Error geocoding location:", error);
-      return { placeName: null, countryCode: undefined };
-    }
+    const results = await reverseGeocodeLocation(latLng);
+    const placeName = results[0]?.formatted_address || null;
+    const country = results
+      .flatMap((result) => result.address_components)
+      .find((component) => component.types.includes("country"));
+    return { placeName, countryCode: country?.short_name };
   };
 
   // Resolve + switch the market for a country (currency/catalogue follow it).
@@ -382,7 +356,7 @@ const LocationSelector = ({
   };
 
   // "Use my current location" — browser geolocation.
-  const handleUseCurrentLocation = () => {
+  const handleUseCurrentLocation = async () => {
     if (demoMode) {
       commitLocation(
         {
@@ -396,42 +370,48 @@ const LocationSelector = ({
 
     if (!navigator.geolocation) {
       addToast({
-        title: "Geolocation is not supported by your browser",
+        title: t("address.location.unsupported"),
         color: "danger",
       });
       return;
     }
 
     setLocatingId("current");
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const latLng = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        // One geocode gives us the readable address AND the country code.
-        const { placeName, countryCode } = await geocodeLatLng(latLng);
-        await commitLocation(
-          latLng,
-          placeName ||
-            t("locationSelector.currentLocation", "Current Location"),
-          countryCode,
-        );
-        setLocatingId(null);
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        setLocatingId(null);
+    try {
+      const { coords } = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        },
+      );
+      const latLng = { lat: coords.latitude, lng: coords.longitude };
+      const { placeName, countryCode } = await geocodeLatLng(latLng);
+      if (!placeName) {
         addToast({
-          title:
-            error.code === error.PERMISSION_DENIED
-              ? "Location permission denied. Please allow access."
-              : "Unable to fetch your current location",
+          title: t("locationSelector.lookupUnavailable"),
           color: "danger",
         });
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    );
+        return;
+      }
+      await commitLocation(latLng, placeName, countryCode);
+    } catch (error) {
+      const permissionDenied =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === 1;
+      addToast({
+        title: permissionDenied
+          ? t("address.location.denied")
+          : t("address.location.failed"),
+        color: "danger",
+      });
+    } finally {
+      setLocatingId(null);
+    }
   };
 
   // Pick one of the saved addresses.

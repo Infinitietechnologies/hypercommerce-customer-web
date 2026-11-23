@@ -685,6 +685,7 @@
   "loading_available_offers": "Loading available offers...",
   "loading_promo_codes": "Loading promo codes...",
   "locationSelector": {
+    "lookupUnavailable": "We couldn't look up your current location. Try again or choose a saved address.",
     "cannotConfirm": "Cannot confirm location",
     "checking": "Checking...",
     "confirmLocation": "Confirm Location",

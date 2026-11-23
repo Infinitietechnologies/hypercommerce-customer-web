@@ -685,6 +685,7 @@
   "loading_available_offers": "उपलब्ध ऑफ़र लोड हो रहे हैं...",
   "loading_promo_codes": "प्रोमो कोड लोड हो रहे हैं...",
   "locationSelector": {
+    "lookupUnavailable": "आपके वर्तमान स्थान का पता नहीं चल सका। फिर से कोशिश करें या सहेजा गया पता चुनें।",
     "cannotConfirm": "स्थान की पुष्टि नहीं की जा सकती",
     "checking": "जांच हो रही है...",
     "confirmLocation": "स्थान की पुष्टि करें",

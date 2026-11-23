@@ -685,6 +685,7 @@
   "loading_available_offers": "جارٍ تحميل العروض المتاحة...",
   "loading_promo_codes": "جارٍ تحميل أكواد الخصم...",
   "locationSelector": {
+    "lookupUnavailable": "تعذر تحديد موقعك الحالي. حاول مرة أخرى أو اختر عنوانًا محفوظًا.",
     "cannotConfirm": "تعذر تأكيد الموقع",
     "checking": "جارٍ الفحص...",
     "confirmLocation": "تأكيد الموقع",
