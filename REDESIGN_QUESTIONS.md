@@ -83,10 +83,10 @@
 ## Flash Sales
 
 - This checkout has no `/redesign` Flash Sales counterpart. The Hyperlocal home promotion and landing-page layout use HyperCommerce's shared theme tokens and UI primitives, with separate desktop and mobile campaign artwork for each placement. The deal list follows the current market and has no category or seller controls.
-- The homepage promotion occupies the second content slot, immediately below the lead banner. The promotion and sale page use the shared standard product card, which matches the supplied reference.
-- `GET /flash-sales/active` returns catalog products with market-formatted prices in `variants[].flash_sale`. Both placements use the variant's campaign comparison and sale prices and the standard catalog actions.
+- The homepage promotion occupies the second content slot, immediately below the lead banner. The campaign artwork, title, countdown, and View sale action form a single link to the sale page. On phones, four equal countdown tiles span the row beneath the title and action.
+- `GET /flash-sales/active` returns catalog products with market-formatted prices in `variants[].flash_sale`. The sale page displays them in the shared standard product cards with campaign comparison and sale prices.
 - The landing banner uses a shallow smoked-glass strip with a soft rim across the bottom. On narrow phones, the countdown label sits beside the sale title and four equal countdown tiles span the strip below. Backdrop refraction starts at the tablet breakpoint to keep the glass steady during mobile countdown updates. The end date and country appear in separate compact cards below the banner. The next product page loads as the shopper approaches the end of the grid.
-- The dev panel returned HTTP 403 for the campaign's public artwork URLs. The promotion and landing hero retain their themed backgrounds if both artwork sizes fail.
+- When both artwork sizes fail, the homepage promotion shows its title, countdown, and action, while the sale page uses its themed banner background.
 - The flash-sale API prioritizes `X-Market` over `country`. The storefront sends the selected delivery country and only sends the market header when that market covers the selection.
 
 ## Location lookup
