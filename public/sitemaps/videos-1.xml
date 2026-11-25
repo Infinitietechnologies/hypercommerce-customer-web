@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://localhost:3000/watch-and-buy/objgoerkovcp/</loc>
+    <video:video>
+      <video:thumbnail_loc>https://dev-hypercommerce.spa-point.in/storage/1992/screenshot-2026-09-28-at-30356-pm.png</video:thumbnail_loc>
+      <video:title>Roll-On Perfume - Amber</video:title>
+      <video:description>Roll-On Perfume - Amber</video:description>
+      <video:content_loc>https://dev-hypercommerce.spa-point.in/storage/1991/perfume-cinematic-shot-b-roll-video-deodorant-commercial-video.mp4</video:content_loc>
+      <video:publication_date>2026-09-28T15:05:37.000Z</video:publication_date>
+      <video:duration>15</video:duration>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://localhost:3000/watch-and-buy/uc64r9m2r9zp/</loc>
+    <video:video>
+      <video:thumbnail_loc>https://dev-hypercommerce.spa-point.in/storage/1666/image.png</video:thumbnail_loc>
+      <video:title>Soft, gentle, and made to care—Dove is more than just skincare; it’s a daily reminder to treat yourself with kindness. From nourishing formulas to trusted ingredients, Dove helps keep your skin feeling healthy, smooth, and hydrated every day. Whether you&apos;re starting your morning routine or winding down after a long day, Dove brings comfort and confidence with every use. Because real beauty begins with self-care, and every person deserves products that celebrate their natural beauty. Choose care that feels good, works beautifully, and supports your skin’s needs. Choose Dove for softness, confidence, and everyday care.</video:title>
+      <video:description>Soft, gentle, and made to care—Dove is more than just skincare; it’s a daily reminder to treat yourself with kindness. From nourishing formulas to trusted ingredients, Dove helps keep your skin feeling healthy, smooth, and hydrated every day. Whether you&apos;re starting your morning routine or winding down after a long day, Dove brings comfort and confidence with every use. Because real beauty begins with self-care, and every person deserves products that celebrate their natural beauty. Choose care that feels good, works beautifully, and supports your skin’s needs. Choose Dove for softness, confidence, and everyday care.</video:description>
+      <video:content_loc>https://dev-hypercommerce.spa-point.in/storage/1663/damaged-hair-try-dove-intensive-repair-shorts.mp4</video:content_loc>
+      <video:publication_date>2026-08-26T12:08:26.000Z</video:publication_date>
+      <video:duration>10</video:duration>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://localhost:3000/watch-and-buy/ceeanpil6xma/</loc>
+    <video:video>
+      <video:thumbnail_loc>https://dev-hypercommerce.spa-point.in/storage/1668/image.png</video:thumbnail_loc>
+      <video:title>Discover the art of fragrance with scents designed to leave a lasting impression. From fresh and floral notes to warm, woody, and luxurious blends, find a perfume that perfectly matches your mood and personality. Every spray adds a touch of elegance, confidence, and individuality to your day. Whether you&apos;re getting ready for a special occasion, heading to work, or simply want to feel refreshed, the right fragrance can become your signature. Explore captivating aromas crafted to make every moment memorable. Find your perfect scent, express your unique style, and let your fragrance tell your story wherever you go.</video:title>
+      <video:description>Discover the art of fragrance with scents designed to leave a lasting impression. From fresh and floral notes to warm, woody, and luxurious blends, find a perfume that perfectly matches your mood and personality. Every spray adds a touch of elegance, confidence, and individuality to your day. Whether you&apos;re getting ready for a special occasion, heading to work, or simply want to feel refreshed, the right fragrance can become your signature. Explore captivating aromas crafted to make every moment memorable. Find your perfect scent, express your unique style, and let your fragrance tell your story wherever you go.</video:description>
+      <video:content_loc>https://dev-hypercommerce.spa-point.in/storage/1667/elevate-your-brand-with-products-promotional-video.mp4</video:content_loc>
+      <video:publication_date>2026-08-26T12:41:12.000Z</video:publication_date>
+      <video:duration>10</video:duration>
+    </video:video>
+  </url>
+</urlset>

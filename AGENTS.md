@@ -74,7 +74,7 @@ Everything below is what the project **actually uses today**. Do not add to this
 | Styling | **Tailwind CSS v4** via `@tailwindcss/postcss`, config in `tailwind.config.ts`, entry `src/styles/globals.css` |
 | Component library | **HeroUI** (`@heroui/react ^2.8.7`, `@heroui/system 2.4.25`, `@heroui/theme 2.4.25`) + `tailwind-variants` |
 | Theme mode | `next-themes` (`darkMode: "class"`), default `system` |
-| Animation | `framer-motion` 12.26.0 |
+| Animation | `framer-motion` 12.43.0 |
 | Global state | **Redux Toolkit** `^2.11.2` + `react-redux` + `redux-persist` |
 | Server-data cache | **SWR** `^2.3.8` |
 | SSR data | `getServerSideProps` (primary), `getStaticProps` where allowed |

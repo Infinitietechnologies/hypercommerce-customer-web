@@ -40,4 +40,4 @@ User-agent: DotBot
 Disallow: /
 
 # Sitemap location
-Sitemap: https://hypercommerce-web.eshopweb.store/sitemap.xml
+Sitemap: https://localhost:3000/sitemap.xml
