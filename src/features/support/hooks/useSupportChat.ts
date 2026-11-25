@@ -218,7 +218,9 @@ export const useSupportChat = (initialData: SupportThreadPayload | null) => {
       const token = String(getCookie("access_token") || "");
       const authorizationHeaders = {Authorization: `Bearer ${token}`, Accept: "application/json"};
       const instance = new Echo({
-        broadcaster: realtimeDriver === "reverb" ? "reverb" : "pusher",
+        ...(realtimeDriver === "reverb"
+          ? { broadcaster: "reverb" as const }
+          : { broadcaster: "pusher" as const }),
         Pusher,
         key: realtimeKey,
         cluster: realtimeCluster || "mt1",

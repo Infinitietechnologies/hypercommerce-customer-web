@@ -9,7 +9,8 @@ dotenv.config({ path: ['.env.local', '.env'] });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const API_URL = `${process.env.NEXT_PUBLIC_ADMIN_PANEL_URL}/api/settings/web`;
+const panelUrl = process.env.NEXT_PUBLIC_ADMIN_PANEL_URL?.trim().replace(/\/+$/, '') ?? '';
+const API_URL = `${panelUrl}/api/settings/web`;
 
 // Helper to download image and save locally
 async function downloadAndSaveImage(url, filename) {

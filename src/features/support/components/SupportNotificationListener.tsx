@@ -34,7 +34,9 @@ const SupportNotificationListener = () => {
       const headers = {Authorization: `Bearer ${token}`, Accept: "application/json"};
       const realtime = payload.realtime;
       const instance = new Echo({
-        broadcaster: realtime.driver === "reverb" ? "reverb" : "pusher",
+        ...(realtime.driver === "reverb"
+          ? { broadcaster: "reverb" as const }
+          : { broadcaster: "pusher" as const }),
         Pusher,
         key: realtime.key || "",
         cluster: realtime.cluster || "mt1",
