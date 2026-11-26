@@ -134,6 +134,16 @@
       "email_update_failed": "Could not update your email",
       "verification_email_failed": "Could not send the verification email"
     },
+    "complete_profile": {
+      "title": "Finish your profile",
+      "description": "Add your mobile number to verify your account.",
+      "checking_phone": "Checking phone number…",
+      "send_failed": "Could not send the code. Please try again.",
+      "verify_title": "Verify your number",
+      "verifying_code": "Verifying code…",
+      "success_title": "Phone number verified",
+      "success_description": "Your profile is complete."
+    },
     "create_account_subtitle": "Please fill the details to create your account",
     "have_account": "Already have an account?",
     "full_name": "Full Name",

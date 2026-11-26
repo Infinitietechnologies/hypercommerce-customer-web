@@ -6,6 +6,7 @@ import {
   useMemo,
   FC,
   ChangeEvent,
+  ReactNode,
 } from "react";
 import {
   Button,
@@ -40,6 +41,7 @@ interface PhoneInputProps {
     phoneNumber: string,
     dialCode: string,
     name: string,
+    expectedLength?: number,
   ) => void;
   label?: string;
   labelPlacement?: "outside" | "outside-left" | "inside";
@@ -47,6 +49,8 @@ interface PhoneInputProps {
   defaultCountry?: string;
   defaultValue?: string;
   placeholder?: string;
+  description?: ReactNode;
+  errorMessage?: string | null;
   isReadOnly?: boolean;
   className?: string;
   endContent?: React.ReactNode;
@@ -59,6 +63,8 @@ const PhoneInput: FC<PhoneInputProps> = ({
   labelPlacement = "outside",
   variant = "flat",
   placeholder = "Phone number",
+  description,
+  errorMessage,
   isReadOnly = false,
   className = "",
   defaultValue = "",
@@ -235,6 +241,7 @@ const PhoneInput: FC<PhoneInputProps> = ({
         cleanedValue,
         state.selectedCountry?.dialCode || "",
         state.selectedCountry?.name || "",
+        state.maxPhoneLength,
       );
     },
     [
@@ -242,12 +249,17 @@ const PhoneInput: FC<PhoneInputProps> = ({
       onPhoneChange,
       state.selectedCountryCode,
       state.selectedCountry,
+      state.maxPhoneLength,
     ],
   );
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      {error && <span className="y text-danger">{error}</span>}
+      {error && (
+        <span role="alert" className="text-base font-medium text-danger">
+          {error}
+        </span>
+      )}
       <div className="flex w-full gap-2 mb-4">
         <Input
           name="mobile"
@@ -382,15 +394,23 @@ const PhoneInput: FC<PhoneInputProps> = ({
           variant={variant}
           classNames={{
             inputWrapper: "ps-0",
-            errorMessage: "text-xs",
+            description: "text-sm",
+            errorMessage: "text-base font-medium",
           }}
+          description={description}
           isDisabled={isLoading}
-          aria-label="Phone number"
+          aria-label={label}
           isInvalid={
-            state.phoneNumber.length > 0 &&
-            state.phoneNumber.length < (state.maxPhoneLength ?? 12)
+            errorMessage === undefined
+              ? state.phoneNumber.length > 0 &&
+                state.phoneNumber.length < (state.maxPhoneLength ?? 12)
+              : Boolean(errorMessage)
           }
           errorMessage={({ validationDetails }) => {
+            if (errorMessage !== undefined) {
+              return errorMessage && <span role="alert">{errorMessage}</span>;
+            }
+
             if (validationDetails.valueMissing) {
               return t("phoneInput.error.required");
             }

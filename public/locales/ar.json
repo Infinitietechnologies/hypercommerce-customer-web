@@ -134,6 +134,16 @@
       "email_update_failed": "تعذّر تحديث بريدك الإلكتروني",
       "verification_email_failed": "تعذّر إرسال رسالة التأكيد"
     },
+    "complete_profile": {
+      "title": "أكمل ملفك الشخصي",
+      "description": "أضف رقم جوالك للتحقق من حسابك.",
+      "checking_phone": "جارٍ التحقق من رقم الهاتف…",
+      "send_failed": "تعذّر إرسال الرمز. يرجى المحاولة مرة أخرى.",
+      "verify_title": "تحقّق من رقمك",
+      "verifying_code": "جارٍ التحقق من الرمز…",
+      "success_title": "تم التحقق من رقم الهاتف",
+      "success_description": "اكتمل ملفك الشخصي."
+    },
     "create_account_subtitle": "يرجى تعبئة البيانات لإنشاء حسابك",
     "have_account": "لديك حساب بالفعل؟",
     "full_name": "الاسم الكامل",

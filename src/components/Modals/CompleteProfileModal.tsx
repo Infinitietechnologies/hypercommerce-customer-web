@@ -1,342 +1,380 @@
-import { useState, FC, useEffect, useRef, useCallback } from "react";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Input,
-  toast as addToast,
-  InputOtp,
-} from "@/components/ui";
-import { TruckElectric, CheckCircle2 } from "lucide-react";
+import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
-import { sendOtp, verifyOtp } from "@/routes/api";
-import { useSettings } from "@/contexts/SettingsContext";
-import { setUserDataRedux } from "@/lib/redux/slices/authSlice";
-import { getCookie } from "@/lib/cookies";
-import { FirebaseInstance } from "@/lib/firebase";
+
 import {
-  handleSignUp,
-  handleResendOtp,
-  checkPhoneExists,
-  handlePhoneLogin,
-} from "@/helpers/auth";
-import { ConfirmationResult } from "firebase/auth";
+  Button,
+  Input,
+  InputOtp,
+  Sheet,
+  toastError,
+  toastSuccess,
+} from "@/components/ui";
+import { useSettings } from "@/contexts/SettingsContext";
+import { useProfilePhoneAvailability } from "@/features/auth/useProfilePhoneAvailability";
 import { useResendCooldown } from "@/features/auth/useResendCooldown";
+import {
+  handlePhoneLogin,
+  handleResendOtp,
+  handleSignUp,
+} from "@/helpers/auth";
 import { getDefaultPhoneCountry } from "@/helpers/phoneCountry";
+import { getCookie } from "@/lib/cookies";
+import { setUserDataRedux } from "@/lib/redux/slices/authSlice";
+import { sendOtp, verifyOtp } from "@/services/auth";
 
 const PhoneInput = dynamic(() => import("@/components/Functional/PhoneInput"), {
   ssr: false,
 });
 
 type Step = "phone" | "otp" | "success";
+type OtpAction = "send" | "resend" | "verify";
 
-export const CompleteProfileModal: FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<Step>("phone");
-  const [isLoading, setIsLoading] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [friendsCode, setFriendsCode] = useState("");
-  const [isResendingOtp, setIsResendingOtp] = useState(false);
-  const cooldown = useResendCooldown();
-  const [fieldErrors, setFieldErrors] = useState({ phone: "" });
-  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
-
+export const CompleteProfileModal = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const { authSettings, demoMode, systemSettings } = useSettings();
+  const { phone, changePhone, resetPhone, retryPhoneCheck } =
+    useProfilePhoneAvailability();
+  const cooldown = useResendCooldown();
+
+  const [openedSession, setOpenedSession] = useState<number | null>(null);
+  const [step, setStep] = useState<Step>("phone");
+  const [friendsCode, setFriendsCode] = useState("");
+  const [action, setAction] = useState<OtpAction | null>(null);
+  const [actionError, setActionError] = useState("");
+  const session = useRef(0);
+  const actionInFlight = useRef(false);
 
   const smsGateway =
     authSettings?.smsGateway ||
     (authSettings?.firebase ? "firebase" : "custom");
   const isFirebaseGateway = smsGateway === "firebase";
+  const isOpen = openedSession !== null;
+  const isBusy = action !== null;
+  const approvedNumber =
+    phone.status === "available" ? phone.internationalNumber : null;
+  const canSendOtp =
+    isOpen && step === "phone" && Boolean(approvedNumber) && !isBusy;
+  const canResendOtp =
+    isOpen &&
+    step === "otp" &&
+    Boolean(approvedNumber) &&
+    !isBusy &&
+    cooldown.secondsLeft === 0;
+
+  const closeModal = useCallback(() => {
+    session.current += 1;
+    resetPhone();
+    setOpenedSession(null);
+  }, [resetPhone]);
 
   useEffect(() => {
-    // Listen for custom event to open this modal
     const handleOpen = () => {
-      setIsOpen(true);
+      session.current += 1;
+      resetPhone();
       setStep("phone");
-      // Check for friend code in cookie
-      const cookieCode = getCookie("friend_code");
-      if (cookieCode) setFriendsCode(cookieCode as string);
+      setActionError("");
+      setFriendsCode(getCookie<string>("friend_code") ?? "");
+      setOpenedSession(session.current);
     };
 
     window.addEventListener("open-complete-profile", handleOpen);
     return () =>
       window.removeEventListener("open-complete-profile", handleOpen);
-  }, []);
+  }, [resetPhone]);
 
-  // Debounce hook
-  const useDebounce = <T extends unknown[]>(
-    callback: (...args: T) => void,
-    delay: number,
+  useEffect(() => {
+    if (!isOpen || step !== "success") return;
+    const timer = setTimeout(closeModal, 2000);
+    return () => clearTimeout(timer);
+  }, [closeModal, isOpen, step]);
+
+  const runOtpAction = async (
+    nextAction: OtpAction,
+    errorMessage: string,
+    perform: (isCurrent: () => boolean) => Promise<void>,
   ) => {
-    const timer = useRef<NodeJS.Timeout | null>(null);
-    return useCallback(
-      (...args: T) => {
-        if (timer.current) clearTimeout(timer.current);
-        timer.current = setTimeout(() => callback(...args), delay);
+    if (actionInFlight.current) return;
+
+    actionInFlight.current = true;
+    const currentSession = session.current;
+    const isCurrent = () => currentSession === session.current;
+    setAction(nextAction);
+    setActionError("");
+
+    try {
+      await perform(isCurrent);
+    } catch {
+      if (isCurrent()) {
+        setActionError(errorMessage);
+        toastError(errorMessage);
+      }
+    } finally {
+      actionInFlight.current = false;
+      setAction(null);
+    }
+  };
+
+  const handleSendOtp = async (resend = false) => {
+    if (!approvedNumber || !(resend ? canResendOtp : canSendOtp)) return;
+
+    const errorMessage = t("auth.complete_profile.send_failed");
+    await runOtpAction(
+      resend ? "resend" : "send",
+      errorMessage,
+      async (isCurrent) => {
+        if (isFirebaseGateway) {
+          const firebase = window.firebaseInstance;
+          if (!firebase) throw new Error("Missing Firebase configuration");
+
+          const send = resend ? handleResendOtp : handleSignUp;
+          if (!(await send(approvedNumber, firebase))) {
+            if (isCurrent()) setActionError(errorMessage);
+            return;
+          }
+        } else {
+          const response = await sendOtp({ mobile: approvedNumber });
+          if (!response.success) throw new Error("OTP delivery failed");
+          if (isCurrent()) {
+            toastSuccess(
+              resend
+                ? t("resend_otp_toast.otp_resent_title")
+                : t("signup_toast.otp_sent_title"),
+              resend
+                ? t("resend_otp_toast.otp_resent_desc")
+                : t("signup_toast.otp_sent_desc"),
+            );
+          }
+        }
+
+        if (!isCurrent()) return;
+        if (resend) cooldown.start();
+        else setStep("otp");
       },
-      [callback, delay],
     );
   };
 
-  const debouncedPhoneCheck = useDebounce(async (phone: string) => {
-    if (!phone || phone.length < 8) return;
-    await checkPhoneExists(phone, setIsCheckingPhone, (callback: any) => {
-      const newErrors = callback({ phone: "" });
-      setFieldErrors(newErrors);
-    });
-  }, 1000);
-
-  const handlePhoneChange = (
-    countryCode: string,
-    phoneNumber: string,
-    dialCode: string,
-  ) => {
-    const formattedNumber = `${dialCode}${phoneNumber}`;
-    setPhoneNumber(formattedNumber);
-    if (phoneNumber.length >= 8) {
-      debouncedPhoneCheck(phoneNumber);
-    } else {
-      setFieldErrors({ phone: "" });
-    }
-  };
-
-  const handleSendOtp = async () => {
-    if (!phoneNumber || phoneNumber.length < 8) {
-      addToast({
-        title: t("login_modal.errors.invalid_phone_title"),
-        color: "danger",
-      });
+  const handleVerify = async (otp: string) => {
+    if (
+      !isOpen ||
+      step !== "otp" ||
+      isBusy ||
+      !approvedNumber ||
+      otp.length !== 6
+    )
       return;
-    }
 
-    setIsLoading(true);
-    try {
-      if (isFirebaseGateway) {
-        const firebaseInstance = window.firebaseInstance as
-          | FirebaseInstance
-          | undefined;
-        if (!firebaseInstance) throw new Error("Firebase not initialized");
+    await runOtpAction(
+      "verify",
+      t("auth.forgot.errors.otp_invalid"),
+      async (isCurrent) => {
+        const friends_code = friendsCode || undefined;
+        let response;
+        if (isFirebaseGateway) {
+          const confirmation = window.confirmationResult;
+          if (!confirmation) throw new Error("Missing OTP confirmation");
 
-        const success = await handleSignUp(phoneNumber, firebaseInstance);
-        if (success) setStep("otp");
-      } else {
-        const res = await sendOtp({ mobile: phoneNumber });
-        if (res.success) {
-          addToast({
-            title: t("signup_toast.otp_sent_title"),
-            color: "success",
+          const credential = await confirmation.confirm(otp);
+          const idToken = await credential.user.getIdToken();
+          if (!isCurrent()) return;
+
+          response = await handlePhoneLogin({
+            idToken,
+            dispatch,
+            friends_code,
+            renderToast: false,
           });
-          setStep("otp");
         } else {
-          throw new Error(res.message);
+          response = await verifyOtp({
+            mobile: approvedNumber,
+            otp,
+            friends_code,
+          });
         }
-      }
-    } catch (error: any) {
-      addToast({
-        title: "Error",
-        description: error.message || "Failed to send OTP",
-        color: "danger",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+
+        if (!response?.success) throw new Error("OTP verification failed");
+        if (isCurrent()) {
+          dispatch(setUserDataRedux(response.data ?? {}));
+          setStep("success");
+          toastSuccess(t("auth.complete_profile.success_title"));
+        }
+      },
+    );
   };
 
-  const handleVerify = async (val: string) => {
-    if (val.length !== 6) return;
-    setIsLoading(true);
-
-    try {
-      let response;
-      if (isFirebaseGateway) {
-        const confirmationResult = window.confirmationResult as
-          | ConfirmationResult
-          | undefined;
-        if (!confirmationResult)
-          throw new Error("Verification session expired");
-
-        const userCredential = await confirmationResult.confirm(val);
-        const idToken = await userCredential.user.getIdToken();
-
-        response = await handlePhoneLogin({
-          idToken,
-          dispatch,
-          friends_code: friendsCode || undefined,
-          renderToast: false,
-        });
-      } else {
-        response = await verifyOtp({
-          mobile: phoneNumber,
-          otp: val,
-          friends_code: friendsCode || undefined,
-        });
-      }
-
-      if (response && response.success) {
-        // Phone is verified. Success!
-        dispatch(setUserDataRedux(response.data || {}));
-        setStep("success");
-        setTimeout(() => setIsOpen(false), 2000);
-      } else {
-        throw new Error(response?.message || "Invalid OTP");
-      }
-    } catch (error: any) {
-      addToast({
-        title: "Verification Failed",
-        description: error.message,
-        color: "danger",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleEditNumber = () => {
+    if (actionInFlight.current) return;
+    resetPhone();
+    setActionError("");
+    setStep("phone");
   };
 
-  const handleResend = async () => {
-    if (cooldown.secondsLeft > 0) return;
+  let phoneError: string | null = null;
+  if (phone.status === "invalid") phoneError = t("phone_check.invalid_phone");
+  if (phone.status === "taken") phoneError = t("phone_check.phone_exists");
+  if (phone.status === "error") phoneError = t("phone_check.check_error");
 
-    setIsResendingOtp(true);
-    try {
-      if (isFirebaseGateway) {
-        const firebaseInstance = window.firebaseInstance as
-          | FirebaseInstance
-          | undefined;
-        if (firebaseInstance)
-          await handleResendOtp(phoneNumber, firebaseInstance);
-      } else {
-        await sendOtp({ mobile: phoneNumber });
-      }
-      cooldown.start();
-      addToast({
-        title: t("resend_otp_toast.otp_resent_title"),
-        color: "success",
-      });
-    } finally {
-      setIsResendingOtp(false);
-    }
-  };
+  const title = {
+    phone: t("auth.complete_profile.title"),
+    otp: t("auth.complete_profile.verify_title"),
+    success: t("auth.complete_profile.success_title"),
+  }[step];
+  const otpLabel = t("auth.otp_input_label");
 
   return (
-    <Modal
+    <Sheet
       isOpen={isOpen}
-      onOpenChange={setIsOpen}
-      isDismissable={true}
-      isKeyboardDismissDisabled={false}
-      hideCloseButton={false}
+      onOpenChange={(open) => {
+        if (!open) closeModal();
+      }}
+      size="md"
       backdrop="blur"
-      placement="center"
+      classNames={{
+        backdrop: "z-sheet",
+        wrapper: "z-sheet",
+        base: "border border-divider bg-content1 shadow-overlay",
+        header: "px-5 pb-2 pt-5 sm:px-6",
+        body: "gap-4 px-5 py-3 sm:px-6",
+        footer: "px-5 pb-6 pt-3 sm:px-6",
+        closeButton:
+          "end-3 top-3 rounded-medium p-2 text-base text-default-500 hover:bg-default-100 hover:text-foreground",
+      }}
+      title={
+        <span className="pe-8 text-xl font-bold text-foreground">{title}</span>
+      }
+      footer={
+        step === "phone" ? (
+          <Button
+            aria-label={t("login_modal.send_otp")}
+            className="w-full text-base font-semibold"
+            color="primary"
+            isDisabled={!canSendOtp}
+            isLoading={action === "send"}
+            onPress={() => handleSendOtp()}
+          >
+            {t("login_modal.send_otp")}
+          </Button>
+        ) : step === "otp" ? (
+          <Button
+            className="w-full text-base font-semibold"
+            isDisabled={isBusy}
+            onPress={handleEditNumber}
+            variant="bordered"
+          >
+            {t("auth.change_number")}
+          </Button>
+        ) : null
+      }
     >
-      <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <TruckElectric className="text-primary" size={24} />
-            <span className="font-bold">
-              {step === "phone" && "Finish Your Profile"}
-              {step === "otp" && "Verify Your Number"}
-              {step === "success" && "Profile Completed!"}
-            </span>
-          </div>
-        </ModalHeader>
-        <ModalBody className="py-4">
-          {step === "phone" && (
-            <div className="space-y-4 space-x-2">
-              <p className="text-sm text-default-500">
-                Please provide your phone number to continue.
-              </p>
-              <PhoneInput
-                onPhoneChange={handlePhoneChange}
-                defaultCountry={demoMode ? "IN" : getDefaultPhoneCountry(systemSettings)}
-                className="w-full"
-              />
-              {(fieldErrors.phone || isCheckingPhone) && (
-                <div className="text-xs text-danger flex items-center gap-2">
-                  {isCheckingPhone && (
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-danger"></div>
-                  )}
-                  {fieldErrors.phone}
-                </div>
-              )}
-              <Input
-                label="Friend Code (Optional)"
-                placeholder="Enter referral code if any"
-                value={friendsCode}
-                onValueChange={setFriendsCode}
-                variant="flat"
-              />
-            </div>
-          )}
-
-          {step === "otp" && (
-            <div className="flex flex-col items-center gap-6">
-              <p className="text-sm text-center text-default-500">
-                Enter the 6-digit code sent to <br />
-                <span className="font-bold text-foreground">{phoneNumber}</span>
-              </p>
-              <InputOtp
-                length={6}
-                onValueChange={handleVerify}
-                isDisabled={isLoading}
-                autoFocus
-                variant="bordered"
-              />
-              <Button
-                variant="light"
-                size="sm"
-                onPress={handleResend}
-                isDisabled={cooldown.secondsLeft > 0}
-                isLoading={isResendingOtp}
-              >
-                {cooldown.secondsLeft > 0
-                  ? t("auth.resend_in", { seconds: cooldown.secondsLeft })
-                  : t("auth.resend_code")}
-              </Button>
-            </div>
-          )}
-
-          {step === "success" && (
-            <div className="flex flex-col items-center py-4 gap-3 animate-in zoom-in duration-300">
-              <div className="h-16 w-16 bg-success/20 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="text-success" size={32} />
-              </div>
-              <h3 className="text-xl font-bold">You&apos;re all set!</h3>
-              <p className="text-sm text-default-500">Welcome to Hypermart.</p>
-            </div>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          {step === "phone" && (
+      {step === "phone" && (
+        <>
+          <p className="text-base text-default-600">
+            {t("auth.complete_profile.description")}
+          </p>
+          <PhoneInput
+            key={openedSession}
+            defaultCountry={
+              demoMode ? "IN" : getDefaultPhoneCountry(systemSettings)
+            }
+            description={
+              phone.status === "checking" ? (
+                <span role="status">
+                  {t("auth.complete_profile.checking_phone")}
+                </span>
+              ) : undefined
+            }
+            errorMessage={phoneError}
+            isReadOnly={isBusy}
+            label={t("auth.phone_number")}
+            onPhoneChange={(...args) => {
+              if (actionInFlight.current) return;
+              changePhone(...args);
+              setActionError("");
+            }}
+            placeholder={t("phoneInput.placeholder")}
+          />
+          {phone.status === "error" && (
             <Button
-              color="primary"
-              className="w-full"
-              isLoading={isLoading || isCheckingPhone}
-              onPress={handleSendOtp}
-              isDisabled={
-                !phoneNumber || phoneNumber.length < 8 || !!fieldErrors.phone
-              }
+              className="self-start text-base font-semibold"
+              onPress={retryPhoneCheck}
+              variant="bordered"
             >
-              Send OTP
+              {t("common.retry")}
             </Button>
           )}
-          {step === "otp" && (
-            <div className="flex gap-2 w-full">
-              <Button
-                variant="flat"
-                onPress={() => setStep("phone")}
-                isDisabled={isLoading}
-                className="flex-1"
-              >
-                Edit Number
-              </Button>
-            </div>
+          <Input
+            label={`${t("auth.referral_code")} (${t("auth.optional")})`}
+            placeholder={t("auth.referral_code_placeholder")}
+            value={friendsCode}
+            onValueChange={setFriendsCode}
+          />
+        </>
+      )}
+
+      {step === "otp" && approvedNumber && (
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="text-base text-default-600">
+            {t("auth.otp_verify_subtitle", {
+              phone: approvedNumber,
+            })}
+          </p>
+          <InputOtp
+            aria-label={otpLabel}
+            ref={(input: HTMLInputElement | null) =>
+              input?.setAttribute("aria-label", otpLabel)
+            }
+            autoFocus
+            isDisabled={isBusy}
+            length={6}
+            name="otp"
+            onValueChange={handleVerify}
+            variant="bordered"
+          />
+          {action === "verify" && (
+            <p className="text-sm" role="status">
+              {t("auth.complete_profile.verifying_code")}
+            </p>
           )}
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+          <Button
+            className="text-base font-semibold"
+            isDisabled={!canResendOtp}
+            isLoading={action === "resend"}
+            onPress={() => handleSendOtp(true)}
+            variant="light"
+          >
+            {cooldown.secondsLeft > 0
+              ? t("auth.resend_in", { seconds: cooldown.secondsLeft })
+              : t("auth.resend_code")}
+          </Button>
+        </div>
+      )}
+
+      {actionError && (
+        <p role="alert" className="text-base font-medium text-danger">
+          {actionError}
+        </p>
+      )}
+
+      {step === "success" && (
+        <div
+          className="flex flex-col items-center gap-3 py-4 text-center"
+          role="status"
+        >
+          <Icon
+            aria-hidden="true"
+            className="text-success"
+            icon="solar:check-circle-bold"
+            width={32}
+            height={32}
+          />
+          <p className="text-base">
+            {t("auth.complete_profile.success_description")}
+          </p>
+        </div>
+      )}
+    </Sheet>
   );
 };

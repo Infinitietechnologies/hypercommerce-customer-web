@@ -134,6 +134,16 @@
       "email_update_failed": "ईमेल अपडेट नहीं हो सका",
       "verification_email_failed": "सत्यापन ईमेल नहीं भेजा जा सका"
     },
+    "complete_profile": {
+      "title": "अपनी प्रोफ़ाइल पूरी करें",
+      "description": "अपना खाता सत्यापित करने के लिए अपना मोबाइल नंबर जोड़ें।",
+      "checking_phone": "फ़ोन नंबर की जाँच हो रही है…",
+      "send_failed": "कोड भेजा नहीं जा सका। कृपया फिर से कोशिश करें।",
+      "verify_title": "अपने नंबर की पुष्टि करें",
+      "verifying_code": "कोड की पुष्टि हो रही है…",
+      "success_title": "फ़ोन नंबर सत्यापित हो गया",
+      "success_description": "आपकी प्रोफ़ाइल पूरी हो गई है।"
+    },
     "create_account_subtitle": "अपना खाता बनाने के लिए विवरण भरें",
     "have_account": "पहले से खाता है?",
     "full_name": "पूरा नाम",
